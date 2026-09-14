@@ -47,7 +47,7 @@ struct SettingsView: View {
     /// The provider a browser sign-in is currently open for, and what went
     /// wrong with the last one.
     @State private var signingIn: Provider?
-    @State private var signInError: String?
+    @State private var signInError: (provider: Provider, message: String)?
     /// Shown while a device-code sign-in is waiting: the code the provider
     /// gave, and where to type it.
     @State private var devicePrompt: OAuthLogin.DevicePrompt?
@@ -481,6 +481,25 @@ struct SettingsView: View {
                     ))
                     .labelsHidden()
                     .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Turn red at"),
+                    subtitle: String.localized("Where a ring stops being amber. A spent limit is red whatever this says.")
+                ) {
+                    Picker(String.localized("Turn red at"), selection: Binding(
+                        get: { settings.warningThreshold },
+                        set: { settings.warningThreshold = $0 }
+                    )) {
+                        ForEach(WarningThreshold.allCases) { threshold in
+                            Text(threshold.title).tag(threshold)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
                     .disabled(!settings.isPanelVisible)
                 }
             }
@@ -1665,7 +1684,7 @@ struct SettingsView: View {
     private func kimiPrimaryAccountRow(_ account: AccountKey) -> some View {
         SettingsRow(
             String.localized("Kimi Code account"),
-            subtitle: signInError
+            subtitle: (signInError?.provider == .kimiCode ? signInError?.message : nil)
                 ?? (kimiSignedIn
                     ? (settings.source(for: account) == .endpoint
                         ? String.localized("Signed in. The API key in Connection is used instead.")
@@ -1724,25 +1743,32 @@ struct SettingsView: View {
                         // whose name is on the page that opens.
                         subtitle: String.localized("Opens the provider's own sign-in page.")
                     ) {
-                        if signingIn == nil {
-                            Button(String.localized("Sign in…")) {
-                                signIn(to: account.provider, replacing: account.isPrimary ? nil : account)
-                            }
-                        } else {
+                        // One sign-in at a time, and its Cancel, code and
+                        // error belong to the provider it was started for:
+                        // a Codex device code shown on the Claude Code pane
+                        // reads as Claude Code asking for it.
+                        if signingIn == account.provider {
                             Button(String.localized("Cancel")) {
                                 signInTask?.cancel()
                                 signInTask = nil
                                 signingIn = nil
                                 devicePrompt = nil
                             }
+                        } else {
+                            Button(String.localized("Sign in…")) {
+                                signIn(to: account.provider, replacing: account.isPrimary ? nil : account)
+                            }
+                            .disabled(signingIn != nil)
                         }
                     }
                 }
 
                 // While a device-code sign-in is waiting, the code is the
                 // whole interaction: it is typed on the provider's page,
-                // not here, and nothing comes back to this Mac.
-                if let devicePrompt {
+                // not here, and nothing comes back to this Mac. Kept outside
+                // the "Add another" gate so a primary Kimi sign-in still
+                // shows its code on this pane.
+                if let devicePrompt, signingIn == account.provider {
                     SettingsRowDivider()
                     SettingsRow(
                         String.localized("Code"),
@@ -1772,9 +1798,13 @@ struct SettingsView: View {
                     }
                 }
 
-                if let signInError {
-                    SettingsRowDivider()
-                    SettingsRow(String.localized("Sign-in"), subtitle: signInError) { EmptyView() }
+                if let signInError, signInError.provider == account.provider {
+                    // Primary Kimi already surfaces the message in its row
+                    // subtitle; skip the duplicate Sign-in row there.
+                    if !(account.isPrimary && account.provider == .kimiCode) {
+                        SettingsRowDivider()
+                        SettingsRow(String.localized("Sign-in"), subtitle: signInError.message) { EmptyView() }
+                    }
                 }
 
                 if !account.isPrimary {
@@ -1958,7 +1988,7 @@ struct SettingsView: View {
                 // Primary Kimi subscription: write onto the primary key, no extra ring.
                 if provider == .kimiCode, existing == AccountKey(.kimiCode) {
                     guard AccountCredentialStore.set(credentials, for: existing!) else {
-                        signInError = String.localized("Couldn't save the login on this Mac.")
+                        signInError = (provider, String.localized("Couldn't save the login on this Mac."))
                         return
                     }
                     kimiLoginTick += 1
@@ -1969,18 +1999,18 @@ struct SettingsView: View {
                 let added = existing ?? settings.addAccount(provider, label: Self.label(for: credentials, provider: provider, in: settings))
                 guard AccountCredentialStore.set(credentials, for: added) else {
                     if existing == nil { settings.removeAccount(added) }
-                    signInError = String.localized("Couldn't save the login on this Mac.")
+                    signInError = (provider, String.localized("Couldn't save the login on this Mac."))
                     return
                 }
                 store.refresh(added)
                 pane = .account(added)
             } catch let failure as OAuthLogin.Failure {
-                if !Task.isCancelled { signInError = failure.message }
+                if !Task.isCancelled { signInError = (provider, failure.message) }
             } catch is CancellationError {
                 // Cancelling is not a failure, and nothing about it belongs in
                 // a pane that may already be showing the next attempt.
             } catch {
-                if !Task.isCancelled { signInError = String.localized("Sign-in was cancelled.") }
+                if !Task.isCancelled { signInError = (provider, String.localized("Sign-in was cancelled.")) }
             }
         }
     }

@@ -102,6 +102,9 @@ struct UsageDetailCard: View {
     /// are a hunt. These ride the card header: they take no extra height.
     var openSettings: (() -> Void)? = nil
 
+    /// Where red begins, so the card's bars agree with the rail's rings.
+    @Environment(\.usageWarningThreshold) private var warningThreshold
+
     var body: some View {
         VStack(alignment: .leading, spacing: DetailCardLayout.contentSpacing) {
             header
@@ -113,7 +116,7 @@ struct UsageDetailCard: View {
                     title: window.name,
                     resetDescription: Self.resetText(window),
                     progress: showsRemaining ? window.remainingFraction : window.usedFraction,
-                    accent: window.tint,
+                    accent: window.tint(warningAt: warningThreshold),
                     percentageText: window.percentText(remaining: showsRemaining),
                     isSpent: UsageTint.isSpent(window),
                     showsRemaining: showsRemaining,

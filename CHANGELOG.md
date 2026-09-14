@@ -10,6 +10,14 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.1.1
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **Choose where the ring turns red.** Settings now has a warning threshold for the amber→red boundary; the green boundary stays fixed, and a spent limit still overrides the colour. Exact equality at the threshold counts as red.
+- **Claude Code warning severities leave room.** A warning from Claude Code is no longer read as a spent limit; locked reasons and unknown severities still mark the limit spent.
+- **Sign-in UI stays on its own provider.** Device-code Cancel, the code row, and sign-in errors only appear on the pane for the provider you started — not on every Accounts group.
+- **Issue templates ask for specifics**, and the provider list in them is no longer stale.
+
 ## 1.1.0
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。 安装自本仓库的副本会从这里收到后续版本。
