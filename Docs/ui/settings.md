@@ -14,7 +14,9 @@ A joined sentence needs no extra space after a Chinese full stop (`。`). `glass
 
 While Liquid Glass is on, the caption still says to drag the panel by a ring. That is current UI. The historical “glass swallows input” diagnosis is uncertain; [rings-and-surface.md](rings-and-surface.md).
 
-Group order in the general pane: **Floating panel → Notifications → Refresh → Order → Application → Language**. The two groups that decide what Pulse does *on its own* sit directly under the panel group, above the housekeeping ones. Notifications was added at the bottom, between Refresh and Language, and that was too far down to find — the panel group alone is fifteen rows.
+Group order in the general pane: **Floating panel → Notifications → Refresh → Order → Application → Language**. The two groups that decide what Pulse does *on its own* sit directly under the panel group, above the housekeeping ones. Notifications was added at the bottom, between Refresh and Language, and that was too far down to find — the panel group alone is sixteen rows.
+
+**Turn red at** lives at the foot of that group: `AppSettings.warningThreshold`, a picker of 60–90%. It moves only the amber→red step; spent is the provider's word and is red whatever the picker says, which is what its subtitle is for. The picker keeps its localized title for accessibility even though its visible label is supplied by the row. [rings-and-surface.md](rings-and-surface.md)
 
 The usage-interval group is named **Refresh**, not Updates.
 
@@ -42,7 +44,7 @@ Each pane has its own refresh, with last-reading time. Rail click is not the onl
 
 Each account also has a **Connection diagnostics** group immediately after Connection: latest check, check time, last successful reading, actual source of displayed figures, explicit cache use, and expandable route checks. A failed check stays visible even when the card displays cached figures. Retry asks only that account; diagnostic copy contains allowlisted metadata ([../refresh-and-data.md](../refresh-and-data.md)). The contextual next step focuses the credential field, reconnects the status line, starts the existing sign-in, reads the chosen browser, opens the relevant app, copies a login command, or opens setup help. Provider-specific action mappings live in [../providers/README.md](../providers/README.md).
 
-Added accounts have a **Sign in again** control; successful reauthentication replaces credentials in the selected slot, preserving its name and display preferences. They do not show ambient CLI source controls that their fetch ignores. A cancelled sign-in or an account removed while sign-in is pending is not written back.
+Added accounts have a **Sign in again** control; successful reauthentication replaces credentials in the selected slot, preserving its name and display preferences. They do not show ambient CLI source controls that their fetch ignores. A cancelled sign-in or an account removed while sign-in is pending is not written back. One extra-account sign-in runs at a time, and its **Cancel**, device code and error rows appear only on the panes of the provider it was started for; other multi-account panes show a disabled **Sign in…** until it finishes. Provider-specific flows are documented in [../providers/authentication.md](../providers/authentication.md).
 
 The sidebar's Application section includes **Developer integrations**. It copies the actual executable's `--json` command with shell quoting, exports the bundled developer kit into a new `Pulse Integrations` folder, and copies links or `open` commands for any configured account. Exports refuse an existing destination and exclude dependency/build folders. Install instructions: [../integrations.md](../integrations.md).
 

@@ -176,6 +176,9 @@ struct FloatingUsagePanelView: View {
             // follow the appearance the material settled on. Forcing dark is
             // exactly what leaves white text sitting on bright glass.
             .environment(\.colorScheme, pinnedScheme)
+            // Where red begins, for every ring, bar and figure below here at
+            // once. Read off `settings` in one place so they cannot disagree.
+            .environment(\.usageWarningThreshold, settings.warningThreshold.fraction)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(String.localized("Pulse floating usage panel"))
             // Strings and layout constants are both read through plain
@@ -212,9 +215,9 @@ struct FloatingUsagePanelView: View {
     private var alertTint: Color? {
         let worst = entries.compactMap(\.headline).max { $0.usedFraction < $1.usedFraction }
         guard let worst,
-              worst.isExhausted || worst.usedFraction >= UsageTint.warningThreshold
+              worst.isExhausted || worst.usedFraction >= settings.warningThreshold.fraction
         else { return nil }
-        return worst.tint
+        return worst.tint(warningAt: settings.warningThreshold.fraction)
     }
 
     /// Only the providers switched on in settings, so the rail shrinks when

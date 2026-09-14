@@ -73,7 +73,7 @@ Route-check diagnostics preserve fallback outcomes without changing which accoun
 
 ## Spent
 
-Claude Code reports `severity` and `locked_reason` per limit. Unrecognised severity is treated as spent.
+Claude Code reports `severity` and `locked_reason` per limit. A `locked_reason` is spent; so is any severity Pulse does not recognise. `normal`/`ok`/`none`/`healthy` and **`warning`/`warn`** are not — Claude Code raises a limit to `warning` while it still has room (seen at 76% used on a scoped weekly limit), and treating that as spent drew a full exhausted-red ring and a red figure for a limit with a quarter left. Spent is what the provider actually reports, not what it is worried about.
 
 ## First run
 

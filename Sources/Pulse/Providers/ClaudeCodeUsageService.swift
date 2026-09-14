@@ -471,11 +471,19 @@ struct ClaudeCodeUsageService: Sendable {
     /// documented loosely, so anything that isn't plainly fine is treated as
     /// spent rather than guessed at — an unknown value erring towards "you're
     /// blocked" is the safer way to be wrong. `locked_reason` is unambiguous.
+    ///
+    /// **A warning is not a block.** Claude Code raises `severity` to
+    /// `warning` while a limit still has room — observed at 76% used on a
+    /// scoped weekly limit — and the catch-all read that as spent: a full,
+    /// deep exhausted-red ring and a red figure beside it, for a limit with a
+    /// quarter left. Spent has to stay the state the provider actually
+    /// reports, or the one reading the app exists to give is the one that
+    /// cries wolf. Anything still unrecognised errs the old way.
     private static func isSpent(_ limit: [String: Any]) -> Bool {
         if limit["locked_reason"] != nil, !(limit["locked_reason"] is NSNull) { return true }
 
         guard let severity = (limit["severity"] as? String)?.lowercased() else { return false }
-        return !["normal", "ok", "none", "healthy"].contains(severity)
+        return !["normal", "ok", "none", "healthy", "warning", "warn"].contains(severity)
     }
 
     private static func date(fromISO8601 text: String) -> Date? {

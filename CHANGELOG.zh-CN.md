@@ -6,6 +6,14 @@
 Sparkle 更新窗口继续只用英文 CHANGELOG.md —— 见 [Scripts/release-notes.py](Scripts/release-notes.py)。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.1.1
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **圆环何时变红可以自己选。** 设置里新增告警阈值：琥珀→红色的分界可调；绿色分界固定；额度用尽仍优先上色。刚好踩在阈值上也算红。
+- **Claude Code 的 warning 不再当成额度用尽。** warning 严重度会留出空间；锁定原因和未知严重度仍标为用尽。
+- **登录界面只挂在对应服务商。** 设备码的取消、验证码行和登录错误只出现在你开始登录的那一家面板，不会串到其他 Accounts 分组。
+- **Issue 模板要求写清细节**，模板里的服务商列表也不再过时。
+
 ## 1.1.0
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。安装自本仓库的副本会从这里收到后续版本。

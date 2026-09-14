@@ -76,6 +76,9 @@ struct UsageRingView: View {
     @State private var spinning = false
     @State private var refreshSpinning = false
 
+    /// Where red begins, as the panel has been set. See `WarningThreshold`.
+    @Environment(\.usageWarningThreshold) private var warningThreshold
+
     /// Gap between the progress ring and the dark disc it encircles.
     private static let centreGap: CGFloat = 4
     /// The icon's share of that dark disc. Sizing the icon from the disc
@@ -152,7 +155,7 @@ struct UsageRingView: View {
         let spent = secondIsSpent || used >= 1
         let shown = showsRemaining && !spent ? 1 - used : used
         let colour = chosenTint.flatMap { spent ? nil : $0 }
-            ?? UsageTint.color(for: used, isExhausted: spent)
+            ?? UsageTint.color(for: used, isExhausted: spent, warningAt: warningThreshold)
 
         ZStack {
             Circle()
@@ -176,7 +179,7 @@ struct UsageRingView: View {
     /// What the arc and the halo are drawn in.
     private var arcColour: Color {
         let spent = isSpent || (usedFraction ?? 0) >= 1
-        let automatic = UsageTint.color(for: usedFraction ?? 0, isExhausted: spent)
+        let automatic = UsageTint.color(for: usedFraction ?? 0, isExhausted: spent, warningAt: warningThreshold)
 
         // Spent is the one state a chosen colour does not get to hide.
         guard let chosenTint, !spent else { return automatic }

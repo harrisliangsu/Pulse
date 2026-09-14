@@ -450,6 +450,24 @@ final class AppSettings {
         }
     }
 
+    /// How full a limit has to be before the panel draws it red.
+    ///
+    /// A setting rather than a constant because "getting tight" is a judgement
+    /// about how somebody works, not a fact about the limit: a weekly window
+    /// three-quarters gone on a Monday and on a Friday are the same number and
+    /// not the same news. It moves the **caution** step's upper edge, nothing
+    /// else — green below 50%, yellow up to here, red above it. Spent stays
+    /// what the provider reports, and is never a matter of taste.
+    ///
+    /// No `onChange?()`: nothing about the panel's frame depends on it, and
+    /// `@Observable` already redraws whoever read it.
+    var warningThreshold: WarningThreshold {
+        didSet {
+            guard warningThreshold != oldValue else { return }
+            UserDefaults.standard.set(warningThreshold.rawValue, forKey: Key.warningThreshold)
+        }
+    }
+
     /// Say on the card whether each limit will last its window.
     ///
     /// Off by default, and that is the same judgement the window clock gets:
@@ -659,6 +677,7 @@ final class AppSettings {
         labelAboveRing: Bool = false,
         showsWindowClock: Bool = false,
         showsRemaining: Bool = false,
+        warningThreshold: WarningThreshold = .default,
         showsForecast: Bool = false,
         showsSecondRing: Bool = false,
         splitAccounts: Set<String> = [],
@@ -692,6 +711,7 @@ final class AppSettings {
         self.labelAboveRing = labelAboveRing
         self.showsWindowClock = showsWindowClock
         self.showsRemaining = showsRemaining
+        self.warningThreshold = warningThreshold
         self.showsForecast = showsForecast
         self.showsSecondRing = showsSecondRing
         self.splitAccounts = splitAccounts
@@ -941,6 +961,8 @@ final class AppSettings {
             labelAboveRing: defaults.object(forKey: Key.labelAboveRing) as? Bool ?? false,
             showsWindowClock: defaults.object(forKey: Key.showsWindowClock) as? Bool ?? false,
             showsRemaining: defaults.object(forKey: Key.showsRemaining) as? Bool ?? false,
+            warningThreshold: (defaults.object(forKey: Key.warningThreshold) as? Int)
+                .flatMap(WarningThreshold.init(rawValue:)) ?? .default,
             showsForecast: defaults.object(forKey: Key.showsForecast) as? Bool ?? false,
             showsSecondRing: defaults.object(forKey: Key.showsSecondRing) as? Bool ?? false,
             splitAccounts: Set(defaults.stringArray(forKey: Key.splitAccounts) ?? []),
@@ -1058,6 +1080,7 @@ final class AppSettings {
         static let labelAboveRing = "settings.labelAboveRing"
         static let showsWindowClock = "settings.showsWindowClock"
         static let showsRemaining = "settings.showsRemaining"
+        static let warningThreshold = "settings.warningThreshold"
         static let showsForecast = "settings.showsForecast"
         static let showsSecondRing = "settings.showsSecondRing"
         static let splitAccounts = "settings.splitAccounts"
