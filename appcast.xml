@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>en</language>
         <item>
+            <title>1.1.1</title>
+            <pubDate>Mon, 14 Sep 2026 01:46:49 -0000</pubDate>
+            <sparkle:version>1.1.1</sparkle:version>
+            <sparkle:shortVersionString>1.1.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.1.1</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.1.1</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>Choose where the ring turns red.</strong> Settings now has a warning threshold for the amber→red boundary; the green boundary stays fixed, and a spent limit still overrides the colour. Exact equality at the threshold counts as red.</li><li><strong>Claude Code warning severities leave room.</strong> A warning from Claude Code is no longer read as a spent limit; locked reasons and unknown severities still mark the limit spent.</li><li><strong>Sign-in UI stays on its own provider.</strong> Device-code Cancel, the code row, and sign-in errors only appear on the pane for the provider you started — not on every Accounts group.</li><li><strong>Issue templates ask for specifics</strong>, and the provider list in them is no longer stale.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.1.1">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.1.1/Pulse-1.1.1.zip"
+                       length="5517546"
+                       type="application/octet-stream"
+                       sparkle:edSignature="aFs1MP8IUb68G7vfC2nbn0tnjrNYYtgszHozCOA4zqBkYGyFZMUm35LlAH4THj8KhNuDkjvAmluy2hQAaF7iBA==" />
+        </item>
+        <item>
             <title>1.1.0</title>
             <pubDate>Fri, 11 Sep 2026 08:18:47 -0000</pubDate>
             <sparkle:version>1.1.0</sparkle:version>
