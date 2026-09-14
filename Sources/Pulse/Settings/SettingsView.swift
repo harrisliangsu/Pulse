@@ -1763,40 +1763,45 @@ struct SettingsView: View {
                     }
                 }
 
-                    // While a device-code sign-in is waiting, the code is the
-                    // whole interaction: it is typed on the provider's page,
-                    // not here, and nothing comes back to this Mac.
-                    if let devicePrompt, signingIn == account.provider {
-                        SettingsRowDivider()
-                        SettingsRow(
-                            String.localized("Code"),
-                            // The sign-in half is not decoration: OpenAI's own
-                            // hand-off to a Google account fails with
-                            // `token_exchange_failed` when the browser has no
-                            // session, and this row is the only place that
-                            // says so. Which half is said depends on whether
-                            // the provider's own link already carries the
-                            // code — telling someone to paste on a page that
-                            // filled itself in is an instruction to undo.
-                            subtitle: devicePrompt.prefilled
-                                ? String.localized("Already on the page. Sign in there first if asked, then approve it.")
-                                : String.localized("Copied. Sign in there first if asked, then paste it.")
-                        ) {
-                            HStack(spacing: 10) {
-                                Text(devicePrompt.userCode)
-                                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                                    .textSelection(.enabled)
+                // While a device-code sign-in is waiting, the code is the
+                // whole interaction: it is typed on the provider's page,
+                // not here, and nothing comes back to this Mac. Kept outside
+                // the "Add another" gate so a primary Kimi sign-in still
+                // shows its code on this pane.
+                if let devicePrompt, signingIn == account.provider {
+                    SettingsRowDivider()
+                    SettingsRow(
+                        String.localized("Code"),
+                        // The sign-in half is not decoration: OpenAI's own
+                        // hand-off to a Google account fails with
+                        // `token_exchange_failed` when the browser has no
+                        // session, and this row is the only place that
+                        // says so. Which half is said depends on whether
+                        // the provider's own link already carries the
+                        // code — telling someone to paste on a page that
+                        // filled itself in is an instruction to undo.
+                        subtitle: devicePrompt.prefilled
+                            ? String.localized("Already on the page. Sign in there first if asked, then approve it.")
+                            : String.localized("Copied. Sign in there first if asked, then paste it.")
+                    ) {
+                        HStack(spacing: 10) {
+                            Text(devicePrompt.userCode)
+                                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                                .textSelection(.enabled)
 
-                                Button(String.localized("Copy")) { copy(devicePrompt.userCode) }
+                            Button(String.localized("Copy")) { copy(devicePrompt.userCode) }
 
-                                Button(String.localized("Open page")) {
-                                    NSWorkspace.shared.open(devicePrompt.verificationURL)
-                                }
+                            Button(String.localized("Open page")) {
+                                NSWorkspace.shared.open(devicePrompt.verificationURL)
                             }
                         }
                     }
+                }
 
-                    if let signInError, signInError.provider == account.provider {
+                if let signInError, signInError.provider == account.provider {
+                    // Primary Kimi already surfaces the message in its row
+                    // subtitle; skip the duplicate Sign-in row there.
+                    if !(account.isPrimary && account.provider == .kimiCode) {
                         SettingsRowDivider()
                         SettingsRow(String.localized("Sign-in"), subtitle: signInError.message) { EmptyView() }
                     }
