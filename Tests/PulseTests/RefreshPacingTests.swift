@@ -133,4 +133,84 @@ struct RefreshPacingTests {
         #expect(Provider.deepSeek.spendingIsWatchedLocally == false)
         #expect(Provider.claudeCode.spendingIsWatchedLocally)
     }
+
+    // MARK: - Which providers' moves shorten the interval
+
+    private static func reading(_ provider: Provider, used: Double, at observedAt: Date = now) -> ProviderUsage {
+        ProviderUsage(
+            account: AccountKey(provider),
+            windows: [UsageWindow(
+                id: "devin-daily", kind: .daily, scope: nil,
+                usedFraction: used, windowSeconds: 86_400, resetsAt: nil
+            )],
+            observedAt: observedAt,
+            state: .live,
+            plan: nil,
+            creditBalance: nil
+        )
+    }
+
+    private static func result(
+        _ provider: Provider,
+        used: Double,
+        at observedAt: Date = now
+    ) -> UsageStore.BatchResult {
+        let after = Self.reading(provider, used: used, at: observedAt)
+        return UsageStore.BatchResult(provider: provider, raw: after, fetched: after)
+    }
+
+    /// **The bug was an omission, not a slow refresh.** Devin is fetched by
+    /// the pass and written to the table, but its row was left out of the
+    /// hand-written list the "did anything move" test walked — so its figures
+    /// could move forever without ever shortening the interval. The comparison
+    /// now runs over the same collection the commit loop uses, and this pins
+    /// that any provider in that collection counts.
+    @Test("A provider's figures moving counts, Devin included")
+    func aMoveCounts() {
+        let before = Self.reading(.devin, used: 0.1)
+        let results = [Self.result(.devin, used: 0.4)]
+
+        #expect(UsageStore.didAnythingMove(results, previous: [before.account.id: before]))
+    }
+
+    @Test("A re-fetch that only advances the clock is not a move")
+    func observedAtDoesNotCountAsAMove() {
+        let before = Self.reading(.devin, used: 0.4, at: Self.now)
+        // A minute later, same windows.
+        let results = [Self.result(.devin, used: 0.4, at: Self.now.addingTimeInterval(60))]
+
+        // `didAnythingMove` compares windows only, so a fresh stamp over the
+        // same figures does not keep the loop at its floor.
+        #expect(!UsageStore.didAnythingMove(results, previous: [before.account.id: before]))
+    }
+
+    @Test("A pass that fetched nothing cannot report a move")
+    func noResultsNoMove() {
+        // Not asked is not moved: an off-rail provider still holding a reading
+        // must not pin the interval at its floor on every pass.
+        let before = Self.reading(.devin, used: 0.4)
+        #expect(!UsageStore.didAnythingMove([], previous: [before.account.id: before]))
+    }
+
+    /// The regression test the omission calls for: the comparison is asked of
+    /// **every** provider, not a hand-picked subset, so a provider added to
+    /// the pass cannot be committed and silently left out of the change test.
+    @Test("Every provider a pass reports can shorten the interval")
+    func everyProviderCanMove() {
+        for provider in Provider.allCases {
+            let before = Self.reading(provider, used: 0.1)
+            let results = [Self.result(provider, used: 0.4)]
+
+            #expect(
+                UsageStore.didAnythingMove(results, previous: [before.account.id: before]),
+                "\(provider.rawValue) moves were not counted"
+            )
+        }
+    }
+
+    @Test("An account with no previous reading counts as moved")
+    func aFirstReadingCounts() {
+        // Nothing was on screen, so the figures are new to the rail.
+        #expect(UsageStore.didAnythingMove([Self.result(.devin, used: 0.4)], previous: [:]))
+    }
 }

@@ -54,11 +54,14 @@ Disabled providers are not fetched. A provider pane can still refresh that accou
 
 ## Cache
 
-`UsageCache` keeps the last **`.live`** reading per account so a refusal can show numbers with a date instead of an empty error. They come back marked `.stale` (the card’s “as of” line).
+`UsageCache` keeps the last good reading per account so a refusal can show numbers with a date instead of an empty error. They come back marked `.stale` (the card’s “as of” line).
 
 - A window whose **reset time has passed is dropped**, not aged. If every window has reset, report the error.
 - 24h cap for windows that never say when they reset.
 - Missing credentials are **not** papered over (`.apiKeyMissing`, `.ollamaSessionMissing`, `.qoderSessionMissing`, `.signedOut`, `.claudeDesktopNotSignedIn`, `.claudeDesktopKeyRefused`, `.kimiSignInRequired`, `.kimiLoginExpired`).
+- **The age rules are not only the read-back path's.** A `.live` reading can still be old: `observedAt` is when the *provider's* figures were taken, not when Pulse asked. `reconciled` now filters a **directly fetched** reading the same way it filters a restored one — a window whose reset has passed is dropped, and a reading past the 24h cap is refused — before it is banked or drawn. Devin is why: its figures come out of a row its own app writes at launch, so a fresh fetch every few minutes keeps returning the same morning-old stamp ([providers/devin.md](providers/devin.md)).
+- **A saved plan is banked even when it is stale.** Devin's comes out of the app's own persistent store rather than a request that can be repeated, so `reconciled` keeps it; it is date-stamped, and `--json` — which never fetches — reads only what is banked. Without that the panel would lose the last plan the app wrote once the fresh window passed.
+- **Routes that need not be one account — or one organization — do not share a fallback.** Devin's endpoint is organization-scoped while the row its app saved is keyed by a user id only, so even the same user can be two organizations' allowances. `ProviderUsage.requiresScopeMatch` is computed from the provider, and every fallback, every "newer reading wins" and every save agrees on a `UsageScope` of **route, organization and identity**; a missing organization or identity is never a wildcard. There is no hand-set flag for a return path to forget.
 - `.live` is not the same as “newest.” A route can mark a capture live for a few minutes while an earlier endpoint reading has a later `observedAt`. `reconciled` prefers the later stamp.
 - `UsageStore.start` paints the cache before the first request so the rail is not blank on a cold start. Cache never undoes a fetch that has already landed.
 

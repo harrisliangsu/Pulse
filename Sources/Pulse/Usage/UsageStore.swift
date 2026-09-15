@@ -380,6 +380,11 @@ final class UsageStore {
         let volcengineSource = settings.source(for: AccountKey(.volcengine))
         let kimiSource = settings.source(for: AccountKey(.kimiCode))
         let commandCode = CommandCodeUsageService(enteredKey: apiKeys[.commandCode])
+        let devin = DevinUsageService(
+            enteredKey: apiKeys[.devin],
+            browser: settings.sessionBrowser(for: AccountKey(.devin))
+        )
+        let devinSource = settings.source(for: AccountKey(.devin))
         let deepSeek = DeepSeekUsageService(
             enteredKey: apiKeys[.deepSeek],
             basis: settings.deepSeekBasis,
@@ -465,6 +470,9 @@ final class UsageStore {
             async let deepSeekUsage = wanted.contains(.deepSeek)
                 ? await deepSeek.fetch()
                 : ProviderUsage.unavailable(.deepSeek, reason: .loading)
+            async let devinUsage = wanted.contains(.devin)
+                ? await devin.fetch(source: devinSource)
+                : ProviderUsage.unavailable(.devin, reason: .loading)
 
             let (rawCodex, rawClaude, rawAntigravity, rawOpenCode) =
                 await (codexUsage, claudeUsage, antigravityUsage, openCodeUsage)
@@ -474,7 +482,7 @@ final class UsageStore {
             let (rawMiniMax, rawMiniMaxCN) = await (minimaxUsage, minimaxCNUsage)
             let (rawCopilot, rawGrok, rawGrokBot) = await (copilotUsage, grokUsage, grokBotUsage)
             let (rawVolcengine, rawCommandCode) = await (volcengineUsage, commandCodeUsage)
-            let rawDeepSeek = await deepSeekUsage
+            let (rawDeepSeek, rawDevin) = await (deepSeekUsage, devinUsage)
 
             // **The disowning is checked before anything is written, not just
             // before the readings are handed to the panel.** `reconciled`
@@ -485,29 +493,43 @@ final class UsageStore {
             // another pass has run.
             guard pass == self.currentPass else { return }
 
-            // A refusal — rate limited, expired token, a VPN dropping the
-            // connection — falls back to the last good reading rather than
-            // blanking the card. It comes back marked stale, so it says how
-            // old it is.
-            let fetchedCodex = await UsageCache.shared.reconciled(rawCodex)
-            let fetchedClaude = await UsageCache.shared.reconciled(rawClaude)
-            let fetchedAntigravity = await UsageCache.shared.reconciled(rawAntigravity)
-            let fetchedOpenCode = await UsageCache.shared.reconciled(rawOpenCode)
-            let fetchedKimi = await UsageCache.shared.reconciled(rawKimi)
-            let fetchedCursor = await UsageCache.shared.reconciled(rawCursor)
-            let fetchedOllama = await UsageCache.shared.reconciled(rawOllama)
-            let fetchedQoder = await UsageCache.shared.reconciled(rawQoder)
-            let fetchedZai = await UsageCache.shared.reconciled(rawZai)
-            let fetchedGLM = await UsageCache.shared.reconciled(rawGLM)
-            let fetchedMiniMax = await UsageCache.shared.reconciled(rawMiniMax)
-            let fetchedMiniMaxCN = await UsageCache.shared.reconciled(rawMiniMaxCN)
-            let fetchedCopilot = await UsageCache.shared.reconciled(rawCopilot)
-            let fetchedGrok = await UsageCache.shared.reconciled(rawGrok)
-            let fetchedGrokBot = await UsageCache.shared.reconciled(rawGrokBot)
-            let fetchedVolcengine = await UsageCache.shared.reconciled(rawVolcengine)
-            let fetchedCommandCode = await UsageCache.shared.reconciled(rawCommandCode)
-            let fetchedDeepSeek = await UsageCache.shared.reconciled(rawDeepSeek)
-
+            // **One collection for the rest of the pass.** A refusal — rate
+            // limited, expired token, a VPN dropping the connection — falls
+            // back to the last good reading rather than blanking the card, and
+            // it comes back marked stale so it says how old it is. The rows are
+            // built once, from the one list of providers: the commit loop and
+            // the change test below are asked of the same collection, so a
+            // provider can no longer be committed and yet be missing from the
+            // comparison — which is what left Devin's moves unable to shorten
+            // the interval.
+            var results: [BatchResult] = []
+            for (provider, raw) in [
+                (Provider.codex, rawCodex),
+                (.claudeCode, rawClaude),
+                (.antigravity, rawAntigravity),
+                (.openCodeGo, rawOpenCode),
+                (.kimiCode, rawKimi),
+                (.cursor, rawCursor),
+                (.ollamaCloud, rawOllama),
+                (.qoder, rawQoder),
+                (.zai, rawZai),
+                (.glmCoding, rawGLM),
+                (.minimax, rawMiniMax),
+                (.minimaxCN, rawMiniMaxCN),
+                (.copilot, rawCopilot),
+                (.grok, rawGrok),
+                (.grokBot, rawGrokBot),
+                (.volcengine, rawVolcengine),
+                (.commandCode, rawCommandCode),
+                (.deepSeek, rawDeepSeek),
+                (.devin, rawDevin),
+            ] where wanted.contains(provider) {
+                results.append(BatchResult(
+                    provider: provider,
+                    raw: raw,
+                    fetched: await UsageCache.shared.reconciled(raw)
+                ))
+            }
             // Accounts Pulse signed in to itself, read one at a time: each
             // may have to renew its token first, and they are few.
             //
@@ -536,27 +558,8 @@ final class UsageStore {
             // overwritten with a stale cache entry every automatic pass —
             // quietly undoing the deliberate refresh its own settings pane
             // offers, a minute or two after the user pressed it.
-            for (provider, fetched, raw) in [
-                (Provider.codex, fetchedCodex, rawCodex),
-                (.claudeCode, fetchedClaude, rawClaude),
-                (.antigravity, fetchedAntigravity, rawAntigravity),
-                (.openCodeGo, fetchedOpenCode, rawOpenCode),
-                (.kimiCode, fetchedKimi, rawKimi),
-                (.cursor, fetchedCursor, rawCursor),
-                (.ollamaCloud, fetchedOllama, rawOllama),
-                (.qoder, fetchedQoder, rawQoder),
-                (.zai, fetchedZai, rawZai),
-                (.glmCoding, fetchedGLM, rawGLM),
-                (.minimax, fetchedMiniMax, rawMiniMax),
-                (.minimaxCN, fetchedMiniMaxCN, rawMiniMaxCN),
-                (.copilot, fetchedCopilot, rawCopilot),
-                (.grok, fetchedGrok, rawGrok),
-                (.grokBot, fetchedGrokBot, rawGrokBot),
-                (.volcengine, fetchedVolcengine, rawVolcengine),
-                (.commandCode, fetchedCommandCode, rawCommandCode),
-                (.deepSeek, fetchedDeepSeek, rawDeepSeek),
-            ] where wanted.contains(provider) {
-                self.commit(fetched, raw: raw, for: AccountKey(provider).id)
+            for result in results {
+                self.commit(result.fetched, raw: result.raw, for: AccountKey(result.provider).id)
             }
             self.isRefreshing = false
             self.refreshStartedAt = nil
@@ -565,35 +568,13 @@ final class UsageStore {
 
             // Compare the windows only. `observedAt` moves on every successful
             // fetch, so including it would report a change every single time
-            // and the loop would never slow down.
-            // Only what was actually fetched. A provider that is switched off
-            // is still reconciled — which hands back its cached windows — while
-            // its slot here was never written, so it compared as "moved" on
-            // every single pass and pinned the adaptive interval at its floor.
-            let moved = [
-                (Provider.codex, fetchedCodex),
-                (.claudeCode, fetchedClaude),
-                (.antigravity, fetchedAntigravity),
-                (.openCodeGo, fetchedOpenCode),
-                (.kimiCode, fetchedKimi),
-                (.cursor, fetchedCursor),
-                (.ollamaCloud, fetchedOllama),
-                (.qoder, fetchedQoder),
-                (.zai, fetchedZai),
-                (.glmCoding, fetchedGLM),
-                (.minimax, fetchedMiniMax),
-                (.minimaxCN, fetchedMiniMaxCN),
-                (.copilot, fetchedCopilot),
-                (.grok, fetchedGrok),
-                (.grokBot, fetchedGrokBot),
-                (.volcengine, fetchedVolcengine),
-                (.commandCode, fetchedCommandCode),
-                (.deepSeek, fetchedDeepSeek),
-            ].contains { provider, fetched in
-                wanted.contains(provider)
-                    && previous[AccountKey(provider).id]?.windows != fetched.windows
+            // and the loop would never slow down. `results` holds only the
+            // providers that were actually asked, so a switched-off one — whose
+            // slot was never written — cannot compare as "moved" on every pass
+            // and pin the adaptive interval at its floor.
+            if Self.didAnythingMove(results, previous: previous) {
+                self.signals.lastChange = Date()
             }
-            if moved { self.signals.lastChange = Date() }
 
             self.scheduleNext()
         }
@@ -640,6 +621,10 @@ final class UsageStore {
         let minimax = MiniMaxUsageService(provider: provider, enteredKey: key)
         let volcengine = VolcengineUsageService(enteredKey: key)
         let commandCode = CommandCodeUsageService(enteredKey: key)
+        let devinAccount = DevinUsageService(
+            enteredKey: key,
+            browser: settings.sessionBrowser(for: account)
+        )
         let deepSeek = DeepSeekUsageService(
             enteredKey: key,
             basis: settings.deepSeekBasis,
@@ -685,6 +670,8 @@ final class UsageStore {
                 raw = await commandCode.fetch()
             case .deepSeek:
                 raw = await deepSeek.fetch()
+            case .devin:
+                raw = await devinAccount.fetch(source: source)
             }
             }
 
@@ -759,7 +746,7 @@ final class UsageStore {
         // Nothing else can be signed in to, so nothing else gets here.
         case .antigravity, .cursor, .openCodeGo, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine, .qoder,
-             .commandCode, .deepSeek:
+             .commandCode, .deepSeek, .devin:
             .unavailable(account, reason: .loading)
         }
     }
@@ -776,6 +763,36 @@ final class UsageStore {
         guard let account = queued.first else { return }
         queued.remove(account)
         refresh(account)
+    }
+
+    /// One provider's answer for a pass: what the service returned and what
+    /// the cache made of it.
+    ///
+    /// **One collection, not two.** The commit loop and the "did anything
+    /// move" question used to be asked of two hand-written lists of the same
+    /// providers, and adding Devin to one while forgetting the other left its
+    /// moves unable to shorten the interval. Asked of the same rows, they
+    /// cannot disagree.
+    struct BatchResult: Sendable {
+        let provider: Provider
+        let raw: ProviderUsage
+        let fetched: ProviderUsage
+    }
+
+    /// Whether any provider that was actually asked reported different windows
+    /// from the reading already on screen.
+    ///
+    /// Only providers represented in `results` are considered, and `results`
+    /// holds exactly the ones this pass asked. `observedAt` is deliberately
+    /// ignored: it moves on every successful fetch, so including it would
+    /// report a change every pass and the loop would never slow down.
+    nonisolated static func didAnythingMove(
+        _ results: [BatchResult],
+        previous: [String: ProviderUsage]
+    ) -> Bool {
+        results.contains { result in
+            previous[AccountKey(result.provider).id]?.windows != result.fetched.windows
+        }
     }
 
     /// Writes a fetched reading into the table, and lets the alerts see it.

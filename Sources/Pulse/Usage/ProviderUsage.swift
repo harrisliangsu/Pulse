@@ -21,6 +21,15 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         /// to turn over, and calling it a spend limit put the word "limit"
         /// on a row where none exists.
         case balance
+        /// Devin's, which resets on a fixed daily boundary. The shortest
+        /// window anyone else reports is five hours and the next is a week,
+        /// so this had nowhere to map either.
+        case daily
+        /// An allowance counted in messages rather than in time. Devin's free
+        /// plan reports one — so many messages, so many left — with no window,
+        /// no reset and no length, which is why it is its own kind rather than
+        /// a period nobody stated.
+        case messages
         /// OpenCode Go's billing period. The others' longest window is a
         /// week, so this one had nowhere to map.
         case monthly
@@ -229,6 +238,8 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         case .weekly: .localized("Weekly limit")
         case .spend: .localized("Spend limit")
         case .balance: .localized("Balance")
+        case .daily: .localized("Daily limit")
+        case .messages: .localized("Message allowance")
         case .monthly: .localized("Monthly limit")
         case .other(let seconds):
             seconds >= 86_400
@@ -307,6 +318,44 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
             return String.localized("\("\(Int((hours / 24).rounded()))") days")
         }
         return String.localized("\("\(Int(hours.rounded()))") hours")
+    }
+}
+
+/// The account and organization a route's figures belong to, as far as the
+/// route could establish them.
+///
+/// **Identity is not one field, and a user id is not an organization.** Devin's
+/// endpoint is scoped to an organization, while the plan row its app saves is
+/// keyed only by a user id — so two readings sharing a user id can still be two
+/// different organizations' allowances, and treating the user id as the whole
+/// answer mixes them. This carries route and organization beside the identity
+/// so a match has to agree on all three.
+struct UsageScope: Equatable, Codable, Sendable {
+    let route: UsageRoute
+    /// The organization the route was scoped to, when it named one. Nil for a
+    /// saved row, which names no organization at all.
+    let organization: String?
+    /// The account the route could name: a browser session's user id, the
+    /// account id in a saved row's key, or — for a pasted credential, which
+    /// names nobody — a hash of the credential, never the credential itself.
+    /// Nil is never a match.
+    let identity: String?
+
+    /// Whether one reading's figures describe the same account's same
+    /// allowance as another's.
+    ///
+    /// Every part has to agree, and an identity missing on either side is not
+    /// a wildcard — it is the absence of evidence, which is not a match.
+    static func match(_ a: UsageScope?, _ b: UsageScope?) -> Bool {
+        guard let a, let b, a.route == b.route, a.organization == b.organization,
+               let aIdentity = a.identity, let bIdentity = b.identity,
+               !aIdentity.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               !bIdentity.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { return false }
+        if a.route == .endpoint {
+            guard let organization = a.organization, !organization.isEmpty else { return false }
+        }
+        return aIdentity == bIdentity
     }
 }
 
@@ -418,6 +467,20 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
         /// used to be reported as "the service returned an error", which sends
         /// somebody to look for an outage instead of at their subscription.
         case zaiNoCodingPlan
+        /// Devin's figures come out of the cache its own app keeps, so an
+        /// app that has never run here has nothing to read. Its own case
+        /// because the remedy is to install or open something, not to sign in
+        /// to anything.
+        case devinAppMissing
+        /// The app has run here and its store holds no plan — never signed in,
+        /// or a build that stopped writing the row.
+        case devinPlanUnread
+        /// A token was pasted with no organisation beside it. The quota path
+        /// is scoped by one and nothing on this Mac carries it, so this is a
+        /// separate answer from a missing token: half of what is needed is
+        /// there, and saying "add a key" about a field that has one is the
+        /// kind of message that sends people to re-paste what already works.
+        case devinOrganizationMissing
         /// No key has been entered for a provider that needs one.
         case apiKeyMissing
         /// There is a key, and the service refused it.
@@ -460,6 +523,9 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             case .volcengineCLIMissing: .localized("Install arkcli and run `arkcli auth login`, or add access keys in Settings.")
             case .volcengineSignInRequired: .localized("arkcli isn't signed in. Run `arkcli auth login`.")
             case .zaiNoCodingPlan: .localized("That key works. The account has no Coding Plan running on it.")
+            case .devinAppMissing: .localized("Devin isn't installed.")
+            case .devinPlanUnread: .localized("Open Devin and sign in, so it can record your plan.")
+            case .devinOrganizationMissing: .localized("Add your Devin organization after the token, separated by a space.")
             case .apiKeyMissing: .localized("Add an API key in Settings.")
             case .apiKeyRefused: .localized("That key was refused. Check it in Settings.")
             case .unreachable: .localized("The service didn't respond.")
@@ -483,7 +549,9 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
     /// being enough once one of them could be signed in to twice.
     let account: AccountKey
     /// Ordered as the provider reports them; the first one drives the ring.
-    let windows: [UsageWindow]
+    ///
+    /// `var` because `current(at:)` drops the ones that have since reset.
+    var windows: [UsageWindow]
     let observedAt: Date?
     let state: State
     /// Plan name, when the provider names one.
@@ -501,10 +569,31 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
     var creditRemaining: CreditAmount?
 
     var origin: UsageRoute?
+    /// The account *and organization* the figures belong to, where the route
+    /// can name them.
+    ///
+    /// **Not the same as `account`.** `AccountKey` is Pulse's own rail slot —
+    /// one per login Pulse watches — while this is what the provider itself
+    /// said. Devin is the only provider that needs it: its two routes need not
+    /// answer for the same person *or the same organization*, and matching on a
+    /// user id alone was exactly the mistake this replaces. A route whose scope
+    /// cannot be established never matches another's.
+    var sourceScope: UsageScope?
     /// A stale status-line capture is not necessarily a cache replacement.
     var isCached = false
     /// Only the latest fetch carries attempts; the cache stores the origin alone.
     var attempts: [ConnectionDiagnostic.Attempt] = []
+
+    /// Whether two readings of this account must agree on their source scope
+    /// before one may stand in for the other.
+    ///
+    /// **Computed from the provider, never set at each return site.** A flag
+    /// written by hand was the earlier mistake: an expired snapshot, a missing
+    /// app, or a reading restored from disk does not go through the one return
+    /// that would have set it, so Devin was silently treated as shareable on
+    /// exactly the paths that mattered. Devin's two routes can name different
+    /// accounts and different organizations; every other provider's cannot.
+    var requiresScopeMatch: Bool { account.provider == .devin }
 
     /// Money the provider says is left, and what it is denominated in.
     struct CreditAmount: Equatable, Sendable {
@@ -590,6 +679,29 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
     /// no windows at all. Read as a failure, the cache kept handing back the
     /// previous reading and the setting appeared to do nothing.
     var reportsSomething: Bool { !windows.isEmpty || creditBalance != nil }
+
+    /// The reading as it stands at `now`: windows whose reset has passed are
+    /// gone, and a reading whose figures are older than the cache keeps is
+    /// gone entirely. Nil means nothing current survives.
+    ///
+    /// **Shared by the cache's write path and its read path.** The read path
+    /// has always filtered a restored reading this way; the write path did
+    /// not, so a service whose figures are a snapshot rather than a request —
+    /// Devin's come out of a row its own app writes at launch — could hand
+    /// the cache a live reading whose windows had already reset and whose
+    /// stamp was a day old, and it went straight to the rail. The same rule
+    /// now applies before those figures are ever banked or drawn.
+    func current(at now: Date) -> ProviderUsage? {
+        if let observedAt, now.timeIntervalSince(observedAt) > UsageCache.maximumAge { return nil }
+
+        let kept = windows.filter { ($0.resetsAt ?? .distantFuture) > now }
+        guard !kept.isEmpty || creditBalance != nil else { return nil }
+        guard kept.count != windows.count else { return self }
+
+        var copy = self
+        copy.windows = kept
+        return copy
+    }
 
     func headlineWindow(preferring id: String? = nil) -> UsageWindow? {
         if let id, let pinned = windows.first(where: { $0.id == id }) { return pinned }

@@ -6,6 +6,16 @@
 Sparkle 更新窗口继续只用英文 CHANGELOG.md —— 见 [Scripts/release-notes.py](Scripts/release-notes.py)。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.1.2
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **Devin 成为新的服务商。** 从 Chromium 浏览器会话读取每日、每周额度，无需钥匙串授权；无登录凭据时读取应用保存的带日期套餐。不同账户和组织的读数保持隔离。[说明](https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/devin.md)。
+- **Token 消耗统计。** 汇总 Claude Code、Codex、OpenCode、Kilo CLI、Grok Build、Kimi CLI 和 Devin CLI 的本机会话，按区间、Agent、模型、项目、会话和 token 类型查看。费用按公开 API 价格折算，不是订阅账单。[详情](https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend.md)。
+- **详情卡片展开、收起时不再沿胶囊漂移。**
+- **模型计价与别名**对齐各 Agent 实际写入的名称；快照与消费统计留在正确边界内。
+- **跨天会话**只计入所选区间；修正日志与数据库缓存更新、自定义会话标题读取。
+- **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.1.1
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。

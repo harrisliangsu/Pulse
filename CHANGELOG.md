@@ -10,6 +10,16 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.1.2
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Devin joins as a provider.** Daily and weekly quota come from a Chromium browser session (no keychain prompt). With no credential, Pulse reads the app’s dated saved plan. Account and organization boundaries stay isolated. [Setup](https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/devin.md).
+- **Token spend.** Local sessions from Claude Code, Codex, OpenCode, Kilo CLI, Grok Build, Kimi CLI and Devin CLI are grouped by span, agent, model, project, session and token kind. Costs use published API rates — not a subscription bill. [Details](https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend.md).
+- **Detail cards no longer drift** along the rail as they open and close.
+- **Model pricing and aliases** match the names agents actually write; snapshots and spending stay inside their proper bounds.
+- **Cross-midnight sessions** count only their in-range work; log/database cache updates and custom session titles are corrected.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.1.1
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。

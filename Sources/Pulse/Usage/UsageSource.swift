@@ -122,6 +122,13 @@ enum UsageSource: String, CaseIterable, Identifiable, Sendable {
              (_, .minimax), (_, .minimaxCN), (_, .copilot), (_, .commandCode), (_, .deepSeek):
             // Never shown either — one route, and it needs a key.
             .localized("Uses the key you entered.")
+        case (.endpoint, .devin):
+            .localized("Asks Devin for your quota, with the token you entered.")
+        case (.tooling, .devin):
+            .localized("Reads what Devin saved the last time it started.")
+        case (.desktopApp, .devin):
+            // Never shown: `options(for:)` offers it to Claude Code alone.
+            .localized("Use the endpoint when possible, the other route when not.")
         case (_, .grokBot):
             // Never shown: one route, and it borrows the login Cursor stored,
             // since Grok Bot is billed against that account.
