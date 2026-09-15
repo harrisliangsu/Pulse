@@ -24,6 +24,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     case qoder
     case commandCode
     case deepSeek
+    case devin
 
     var id: String { rawValue }
 
@@ -85,6 +86,11 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // The shop, not the model family: the balance belongs to the account
         // and is spent across whatever the key is pointed at.
         case .deepSeek: "DeepSeek"
+        // Cognition's agent. The Mac app is the renamed Windsurf editor and
+        // still identifies itself as `com.exafunction.windsurf`, but the plan,
+        // the quota and the account are Devin's, and Devin is what the reader
+        // subscribed to.
+        case .devin: "Devin"
         }
     }
 
@@ -121,6 +127,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // smudge, and this is the mark the product is recognised by anyway.
         case .commandCode: "commandcode"
         case .deepSeek: "deepseek"
+        case .devin: "devin"
         }
     }
 
@@ -143,8 +150,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // which is true today and better than a column of zeroes.
         case .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
-             .volcengine, .qoder, .commandCode, .deepSeek: false
-        }
+             .volcengine, .qoder, .commandCode, .deepSeek, .devin: false        }
     }
 
     /// Whether this provider's limits can be drawn as one ring per model
@@ -187,7 +193,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// have instead of the picker it needs.
     var hasSourceChoice: Bool {
         switch self {
-        case .claudeCode, .codex, .volcengine, .kimiCode: true
+        case .claudeCode, .codex, .volcengine, .kimiCode, .devin: true
         case .antigravity, .cursor, .openCodeGo, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot, .qoder,
              .commandCode, .deepSeek: false
@@ -226,7 +232,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // about elsewhere, so there is nothing here to state.
         case .claudeCode, .codex, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine, .qoder,
-             .commandCode, .deepSeek:
+             .commandCode, .deepSeek, .devin:
             nil
         }
     }
@@ -238,7 +244,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// anyone on the plan who doesn't run the CLI on this Mac.
     var usesAPIKey: Bool {
         [.openCodeGo, .kimiCode, .ollamaCloud, .zai, .glmCoding, .minimax, .minimaxCN, .volcengine, .qoder,
-         .commandCode, .deepSeek].contains(self)
+         .commandCode, .deepSeek, .devin].contains(self)
     }
 
     /// Whether this Mac can see the thing this provider is billing for.
@@ -274,6 +280,16 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// and calling it an API key in Settings would send people looking for one
     /// that does not exist.
     var usesSessionCookie: Bool { self == .ollamaCloud || self == .qoder }
+
+    /// Whether this provider's credential is read out of a browser rather than
+    /// out of another tool's files.
+    ///
+    /// **Not `usesSessionCookie`**, which is the narrower question of whether
+    /// what is read is a *cookie*. Devin's is a `localStorage` entry, which
+    /// lives in a different file in a different format and — because it is not
+    /// encrypted — needs no keychain permission. Both want the same row in
+    /// Settings: which browser, and a button to go and look.
+    var readsBrowserStorage: Bool { usesSessionCookie || self == .devin }
 
     /// Whether this provider can report anything at all without being set up.
     ///
@@ -313,6 +329,11 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // signed in, so its presence is evidence the CLI ran here and none at
         // all that there is an account to report on.
         case .commandCode: CommandCodeUsageService.storedKey() != nil
+        // The pasted token buys the *live* route; the app's own saved plan
+        // needs nothing at all, so an install is enough to have something to
+        // say. Without this, adding the paste field would have turned a
+        // working provider into one that waits for a credential.
+        case .devin: DevinUsageService.isInstalled()
         default: false
         }
     }
@@ -338,6 +359,10 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         return switch self {
         case .grok: FileManager.default.fileExists(atPath: home.appending(path: ".grok").path)
         case .grokBot: CursorAppLogin.hasStoredLogin()
+        // Nothing is pasted for Devin and nothing is signed in to: the app's
+        // own store is the only source, so an app that has never run here
+        // would put a permanently empty ring on the rail.
+        case .devin: DevinUsageService.isInstalled()
         default: true
         }
     }
@@ -422,6 +447,14 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // question is about whether there is an account behind it.
         if CommandCodeUsageService.storedKey() != nil {
             found.insert(.commandCode)
+        }
+
+        // Devin's own store, rather than the bundle: the plan is read from the
+        // app's global state, so a machine that has the app but has never run
+        // it has nothing to report — and one that ran it before the app was
+        // moved or renamed still does.
+        if DevinUsageService.isInstalled() {
+            found.insert(.devin)
         }
 
         return found

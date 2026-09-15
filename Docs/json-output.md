@@ -10,7 +10,7 @@ Source: [`Sources/Pulse/Usage/UsageReport.swift`](../Sources/Pulse/Usage/UsageRe
 
 ## It prints the cache and never fetches
 
-A status line polls every couple of seconds. Seventeen providers cannot be asked at that rate, and a command that opened network connections and touched the keychain every time a terminal redrew would be a worse citizen than no command at all.
+A status line polls every couple of seconds. Eighteen providers cannot be asked at that rate, and a command that opened network connections and touched the keychain every time a terminal redrew would be a worse citizen than no command at all.
 
 So this reads what the **running app** last banked and says how old it is. Every account carries `observedAt` and `ageSeconds`; decide for yourself what counts as too old. With the app not running the figures simply stop moving — they are never presented as current. An installation where the app has never run prints an empty rail rather than a guess at what would be switched on.
 
@@ -20,7 +20,7 @@ It **reads and never writes**. `AppSettings.storedRail()` exists for this: `rest
 
 Window names are localized in the app and would change under a script's feet, so `UsageWindow.name` is **not a field**. What is there instead:
 
-- `kind` — a flat token: `fiveHour`, `weekly`, `spend`, `monthly`, `balance`, or `other:<seconds>`. `balance` is prepaid credit, which is **not a limit**: it never turns over, so `reportsLength` is false and `resetsAt` is null on those rows ([providers/deepseek.md](providers/deepseek.md)). `UsageWindow.Kind` is `Codable`, but its synthesised form is an object with an associated value in it; fine on disk, awkward in a `jq` filter.
+- `kind` — a flat token: `fiveHour`, `daily`, `weekly`, `monthly`, `spend`, `balance`, `messages`, or `other:<seconds>`. `messages` is an allowance counted in messages rather than in time ([providers/devin.md](providers/devin.md)): no window, no reset, `reportsLength` false. `balance` is prepaid credit, which is **not a limit**: it never turns over, so `reportsLength` is false and `resetsAt` is null on those rows ([providers/deepseek.md](providers/deepseek.md)). `UsageWindow.Kind` is `Codable`, but its synthesised form is an object with an associated value in it; fine on disk, awkward in a `jq` filter.
 - `scope`, `name` — product names, the same in every language.
 - `estimated` / `estimatedFrom` — true where the provider said how much of an allowance is **left** and never how large it is, so the denominator behind `usedFraction` was inferred; `estimatedFrom` is a stable token saying which inference — `planPrice` ([providers/command-code.md](providers/command-code.md)), `sinceTopUp` or `yourBudget` ([providers/deepseek.md](providers/deepseek.md)). The wording that marks it on screen is localized; neither of these is, which is why they are not folded into `scope`.
 - `label` — the user's own name for an added account, theirs to have written in any language.

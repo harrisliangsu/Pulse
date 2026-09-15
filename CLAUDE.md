@@ -2,7 +2,7 @@
 
 AI entry for this repo. Human workflow, evidence rules, and the docs map live in [CONTRIBUTING.md](CONTRIBUTING.md) and [Docs/README.md](Docs/README.md). Change the **authoritative topic doc** in the same patch as the code; do not grow this file.
 
-Pulse is a macOS menu-bar usage monitor. SwiftUI draws the panel; a transparent, non-activating AppKit `NSPanel` owns size, placement, and input. Seventeen providers, no Pulse backend, no Pulse account. Per-provider routes, auth, cookies, and extra logins: [Docs/providers/README.md](Docs/providers/README.md).
+Pulse is a macOS menu-bar usage monitor. SwiftUI draws the panel; a transparent, non-activating AppKit `NSPanel` owns size, placement, and input. Eighteen providers, no Pulse backend, no Pulse account. Per-provider routes, auth, cookies, and extra logins: [Docs/providers/README.md](Docs/providers/README.md).
 
 Sources sit in six directories under `Sources/Pulse`: **App** (lifecycle, settings store, updates), **Panel** (the window, its placement, and everything drawn in it), **Settings** (the settings window), **Usage** (store, cache, ledger, forecast, alerts), **Providers** (one service per product, plus their helpers), **Auth** (keys, logins, cookies). Swift has no directory namespace and SwiftPM recurses, so a file's directory is a claim about what it belongs to and nothing else — move a file when that claim stops being true.
 
@@ -51,6 +51,7 @@ Treat remaining warnings as failures. macOS 14+, Swift tools 6.0, no linter. **`
 | Glass, rings, colour, activity mark | [Docs/ui/rings-and-surface.md](Docs/ui/rings-and-surface.md) |
 | Settings window copy/layout | [Docs/ui/settings.md](Docs/ui/settings.md) |
 | Refresh, cache, activity, ledger | [Docs/refresh-and-data.md](Docs/refresh-and-data.md) |
+| Token spend pane, agents, spend readers | [Docs/token-spend.md](Docs/token-spend.md) |
 | Notifications, alert rules | [Docs/notifications.md](Docs/notifications.md) |
 | What is tested, fixtures | [Docs/testing.md](Docs/testing.md) |
 | `--json` output contract | [Docs/json-output.md](Docs/json-output.md) |
@@ -62,4 +63,4 @@ Treat remaining warnings as failures. macOS 14+, Swift tools 6.0, no linter. **`
 
 ## Current facts (verify in code if they matter)
 
-Eighteen `Provider` cases (includes fork-only Qoder plus upstream Command Code and DeepSeek). Extra accounts: Claude Code, Codex, Grok, Grok Bot, and Kimi Code (`supportsMultipleAccounts`). Adaptive refresh is a **one-shot** timer, **2–30 minutes** (`AdaptiveRefresh.floor` 120s / `ceiling` 1800s) — not a 60s loop. Liquid Glass drag: historical “material swallows input” diagnosis is **uncertain**; current approach is a hit-testable `PanelSurface` plus window `sendEvent`. Real-input verification is not claimed. Settings still say to drag by a ring while glass is on.
+Nineteen `Provider` cases (includes fork-only Qoder plus upstream Command Code, DeepSeek, and Devin). Extra accounts: Claude Code, Codex, Grok, Grok Bot, and Kimi Code (`supportsMultipleAccounts`). Adaptive refresh is a **one-shot** timer, **2–30 minutes** (`AdaptiveRefresh.floor` 120s / `ceiling` 1800s) — not a 60s loop. Liquid Glass drag: historical “material swallows input” diagnosis is **uncertain**; current approach is a hit-testable `PanelSurface` plus window `sendEvent`. Real-input verification is not claimed. Settings still say to drag by a ring while glass is on.

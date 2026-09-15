@@ -28,8 +28,12 @@ enum ConnectionRemedy: Equatable {
         case .claudeDesktopNotSignedIn, .claudeDesktopSessionExpired: return .openApp("Claude")
         case .cursorSignInRequired, .cursorLoginExpired: return .openApp("Cursor")
         case .antigravityNotRunning, .antigravityNotAnswering: return .openApp("Antigravity")
+        // The remedy for both is the same thing: start it. A plan it has never
+        // recorded is one sign-in away, and opening the app is the step before
+        // that either way.
+        case .devinAppMissing, .devinPlanUnread: return .openApp("Devin")
         case .notSignedIn, .signedOut, .kimiSignInRequired, .kimiLoginExpired: return .signIn
-        case .apiKeyMissing, .apiKeyRefused: return .editCredential
+        case .apiKeyMissing, .apiKeyRefused, .devinOrganizationMissing: return .editCredential
         case .ollamaSessionMissing, .ollamaSessionExpired,
              .qoderSessionMissing, .qoderSessionExpired: return .readBrowser
         case .claudeDesktopKeyRefused, .unreachable, .rateLimited, .serverError,
@@ -71,6 +75,7 @@ enum ConnectionRemedy: Equatable {
         case .commandCode: "command-code"
         case .deepSeek: "deepseek"
         case .qoder: "qoder"
+        case .devin: "devin"
         }
         // Fork docs live here; upstream help links would send people to the wrong repo.
         return URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/\(page).md")!

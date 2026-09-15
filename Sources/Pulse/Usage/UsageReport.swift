@@ -189,6 +189,8 @@ enum UsageReport {
             case .weekly: "weekly"
             case .spend: "spend"
             case .balance: "balance"
+            case .daily: "daily"
+            case .messages: "messages"
             case .monthly: "monthly"
             case .other(let seconds): "other:\(seconds)"
             }

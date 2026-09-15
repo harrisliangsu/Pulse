@@ -42,6 +42,8 @@ body:
         - Volcengine
         - Command Code
         - DeepSeek
+        - Qoder
+        - Devin
         - The panel itself · 面板本身，不是某个服务
     validations:
       required: true
@@ -100,7 +102,7 @@ body:
       placeholder: |
         1.
         2.
-        Every refresh / happened once: 
+        Every refresh / happened once:
     validations:
       required: false
 

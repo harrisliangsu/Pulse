@@ -75,13 +75,32 @@ struct SettingsView: View {
     @FocusState private var credentialFocused: Bool
     @State private var repairMessages: [String: String] = [:]
     @State private var connectionFocusRequest = 0
+    /// Every agent's spending, for the pane that is not about one provider.
+    /// Its own state rather than something derived from `ledgers`, which is
+    /// filled one account at a time as their panes are opened.
+    @State private var spend = SpendSummary()
+    @State private var spendSpan = SpendSpan.default
+    @State private var isScanningSpend = false
+    /// The agent the spend pane is looking at on its own, and that agent's own
+    /// figures. Kept beside the combined ones rather than derived on the fly:
+    /// both come out of the same ledgers and the same span, so they cannot
+    /// disagree about what a month is.
+    @State private var spendFocus: SpendAgent?
+    @State private var focusedSpend = SpendSummary()
+    @State private var spendLedgers: [SpendAgent: UsageLedger] = [:]
 
     var body: some View {
         NavigationSplitView {
             List(selection: $navigation.pane) {
-                if matches(.general) {
+                if matches(.general) || matches(.spend) {
                     Section(String.localized("Panel")) {
-                        row(.general)
+                        if matches(.general) { row(.general) }
+                        // Above the accounts, not below them. Eighteen
+                        // provider rows is more than a sidebar shows at once,
+                        // and a pane whose whole subject is "all of them
+                        // together" was landing under the fold — reachable
+                        // only by scrolling past the thing it summarises.
+                        if matches(.spend) { row(.spend) }
                     }
                 }
 
@@ -125,7 +144,8 @@ struct SettingsView: View {
                 prompt: Text(localized: "Search")
             )
             .overlay {
-                if isSearching, matchingAccounts.isEmpty, !matches(.general), !matches(.about), !matches(.integrations) {
+                if isSearching, matchingAccounts.isEmpty, !matches(.general), !matches(.spend),
+                   !matches(.about), !matches(.integrations) {
                     Text(localized: "No matches")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
@@ -141,6 +161,15 @@ struct SettingsView: View {
                         switch pane {
                         case .general: general
                         case .account(let account): accountPane(account)
+                        case .spend:
+                            TokenSpendView(
+                                summary: spend,
+                                focus: $spendFocus,
+                                focused: focusedSpend,
+                                span: $spendSpan,
+                                isLoading: isScanningSpend,
+                                refresh: { Task { await loadSpend(refresh: true) } }
+                            )
                         case .about: about
                         case .integrations: DeveloperIntegrationsView(settings: settings)
                         }
@@ -152,6 +181,16 @@ struct SettingsView: View {
                 // Keyed on the pane and enabled state, so enabling an account
                 // also reconsiders its history's empty-state explanation.
                 .task(id: historyKey) { await loadHistory() }
+                // Opening the pane reads; changing the span only re-adds up
+                // what has already been read, which is why the refresh is not
+                // forced here and is a button instead.
+                // **Two tasks, because they cost different things.** Reading
+                // every agent's store is seconds on a cold launch; adding the
+                // numbers up again for a different span is microseconds. Keyed
+                // together, changing the span put the spinner back on screen
+                // and made a cached read look like a rescan.
+                .task(id: spendLoadKey) { await loadSpend() }
+                .onChange(of: spendKey) { _, _ in recomputeSpend() }
                 .onChange(of: connectionFocusRequest) {
                     proxy.scrollTo("connection", anchor: .top)
                     credentialFocused = true
@@ -226,7 +265,7 @@ struct SettingsView: View {
             switch pane {
             case .account(let account):
                 LobeIconView(provider: account.provider, size: 14)
-            case .general, .about, .integrations:
+            case .general, .spend, .about, .integrations:
                 Image(systemName: pane.symbol)
             }
         }
@@ -804,7 +843,17 @@ struct SettingsView: View {
     /// the way is discarded unseen.
     /// Names the browser about to be opened, and warns when opening it will
     /// ask for the keychain.
-    private static func browserHint(_ chosen: BrowserCookies.Browser?) -> String {
+    private static func browserHint(_ chosen: BrowserCookies.Browser?, for provider: Provider) -> String {
+        // A `localStorage` entry is not encrypted, so nothing is ever asked
+        // for and the hint must not say it might be.
+        guard provider.usesSessionCookie else {
+            if let chosen { return String.localized("Only \(chosen.name).") }
+            guard let first = ChromiumLocalStorage.present().first else {
+                return String.localized("Finds it in the browser you signed in with.")
+            }
+            return String.localized("Starts with \(first.name).")
+        }
+
         // Named, it is the only one opened — the rest are not tried, so a
         // failure is reported rather than answered from a browser the user
         // never signed in to. That is the same bargain `UsageSource` makes.
@@ -827,6 +876,14 @@ struct SettingsView: View {
     }
 
     private func readSession(for account: AccountKey) {
+        // Devin's credential is not a cookie and is not saved: the service
+        // reads it from the browser on every pass, so this button's job is to
+        // say whether there is one to read and where it was found.
+        guard account.provider.usesSessionCookie else {
+            readBrowserStorage(for: account)
+            return
+        }
+
         // Named, that one and no other. Left automatic, the default browser
         // leads and the rest follow.
         let browsers = settings.sessionBrowser(for: account).map { [$0] } ?? BrowserCookies.present()
@@ -877,6 +934,36 @@ struct SettingsView: View {
                     ? String.localized("No Qoder session found. Sign in at qoder.com first.")
                     : String.localized("No Ollama session found. Sign in at ollama.com first.")
             }
+        }
+    }
+
+    /// Devin: look now, say what was found, and ask for a refresh.
+    ///
+    /// **Nothing is stored.** A saved copy would be a second place for the
+    /// session to go stale and the one that cannot renew itself; reading it
+    /// each pass costs about forty milliseconds and is always current.
+    private func readBrowserStorage(for account: AccountKey) {
+        let chosen = settings.sessionBrowser(for: account)
+        guard !(chosen.map { [$0] } ?? ChromiumLocalStorage.present()).isEmpty else {
+            sessionMessage = String.localized("No Chromium browser was found.")
+            return
+        }
+
+        Task {
+            // Off the main thread: it opens every table in a browser profile's
+            // storage, and the settings window should not freeze while it does.
+            let found = await Task.detached(priority: .userInitiated) {
+                DevinUsageService.fromBrowser(chosen)
+            }.value
+
+            guard pane == .account(account) else { return }
+            guard let found else {
+                sessionMessage = String.localized("No Devin session found. Sign in at app.devin.ai first.")
+                return
+            }
+
+            sessionMessage = String.localized("Read from \(found.browser.name).")
+            store.refresh(account)
         }
     }
 
@@ -1131,6 +1218,56 @@ struct SettingsView: View {
     private var historyKey: String {
         guard case .account(let account) = pane else { return "\(pane)" }
         return "\(account.id)|\(settings.isEnabled(account))"
+    }
+
+    /// What the combined figures depend on: the pane being open, and how far
+    /// back it is counting.
+    /// What a *read* depends on: only whether the pane is open.
+    private var spendLoadKey: String {
+        if case .spend = pane { return "spend" }
+        return "-"
+    }
+
+    /// What the *figures* depend on, which is read back out of what was loaded.
+    private var spendKey: String {
+        guard case .spend = pane else { return "-" }
+        return "\(spendSpan.rawValue)|\(spendFocus?.rawValue ?? "")"
+    }
+
+    /// Every agent's ledger, added up.
+    ///
+    /// **Rescanning is the button, not the default.** Going through a few
+    /// hundred megabytes of transcripts on every pane switch would make this
+    /// the slowest thing in the window; `UsageLedgerReader` already caches one
+    /// ledger per provider, and reusing them is arithmetic.
+    private func loadSpend(refresh: Bool = false) async {
+        guard case .spend = pane else { return }
+        // Nothing to say about a read that is already in hand: the actor's
+        // own cache answers, and flipping the spinner for it is what made a
+        // cached page look like a rescan.
+        let wasEmpty = spendLedgers.isEmpty
+        if wasEmpty || refresh { isScanningSpend = true }
+        defer { isScanningSpend = false }
+
+        // Every agent that has left a record on this Mac, which is a wider
+        // list than the providers with rings: `AgentLedgers` delegates the two
+        // Pulse already reads and parses the rest itself.
+        let ledgers = await AgentLedgers.shared.ledgers(refresh: refresh)
+        guard !Task.isCancelled else { return }
+
+        spendLedgers = ledgers
+        recomputeSpend()
+    }
+
+    /// The same function over the same ledgers, twice: once for everything and
+    /// once for the agent being looked at. Deriving the second from the first
+    /// would mean a second way of counting a span, and two ways of counting
+    /// one thing eventually disagree.
+    private func recomputeSpend() {
+        spend = SpendSummary.of(spendLedgers, overLast: spendSpan.days)
+        focusedSpend = spendFocus.map { agent in
+            SpendSummary.of(spendLedgers.filter { $0.key == agent }, overLast: spendSpan.days)
+        } ?? SpendSummary()
     }
 
     private func loadHistory() async {
@@ -1444,6 +1581,11 @@ struct SettingsView: View {
             .localized("From commandcode.ai. Optional — Pulse can use the login Command Code saved. Stored encrypted on this Mac.")
         case .deepSeek:
             .localized("From platform.deepseek.com. Stored encrypted on this Mac.")
+        // Two values in one field, because the quota path is scoped by an
+        // organisation and nothing on this Mac carries one. Optional, like
+        // Volcengine's: without it Pulse reads the plan Devin's own app saved.
+        case .devin:
+            .localized("A Bearer token from app.devin.ai, then a space, then your organization. Optional — Pulse can read what Devin's app saved. Stored encrypted on this Mac.")
         default:
             .localized("Stored encrypted on this Mac.")
         }
@@ -1567,7 +1709,12 @@ struct SettingsView: View {
                         ? String.localized("Session cookie")
                         : account.provider.usesKeyPair
                             ? String.localized("Access keys")
-                            : String.localized("API key"),
+                            // Devin's is a token *and* an organization, and
+                            // calling it an API key sends people looking for a
+                            // page that issues one. There isn't one.
+                            : account.provider == .devin
+                                ? String.localized("Token and organization")
+                                : String.localized("API key"),
                     subtitle: Self.keySubtitle(for: account.provider)
                 ) {
                     HStack(spacing: 8) {
@@ -1585,7 +1732,7 @@ struct SettingsView: View {
                 // Only where a browser session *is* the credential. Every
                 // other provider borrows a login its own tool stored, and none
                 // of them should be going through anybody's cookies to do it.
-                if account.provider.usesSessionCookie {
+                if account.provider.readsBrowserStorage {
                     SettingsRowDivider()
 
                     SettingsRow(
@@ -1594,7 +1741,8 @@ struct SettingsView: View {
                         // Chromium keeps its cookies under a key in the login
                         // keychain, and being told a second before the dialog
                         // appears is the difference between a step and a scare.
-                        subtitle: sessionMessage ?? Self.browserHint(settings.sessionBrowser(for: account))
+                        subtitle: sessionMessage
+                            ?? Self.browserHint(settings.sessionBrowser(for: account), for: account.provider)
                     ) {
                         HStack(spacing: 8) {
                             Picker("", selection: Binding(
@@ -1609,7 +1757,12 @@ struct SettingsView: View {
                                 // Only what is actually installed. A browser
                                 // that isn't there is a choice that can only
                                 // fail.
-                                ForEach(BrowserCookies.present()) { browser in
+                                // Devin's is in a LevelDB, which only the
+                                // Chromium browsers keep — offering Safari or
+                                // Firefox there is a choice that cannot work.
+                                ForEach(account.provider.usesSessionCookie
+                                    ? BrowserCookies.present()
+                                    : ChromiumLocalStorage.present()) { browser in
                                     Text(browser.name).tag(BrowserCookies.Browser?.some(browser))
                                 }
                             }
@@ -2253,12 +2406,19 @@ struct SettingsView: View {
 enum SettingsPane: Hashable {
     case general
     case account(AccountKey)
+    /// Every agent's spending added up — a pane whose subject is not a
+    /// provider, which is why it sits outside the accounts rather than inside
+    /// one of them.
+    case spend
     case about
     case integrations
 
     var title: String {
         switch self {
         case .general: .localized("General")
+        // Not "Usage history", which is what a provider's own card is called.
+        // Two panes with one name is two places to look for one thing.
+        case .spend: .localized("Token spend")
         // Brand names, left as they are in every language.
         // A fallback: the view titles these from the account's own label.
         case .account(let account): account.provider.displayName
@@ -2272,6 +2432,7 @@ enum SettingsPane: Hashable {
     var symbol: String {
         switch self {
         case .general: "slider.horizontal.3"
+        case .spend: "chart.bar"
         case .account: "square.stack.3d.up"
         case .about: "info.circle"
         case .integrations: "terminal"
