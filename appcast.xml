@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>en</language>
         <item>
+            <title>1.1.2</title>
+            <pubDate>Tue, 15 Sep 2026 01:45:49 -0000</pubDate>
+            <sparkle:version>1.1.2</sparkle:version>
+            <sparkle:shortVersionString>1.1.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.1.2</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.1.2</h2><ul><li><strong>This repository (<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>) is the update source.</strong> Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.</li><li><strong>Devin joins as a provider.</strong> Daily and weekly quota come from a Chromium browser session (no keychain prompt). With no credential, Pulse reads the app’s dated saved plan. Account and organization boundaries stay isolated. <a href="https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/devin.md">Setup</a>.</li><li><strong>Token spend.</strong> Local sessions from Claude Code, Codex, OpenCode, Kilo CLI, Grok Build, Kimi CLI and Devin CLI are grouped by span, agent, model, project, session and token kind. Costs use published API rates — not a subscription bill. <a href="https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend.md">Details</a>.</li><li><strong>Detail cards no longer drift</strong> along the rail as they open and close.</li><li><strong>Model pricing and aliases</strong> match the names agents actually write; snapshots and spending stay inside their proper bounds.</li><li><strong>Cross-midnight sessions</strong> count only their in-range work; log/database cache updates and custom session titles are corrected.</li><li><strong>Fork-only pieces kept:</strong> Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.1.2">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.1.2/Pulse-1.1.2.zip"
+                       length="6213851"
+                       type="application/octet-stream"
+                       sparkle:edSignature="xXi0GN2e8GQ1lyTBUVVUuLEwhl52b59fT4+izAmnZ1cPLSno2uxyjDTQ0UmzSEfwrsVtjj4AORqL11oDixQxAw==" />
+        </item>
+        <item>
             <title>1.1.1</title>
             <pubDate>Mon, 14 Sep 2026 01:46:49 -0000</pubDate>
             <sparkle:version>1.1.1</sparkle:version>
