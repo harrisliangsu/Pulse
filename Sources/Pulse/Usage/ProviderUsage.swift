@@ -42,7 +42,9 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         var celebratesReset: Bool {
             switch self {
             case .weekly, .monthly: true
-            case .fiveHour, .spend, .balance, .other: false
+            // Daily rolls over every day; message allowances have no reset —
+            // neither is something a ribbon should celebrate.
+            case .fiveHour, .spend, .balance, .daily, .messages, .other: false
             }
         }
     }
