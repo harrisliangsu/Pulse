@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Reads one version's entry out of CHANGELOG.md.
+"""Reads one version's entry out of CHANGELOG.md or CHANGELOG.zh-CN.md.
 
-Two things show a user what changed, and they must not drift apart: the GitHub
-release page and Sparkle's update window. Both take their text from here.
+GitHub Release notes are bilingual (Chinese first) via release-notes.py.
+Sparkle's update window on this fork prefers Chinese from CHANGELOG.zh-CN.md
+(with English CHANGELOG.md as fallback).
 
 Usage:
-    Scripts/changelog.py 1.0.3            # the entry, as markdown
-    Scripts/changelog.py 1.0.3 --html     # the same, as the feed carries it
+    Scripts/changelog.py 1.0.3            # English entry (CHANGELOG.md)
+    Scripts/changelog.py 1.0.3 --zh       # Chinese entry (CHANGELOG.zh-CN.md)
+    Scripts/changelog.py 1.0.3 --html     # HTML for the Sparkle feed
+    Scripts/changelog.py 1.0.3 --zh --html
 
 **The entry is deliberately hand-written.** Generating it from commit subjects
 was tried and is wrong: this repository takes direct commits, so the list runs
@@ -26,14 +29,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CHANGELOG = ROOT / "CHANGELOG.md"
+CHANGELOG_ZH = ROOT / "CHANGELOG.zh-CN.md"
 
 
-def entry(version: str) -> str | None:
+def entry(version: str, path: Path | None = None) -> str | None:
     """The markdown under `## <version>`, up to the next version heading."""
-    if not CHANGELOG.exists():
+    changelog = path or CHANGELOG
+    if not changelog.exists():
         return None
 
-    text = CHANGELOG.read_text()
+    text = changelog.read_text()
     pattern = rf"^## {re.escape(version)}\s*$(.*?)(?=^## |\Z)"
     match = re.search(pattern, text, re.M | re.S)
     if not match:
@@ -104,9 +109,12 @@ def main() -> None:
         sys.exit(__doc__)
 
     version = sys.argv[1]
-    found = entry(version)
+    use_zh = "--zh" in sys.argv
+    path = CHANGELOG_ZH if use_zh else CHANGELOG
+    found = entry(version, path)
     if not found:
-        sys.exit(f"CHANGELOG.md has no entry for {version}")
+        label = "CHANGELOG.zh-CN.md" if use_zh else "CHANGELOG.md"
+        sys.exit(f"{label} has no entry for {version}")
 
     print(as_html(found) if "--html" in sys.argv else found)
 

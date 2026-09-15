@@ -66,7 +66,7 @@ SKELETON = f"""<?xml version="1.0" encoding="utf-8"?>
         <title>Pulse</title>
         <link>{FEED_URL}</link>
         <description>Updates for Pulse.</description>
-        <language>en</language>
+        <language>zh-CN</language>
     </channel>
 </rss>
 """
@@ -168,8 +168,11 @@ def description(version: str, previous: str | None) -> str:
     not a link the user clicks, it is a page Sparkle loads into the update
     window — so the whole GitHub release page, navigation bars and all, was
     rendered inside a small panel, and showed nothing at all without a network.
+
+    This fork prefers Chinese (`CHANGELOG.zh-CN.md`) so the update dialog
+    matches a Chinese Mac UI; English is the fallback if the ZH entry is missing.
     """
-    written = changelog.entry(version)
+    written = changelog.entry(version, changelog.CHANGELOG_ZH) or changelog.entry(version)
     if written:
         listing = changelog.as_html(written)
     else:
@@ -177,7 +180,7 @@ def description(version: str, previous: str | None) -> str:
         body = "".join(f"<li>{html.escape(line)}</li>" for line in items)
         listing = f"<ul>{body}</ul>" if body else ""
 
-    link = f'<p><a href="{REPO}/releases/tag/v{version}">Release notes on GitHub</a></p>'
+    link = f'<p><a href="{REPO}/releases/tag/v{version}">在 GitHub 查看更新说明</a></p>'
     inner = f"{STYLE}<h2>Pulse {html.escape(version)}</h2>{listing}{link}"
 
     # A CDATA section cannot contain its own terminator; nothing here should
@@ -221,7 +224,7 @@ def main() -> None:
         return
 
     # Newest first, which is the order Sparkle and every feed reader expect.
-    anchor = "        <language>en</language>\n"
+    anchor = "        <language>zh-CN</language>\n"
     if anchor not in feed:
         sys.exit("appcast.xml is not in the shape this expects — check it by hand.")
 

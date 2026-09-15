@@ -3,7 +3,7 @@
 每个版本改了什么，写给正在决定要不要装的人看。
 
 本文件是 GitHub Release **中文**正文的来源；英文仍见 [CHANGELOG.md](CHANGELOG.md)。
-Sparkle 更新窗口继续只用英文 CHANGELOG.md —— 见 [Scripts/release-notes.py](Scripts/release-notes.py)。
+Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
 ## 1.1.2

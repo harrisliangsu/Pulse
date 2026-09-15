@@ -2,9 +2,9 @@
 
 **Status:** still in force (split by audience). **Evidence:** historical Sparkle/GitHub mistakes; current scripts.
 
-`CHANGELOG.md` (English) remains the Sparkle update window. The GitHub Release page is **bilingual, Chinese first**: `Scripts/release-notes.py` reads `CHANGELOG.zh-CN.md` and `CHANGELOG.md` and emits the same shape as upstream qunqin24/Pulse release pages (language anchors, install copy, Full Changelog compare against this fork). The workflow refuses to start without a matching `##` section in **both** files, *before* it builds, so a forgotten entry costs a re-tag rather than a release whose notes went out wrong.
+`CHANGELOG.zh-CN.md` (Chinese) is the Sparkle update window on this fork; English `CHANGELOG.md` is the fallback. The GitHub Release page is **bilingual, Chinese first**: `Scripts/release-notes.py` reads `CHANGELOG.zh-CN.md` and `CHANGELOG.md` and emits the same shape as upstream qunqin24/Pulse release pages (language anchors, install copy, Full Changelog compare against this fork). The workflow refuses to start without a matching `##` section in **both** files, *before* it builds, so a forgotten entry costs a re-tag rather than a release whose notes went out wrong.
 
-Notes used to be `sparkle:releaseNotesLink` pointing at the GitHub release page. Sparkle loads that into a WebView **inside** the update window, so the whole GitHub page rendered in a small panel and showed nothing offline. The item carries `<description>` instead; if both are present the **link wins**, so the link must be absent. Keeping Sparkle on English-only changelog HTML avoids shipping a bilingual WebView blob into the update dialog.
+Notes used to be `sparkle:releaseNotesLink` pointing at the GitHub release page. Sparkle loads that into a WebView **inside** the update window, so the whole GitHub page rendered in a small panel and showed nothing offline. The item carries `<description>` instead; if both are present the **link wins**, so the link must be absent. Sparkle stays on a single-language HTML blob (Chinese first) so the dialog stays readable without a bilingual WebView dump.
 
 Generating copy from commit subjects was tried: this repo takes direct commits, so the range ran to ~40 subjects a release, half of them “Update README”. Kept only as a fallback so a forgotten entry ships something rather than an empty dialog.
 

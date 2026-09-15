@@ -4,7 +4,7 @@
         <title>Pulse</title>
         <link>https://raw.githubusercontent.com/harrisliangsu/Pulse/main/appcast.xml</link>
         <description>Updates for Pulse.</description>
-        <language>en</language>
+        <language>zh-CN</language>
         <item>
             <title>1.1.2</title>
             <pubDate>Tue, 15 Sep 2026 01:45:49 -0000</pubDate>
@@ -17,7 +17,7 @@
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Pulse 1.1.2</h2><ul><li><strong>This repository (<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>) is the update source.</strong> Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.</li><li><strong>Devin joins as a provider.</strong> Daily and weekly quota come from a Chromium browser session (no keychain prompt). With no credential, Pulse reads the app’s dated saved plan. Account and organization boundaries stay isolated. <a href="https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/devin.md">Setup</a>.</li><li><strong>Token spend.</strong> Local sessions from Claude Code, Codex, OpenCode, Kilo CLI, Grok Build, Kimi CLI and Devin CLI are grouped by span, agent, model, project, session and token kind. Costs use published API rates — not a subscription bill. <a href="https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend.md">Details</a>.</li><li><strong>Detail cards no longer drift</strong> along the rail as they open and close.</li><li><strong>Model pricing and aliases</strong> match the names agents actually write; snapshots and spending stay inside their proper bounds.</li><li><strong>Cross-midnight sessions</strong> count only their in-range work; log/database cache updates and custom session titles are corrected.</li><li><strong>Fork-only pieces kept:</strong> Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.1.2">Release notes on GitHub</a></p>]]></description>
+</style><h2>Pulse 1.1.2</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>Devin 成为新的服务商。</strong> 从 Chromium 浏览器会话读取每日、每周额度，无需钥匙串授权；无登录凭据时读取应用保存的带日期套餐。不同账户和组织的读数保持隔离。<a href="https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/devin.md">说明</a>。</li><li><strong>Token 消耗统计。</strong> 汇总 Claude Code、Codex、OpenCode、Kilo CLI、Grok Build、Kimi CLI 和 Devin CLI 的本机会话，按区间、Agent、模型、项目、会话和 token 类型查看。费用按公开 API 价格折算，不是订阅账单。<a href="https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend.md">详情</a>。</li><li><strong>详情卡片展开、收起时不再沿胶囊漂移。</strong></li><li><strong>模型计价与别名</strong>对齐各 Agent 实际写入的名称；快照与消费统计留在正确边界内。</li><li><strong>跨天会话</strong>只计入所选区间；修正日志与数据库缓存更新、自定义会话标题读取。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.1.2">在 GitHub 查看更新说明</a></p>]]></description>
             <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.1.2/Pulse-1.1.2.zip"
                        length="6213851"
                        type="application/octet-stream"

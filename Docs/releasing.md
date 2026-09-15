@@ -8,7 +8,7 @@ Toolchain and local `swift build`: [build-from-source.md](build-from-source.md).
 
 The version lives in `VERSION` and nowhere else. Tag `v$(cat VERSION)`. The update check reads GitHub’s latest release tag against `CFBundleShortVersionString`.
 
-**Pushing a tag is the whole release.** Both `CHANGELOG.md` and `CHANGELOG.zh-CN.md` need a `## x.y.z` section **before** the tag: the workflow stops without either, before it builds. GitHub Release notes are **bilingual, Chinese first**, built by `Scripts/release-notes.py`. Sparkle's update window still uses the **English** `CHANGELOG.md` only. Generating notes from commit subjects is a fallback for forgotten English entries in older tooling, not the path for a tagged release.
+**Pushing a tag is the whole release.** Both `CHANGELOG.md` and `CHANGELOG.zh-CN.md` need a `## x.y.z` section **before** the tag: the workflow stops without either, before it builds. GitHub Release notes are **bilingual, Chinese first**, built by `Scripts/release-notes.py`. Sparkle's update window uses **Chinese** `CHANGELOG.zh-CN.md` first (English `CHANGELOG.md` as fallback). Generating notes from commit subjects is a fallback for forgotten English entries in older tooling, not the path for a tagged release.
 
 ```bash
 # CHANGELOG.md and CHANGELOG.zh-CN.md first. Then:
@@ -69,4 +69,4 @@ Sparkle updates from the **zip**, not the DMG. The image is for people.
 - Public key: `Scripts/sparkle-public-key.txt` (committed). Private key: `SPARKLE_PRIVATE_KEY` only.
 - `Scripts/appcast.py` signs the zip and appends to `appcast.xml`. The workflow commits the feed **after** publishing (the feed points at the release asset).
 
-`Scripts/changelog.py` converts one English CHANGELOG section to HTML for Sparkle. Grammar: bullets, `**bold**`, `` `code` ``, links. `Scripts/release-notes.py` builds the bilingual GitHub Release body from both changelogs.
+`Scripts/changelog.py` converts one CHANGELOG section to HTML for Sparkle (`--zh` for Chinese). Grammar: bullets, `**bold**`, `` `code` ``, links. `Scripts/release-notes.py` builds the bilingual GitHub Release body from both changelogs.

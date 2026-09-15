@@ -2,7 +2,7 @@
 """Build the bilingual GitHub Release body for one version.
 
 Chinese first, English second — same shape as upstream qunqin24/Pulse release
-pages. Sparkle still reads the English CHANGELOG.md via changelog.py /
+pages. Sparkle reads CHANGELOG.zh-CN.md first via changelog.py /
 appcast.py; this script is only for the GitHub Release page.
 
 Usage:
