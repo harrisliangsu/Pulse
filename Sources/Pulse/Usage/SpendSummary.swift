@@ -58,6 +58,10 @@ struct SpendSummary: Equatable, Sendable {
         /// The day split by kind of token, summed across agents. Nothing here
         /// is recomputed: the ledger already carries it per day.
         var tally = TokenTally()
+        /// Tokens that day with no price behind them, summed across agents.
+        /// Carried so a row can show a dash rather than `$0` for work Pulse
+        /// could not price, and so the figure is never silently priced at zero.
+        var unpricedTokens: Int = 0
 
         var id: Date { date }
     }
@@ -103,6 +107,15 @@ struct SpendSummary: Equatable, Sendable {
     /// Models seen in the logs that models.dev has no price for, named so the
     /// footnote can say which.
     var unpricedModels: [String] = []
+
+    /// Whether any contributing ledger had only session- or report-level
+    /// timing for some of its work, so the hour figure must not be drawn.
+    var hasAggregateTiming = false
+
+    /// Whether any contributing ledger's counts may be missing. When set, the
+    /// total is a floor rather than a whole: the UI says "partial" instead of
+    /// quietly under-reporting. It adds no tokens and changes no price.
+    var hasPartialCounts = false
 
     var isEmpty: Bool { tokens == 0 && cost == 0 }
 
@@ -192,7 +205,9 @@ struct SpendSummary: Equatable, Sendable {
     /// same sum — never the whole conversation, and never a share of it
     /// worked out from a ratio.
     ///
-    /// A session with no buckets is one read before the ledger kept them:
+    /// Calendar-day buckets also preserve the span when a report has no exact
+    /// hour. They are used only when quarter-hour buckets are unavailable.
+    /// A session with neither kind of bucket is one read before the ledger kept them:
     /// it falls back to being counted whole when it ended inside the span,
     /// which is the old rule and never a silent zero.
     private static func window(
@@ -202,6 +217,11 @@ struct SpendSummary: Equatable, Sendable {
         guard let cutoff else { return (session.tokens, session.cost, session.end) }
 
         guard !session.slots.isEmpty else {
+            if !session.days.isEmpty {
+                let days = session.days.filter { $0.date >= cutoff }
+                guard let last = days.map(\.date).max() else { return nil }
+                return (days.reduce(0) { $0 + $1.tokens }, days.reduce(0.0) { $0 + $1.cost }, last)
+            }
             return session.end >= cutoff ? (session.tokens, session.cost, session.end) : nil
         }
 
@@ -245,6 +265,7 @@ struct SpendSummary: Equatable, Sendable {
         var dayTokens: [Date: Int] = [:]
         var dayCost: [Date: Double] = [:]
         var dayTally: [Date: TokenTally] = [:]
+        var dayUnpriced: [Date: Int] = [:]
         var hourTokens: [Int: Int] = [:]
         var tally = TokenTally()
         var modelTokens: [String: Int] = [:]
@@ -254,12 +275,14 @@ struct SpendSummary: Equatable, Sendable {
         var projectCost: [String: Double] = [:]
         var projectSessions: [String: Int] = [:]
         var projectLastUsed: [String: Date] = [:]
+        var hasAggregate = false
+        var hasPartial = false
 
         for (agent, ledger) in ledgers {
             // A ledger that cannot be priced has no place in a combined cost.
-            // Every agent's is read from this Mac's own files; the guard is
-            // for a provider's own statistics, which carry no money.
-            guard ledger.origin == .localTranscripts else { continue }
+            // Local records and imported ones can be; a provider's own
+            // statistics carry one total per model and no money.
+            guard ledger.origin.supportsTokenSpend else { continue }
 
             let window = cutoff.map { start in ledger.days.filter { $0.date >= start } } ?? ledger.days
             guard !window.isEmpty else { continue }
@@ -276,6 +299,7 @@ struct SpendSummary: Equatable, Sendable {
 
                 dayTokens[day.date, default: 0] += day.tokens
                 dayCost[day.date, default: 0] += day.cost
+                dayUnpriced[day.date, default: 0] += day.unpricedTokens
                 dayTally[day.date] = (dayTally[day.date] ?? TokenTally()) + day.tally
 
                 for (model, tokens) in day.models {
@@ -312,7 +336,7 @@ struct SpendSummary: Equatable, Sendable {
                         session: UsageLedger.Session(
                             id: session.id, name: session.name, title: session.title,
                             project: session.project, start: session.start, end: session.end,
-                            tokens: windowed.tokens, cost: windowed.cost, slots: session.slots
+                            tokens: windowed.tokens, cost: windowed.cost, slots: session.slots, days: session.days
                         )
                     )
                 )
@@ -325,6 +349,12 @@ struct SpendSummary: Equatable, Sendable {
             }
 
             guard agentTokens > 0 || agentCost > 0 else { continue }
+
+            // A ledger that contributed and had aggregate timing taints the
+            // hour figure for the whole scope; a ledger that contributed
+            // nothing does not. The same rule marks the total partial.
+            if ledger.hasAggregateTiming { hasAggregate = true }
+            if ledger.hasPartialCounts { hasPartial = true }
 
             summary.agents.append(
                 Agent(agent: agent, tokens: agentTokens, cost: agentCost, unpricedTokens: agentUnpriced)
@@ -364,7 +394,8 @@ struct SpendSummary: Equatable, Sendable {
                     date: cursor,
                     tokens: dayTokens[cursor] ?? 0,
                     cost: dayCost[cursor] ?? 0,
-                    tally: dayTally[cursor] ?? TokenTally()
+                    tally: dayTally[cursor] ?? TokenTally(),
+                    unpricedTokens: dayUnpriced[cursor] ?? 0
                 )
             )
             guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
@@ -375,14 +406,21 @@ struct SpendSummary: Equatable, Sendable {
         // work in it is still a row rather than a hole in the sequence.
         var monthTokens: [Date: Int] = [:]
         var monthCost: [Date: Double] = [:]
+        var monthUnpriced: [Date: Int] = [:]
         for day in summary.days {
             guard let month = calendar.date(from: calendar.dateComponents([.year, .month], from: day.date))
             else { continue }
             monthTokens[month, default: 0] += day.tokens
             monthCost[month, default: 0] += day.cost
+            monthUnpriced[month, default: 0] += day.unpricedTokens
         }
         summary.months = monthTokens
-            .map { Day(date: $0.key, tokens: $0.value, cost: monthCost[$0.key] ?? 0) }
+            .map {
+                Day(
+                    date: $0.key, tokens: $0.value, cost: monthCost[$0.key] ?? 0,
+                    unpricedTokens: monthUnpriced[$0.key] ?? 0
+                )
+            }
             .sorted { $0.date < $1.date }
 
         summary.sessions.sort { $0.session.end > $1.session.end }
@@ -401,6 +439,8 @@ struct SpendSummary: Equatable, Sendable {
         summary.tally = tally
         summary.hours = hourTokens
         summary.unpricedModels = unpriced.sorted()
+        summary.hasAggregateTiming = hasAggregate
+        summary.hasPartialCounts = hasPartial
 
         return summary
     }

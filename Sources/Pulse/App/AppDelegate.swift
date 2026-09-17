@@ -12,6 +12,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Not private: the settings pane shows what the system says about
     /// permission, which is not the same as what the switches say.
     private(set) lazy var alerts = UsageAlerts(settings: settings)
+    /// Not private for the same reason: the settings pane is the only place
+    /// that can report a combination the window server refused.
+    let shortcuts = GlobalShortcutMonitor()
     private lazy var store = UsageStore(settings: settings, alerts: alerts)
 
     private var panelController: FloatingPanelController?
@@ -90,6 +93,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.store.settingsChanged()
         }
 
+        // A secondary click on the rail is a way into settings that does not
+        // go through the menu bar at all — which is the point, since a full
+        // menu bar is where Pulse's icon stops being reachable. Issue #24.
+        controller.contextMenu = { [weak self] in self?.panelMenu() ?? NSMenu() }
+
+        // Same issue, from the other side: a combination that works with no
+        // pointer involved. Both unset until somebody sets one.
+        shortcuts.on(.openSettings) { [weak self] in self?.showSettings() }
+        shortcuts.on(.togglePanel) { [weak self] in
+            // Through the setting rather than `controller.toggle()`, so the
+            // panel is in the state the switch in settings claims it is, and
+            // stays that way across a launch.
+            self?.settings.isPanelVisible.toggle()
+        }
+        shortcuts.apply(settings)
+
         if settings.isPanelVisible {
             controller.show()
         }
@@ -104,6 +123,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         showSettings(link: nil)
     }
 
+    /// The rail's own menu: the same three things the menu bar offers, because
+    /// this exists for the Mac where that menu cannot be reached.
+    ///
+    /// Built on each click rather than kept, so an update found since the last
+    /// one is on it — an `NSMenu` held as a property would still be showing
+    /// whatever was true when it was made.
+    private func panelMenu() -> NSMenu {
+        let menu = NSMenu()
+
+        if let newer = update.newer {
+            let item = NSMenuItem(
+                title: .localized("Pulse \(newer.version) is available"),
+                action: #selector(checkForUpdate),
+                keyEquivalent: ""
+            )
+            item.target = self
+            menu.addItem(item)
+            menu.addItem(.separator())
+        }
+
+        let settingsItem = NSMenuItem(
+            title: .localized("Settings…"),
+            action: #selector(openSettingsFromMenu),
+            keyEquivalent: ""
+        )
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+
+        menu.addItem(.separator())
+
+        let quit = NSMenuItem(
+            title: .localized("Quit Pulse"),
+            action: #selector(NSApplication.terminate(_:)),
+            keyEquivalent: ""
+        )
+        quit.target = NSApp
+        menu.addItem(quit)
+
+        return menu
+    }
+
+    @objc private func openSettingsFromMenu() {
+        showSettings()
+    }
+
+    @objc private func checkForUpdate() {
+        update.check()
+    }
+
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
             if let link = PulseLink(url: url) { showSettings(link: link) }
@@ -111,7 +179,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showSettings(link: PulseLink?) {
-        let window = settingsWindow ?? SettingsWindowController(store: store, settings: settings, placement: placement, update: update, alerts: alerts)
+        let window = settingsWindow ?? SettingsWindowController(store: store, settings: settings, placement: placement, update: update, alerts: alerts, shortcuts: shortcuts)
         settingsWindow = window
         window.show(link: link)
     }

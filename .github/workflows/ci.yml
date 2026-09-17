@@ -99,6 +99,14 @@ jobs:
           # bundle. Lose these and a Chinese Mac gets an English app, with a
           # green build and every string still shipped. Read with -o - : a
           # bare `plutil -extract` rewrites the file it was asked to read.
-          plutil -extract CFBundleLocalizations json -o - "$APP/Contents/Info.plist" | grep -q 'zh-Hans'
+          # Every language, not just the first one added: a .lproj that ships
+          # without being declared here is a translation nobody ever sees.
+          for language in en zh-Hans zh-Hant ja ko; do
+            plutil -extract CFBundleLocalizations json -o - "$APP/Contents/Info.plist" | grep -q "\"$language\""
+            # Case-insensitively: SwiftPM has lowercased these folder names in
+            # the past and does not on the current toolchain, and which way it
+            # went is not what this is checking.
+            find "$APP/Contents/Resources/Pulse_Pulse.bundle/Contents/Resources" -iname "$language.lproj" | grep -q .
+          done
           echo "Version: $(defaults read "$PWD/$APP/Contents/Info.plist" CFBundleShortVersionString)"
           echo "Architectures: $(lipo -archs "$APP/Contents/MacOS/Pulse")"

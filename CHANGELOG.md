@@ -10,6 +10,20 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.1.3
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **More token-spend sources.** Local-record readers for Gemini CLI, Cline, Roo Code, OpenClaw, GitHub Copilot and more, plus exports from Cursor, Trae and others. Some sources need a prior export or capture. [Sources](https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend-sources.md).
+- **Model usage details.** Open a model for input/output/cache, daily and hourly usage, and per-agent contributions; detail tables sort and page. Costs use published API rates — not a subscription bill.
+- **Chart hover values.** Point at a history chart to read the token count for that date or hour, including short bars and empty periods.
+- **Rail menu and global shortcuts.** Right-click the floating rail to open Settings. Optional shortcuts open Settings or show/hide the rail (unassigned by default).
+- **Traditional Chinese, Japanese and Korean.** Three new interface and README translations; large-number abbreviations use each language’s own units.
+- **Plan-based model pricing** and corrected Kilo CLI price source; day, model and session amounts agree. Spend catalogue marks missing prices and incomplete counts.
+- **Antigravity IDE** reads its own conversation store; Devin records are no longer labelled CLI-only; matched database and Desktop captures count once.
+- **Cross-day aggregates** contribute only in-range usage; Command Code rewinds keep consumption that already occurred; default span is the last week and is remembered.
+- **Settings sidebar** keeps its width after a language change; agent icons and screenshots updated.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.1.2
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.

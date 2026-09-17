@@ -394,12 +394,25 @@ struct UsageRingView: View {
 }
 
 struct LobeIconView: View {
-    let provider: Provider
+    /// The SVG in `Resources` to draw, without its extension.
+    let resource: String
     let size: CGFloat
+
+    init(provider: Provider, size: CGFloat) {
+        self.resource = provider.iconResource
+        self.size = size
+    }
+
+    /// For a mark that belongs to an agent rather than to a provider. See
+    /// `LobeIconStore`.
+    init(resource: String, size: CGFloat) {
+        self.resource = resource
+        self.size = size
+    }
 
     var body: some View {
         Group {
-            if let image = LobeIconStore.image(for: provider) {
+            if let image = LobeIconStore.image(named: resource) {
                 Image(nsImage: image)
                     .resizable()
                     .renderingMode(.template)
@@ -427,31 +440,45 @@ struct LobeIconView: View {
 /// size up front. They are also marked as template images: the artwork is a
 /// solid `currentColor` fill, and only its alpha matters once
 /// `LobeIconView` tints it.
+///
+/// Not `private` so `AgentIconTests` can ask whether a named mark actually
+/// loads — a test's own `Bundle.module` is the test target's, so the only way
+/// to ask about Pulse's resources is through Pulse. Do not tidy it back.
 @MainActor
-private enum LobeIconStore {
+enum LobeIconStore {
     /// Comfortably above any size the app draws these at, so scaling only
     /// ever goes downwards.
     private static let renderSize = NSSize(width: 256, height: 256)
 
-    private static let images: [Provider: NSImage] = Dictionary(
-        uniqueKeysWithValues: Provider.allCases.compactMap { provider in
-            guard
-                let url = Bundle.module.url(
-                    forResource: provider.iconResource,
-                    withExtension: "svg"
-                ),
-                let image = NSImage(contentsOf: url)
-            else {
-                return nil
-            }
-            image.size = renderSize
-            image.isTemplate = true
-            return (provider, image)
+    /// Keyed by **resource name**, not by `Provider`.
+    ///
+    /// The spend pane draws clients that are not providers at all — a provider
+    /// is something Pulse can put a ring and a pane behind, and most of the
+    /// agent catalogue is neither. Keying the store by the file name is what
+    /// lets an agent carry its own mark without being promoted to a provider
+    /// to get one.
+    ///
+    /// Loaded on demand rather than all at once: the catalogue's marks are
+    /// only ever needed if that pane is opened, and most installs draw a
+    /// handful of them.
+    private static var images: [String: NSImage] = [:]
+
+    static func image(named name: String) -> NSImage? {
+        if let cached = images[name] { return cached }
+        guard
+            let url = Bundle.module.url(forResource: name, withExtension: "svg"),
+            let image = NSImage(contentsOf: url)
+        else {
+            return nil
         }
-    )
+        image.size = renderSize
+        image.isTemplate = true
+        images[name] = image
+        return image
+    }
 
     static func image(for provider: Provider) -> NSImage? {
-        images[provider]
+        image(named: provider.iconResource)
     }
 }
 

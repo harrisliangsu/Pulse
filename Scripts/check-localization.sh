@@ -19,26 +19,36 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-EN="Sources/Pulse/Resources/en.lproj/Localizable.strings"
-ZH="Sources/Pulse/Resources/zh-Hans.lproj/Localizable.strings"
+RESOURCES="Sources/Pulse/Resources"
+EN="$RESOURCES/en.lproj/Localizable.strings"
 
 keys() { grep -o '^"[^"]*"' "$1" | sed 's/^"//; s/"$//' | sort; }
 
 status=0
+languages=0
 
-if ! diff <(keys "$EN") <(keys "$ZH") > /tmp/localization-diff.txt; then
-    echo "Localization keys differ between en and zh-Hans:"
-    echo "  < only in en    > only in zh-Hans"
-    cat /tmp/localization-diff.txt
-    status=1
-fi
+# Every shipped language against English, rather than one named pair: a
+# language added to the app but not to this loop is a language nobody is
+# checking, which is the failure this script exists to prevent.
+for table in "$RESOURCES"/*.lproj/Localizable.strings; do
+    [ "$table" = "$EN" ] && continue
+    language=$(basename "$(dirname "$table")" .lproj)
+    languages=$((languages + 1))
+
+    if ! difference=$(diff <(keys "$EN") <(keys "$table")); then
+        echo "Localization keys differ between en and $language:"
+        echo "  < only in en    > only in $language"
+        echo "$difference"
+        status=1
+    fi
+done
 
 # What the source asks for, read with a scanner rather than a pattern — Swift
 # interpolations nest and can hold string literals of their own.
 python3 Scripts/localization-keys.py "$EN" || status=1
 
 if [ "$status" -eq 0 ]; then
-    echo "Localization keys match ($(keys "$EN" | wc -l | tr -d ' ') keys), and every key the source asks for exists."
+    echo "Localization keys match ($(keys "$EN" | wc -l | tr -d ' ') keys across $languages translations), and every key the source asks for exists."
 fi
 
 exit "$status"

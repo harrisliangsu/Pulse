@@ -492,8 +492,11 @@ struct FloatingUsagePanelView: View {
             guard !Task.isCancelled else { return }
             hideAfterDelay = nil
             // Never mid-drag: the pointer is far from the panel by design
-            // while it is being carried across the screen.
-            guard !placement.isDragging else { return }
+            // while it is being carried across the screen. Nor while the
+            // panel's own menu is up, for the same reason — the pointer is on
+            // the menu, which is not the panel. Both re-arm: `hideAfterDelay`
+            // is already nil here, so the watcher's next tick asks again.
+            guard !placement.isDragging, !placement.isMenuOpen else { return }
             isHovered = false
         }
     }
