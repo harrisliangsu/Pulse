@@ -22,11 +22,21 @@ struct TokenTally: Codable, Sendable, Equatable {
     /// Rates are per million tokens. A missing cache rate falls back to the
     /// plain input rate — that is the provider's own arrangement for models
     /// that don't price the cache separately, not a guess.
+    ///
+    /// **The split is the only formula.** `cost(at:)` is this breakdown's
+    /// total, so a day's money and the per-model money it is built from come
+    /// out of one arithmetic instead of two that would eventually disagree.
+    func costBreakdown(at price: ModelPrice) -> TokenCost {
+        TokenCost(
+            input: Double(input) * price.input / 1_000_000,
+            cacheWrite: Double(cacheWrite) * (price.cacheWrite ?? price.input) / 1_000_000,
+            cacheRead: Double(cacheRead) * (price.cacheRead ?? price.input) / 1_000_000,
+            output: Double(output) * price.output / 1_000_000
+        )
+    }
+
     func cost(at price: ModelPrice) -> Double {
-        (Double(input) * price.input
-            + Double(cacheWrite) * (price.cacheWrite ?? price.input)
-            + Double(cacheRead) * (price.cacheRead ?? price.input)
-            + Double(output) * price.output) / 1_000_000
+        costBreakdown(at: price).total
     }
 }
 
@@ -50,6 +60,39 @@ struct LedgerDay: Identifiable, Sendable, Equatable {
     /// what separates "I sent a lot" from "I re-read a lot", which are priced
     /// an order of magnitude apart.
     var tally = TokenTally()
+
+    /// The same day split by **raw model id**, each id with its own tally.
+    ///
+    /// A model's own categories cannot be recovered from `tally`, which is
+    /// every model in the day added together, so the per-model breakdown is
+    /// kept beside it. The key is the model id as written by the agent, not
+    /// the display name — several ids can resolve to one name, and the
+    /// drill-down adds them up itself.
+    ///
+    /// Empty for a day read before the model detail was kept, which is how a
+    /// per-model breakdown knows its categories are missing rather than
+    /// reading a model's whole total as one category.
+    var modelTallies: [String: TokenTally] = [:]
+
+    /// The same day split by **raw model id**, each id with what its own tokens
+    /// cost at that model's own rates.
+    ///
+    /// A model absent here is one with no published price — counted, never
+    /// priced, and never patched with a zero. Kept per raw id because several
+    /// ids can resolve to one display name at different rates, and because a
+    /// day's blended cost must never be prorated across the models in it.
+    var modelCosts: [String: TokenCost] = [:]
+
+    /// The same day split by **raw model id**, each id with the tokens that
+    /// could not be placed in any of the four kinds.
+    ///
+    /// A source that reports a bare total, or a session total, has real tokens
+    /// Pulse cannot classify; they are counted in `tokens` and `models` and
+    /// listed here, but they are never invented into `input` and never priced.
+    /// A raw id absent here has no such tokens. This is what lets a summary
+    /// tell "some of this is unclassified" from "the split is broken", so a
+    /// damaged ledger is not mistaken for a legitimate partial one.
+    var modelUnclassifiedTokens: [String: Int] = [:]
 
     var id: Date { date }
 }
@@ -75,6 +118,15 @@ struct UsageLedger: Sendable, Equatable {
         let start: Date
         let tokens: Int
         let cost: Double
+        /// The quarter-hour's tokens split by **raw model id**, where the
+        /// reader kept them.
+        ///
+        /// A `LedgerDay` has already thrown the time of day away, so a model's
+        /// own hours can only come from here. Empty for a slot read before the
+        /// detail was kept — which is how a per-model breakdown knows its hours
+        /// cannot be trusted, rather than dividing the whole agent's usage by
+        /// whatever model happened to be named.
+        var models: [String: TokenTally] = [:]
     }
 
     /// Ascending by date, gaps closed so the chart reads as a calendar.
@@ -86,23 +138,64 @@ struct UsageLedger: Sendable, Equatable {
     /// provider's own statistics cover every machine on the account and give
     /// one token total per model, which cannot be priced. A card that showed
     /// money for the second would be inventing it.
-    enum Origin: Sendable, Equatable {
+    enum Origin: String, Codable, Sendable, Equatable {
         /// Scanned from the CLI's session files on this Mac.
         case localTranscripts
-        /// Asked of the provider, so it covers the whole account.
+        /// Imported from decoded records — a capture, a dropped log, another
+        /// tool's store — rather than read by one of the built-in readers.
+        /// Still this Mac's own movement, so it can be priced when the kinds
+        /// are known.
+        case importedRecords
+        /// Asked of the provider, so it covers the whole account. One token
+        /// total per model and no money behind it.
         case providerStatistics
+
+        /// Whether a ledger with this origin may appear in the token spend
+        /// pane. Records read or imported here can; a provider's own
+        /// statistics cannot, because they carry no money and would put a
+        /// figure on a total half of it cannot carry.
+        var supportsTokenSpend: Bool {
+            switch self {
+            case .localTranscripts, .importedRecords: true
+            case .providerStatistics: false
+            }
+        }
     }
 
     var origin: Origin = .localTranscripts
 
-    let days: [LedgerDay]
-    let earliest: Date?
+    /// Whether some of this work has only session- or report-level timing, so
+    /// the hour profile cannot be trusted.
+    ///
+    /// An imported aggregate record is placed on its real calendar day but not
+    /// in a quarter-hour bucket — the hour it ran is not known. A summary that
+    /// sees this withholds the per-hour figure rather than inventing one.
+    var hasAggregateTiming = false
+
+    /// Whether some of the counts behind this ledger may be missing.
+    ///
+    /// A store that cannot prove whether reasoning or cache tokens are already
+    /// included in a reported figure gives Pulse figures that are real but may
+    /// be short. A summary that sees this marks the total as partial rather
+    /// than presenting a possibly incomplete count as whole. It never changes
+    /// a token number or a price.
+    var hasPartialCounts = false
+
+    var days: [LedgerDay]
+    var earliest: Date?
     /// Models seen in the logs that models.dev has no price for.
-    let unpricedModels: [String]
+    ///
+    /// `var` rather than `let` so a builder can add a raw id it saw only as
+    /// unclassified tokens: it still has no money behind it.
+    var unpricedModels: [String]
     /// How each model id is written by its provider, where models.dev says.
-    let modelNames: [String: String]
+    ///
+    /// `var` so a builder can resolve a display name for a raw id it saw only
+    /// as unclassified tokens. A name is not a price: looking one up here
+    /// never turns those tokens into money.
+    var modelNames: [String: String]
     /// Ascending by start time. Only slots with work in them.
-    let slots: [Slot]
+    var slots: [Slot]
     /// One per transcript file, which is one per session of that CLI.
     ///
     /// **Free, or nearly.** The scan already keys its cache by file path and
@@ -112,6 +205,14 @@ struct UsageLedger: Sendable, Equatable {
 
     /// One transcript: one conversation with the CLI.
     struct Session: Identifiable, Sendable, Equatable {
+        /// A reported calendar day's work, independent of whether its hour is
+        /// known. Used for span filtering, never as an hourly measurement.
+        struct Day: Sendable, Equatable {
+            let date: Date
+            let tokens: Int
+            let cost: Double
+        }
+
         /// The file's path, which is unique and stable.
         let id: String
         /// What the CLI called it — a uuid for Claude Code, a timestamped
@@ -138,9 +239,12 @@ struct UsageLedger: Sendable, Equatable {
         /// resumed across midnight, or over days, has work on more than one
         /// calendar day; without this detail a span can only take it whole or
         /// drop it, and a project's total then disagrees with the span's own.
-        /// Empty for a ledger read before sessions kept their buckets, where
-        /// the readers fall back to counting the session whole.
+        /// Empty when timing is aggregate, or on an older ledger. Calendar
+        /// days below are the fallback; only a session with neither is counted whole.
         var slots: [Slot] = []
+        /// Present for normalized records, including aggregate reports. A
+        /// session may have exact days while having no trustworthy hours.
+        var days: [Day] = []
     }
 
     static let empty = UsageLedger(
@@ -271,9 +375,10 @@ actor UsageLedgerReader {
     nonisolated static func price(
         _ buckets: [String: [String: TokenTally]],
         with prices: [String: ModelPrice],
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        vendor: String? = nil
     ) -> UsageLedger {
-        priced(buckets, with: prices, calendar: calendar)
+        priced(buckets, with: prices, calendar: calendar, vendor: vendor)
     }
 
     /// Turns buckets into days, slots and money.
@@ -285,7 +390,8 @@ actor UsageLedgerReader {
     nonisolated private static func priced(
         _ buckets: Buckets,
         with prices: [String: ModelPrice],
-        calendar: Calendar
+        calendar: Calendar,
+        vendor: String? = nil
     ) -> UsageLedger {
         guard !buckets.isEmpty else { return .empty }
 
@@ -299,10 +405,13 @@ actor UsageLedgerReader {
         var dayCost: [Date: Double] = [:]
         var dayUnpriced: [Date: Int] = [:]
         var dayModels: [Date: [String: Int]] = [:]
+        var dayModelTallies: [Date: [String: TokenTally]] = [:]
+        var dayModelCosts: [Date: [String: TokenCost]] = [:]
         var dayTally: [Date: TokenTally] = [:]
 
         for (key, models) in buckets {
             guard let start = sharedSlotFormatter.date(from: key) else { continue }
+            let day = calendar.startOfDay(for: start)
 
             var tokens = 0
             var cost = 0.0
@@ -310,11 +419,18 @@ actor UsageLedgerReader {
 
             for (model, tally) in models {
                 tokens += tally.total
-                dayModels[calendar.startOfDay(for: start), default: [:]][model, default: 0] += tally.total
-                dayTally[calendar.startOfDay(for: start), default: TokenTally()] = (dayTally[calendar.startOfDay(for: start)] ?? TokenTally()) + tally
+                dayModels[day, default: [:]][model, default: 0] += tally.total
+                // Per model, so a drill-down can show one model's own split
+                // rather than the whole day's.
+                dayModelTallies[day, default: [:]][model, default: TokenTally()] =
+                    (dayModelTallies[day]?[model] ?? TokenTally()) + tally
+                dayTally[day, default: TokenTally()] = (dayTally[day] ?? TokenTally()) + tally
 
-                if let price = ModelPrices.price(for: model, in: prices) {
-                    cost += tally.cost(at: price)
+                if let price = ModelPrices.price(for: model, in: prices, vendor: vendor) {
+                    let money = tally.costBreakdown(at: price)
+                    cost += money.total
+                    dayModelCosts[day, default: [:]][model, default: TokenCost()] =
+                        (dayModelCosts[day]?[model] ?? TokenCost()) + money
                     if let name = price.name { names[model] = name }
                 } else {
                     unpriced.insert(model)
@@ -322,9 +438,8 @@ actor UsageLedgerReader {
                 }
             }
 
-            slots.append(UsageLedger.Slot(start: start, tokens: tokens, cost: cost))
+            slots.append(UsageLedger.Slot(start: start, tokens: tokens, cost: cost, models: models))
 
-            let day = calendar.startOfDay(for: start)
             dayTokens[day, default: 0] += tokens
             dayCost[day, default: 0] += cost
             dayUnpriced[day, default: 0] += unpricedTokens
@@ -338,7 +453,9 @@ actor UsageLedgerReader {
                 cost: dayCost[day] ?? 0,
                 unpricedTokens: dayUnpriced[day] ?? 0,
                 models: dayModels[day] ?? [:],
-                tally: dayTally[day] ?? TokenTally()
+                tally: dayTally[day] ?? TokenTally(),
+                modelTallies: dayModelTallies[day] ?? [:],
+                modelCosts: dayModelCosts[day] ?? [:]
             )
         }
 

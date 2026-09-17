@@ -166,6 +166,46 @@ struct SpendSummaryTests {
         #expect(abs((shared?.share ?? 0) - 0.75) < 0.0001)
     }
 
+    @Test("One raw id, priced in one source and unknown-only in another, is one model row")
+    func unknownOnlyKeepsTheSameNameAcrossSources() {
+        // The same model id reaches Pulse two ways: one source classified its
+        // work, another reported only a bare total. Without the name lookup the
+        // unknown-only copy would group under its raw id and the model would
+        // split into two rows — one named, one not.
+        let prices: [String: ModelPrice] = [
+            "gpt-5": ModelPrice(
+                input: 1_000, output: 10_000, cacheRead: 100, cacheWrite: 1_000, name: "GPT-5"
+            )
+        ]
+        let at = Self.calendar.date(bySettingHour: 10, minute: 0, second: 0, of: Self.today)!
+
+        let known = AgentUsageLedger.build(
+            [AgentUsageRecord(timestamp: at, model: "gpt-5", tally: TokenTally(input: 1_000))],
+            prices: prices, namespace: "a", calendar: Self.calendar
+        )
+        let unknown = AgentUsageLedger.build(
+            [AgentUsageRecord(timestamp: at, model: "gpt-5", tally: TokenTally(), unclassifiedTokens: 500)],
+            prices: prices, namespace: "b", calendar: Self.calendar
+        )
+
+        let summary = Self.summary([.codex: known, .claudeCode: unknown], overLast: 7)
+        #expect(summary.models.map(\.name) == ["GPT-5"])
+        #expect(summary.models.first?.tokens == 1_500)
+        #expect(summary.models.first?.agents == [.claudeCode, .codex])
+        // The day carries the unknown-price tokens beside the priced ones.
+        #expect(summary.days.last?.unpricedTokens == 500)
+
+        let model = ModelSpendSummary.of(
+            [.codex: known, .claudeCode: unknown], named: "GPT-5",
+            overLast: 7, now: Self.today, calendar: Self.calendar
+        )
+        #expect(model.tokens == 1_500)
+        // 1,000 input at $1,000/M for the classified copy.
+        #expect(model.cost == 1)
+        #expect(model.unpricedTokens == 500)
+        #expect(model.agents.count == 2)
+    }
+
     @Test("The busiest day is the busiest across agents, not any one of them")
     func busiestDayIsCombined() {
         // Neither agent's own heaviest day is the pair's heaviest.
@@ -203,6 +243,27 @@ struct SpendSummaryTests {
         #expect(today?.tally.input == 110)
         #expect(today?.tally.cacheRead == 200)
         #expect(today?.tally.total == 400)
+    }
+
+    @Test("A day's unknown-price tokens roll up into its day and month rows")
+    func unpricedTokensReachDaysAndMonths() {
+        let priced = LedgerDay(
+            date: Self.today, tokens: 100, cost: 1, unpricedTokens: 0, models: ["m": 100]
+        )
+        let unpriced = LedgerDay(
+            date: Self.today, tokens: 300, cost: 0, unpricedTokens: 300, models: ["mystery": 300]
+        )
+
+        let summary = Self.summary([
+            .codex: Self.ledger([priced]),
+            .claudeCode: Self.ledger([unpriced]),
+        ], overLast: 7)
+
+        #expect(summary.days.last?.tokens == 400)
+        #expect(summary.days.last?.unpricedTokens == 300)
+        #expect(summary.months.last?.unpricedTokens == 300)
+        // A quiet day carries a real zero rather than a missing figure.
+        #expect(summary.days.first?.unpricedTokens == 0)
     }
 
     @Test("The table sorts by any column, both ways")

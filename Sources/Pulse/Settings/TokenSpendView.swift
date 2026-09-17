@@ -10,11 +10,12 @@ import SwiftUI
 /// a share per agent, a ranking per model — and none of it appears on the
 /// rail, which is for what is left rather than for what is gone.
 ///
-/// **Only agents that keep transcripts here.** Money is reconstructed from
-/// what the CLIs wrote on this Mac at models.dev's published rates; a provider
+/// **Only sources that leave local records.** Money is reconstructed from the
+/// records and exports Pulse reads at models.dev's published rates; a provider
 /// that reports its own statistics instead gives one token total per model and
 /// no money at all, and folding that into a combined cost would put a figure
-/// on the total that half of it cannot carry.
+/// on the total that half of it cannot carry. An export can cover more than
+/// this Mac, which is why the prose names records rather than a machine.
 struct TokenSpendView: View {
     let summary: SpendSummary
     /// The agent being looked at on its own, or nil for the combined view.
@@ -23,6 +24,29 @@ struct TokenSpendView: View {
     /// function as the combined one, from a dictionary of one — so the split
     /// and the whole cannot drift apart or be counted differently.
     let focused: SpendSummary
+    /// The model being looked at on its own — a name, which is what the
+    /// summary is keyed by — or nil for the list. Cleared by `SettingsView`
+    /// when the agent changes: a model opened under one agent means nothing
+    /// under another.
+    @Binding var modelFocus: String?
+    /// That model's figures, from the same ledgers and the same span, narrowed
+    /// to the agent on screen first where there is one. Kept beside the agent's
+    /// own summary for the same reason that one is kept beside the combined:
+    /// both come out of one function, so they cannot count a span two ways.
+    let modelSummary: ModelSpendSummary
+    /// Sources that are present — installed, or captured/exported to a folder
+    /// Pulse reads — but produced no token records.
+    ///
+    /// **Not a zero reading and not a login prompt.** These are named at the
+    /// foot of the combined pane so "nothing here" can be told from "nothing
+    /// was read", without pretending their silence is a measurement or asking
+    /// the reader to set anything up. A source that reports money but no
+    /// tokens is here too: it has no usage records to show.
+    let noRecords: [SpendAgent]
+    /// Whether any present source held history a reader could only partly
+    /// decode. Shown as one short, generic sentence; the readers' own English
+    /// diagnostics never reach the view.
+    let hasReadLimitations: Bool
     @Binding var span: SpendSpan
     let isLoading: Bool
     let refresh: () -> Void
@@ -41,6 +65,8 @@ struct TokenSpendView: View {
     /// table is tens, and a shared page number would jump both at once.
     @State private var sessionPageSize = 10
     @State private var sessionPage = 0
+    /// Whether the model list is showing every model or just the first few.
+    @State private var showAllModels = false
 
     /// Enough to see where the work goes without turning the pane into a
     /// table. The rest is in the ledger and nobody reads a fortieth row.
@@ -48,12 +74,16 @@ struct TokenSpendView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            if let focus { agentHeader(focus) }
+            if let modelFocus {
+                modelHeader(modelFocus)
+            } else if let focus {
+                agentHeader(focus)
+            }
 
             SettingsGroup(String.localized("Span")) {
                 SettingsRow(
                     String.localized("Counting"),
-                    subtitle: String.localized("Read from this Mac's transcripts, priced at models.dev's published rates.")
+                    subtitle: String.localized("Read from local records and exports, priced at models.dev's published rates.")
                 ) {
                     HStack(spacing: 8) {
                         Picker("", selection: $span) {
@@ -62,6 +92,9 @@ struct TokenSpendView: View {
                             }
                         }
                         .labelsHidden()
+                        // The picker's own title is empty and the row's label is
+                        // to its left, which VoiceOver does not join to it.
+                        .accessibilityLabel(String.localized("Counting"))
                         .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
 
                         Button(String.localized("Rescan")) { refresh() }
@@ -70,9 +103,29 @@ struct TokenSpendView: View {
                 }
             }
 
-            // The span picker stays in both views, so narrowing the window
-            // while looking at one agent does not throw the reader back out.
-            if let focus {
+            // **A partial read is stated, not hidden.** A source can hold
+            // history this Mac cannot decode (a compressed transcript) while
+            // other records read fine; without this line the readable subset
+            // would look like the whole. One generic sentence, in every
+            // sub-view, and no control attached.
+            if hasReadLimitations {
+                Text(localized: "Some compressed records could not be read.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 4)
+            }
+
+            // The span picker stays in every view, so narrowing the window
+            // while looking at one agent or one model does not throw the reader
+            // back out.
+            if let modelFocus {
+                if modelSummary.isEmpty {
+                    nothingForModel(modelFocus)
+                } else {
+                    ModelSpendDetailView(model: modelSummary)
+                }
+            } else if let focus {
                 if focused.isEmpty {
                     nothingForAgent(focus)
                 } else {
@@ -82,7 +135,7 @@ struct TokenSpendView: View {
                     if span != .today { hourly(focused) }
                     if span != .today { daily(focused) }
                     if focused.months.count > 1 { monthly(focused) }
-                    if !focused.models.isEmpty { models(focused) }
+                    if !focused.models.isEmpty { models(focused).id("models") }
                     if !focused.projects.isEmpty { projects(focused) }
                     if !focused.sessions.isEmpty { sessions(focused) }
                     footnote(focused)
@@ -97,10 +150,34 @@ struct TokenSpendView: View {
                 if span != .today { daily(summary) }
                 if summary.months.count > 1 { monthly(summary) }
                 agents
-                if summary.models.count > 1 { models(summary) }
+                // Even one model is an entry point now: tapping it opens that
+                // model's own detail, which is the only place its split lives.
+                if !summary.models.isEmpty { models(summary).id("models") }
                 if !summary.projects.isEmpty { projects(summary) }
                 if !summary.sessions.isEmpty { sessions(summary) }
                 footnote(summary)
+            }
+
+            // **Only for the combined pane.** A source with no records is a
+            // fact about the whole page; under one agent or one model it would
+            // read as a per-agent absence the same list already shows.
+            if modelFocus == nil, focus == nil, !noRecords.isEmpty {
+                noRecordsGroup
+            }
+        }
+    }
+
+    // MARK: - Nothing read from a source
+
+    /// The present-but-silent sources, named once at the foot of the page.
+    ///
+    /// Deliberately short: names only, no control and no explanation of how to
+    /// make one produce records. A source that is absent entirely is not here —
+    /// fifty-one empty rows would be worse than nothing.
+    private var noRecordsGroup: some View {
+        SettingsGroup(String.localized("No usage data read")) {
+            SettingsRow(noRecords.map(\.displayName).joined(separator: " · ")) {
+                EmptyView()
             }
         }
     }
@@ -121,7 +198,7 @@ struct TokenSpendView: View {
                     .font(.system(size: 12))
                 Text(verbatim: "·")
                     .foregroundStyle(.secondary)
-                if let icon = agent.iconProvider { LobeIconView(provider: icon, size: 13) }
+                if let icon = agent.iconResource { LobeIconView(resource: icon, size: 13) }
                 Text(agent.displayName)
                     .font(.system(size: 12, weight: .medium))
             }
@@ -141,19 +218,56 @@ struct TokenSpendView: View {
         }
     }
 
+    // MARK: - One model
+
+    /// The way back, and which model is being looked at. Where the model was
+    /// opened from an agent's own list the back label is that agent, because
+    /// that is the list it returns to; from the combined list it is all models.
+    private func modelHeader(_ name: String) -> some View {
+        let back = focus.map(\.displayName) ?? String.localized("All models")
+
+        return Button {
+            modelFocus = nil
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 11, weight: .semibold))
+                Text(back)
+                    .font(.system(size: 12))
+                Text(verbatim: "·")
+                    .foregroundStyle(.secondary)
+                Text(name)
+                    .font(.system(size: 12, weight: .medium))
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(.leading, 4)
+    }
+
+    private func nothingForModel(_ name: String) -> some View {
+        SettingsGroup(name) {
+            SettingsRow(
+                String.localized("Nothing in this span"),
+                subtitle: String.localized("Try a longer span, or rescan.")
+            ) {
+                EmptyView()
+            }
+        }
+    }
+
     // MARK: - Nothing to show
 
     private var empty: some View {
         SettingsGroup(String.localized("Total")) {
             SettingsRow(
                 isLoading ? String.localized("Reading…") : String.localized("Nothing yet"),
+                // **No agent is promised and none is promised absent.** The
+                // page reads records and exports from a catalogue of sources,
+                // and any of them can be the one that has nothing; naming one
+                // here would be wrong for everyone else.
                 subtitle: isLoading
-                    ? String.localized("Going through this Mac's transcripts.")
-                    // Says which agents, because the answer "nothing" is only
-                    // true of the two that leave transcripts — somebody whose
-                    // work is all in a third would otherwise read this as a
-                    // fault.
-                    : String.localized("Claude Code and Codex write the logs this is counted from. Nothing from either has been found on this Mac.")
+                    ? String.localized("Going through local records and exports.")
+                    : String.localized("No local records or exports have been found yet.")
             ) {
                 EmptyView()
             }
@@ -165,10 +279,40 @@ struct TokenSpendView: View {
     private func total(_ summary: SpendSummary) -> some View {
         SettingsGroup(focus == nil ? String.localized("Total") : String.localized("This agent")) {
             VStack(alignment: .leading, spacing: 10) {
+                // **An hour profile is complete only when its hours are the
+                // whole day.** Some records carry a session or report date and
+                // no hour, so summing the quarter-hour buckets can fall short
+                // of the total; drawing it anyway would present a partial day
+                // as the day's shape.
+                let hoursComplete = Self.hoursComplete(summary)
+                // **No price is not a price of zero.** When every token in
+                // scope is unpriced there is no money figure to show; a
+                // `$0.00` would read as a real, very cheap measurement. A
+                // genuine free rate keeps its own real zero.
+                let noPriceAtAll = summary.tokens > 0 && summary.unpricedTokens == summary.tokens
+                // The amount covers only the priced subset when some tokens
+                // had no price, or when the source itself could only attest to
+                // part of its counts. Either way the figure is a partial one
+                // and says so; only the all-unpriced case is no figure at all.
+                let partialEstimate = !noPriceAtAll
+                    && (summary.unpricedTokens > 0 || summary.hasPartialCounts)
+
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(Self.money(summary.cost))
-                        .font(.system(size: 28, weight: .semibold))
-                        .monospacedDigit()
+                    if noPriceAtAll {
+                        Text(localized: "Estimate unavailable")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(SpendFormat.money(summary.cost))
+                            .font(.system(size: 28, weight: .semibold))
+                            .monospacedDigit()
+
+                        if partialEstimate {
+                            Text(localized: "Partial estimate")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
 
                     Text(String.localized("\(TokenCount.short(summary.tokens)) tokens"))
                         .font(.system(size: 12))
@@ -180,38 +324,51 @@ struct TokenSpendView: View {
                 // days; over today there is only one of those, and the shape
                 // worth seeing is the hours it was spread across.
                 if span == .today {
-                    HourProfile(hours: summary.hours)
-                        .frame(height: 78)
+                    if hoursComplete {
+                        HourProfile(hours: summary.hours)
+                            .frame(height: 78)
+                    } else {
+                        // The existing unavailable line, in place of a shape
+                        // that would be only part of the day.
+                        Text(localized: "Hourly detail unavailable.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
                 } else if summary.days.count > 1 {
-                    SpendChart(days: summary.days)
+                    SpendBarChart(bars: summary.days.map { .init(date: $0.date, tokens: $0.tokens) })
                         .frame(height: 78)
                 }
 
                 HStack(spacing: 16) {
                     if span == .today {
-                        caption(
-                            String.localized("Active hours"),
-                            String.localized("\("\(summary.activeHours)") of \("24")")
-                        )
-                        if let hour = summary.peakHour {
-                            // Its own label: "busiest" is a day over every
-                            // other span and an hour over this one, and
-                            // Chinese names each of those outright.
-                            caption(
-                                String.localized("Busiest hour"),
-                                "\(Self.hour(hour)) · \(TokenCount.short(summary.hours[hour] ?? 0))"
+                        // Both captions read the hour series, so both are
+                        // withheld when it does not cover the day rather than
+                        // report a partial figure as the whole.
+                        if hoursComplete {
+                            SpendCaption(
+                                String.localized("Active hours"),
+                                String.localized("\("\(summary.activeHours)") of \("24")")
                             )
+                            if let hour = summary.peakHour {
+                                // Its own label: "busiest" is a day over every
+                                // other span and an hour over this one, and
+                                // Chinese names each of those outright.
+                                SpendCaption(
+                                    String.localized("Busiest hour"),
+                                    "\(SpendFormat.hour(hour)) · \(TokenCount.short(summary.hours[hour] ?? 0))"
+                                )
+                            }
                         }
                     } else {
                         // Days with work on them, not days in the span: the
                         // second is the picker's own setting read back.
-                        caption(
+                        SpendCaption(
                             String.localized("Active days"),
                             String.localized("\("\(summary.activeDays)") of \("\(max(summary.days.count, 1))")")
                         )
 
                         if let busiest = summary.busiestDay, busiest.tokens > 0 {
-                            caption(
+                            SpendCaption(
                                 String.localized("Busiest"),
                                 "\(Self.shortDate(busiest.date)) · \(TokenCount.short(busiest.tokens))"
                             )
@@ -219,7 +376,7 @@ struct TokenSpendView: View {
                     }
 
                     if focus == nil, summary.agents.count > 1 {
-                        caption(String.localized("Agents"), "\(summary.agents.count)")
+                        SpendCaption(String.localized("Agents"), "\(summary.agents.count)")
                     }
                 }
             }
@@ -236,44 +393,23 @@ struct TokenSpendView: View {
     /// **The split is the point, not the total.** These four are priced an
     /// order of magnitude apart — a cache read costs a tenth of fresh input on
     /// most price lists — so a bill that looks surprising next to a token
-    /// count is usually explained here and nowhere else.
+    /// count is usually explained here and nowhere else. The rows themselves
+    /// are shared with the model detail, which is why they take a bare tally.
     private func kinds(_ summary: SpendSummary) -> some View {
-        let tally = summary.tally
-        let total = max(tally.total, 1)
-
-        return SettingsGroup(String.localized("By kind")) {
-            VStack(spacing: 0) {
-                ForEach(Array(Self.kindRows(tally).enumerated()), id: \.offset) { index, row in
-                    if index > 0 { SettingsRowDivider() }
-                    SettingsRow(row.label, subtitle: row.note) {
-                        HStack(spacing: 10) {
-                            ShareBar(share: Double(row.tokens) / Double(total))
-                                .frame(width: 64, height: 6)
-
-                            Text(String.localized("\(TokenCount.short(row.tokens)) tokens"))
-                                .font(.system(size: 12))
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                                // One line, always. Grouped by ten thousands
-                                // these read "1246万 tokens", which is wider
-                                // than the English it was measured against and
-                                // was wrapping under its own bar.
-                                .lineLimit(1)
-                                .fixedSize(horizontal: true, vertical: false)
-                        }
-                    }
+        SettingsGroup(String.localized("By kind")) {
+            // **A partial split is not four zeroes.** Where some tokens belong
+            // to no kind — a bare or session total records the source never
+            // broke down — the four kinds do not add up to the total, and
+            // drawing the shortfall as a zero would read as a measurement of
+            // "none". The existing unavailable line says what is true instead.
+            if summary.tally.total == summary.tokens {
+                TokenKindBreakdown(tally: summary.tally)
+            } else {
+                SettingsRow(String.localized("Token breakdown unavailable.")) {
+                    EmptyView()
                 }
             }
         }
-    }
-
-    private static func kindRows(_ tally: TokenTally) -> [(label: String, note: String, tokens: Int)] {
-        [
-            (String.localized("Input"), String.localized("Sent fresh, not served from the cache."), tally.input),
-            (String.localized("Cache write"), String.localized("Put into the prompt cache to be re-used."), tally.cacheWrite),
-            (String.localized("Cache read"), String.localized("Served from the cache, and priced far lower."), tally.cacheRead),
-            (String.localized("Output"), String.localized("Written back by the model."), tally.output),
-        ]
     }
 
     // MARK: - Day by day
@@ -306,13 +442,29 @@ struct TokenSpendView: View {
                         GridRow {
                             Text(Self.tableDate(day.date))
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            cell(day.tally.input)
-                            cell(day.tally.output)
-                            cell(day.tally.cacheRead)
-                            cell(day.tally.cacheWrite)
+                            // **The kinds are shown only when they add up.** A
+                            // day whose categories do not equal its own total
+                            // has tokens outside the four kinds; the category
+                            // cells go blank rather than draw a zero that was
+                            // never measured. The total column is the day's
+                            // own figure and always stands.
+                            let complete = day.tally.total == day.tokens
+                            cell(complete ? day.tally.input : nil)
+                            cell(complete ? day.tally.output : nil)
+                            cell(complete ? day.tally.cacheRead : nil)
+                            cell(complete ? day.tally.cacheWrite : nil)
                             cell(day.tokens)
-                            Text(Self.money(day.cost))
-                                .frame(maxWidth: .infinity, alignment: .trailing)
+                            // **An all-unpriced day is not a free day.** The
+                            // day's own money is a priced subset; when nothing
+                            // in it had a price the cell shows the same
+                            // unavailable mark a model's day would, not
+                            // `$0.00`. A partial day keeps its amount with the
+                            // `*` the footnote explains.
+                            CostText(
+                                cost: day.tokens > 0 && day.unpricedTokens == day.tokens ? nil : day.cost,
+                                unpriced: day.unpricedTokens
+                            )
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         }
                         .font(.system(size: 11))
                         .monospacedDigit()
@@ -322,54 +474,12 @@ struct TokenSpendView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 8)
 
-                if rows.count > Self.pageSizes.first ?? 10 {
+                if rows.count > (SpendPaging.sizes.first ?? 10) {
                     SettingsRowDivider()
-                    pager(rows: rows.count, pages: pages, current: current)
+                    SpendPageFooter(rows: rows.count, pageSize: $pageSize, page: $page)
                 }
             }
         }
-    }
-
-    static let pageSizes = [10, 20, 30, 50]
-
-    private func pager(rows: Int, pages: Int, current: Int) -> some View {
-        HStack(spacing: 10) {
-            Picker("", selection: $pageSize) {
-                ForEach(Self.pageSizes, id: \.self) { size in
-                    // Interpolated as a string: an `Int` in a key produces
-                    // `%lld`, which will not match a `%@` entry.
-                    Text(String.localized("\("\(size)") per page")).tag(size)
-                }
-            }
-            .labelsHidden()
-            .fixedSize()
-            // A shorter page does not mean the same rows: going back to the
-            // first one is the only answer that is the same every time.
-            .onChange(of: pageSize) { _, _ in page = 0 }
-
-            Spacer(minLength: 8)
-
-            Text(String.localized("\("\(current * pageSize + 1)")–\("\(min((current + 1) * pageSize, rows))") of \("\(rows)")"))
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-
-            Button {
-                page = max(current - 1, 0)
-            } label: {
-                Image(systemName: "chevron.left")
-            }
-            .disabled(current == 0)
-
-            Button {
-                page = min(current + 1, pages - 1)
-            } label: {
-                Image(systemName: "chevron.right")
-            }
-            .disabled(current >= pages - 1)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
     }
 
     /// Clicking a column sorts by it; clicking the sorted one turns it around.
@@ -400,10 +510,19 @@ struct TokenSpendView: View {
         .buttonStyle(.plain)
     }
 
-    private func cell(_ tokens: Int) -> some View {
-        Text(tokens > 0 ? TokenCount.short(tokens) : "—")
-            .foregroundStyle(tokens > 0 ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
-            .frame(maxWidth: .infinity, alignment: .trailing)
+    /// A known count shows the short form; an absent one — either a kind the
+    /// day did not report, or a zero the store wrote — shows an em dash.
+    private func cell(_ tokens: Int?) -> some View {
+        Group {
+            if let tokens, tokens > 0 {
+                Text(TokenCount.short(tokens))
+                    .foregroundStyle(AnyShapeStyle(.primary))
+            } else {
+                Text(verbatim: "—")
+                    .foregroundStyle(AnyShapeStyle(.tertiary))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     private static func tableDate(_ date: Date) -> String {
@@ -418,11 +537,39 @@ struct TokenSpendView: View {
     /// the time of day survives — a day has already thrown it away.
     private func hourly(_ summary: SpendSummary) -> some View {
         SettingsGroup(String.localized("By hour")) {
-            HourProfile(hours: summary.hours)
-                .frame(height: 66)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+            if Self.hoursComplete(summary) {
+                HourProfile(hours: summary.hours)
+                    .frame(height: 66)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+            } else {
+                SettingsRow(String.localized("Hourly detail unavailable.")) {
+                    EmptyView()
+                }
+            }
         }
+    }
+
+    /// Whether the quarter-hour buckets account for every token in the span.
+    ///
+    /// A record with only session- or report-level timing contributes to the
+    /// total and to no hour, so a short sum is the signal that the profile
+    /// cannot stand for the whole. Equality is the test, not "has any hours".
+    private static func hoursComplete(_ summary: SpendSummary) -> Bool {
+        summary.hours.values.reduce(0, +) == summary.tokens
+    }
+
+    /// Whether any row shows an amount with a `*` beside it — a partly priced
+    /// agent, day or month. A row that priced nothing shows an em dash instead,
+    /// and a row that priced everything has no `*`, so neither needs the
+    /// legend.
+    private static func hasPartialAmounts(_ summary: SpendSummary) -> Bool {
+        func partial(_ unpriced: Int, _ tokens: Int) -> Bool {
+            unpriced > 0 && unpriced < tokens
+        }
+        return summary.agents.contains { partial($0.unpricedTokens, $0.tokens) }
+            || summary.days.contains { partial($0.unpricedTokens, $0.tokens) }
+            || summary.months.contains { partial($0.unpricedTokens, $0.tokens) }
     }
 
     /// Whole months, for the spans long enough to have more than one.
@@ -435,9 +582,14 @@ struct TokenSpendView: View {
                         month.date.formatted(.dateTime.year().month(.wide).locale(LocalizationSource.locale)),
                         subtitle: String.localized("\(TokenCount.short(month.tokens)) tokens")
                     ) {
-                        Text(Self.money(month.cost))
-                            .font(.system(size: 12))
-                            .monospacedDigit()
+                        // The same rule as a day row: a month whose tokens
+                        // were all unpriced has no amount to show, and a
+                        // partly priced month keeps its `*`.
+                        CostText(
+                            cost: month.tokens > 0 && month.unpricedTokens == month.tokens ? nil : month.cost,
+                            unpriced: month.unpricedTokens
+                        )
+                        .font(.system(size: 12))
                     }
                 }
             }
@@ -456,45 +608,25 @@ struct TokenSpendView: View {
     private func streaks(_ summary: SpendSummary) -> some View {
         SettingsGroup(String.localized("Pattern")) {
             HStack(spacing: 16) {
-                caption(
+                SpendCaption(
                     String.localized("Current streak"),
                     String.localized("\("\(summary.currentStreak)") days")
                 )
-                caption(
+                SpendCaption(
                     String.localized("Longest streak"),
                     String.localized("\("\(summary.longestStreak)") days")
                 )
-                if let hour = summary.peakHour {
-                    caption(String.localized("Peak hour"), Self.hour(hour))
+                // Only a complete hour series has a peak worth naming.
+                if Self.hoursComplete(summary), let hour = summary.peakHour {
+                    SpendCaption(String.localized("Peak hour"), SpendFormat.hour(hour))
                 }
                 if let model = summary.models.first {
-                    caption(String.localized("Favourite model"), model.name)
+                    SpendCaption(String.localized("Favourite model"), model.name)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-        }
-    }
-
-    /// The hour, in the words each language actually uses for one.
-    ///
-    /// **Not `.dateTime.hour()`.** It is locale-aware and still wrong here: for
-    /// Chinese it produces the written "10时" where an hour spoken aloud is
-    /// "10 点". A key per language says it the way that language says it, and
-    /// the number is interpolated as a string so the entry stays `%@`.
-    static func hour(_ hour: Int) -> String {
-        .localized("\("\(hour)") o'clock")
-    }
-
-    private func caption(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(label)
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
-            Text(value)
-                .font(.system(size: 12))
-                .monospacedDigit()
         }
     }
 
@@ -514,7 +646,7 @@ struct TokenSpendView: View {
                     SettingsRow(
                         agent.agent.displayName,
                         subtitle: String.localized("\(TokenCount.short(agent.tokens)) tokens"),
-                        icon: agent.agent.iconProvider
+                        icon: agent.agent.iconResource
                     ) {
                         HStack(spacing: 10) {
                             ShareBar(share: summary.tokens > 0
@@ -522,10 +654,16 @@ struct TokenSpendView: View {
                                 : 0)
                                 .frame(width: 64, height: 6)
 
-                            Text(Self.money(agent.cost))
-                                .font(.system(size: 12))
-                                .monospacedDigit()
-                                .frame(width: 76, alignment: .trailing)
+                            // A cost-only agent whose tokens were all
+                            // unpriced shows no amount rather than `$0.00`; a
+                            // partly priced one keeps its `*`.
+                            CostText(
+                                cost: agent.tokens > 0 && agent.unpricedTokens == agent.tokens
+                                    ? nil : agent.cost,
+                                unpriced: agent.unpricedTokens
+                            )
+                            .font(.system(size: 12))
+                            .frame(width: 76, alignment: .trailing)
 
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 11, weight: .semibold))
@@ -541,29 +679,74 @@ struct TokenSpendView: View {
         }
     }
 
+    /// One row a model, and **the whole row opens it** — the same shape the
+    /// agent list uses, because a target the width of a chevron is a target
+    /// most people miss.
+    ///
+    /// The same rows serve the combined list and one agent's: which ledgers are
+    /// behind them is `SettingsView`'s job. The row ranks by tokens, which is
+    /// what the combined page can sum without pricing each model; the API
+    /// estimate for one model lives behind the row, in its drill-down.
     private func models(_ summary: SpendSummary) -> some View {
-        SettingsGroup(String.localized("By model")) {
-            ForEach(Array(summary.models.prefix(Self.modelLimit).enumerated()), id: \.element.id) { index, model in
+        let shown = showAllModels
+            ? summary.models
+            : Array(summary.models.prefix(Self.modelLimit))
+
+        return SettingsGroup(String.localized("By model")) {
+            ForEach(Array(shown.enumerated()), id: \.element.id) { index, model in
                 if index > 0 { SettingsRowDivider() }
 
-                SettingsRow(
-                    model.name,
-                    // Which agents sent work to it — one model can belong to
-                    // two, and the row would otherwise look like it belongs to
-                    // whichever is listed first above.
-                    subtitle: model.agents.map(\.displayName).joined(separator: " · ")
-                ) {
-                    HStack(spacing: 10) {
-                        ShareBar(share: model.share)
-                            .frame(width: 64, height: 6)
+                Button {
+                    modelFocus = model.name
+                } label: {
+                    SettingsRow(
+                        model.name,
+                        // Which agents sent work to it — one model can belong
+                        // to two, and the row would otherwise look like it
+                        // belongs to whichever is listed first above.
+                        subtitle: model.agents.map(\.displayName).joined(separator: " · ")
+                    ) {
+                        HStack(spacing: 10) {
+                            ShareBar(share: model.share)
+                                .frame(width: 64, height: 6)
 
-                        Text(String.localized("\(TokenCount.short(model.tokens)) tokens"))
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                            .frame(width: 76, alignment: .trailing)
+                            Text(String.localized("\(TokenCount.short(model.tokens)) tokens"))
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                                .frame(width: 76, alignment: .trailing)
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                        }
                     }
+                    // A button's label does not take clicks where the row's own
+                    // background is transparent, which is most of it.
+                    .contentShape(.rect)
                 }
+                .buttonStyle(.plain)
+                .accessibilityHint(String.localized("Show this model's details"))
+            }
+
+            // More models than fit a glance are still all reachable: the first
+            // few are a preview, and this opens the rest rather than hiding
+            // them behind the span picker.
+            if summary.models.count > Self.modelLimit {
+                SettingsRowDivider()
+                Button {
+                    showAllModels.toggle()
+                } label: {
+                    SettingsRow(showAllModels
+                        ? String.localized("Show fewer")
+                        : String.localized("Show all models")) {
+                        Image(systemName: showAllModels ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -592,7 +775,7 @@ struct TokenSpendView: View {
                             ShareBar(share: Double(project.tokens) / Double(total))
                                 .frame(width: 64, height: 6)
 
-                            Text(Self.money(project.cost))
+                            Text(SpendFormat.money(project.cost))
                                 .font(.system(size: 12))
                                 .monospacedDigit()
                                 .lineLimit(1)
@@ -623,7 +806,7 @@ struct TokenSpendView: View {
                         // at least what the session is called.
                         row.session.title ?? row.session.project ?? row.session.name,
                         subtitle: Self.sessionSubtitle(row),
-                        icon: row.agent.iconProvider
+                        icon: row.agent.iconResource
                     ) {
                         HStack(spacing: 10) {
                             Text(String.localized("\(TokenCount.short(row.session.tokens)) tokens"))
@@ -633,7 +816,7 @@ struct TokenSpendView: View {
                                 .lineLimit(1)
                                 .fixedSize(horizontal: true, vertical: false)
 
-                            Text(Self.money(row.session.cost))
+                            Text(SpendFormat.money(row.session.cost))
                                 .font(.system(size: 12))
                                 .monospacedDigit()
                                 .lineLimit(1)
@@ -642,41 +825,9 @@ struct TokenSpendView: View {
                     }
                 }
 
-                if rows.count > Self.pageSizes.first ?? 10 {
+                if rows.count > (SpendPaging.sizes.first ?? 10) {
                     SettingsRowDivider()
-                    HStack(spacing: 10) {
-                        Picker("", selection: $sessionPageSize) {
-                            ForEach(Self.pageSizes, id: \.self) { size in
-                                Text(String.localized("\("\(size)") per page")).tag(size)
-                            }
-                        }
-                        .labelsHidden()
-                        .fixedSize()
-                        .onChange(of: sessionPageSize) { _, _ in sessionPage = 0 }
-
-                        Spacer(minLength: 8)
-
-                        Text(String.localized("\("\(current * sessionPageSize + 1)")–\("\(min((current + 1) * sessionPageSize, rows.count))") of \("\(rows.count)")"))
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-
-                        Button {
-                            sessionPage = max(current - 1, 0)
-                        } label: {
-                            Image(systemName: "chevron.left")
-                        }
-                        .disabled(current == 0)
-
-                        Button {
-                            sessionPage = min(current + 1, pages - 1)
-                        } label: {
-                            Image(systemName: "chevron.right")
-                        }
-                        .disabled(current >= pages - 1)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    SpendPageFooter(rows: rows.count, pageSize: $sessionPageSize, page: $sessionPage)
                 }
             }
         }
@@ -700,22 +851,44 @@ struct TokenSpendView: View {
     private func footnote(_ summary: SpendSummary) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             // The same warning the card carries, and for the same reason: it
-            // would be easy to read this as a bill, and it is not one.
-            Text(localized: "Counted from this Mac's own logs and priced at the published API rates from models.dev. Your plans are subscriptions, so this is what the same work would cost through the API — not what you were charged. Work done on another machine is not here.")
+            // would be easy to read this as a bill, and it is not one. The
+            // wording is generic on purpose — some records come from an export
+            // that can cover more than this Mac, so "local logs" would make a
+            // promise about the account that Pulse cannot keep.
+            Text(localized: "Usage records, estimated at models.dev API rates—not an actual bill.")
+
+            // **Some sources can only attest to part of their counts.** Where
+            // one of those fed this span, the totals are the known subset; the
+            // sentence says so rather than leaving a reader to trust a figure
+            // the store itself did not fully state. Not an error, so it is a
+            // plain note and never an empty page.
+            if summary.hasPartialCounts {
+                Text(localized: "Counts may be incomplete.")
+            }
+
+            // The legend for the `*` a partly priced row carries. A row whose
+            // every token was unpriced shows no amount and needs no legend, so
+            // this is shown only where an amount and a `*` are.
+            if Self.hasPartialAmounts(summary) {
+                Text(localized: "Excludes unpriced tokens.")
+            }
+
+            // **A short, conditional note about the dates.** Some stores state
+            // only a session or report date, so the day a record lands on is
+            // right while the hour is not. Said once, where the hour figures
+            // are, rather than left to be inferred from a missing profile.
+            if summary.hasAggregateTiming {
+                Text(localized: "Some records use session report dates.")
+            }
 
             if !summary.unpricedModels.isEmpty {
                 // **Counted, not listed.** Naming them was fine at two and is
                 // a paragraph at thirty — and the names are the least useful
                 // part of the sentence, which is that some tokens have no
                 // price. The list stays a hover away.
-                Text(String.localized("\("\(summary.unpricedModels.count)") models have no published price, so those tokens are counted but not costed."))
+                Text(String.localized("\("\(summary.unpricedModels.count)") models without public pricing: tokens only."))
                     .help(summary.unpricedModels.joined(separator: ", "))
             }
-
-            // The money is per day and the tokens are per model, so there is
-            // no per-model cost to add up — and a day's blended rate applied
-            // to one model would be a number nobody reported.
-            Text(localized: "The model list is tokens only: the logs price a day's work, not each model's share of it.")
         }
         .font(.system(size: 11))
         .foregroundStyle(.secondary)
@@ -724,16 +897,6 @@ struct TokenSpendView: View {
     }
 
     // MARK: - Formatting
-
-    private static func money(_ amount: Double) -> String {
-        // models.dev publishes in dollars, so the figure is in dollars whatever
-        // the reader's own currency is.
-        amount.formatted(
-            .currency(code: "USD")
-                .precision(.fractionLength(amount >= 1000 ? 0 : 2))
-                .locale(LocalizationSource.locale)
-        )
-    }
 
     private static func shortDate(_ date: Date) -> String {
         date.formatted(.dateTime.month(.abbreviated).day().locale(LocalizationSource.locale))
@@ -752,7 +915,10 @@ enum SpendSpan: String, CaseIterable, Identifiable, Sendable {
     case quarter
     case all
 
-    static let `default` = SpendSpan.month
+    /// The span the pane opens on: the last week, the shortest window that
+    /// shows a work rhythm rather than a single day. The reader's own pick is
+    /// kept by `AppSettings.spendSpan`.
+    static let `default` = SpendSpan.week
 
     var id: String { rawValue }
 
@@ -780,174 +946,6 @@ enum SpendSpan: String, CaseIterable, Identifiable, Sendable {
         case .all: .localized("All time")
         }
     }
-}
-
-/// One agent's or one model's share of the whole, as a bar.
-///
-/// A bar rather than a percentage because the list is read by comparing rows,
-/// and a column of percentages has to be compared digit by digit.
-private struct ShareBar: View {
-    let share: Double
-
-    var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .leading) {
-                Capsule().fill(.quaternary)
-                Capsule()
-                    .fill(.tint)
-                    // A share too small to see is still a share: anything at
-                    // all keeps a visible stub, the same rule the ring follows.
-                    .frame(width: max(proxy.size.width * min(max(share, 0), 1), share > 0 ? 3 : 0))
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(Int((share * 100).rounded()))%")
-    }
-}
-
-/// Tokens per day across every agent.
-///
-/// Its own view rather than the card's `DailyTokensChart`: that one takes
-/// `LedgerDay`, which belongs to one provider, and this bar is several agents'
-/// work on one day.
-private struct SpendChart: View {
-    let days: [SpendSummary.Day]
-
-    /// **A bar is never wider than this.** Dividing the pane by the number of
-    /// days and using the result is right at ninety bars and absurd at seven:
-    /// a week filled the width with columns 160pt across and 64pt tall, which
-    /// reads as a row of blocks rather than as a chart. Each day still gets an
-    /// equal slot — that is what keeps the spacing even and the dates
-    /// honest — and the bar sits in the middle of its own.
-    private static let maxBarWidth: CGFloat = 22
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            GeometryReader { proxy in
-                let peak = max(days.map(\.tokens).max() ?? 1, 1)
-                let slot = proxy.size.width / CGFloat(max(days.count, 1))
-                let width = max(min(slot * 0.72, Self.maxBarWidth), 1)
-
-                HStack(alignment: .bottom, spacing: 0) {
-                    ForEach(days) { day in
-                        RoundedRectangle(cornerRadius: min(width, 5) / 2, style: .continuous)
-                            .fill(day.tokens > 0 ? AnyShapeStyle(.tint) : AnyShapeStyle(.quaternary))
-                            // A day with any work at all keeps a visible stub,
-                            // so a quiet day reads as quiet rather than as
-                            // missing.
-                            .frame(
-                                width: width,
-                                height: day.tokens > 0
-                                    ? max((proxy.size.height - 1) * CGFloat(day.tokens) / CGFloat(peak), 3)
-                                    : 2
-                            )
-                            .frame(width: slot, alignment: .center)
-                            .help(Self.tooltip(day))
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                // The line the bars stand on. Without it the short days float
-                // and the whole thing reads as blocks rather than a chart.
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .fill(.quaternary)
-                        .frame(height: 1)
-                }
-            }
-
-            // Only the ends. A label under every bar is unreadable at ninety
-            // of them and unnecessary at seven — the tooltip has the rest.
-            if let first = days.first, let last = days.last, days.count > 1 {
-                HStack {
-                    Text(Self.shortDate(first.date))
-                    Spacer(minLength: 0)
-                    Text(Self.shortDate(last.date))
-                }
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String.localized("Tokens per day"))
-    }
-
-    private static func shortDate(_ date: Date) -> String {
-        date.formatted(.dateTime.month(.abbreviated).day().locale(LocalizationSource.locale))
-    }
-
-    private static func tooltip(_ day: SpendSummary.Day) -> String {
-        "\(shortDate(day.date)) · \(TokenCount.short(day.tokens))"
-    }
-}
-
-/// The days, as a calendar of weeks.
-///
-/// One column a week, one row a weekday, shaded by how much went through —
-/// the shape GitHub made legible and the one tokscale borrows. It answers a
-/// different question from the bars above: not *how much* on each day, but
-/// *which* days, and whether they run together.
-///
-/// **Bucketed into four shades rather than scaled continuously.** A linear
-/// ramp against the busiest day makes every ordinary day the palest step and
-/// the calendar reads as empty; the buckets are cut on quarters of the peak,
-/// which keeps an ordinary week visible next to an exceptional one.
-
-/// Tokens by hour of the local day.
-///
-/// Its own view because it is drawn in two places for two reasons: as the
-/// whole shape of today, where a single daily bar says nothing, and as the
-/// profile of a longer span, where it answers "when do I work" rather than
-/// "how much did today hold".
-private struct HourProfile: View {
-    let hours: [Int: Int]
-
-    var body: some View {
-        let peak = max(hours.values.max() ?? 1, 1)
-
-        VStack(alignment: .leading, spacing: 6) {
-            GeometryReader { proxy in
-                HStack(alignment: .bottom, spacing: 2) {
-                    ForEach(0..<24, id: \.self) { hour in
-                        let tokens = hours[hour] ?? 0
-                        RoundedRectangle(cornerRadius: 2, style: .continuous)
-                            .fill(tokens > 0 ? AnyShapeStyle(.tint) : AnyShapeStyle(.quaternary))
-                            // An hour with any work at all keeps a visible
-                            // stub, so a quiet hour reads as quiet rather than
-                            // as missing.
-                            .frame(
-                                maxWidth: .infinity,
-                                maxHeight: tokens > 0
-                                    ? max((proxy.size.height - 1) * CGFloat(tokens) / CGFloat(peak), 3)
-                                    : 2
-                            )
-                            .help("\(Self.hour(hour)) · \(TokenCount.short(tokens))")
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .fill(.quaternary)
-                        .frame(height: 1)
-                }
-            }
-
-            HStack {
-                Text(Self.hour(0))
-                Spacer(minLength: 0)
-                Text(Self.hour(12))
-                Spacer(minLength: 0)
-                Text(Self.hour(23))
-            }
-            .font(.system(size: 10))
-            .foregroundStyle(.secondary)
-            .monospacedDigit()
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String.localized("Tokens per hour"))
-    }
-
-    private static func hour(_ hour: Int) -> String { TokenSpendView.hour(hour) }
 }
 
 /// The day table's columns, which are also what it can be sorted by.

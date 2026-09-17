@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <sub><b>macOS 14 Sonoma 或更高版本</b> · Apple 芯片与 Intel 通用 · <a href="README.md"><b>English</b></a></sub>
+  <sub><b>macOS 14 Sonoma 或更高版本</b> · Apple 芯片与 Intel 通用 · <a href="README.md"><b>English</b></a> · <b>简体中文</b> · <a href="README.zh-Hant.md"><b>繁體中文</b></a> · <a href="README.ja.md"><b>日本語</b></a> · <a href="README.ko.md"><b>한국어</b></a></sub>
 </p>
 
 <p align="center">
@@ -53,7 +53,7 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 
 ### 多账号管理与本地消费账本
 - **多账号并行**：支持同一服务绑定多个订阅（Claude Code、Codex、Grok、Grok Bot、Kimi Code），并排查看并自定义标签。
-- **本地消费历史**：直接解析本地 CLI 会话日志，基于官方公开 API 价格折算历史总消费，并估算限额窗口的实际价值。
+- **消费历史**：从本地记录、数据库与导出文件还原 token 消费，按官方公开 API 价格折算；默认查看最近 7 天，记住你选择的区间，并保留每个模型的用量与估算金额。
 - **十九个服务商**：Claude Code、Codex、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、Qoder、z.ai、Zhipu、MiniMax（国际与国内）、火山引擎、Command Code、DeepSeek，以及 Devin。
 - **可脚本化**：`Pulse --json` 输出最近一次读数——套餐、每条限额、重置时间，以及数字有多旧——可接 tmux、sketchybar、Raycast 或 shell 提示符。它只读缓存不发请求，高频轮询也不花代价。
 - **开发者集成**：在设置中导出 Raycast 扩展及可直接配置的 tmux、sketchybar、终端脚本；通过账户链接直达对应设置页。[安装指南](Docs/integrations.md)。
@@ -61,9 +61,27 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 - **本地优先**：无 Pulse 服务器、无 Pulse 账号、无遥测。请求发往你已在使用的服务商（并遵循 macOS 系统代理设置）。
 
 <p align="center">
-  <img src="Docs/panel.png" height="300" alt="详情卡片">
+  <img src="Docs/panel.webp" height="300" alt="详情卡片">
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="Docs/settings.png" height="300" alt="Pulse 设置界面">
+  <img src="Docs/settings.webp" height="300" alt="Pulse 设置界面">
+</p>
+
+<p align="center">
+  <img src="Docs/account-claude-code.webp" height="290" alt="账户页：每条上报的限额、已用额度的估算价值与本地历史">
+  &nbsp;&nbsp;
+  <img src="Docs/account-codex.webp" height="290" alt="另一个账户页：套餐、信用余额与限额重置次数">
+</p>
+
+<p align="center">
+  <img src="Docs/spend.webp" height="290" alt="Token 消费：合计、按类型的用量与每日规律">
+  &nbsp;&nbsp;
+  <img src="Docs/spend-history.webp" height="290" alt="按天、按月、按 agent 的 Token 消费">
+</p>
+
+<p align="center">
+  <img src="Docs/spend-agent.webp" height="290" alt="单个 agent 的消费明细">
+  &nbsp;&nbsp;
+  <img src="Docs/spend-model.webp" height="290" alt="单个模型的消费，按 token 类型计价">
 </p>
 
 ---
@@ -108,7 +126,7 @@ Pulse 仅呈现各服务上报的数字，绝不依靠本地 Token 粗略估算�
 >   ```bash
 >   xattr -cr /Applications/Pulse.app
 >   ```
-> *(后续通过内置的 Sparkle 进行静默更新，无需再次授权)*。
+>   *(后续通过内置的 Sparkle 进行静默更新，无需再次授权)*。
 
 ---
 

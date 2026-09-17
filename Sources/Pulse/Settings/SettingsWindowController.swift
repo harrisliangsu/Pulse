@@ -16,6 +16,7 @@ final class SettingsWindowController {
     private let placement: PanelPlacement
     private let update: AppUpdate
     private let alerts: UsageAlerts
+    private let shortcuts: GlobalShortcutMonitor
     private var window: NSWindow?
     private let navigation = SettingsNavigation()
 
@@ -24,13 +25,15 @@ final class SettingsWindowController {
         settings: AppSettings,
         placement: PanelPlacement,
         update: AppUpdate,
-        alerts: UsageAlerts
+        alerts: UsageAlerts,
+        shortcuts: GlobalShortcutMonitor
     ) {
         self.store = store
         self.settings = settings
         self.placement = placement
         self.update = update
         self.alerts = alerts
+        self.shortcuts = shortcuts
     }
 
     func show(link: PulseLink? = nil) {
@@ -95,7 +98,7 @@ final class SettingsWindowController {
         window.titlebarSeparatorStyle = .automatic
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(
-            rootView: SettingsView(store: store, settings: settings, placement: placement, update: update, alerts: alerts, navigation: navigation)
+            rootView: SettingsView(store: store, settings: settings, placement: placement, update: update, alerts: alerts, shortcuts: shortcuts, navigation: navigation)
         )
         return window
     }

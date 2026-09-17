@@ -12,6 +12,7 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 | [ui/README.md](ui/README.md) | Panel geometry, input, glass/rings, settings window |
 | [refresh-and-data.md](refresh-and-data.md) | Refresh loop, cache, activity, ledger, forecast, estimate |
 | [token-spend.md](token-spend.md) | The Token spend pane: which agents are read, what may be said about the figures |
+| [token-spend-sources.md](token-spend-sources.md) | The complete agent/source catalog: default macOS location, format, counters reported, evidence level |
 | [notifications.md](notifications.md) | When Pulse posts a notification, and what it refuses to say |
 | [development.md](development.md) | Localization, resources, layout budgets, how to add UI |
 | [testing.md](testing.md) | What `swift test` covers, fixtures, why the gaps are gaps |
@@ -40,4 +41,4 @@ When those notes disagree with `providers/README.md` or the code, the code and t
 
 ## User-facing
 
-- [../README.md](../README.md) / [../README.zh-CN.md](../README.zh-CN.md) — product pages. Keep bilingual parity. They are not the architecture source of truth.
+- [../README.md](../README.md) with [zh-CN](../README.zh-CN.md) / [zh-Hant](../README.zh-Hant.md) / [ja](../README.ja.md) / [ko](../README.ko.md) — product pages. Keep all five in parity. They are not the architecture source of truth.

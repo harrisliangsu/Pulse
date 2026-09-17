@@ -119,6 +119,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <array>
         <string>en</string>
         <string>zh-Hans</string>
+        <string>zh-Hant</string>
+        <string>ja</string>
+        <string>ko</string>
     </array>
     <key>CFBundleShortVersionString</key><string>$VERSION</string>
     <key>CFBundleVersion</key><string>$VERSION</string>

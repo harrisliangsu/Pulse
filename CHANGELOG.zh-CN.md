@@ -6,6 +6,20 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.1.3
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **更多 Token 消耗来源。** 新增 Gemini CLI、Cline、Roo Code、OpenClaw、GitHub Copilot 等本地记录读取，并支持 Cursor、Trae 等导出数据。部分来源需要先导出或捕获记录；可读格式及验证范围见[来源说明](https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend-sources.md)。
+- **模型用量详情。** 点击模型可查看输入、输出、缓存读写、每日与每小时消耗，以及各 Agent 的贡献；明细表支持排序和分页。费用按公开 API 价格折算，不是订阅账单。
+- **图表悬停读数。** 指向历史图表即可查看对应日期或小时的 token 数量，较短的柱形和零用量时段也能选中。
+- **浮动栏菜单与全局快捷键。** 右键浮动栏即可打开设置；可自行设置快捷键，用于打开设置或显示、隐藏浮动栏。默认不绑定按键。
+- **繁体中文、日语和韩语。** 界面与 README 新增三种语言，大数缩写使用各语言对应的单位。
+- **按套餐计价与目录标记。** 补全仅由套餐商公布价格的模型计价，修复 Kilo CLI 的价格来源；缺失价格、不完整计数会明确标注；日汇总、模型详情和会话金额保持一致。
+- **Antigravity IDE** 读取自身的会话存储；Devin 记录不再误标为仅来自 CLI；已匹配的数据库与 Desktop 捕获只统计一次。
+- **跨天汇总**只计入所选区间；Command Code 回退对话后仍保留已经发生的消耗；Token 消耗默认显示最近一周并记住所选区间。
+- **设置侧栏**在切换语言后保持宽度；补充 Agent 图标并更新界面截图。
+- **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.1.2
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。

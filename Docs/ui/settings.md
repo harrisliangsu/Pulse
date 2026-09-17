@@ -14,11 +14,13 @@ A joined sentence needs no extra space after a Chinese full stop (`。`). `glass
 
 While Liquid Glass is on, the caption still says to drag the panel by a ring. That is current UI. The historical “glass swallows input” diagnosis is uncertain; [rings-and-surface.md](rings-and-surface.md).
 
-Group order in the general pane: **Floating panel → Notifications → Refresh → Order → Application → Language**. The two groups that decide what Pulse does *on its own* sit directly under the panel group, above the housekeeping ones. Notifications was added at the bottom, between Refresh and Language, and that was too far down to find — the panel group alone is sixteen rows.
+Group order in the general pane: **Floating panel → Notifications → Refresh → Order → Application → Shortcuts → Language**. The two groups that decide what Pulse does *on its own* sit directly under the panel group, above the housekeeping ones. Notifications was added at the bottom, between Refresh and Language, and that was too far down to find — the panel group alone is sixteen rows.
 
 **Turn red at** lives at the foot of that group: `AppSettings.warningThreshold`, a picker of 60–90%. It moves only the amber→red step; spent is the provider's word and is red whatever the picker says, which is what its subtitle is for. The picker keeps its localized title for accessibility even though its visible label is supplied by the row. [rings-and-surface.md](rings-and-surface.md)
 
 The usage-interval group is named **Refresh**, not Updates.
+
+**Shortcuts** sits with Application because both are about the app rather than about a reading, and above Language because Language is the last thing anybody looks for. Two rows, both empty until set, each a `ShortcutField`: click it, press the combination, ⎋ leaves it alone and ⌫ takes it away. The subtitle is the row's own line **unless** the window server refused the combination, in which case the clash takes the line over — that is the only thing the monitor knows and the pane does not. Setting one writes the setting and calls `GlobalShortcutMonitor.apply` there and then; shortcuts deliberately do **not** go through `AppSettings.onChange`, which refetches every provider. Rules and why hot keys rather than an event tap: [input.md](input.md).
 
 An account pane grows a **Notifications** group of its own where `Provider.reportsSpendableBalance` is true — a "warn below" figure in money. Not a row under Connection, which is about credentials and routes, and not in the general pane's Notifications group either: the figure is per account, because the providers that report a balance do not price in the same currency. [../notifications.md](../notifications.md)
 
@@ -27,6 +29,8 @@ The general pane's **Notifications** group's three controls are not independent 
 **Celebrations** is a fourth switch, not a fourth notification. Full-screen ribbons and the system Hero sound when a **week or month** turns over, with the account's name on them. Five-hour sessions are excluded. Off by default. It does not go through `UNUserNotificationCenter`, so it is not greyed out in a `swift run` build and does not ask for a grant. It is not tied to "Warn at". Same unambiguous-reset evidence as the notification, one overlay per account per pass.
 
 ## Controls
+
+Card borders are decorative and ignore hit testing, so they cannot cover the controls or the charts' full-height hover targets. Chart readouts: [../token-spend.md](../token-spend.md), [../refresh-and-data.md](../refresh-and-data.md).
 
 SwiftUI `Picker` / `Menu` on macOS **cannot be given a width**. `.frame`, min/max, `fixedSize`, and a fixed-width custom label were measured (historical) and none moved the control. Right-align at `SettingsLayout.controlWidth` as a *ceiling*; long labels truncate. An `NSPopUpButton` wrapper did give a true 180pt box and was removed: short labels floated in empty chrome. Don’t rebuild it without checking that first.
 

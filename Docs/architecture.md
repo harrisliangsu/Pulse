@@ -23,6 +23,15 @@ Hand-rolled `SettingsWindowController`, not SwiftUI’s `Settings` scene: an `.a
 - The sidebar does **not** extend behind the traffic lights. That is AppKit’s treatment of an `NSSplitViewController` sidebar; a SwiftUI `NavigationSplitView` in an `NSHostingView` does not get it. Historical measurement (with/without full-size content and a unified `NSToolbar`) is in the old notes, not re-run here.
 - Ending text-field editing on click-away is the **window’s** job (`SettingsWindow.sendEvent`). Geometry against the field being edited, never `hitTest` — a hosted SwiftUI tree answers that unreliably. See [ui/settings.md](ui/settings.md).
 
+## Ways into settings
+
+Four, and the menu bar is only one of them — an icon in a full menu bar is not reachable at all ([issue #24](https://github.com/qunqin24/Pulse/issues/24)):
+
+- The `MenuBarExtra` menu (`PulseApp`).
+- A **secondary click on the rail**, which puts up `AppDelegate.panelMenu()`. [ui/input.md](ui/input.md)
+- A **global shortcut**, unset until somebody sets one. `GlobalShortcutMonitor`, held by the app delegate for the life of the process and re-applied by the settings pane whenever a combination changes. The panel's own shortcut goes through `settings.isPanelVisible` rather than `FloatingPanelController.toggle()`, so the panel is in the state the switch in settings claims and stays that way across a launch.
+- A `pulse://` link, below.
+
 ## Settings navigation from other apps
 
 `PulseLink` parses `pulse://settings`, `pulse://integrations`, and `pulse://account/<encoded-id>`. `AppDelegate.application(_:open:)` passes accepted links to `SettingsWindowController`, whose `SettingsNavigation` owns the selected pane shared with SwiftUI. A request id lets a repeated link clear sidebar search and return to the heading, even when the pane is already selected. Account targets must exist in `settings.allAccounts`; links never create a slot or run a repair. `Scripts/bundle.sh` registers the `pulse` URL scheme in `CFBundleURLTypes`. Setup and examples: [integrations.md](integrations.md).

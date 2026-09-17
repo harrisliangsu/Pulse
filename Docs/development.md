@@ -17,7 +17,7 @@ Historical matrix and disagreement numbers: [decisions/panel-frame.md](decisions
 
 ## Localization
 
-English and Simplified Chinese. Strings in `Sources/Pulse/Resources/en.lproj` and `zh-Hans.lproj`. `Package.swift` sets `defaultLocalization: "en"`.
+Five languages: English, Simplified Chinese, Traditional Chinese, Japanese and Korean. Strings in `Sources/Pulse/Resources/{en,zh-Hans,zh-Hant,ja,ko}.lproj`. `Package.swift` sets `defaultLocalization: "en"`.
 
 - Language follows the system unless Settings pins one. Takes effect **without relaunch**: `LocalizationSource` swaps the `.lproj` sub-bundle. Lookups are a function call, so SwiftUI has nothing to observe — views that show copy carry `.id(settings.language)`.
 - `UsageWindow.Kind` and `ProviderUsage.Unavailability` are **cases, not stored strings**, so a reading taken in one language is not frozen when the user switches.
@@ -31,7 +31,7 @@ English and Simplified Chinese. Strings in `Sources/Pulse/Resources/en.lproj` an
 - Chinese full stop `。` is full-width and already has trailing space; do not add another (`glassSubtitle`).
 - SwiftPM lowercases `zh-Hans.lproj` to `zh-hans.lproj` in the built bundle. `Bundle.preferredLocalizations` is case-insensitive; `path(forResource: "zh-Hans", ofType: "lproj")` returns nil.
 
-`./Scripts/check-localization.sh` compares the two `.strings` files **and** every key the source asks for (`Scripts/localization-keys.py` — a scanner, not a regex, because interpolations nest). Comparing only the two files missed a renamed string literal that fell back to English while both files still agreed.
+`./Scripts/check-localization.sh` compares **every** `.strings` file against English — it globs `*.lproj` rather than naming a pair, so a language added to the app but not to the script cannot go unchecked — **and** every key the source asks for (`Scripts/localization-keys.py` — a scanner, not a regex, because interpolations nest). Comparing only the two files missed a renamed string literal that fell back to English while both files still agreed.
 
 Why implicit `Text` fails, and the scanner’s blind spots: [decisions/localization.md](decisions/localization.md).
 
@@ -41,7 +41,9 @@ Why implicit `Text` fails, and the scanner’s blind spots: [decisions/localizat
 
 The package resource bundle must land in `Contents/Resources` in a real app (`Bundle.module` looks through `Bundle.main.resourceURL`). Leave it out and the app runs, silently in English, with no marks. [releasing.md](releasing.md).
 
-Shipping the `.lproj` folders is **not enough on its own**. CFBundle resolves a nested bundle's language against the **main** bundle's declared localizations, so with no `CFBundleLocalizations` in `Pulse.app/Contents/Info.plist`, `Bundle.module.preferredLocalizations` comes back `["en"]` on a Mac set to `zh-Hans-CN` and every lookup returns the English key — strings all present, all unused. `Scripts/bundle.sh` declares `en` and `zh-Hans`; CI asserts `zh-Hans` survives. Adding a language means adding it in **both** places.
+Shipping the `.lproj` folders is **not enough on its own**. CFBundle resolves a nested bundle's language against the **main** bundle's declared localizations, so with no `CFBundleLocalizations` in `Pulse.app/Contents/Info.plist`, `Bundle.module.preferredLocalizations` comes back `["en"]` on a Mac set to `zh-Hans-CN` and every lookup returns the English key — strings all present, all unused. `Scripts/bundle.sh` declares all five; CI asserts each one survives in the plist *and* as an `.lproj` inside the resource bundle. Adding a language means adding it in **four** places: a new `.lproj`, an `AppLanguage` case, `CFBundleLocalizations` in `bundle.sh`, and the CI loop.
+
+**Numbers are part of the translation.** `LocalizationSource.myriadUnits` decides whether a token count is grouped by thousands or by 10⁴/10⁸, and in whose characters — 亿 for simplified Chinese, 億 for traditional Chinese and Japanese, 억 for Korean. It returns the characters rather than a `Bool` precisely so those cannot be shared by accident; the characters live in code, not in the `.strings` files, because they belong to the numeral system rather than to the copy. `MyriadUnitsTests` pins it, including that `zh_TW` / `zh_HK` / `zh_MO` are read as traditional when the locale names a region but no script.
 
 Measured on 1.0.7's bundle: identical apps differing only by that key gave `preferredLocalizations` `["en"]` vs `["zh-Hans"]`, and `"Quit Pulse"` vs `"退出 Pulse"`.
 

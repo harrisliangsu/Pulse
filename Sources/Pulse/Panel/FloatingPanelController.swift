@@ -192,7 +192,6 @@ final class FloatingPanelController {
                 ? PanelHitArea.rail(edge: placement.edge, railSize: size, railTop: placement.railTop, railLeading: placement.railLeading)
                 : PanelHitArea.strip(edge: placement.edge, railSize: size, railTop: placement.railTop, railLeading: placement.railLeading)
         }
-        panel.onOpenSettings = openSettings
         panel.onClick = { [settings, placement, store] point in
             guard placement.isRailExpanded else { return }
             // The rail draws them in the user's order, so a click has to be
@@ -226,6 +225,17 @@ final class FloatingPanelController {
     }
 
     var isVisible: Bool { panel.isVisible }
+
+    /// The menu a secondary click on the rail puts up.
+    ///
+    /// Supplied from outside rather than built here: what belongs on it is
+    /// settings, updates and quitting, none of which this class knows anything
+    /// about. Built fresh on each click so an update that arrived since the
+    /// last one is on it.
+    var contextMenu: (() -> NSMenu)? {
+        get { panel.contextMenu }
+        set { panel.contextMenu = newValue }
+    }
 
     func show() {
         // **Placed, shown, then placed again**, and the second one is the one
@@ -463,9 +473,9 @@ private final class FloatingPanel: NSPanel {
     /// A short press that ended without moving the panel. The controller maps
     /// it to a provider ring; empty rail space remains drag-only.
     var onClick: ((CGPoint) -> Void)?
-    /// Settings from a right-click on the rail. The panel is never key, so
-    /// the menu-bar ⌘, does not land here.
-    var onOpenSettings: (() -> Void)?
+    /// The menu a secondary click on the rail puts up, built fresh each time
+    /// so it can carry whatever is true now — an available update, say.
+    var contextMenu: (() -> NSMenu)?
     var placement: PanelPlacement?
 
     /// Where on the rail the pointer took hold, so the panel doesn't jump to
@@ -477,8 +487,10 @@ private final class FloatingPanel: NSPanel {
 
     override func sendEvent(_ event: NSEvent) {
         switch event.type {
-        case .rightMouseDown where popAppMenu(event): return
-        case .leftMouseDown where event.modifierFlags.contains(.control) && popAppMenu(event): return
+        // Before the drag: a control-click *is* a right click on macOS, and
+        // taking it as a press would start carrying the panel instead.
+        case .rightMouseDown where showMenu(event): return
+        case .leftMouseDown where event.modifierFlags.contains(.control) && showMenu(event): return
         case .leftMouseDown where begin(event): return
         case .leftMouseDragged where carry(): return
         case .leftMouseUp where finish(): return
@@ -486,42 +498,31 @@ private final class FloatingPanel: NSPanel {
         }
     }
 
-    /// Right-click (and Control-click) on the rail or sliver. SwiftUI
-    /// `.contextMenu` needs a key window; this panel never is one.
-    @discardableResult
-    private func popAppMenu(_ event: NSEvent) -> Bool {
-        let location = local(event)
-        guard let area = grabArea?(), area.contains(location) else { return false }
+    /// Puts the panel's menu up, if the click landed on something to grab.
+    ///
+    /// The same geometry the drag uses, so what can be picked up is what can be
+    /// right-clicked — including the sliver, which is the whole point: the rail
+    /// is wound down to six points most of the time, and a menu you can only
+    /// reach by hovering first is one more thing to know.
+    ///
+    /// Taken here rather than through SwiftUI's `.contextMenu` for the reason
+    /// every other press is: this window is a non-key accessory panel, and
+    /// SwiftUI's own input handling is not reliable on it. See Docs/ui/input.md.
+    private func showMenu(_ event: NSEvent) -> Bool {
+        guard
+            let area = grabArea?(),
+            let menu = contextMenu?(),
+            let view = contentView,
+            area.contains(local(event))
+        else { return false }
 
-        let menu = NSMenu()
-        let settingsItem = NSMenuItem(
-            title: String.localized("Settings…"),
-            action: #selector(openSettingsFromMenu),
-            keyEquivalent: ""
-        )
-        settingsItem.target = self
-        menu.addItem(settingsItem)
-
-        let quitItem = NSMenuItem(
-            title: String.localized("Quit Pulse"),
-            action: #selector(quitFromMenu),
-            keyEquivalent: ""
-        )
-        quitItem.target = self
-        menu.addItem(quitItem)
-
-        if let view = contentView {
-            NSMenu.popUpContextMenu(menu, with: event, for: view)
-        }
+        // `popUp` runs its own tracking loop, so the flag is cleared only once
+        // the menu has closed — which is exactly the span the rail must stay
+        // drawn out for.
+        placement?.isMenuOpen = true
+        menu.popUp(positioning: nil, at: view.convert(event.locationInWindow, from: nil), in: view)
+        placement?.isMenuOpen = false
         return true
-    }
-
-    @objc private func openSettingsFromMenu() {
-        onOpenSettings?()
-    }
-
-    @objc private func quitFromMenu() {
-        NSApplication.shared.terminate(nil)
     }
 
     private func begin(_ event: NSEvent) -> Bool {

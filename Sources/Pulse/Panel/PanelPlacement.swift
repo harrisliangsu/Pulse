@@ -159,6 +159,14 @@ final class PanelPlacement {
     /// the instant the pointer travels.
     var isPressed = false
 
+    /// The panel's own context menu is open.
+    ///
+    /// The pointer is over the menu while it is up, which is off the panel by
+    /// every test the watcher makes — so without this the rail winds down to
+    /// its sliver the moment the menu appears next to it, and the menu is left
+    /// pointing at nothing.
+    var isMenuOpen = false
+
     /// Whether the rail is drawn out in full or wound down to its sliver.
     ///
     /// Decided by the content — it depends on where the pointer is — and

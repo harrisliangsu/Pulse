@@ -36,16 +36,21 @@ Click starts a provider-scoped refresh. `UsageStore.isRefreshing` : the usage ar
 
 A click is matched against the **displayed slots** the controller builds through `RailSlot.rail(for:isSplit:groups:)`, not `Provider.allCases`.
 
-## Settings and Quit from the panel
+## Secondary click opens the panel's menu
 
-The panel never becomes key, so the menu-bar extras' ⌘, / ⌘Q do not reach it. Do not install a global key monitor for ⌘Q: that would quit whichever app is frontmost *and* Pulse.
+`FloatingPanel.sendEvent` also takes `.rightMouseDown`, and `.leftMouseDown` **with control held** — a control-click is a right click on macOS, and letting it fall through to `begin(_:)` starts carrying the panel instead. Same geometry as the drag (`grabArea`), so what can be picked up can be right-clicked, **the sliver included** — the rail is wound down most of the time, and a menu reachable only after hovering is one more thing to know.
 
-Two ways that do work:
+Taken in `sendEvent` rather than with SwiftUI's `.contextMenu`, for the reason every other press is: this is a non-key accessory panel and SwiftUI's own input handling is not reliable on it.
 
-- **Right-click (or Control-click) the rail or sliver** — `FloatingPanel.sendEvent` pops an AppKit menu with Settings… and Quit Pulse. SwiftUI `.contextMenu` needs a key window; this panel is not one.
-- **Gear and power on the details card header** — the card is not the grab area. A SwiftUI `Button` is not enough: this window is transparent, so a tracking overlay that returns nil from `hitTest` is a hole and the press lands on the page behind. `PointerHand` claims the point, accepts the first click while another app is frontmost, and fires the action. Hover enlarge and the pointing-hand cursor use the same view (`.activeAlways` tracking area) — not `.onHover`. They take no extra card height; the title truncates.
+`AppDelegate.panelMenu()` builds it — settings, quit, and an available update — and builds it **fresh on every click**, so an update found since the last one is on it. The menu exists because a full menu bar is where Pulse's icon stops being reachable ([issue #24](https://github.com/qunqin24/Pulse/issues/24)).
 
-The menu-bar extra stays. These are the same two actions, reachable without hunting the extra.
+`placement.isMenuOpen` is set for the span of `popUp`, which runs its own tracking loop. Without it the pointer is on the menu — off the panel by every test `pointerMoved` makes — and the rail winds down to its sliver the moment the menu appears beside it. `scheduleHide` guards on it exactly as it guards on `isDragging`, and re-arms the same way.
+
+## Global shortcuts
+
+`GlobalShortcut` / `GlobalShortcutMonitor` (App/). `RegisterEventHotKey`, **not** an event tap: a tap that sees other apps' keystrokes needs Accessibility permission, and that is not a trade worth offering to open a settings window. Two actions, both **unset until somebody sets one** — a default combination is a key taken out of every other app's hands on behalf of someone who never asked.
+
+A combination needs ⌘, ⌥ or ⌃ in it; ⇧ alone is refused, and so is a bare key, function keys included. `⇧P` would take the letter P away from every text field on the Mac. A registration the window server refuses (another app holds the keys — or Pulse's own other shortcut does) lands in `unavailable`, and settings says so: a shortcut that quietly does nothing is worse than none, because the reader blames the feature. Recording is a **local event monitor**, installed only while recording and swallowing what it sees, which is what lets ⌘Q be recorded rather than quitting the app. [settings.md](settings.md)
 
 ## Settings fields
 

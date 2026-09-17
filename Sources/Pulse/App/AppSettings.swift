@@ -47,6 +47,28 @@ final class AppSettings {
         }
     }
 
+    /// The key combination that opens settings from anywhere, or nil.
+    ///
+    /// Deliberately no `onChange`: that is the usage loop's hook and it
+    /// refetches every provider when it fires. A shortcut is not a reading.
+    /// Whoever sets one tells `GlobalShortcutMonitor` directly, which is the
+    /// only thing that has to hear about it.
+    var openSettingsShortcut: GlobalShortcut? {
+        didSet {
+            guard openSettingsShortcut != oldValue else { return }
+            UserDefaults.standard.set(openSettingsShortcut?.storage, forKey: Key.openSettingsShortcut)
+        }
+    }
+
+    /// The key combination that draws the floating panel or takes it away, or
+    /// nil. Same rule about `onChange` as the one above.
+    var togglePanelShortcut: GlobalShortcut? {
+        didSet {
+            guard togglePanelShortcut != oldValue else { return }
+            UserDefaults.standard.set(togglePanelShortcut?.storage, forKey: Key.togglePanelShortcut)
+        }
+    }
+
     /// Where DeepSeek's ring gets its denominator.
     ///
     /// DeepSeek reports a prepaid balance and no allowance at all, so unlike
@@ -468,6 +490,42 @@ final class AppSettings {
         }
     }
 
+    /// How far back the Token spend pane counts.
+    ///
+    /// The last **week** until the reader picks another span, and their pick is
+    /// kept: the pane answers a sit-down question, and making someone re-choose
+    /// the window on every visit is work nobody asked for. No `onChange?()` —
+    /// nothing about the panel's frame depends on it, and `@Observable` already
+    /// redraws whoever read it, the same as `warningThreshold`.
+    var spendSpan: SpendSpan {
+        didSet {
+            guard spendSpan != oldValue else { return }
+            Self.storeSpendSpan(spendSpan, in: .standard)
+        }
+    }
+
+    /// The span last chosen, or `.week` when nothing is stored or what is
+    /// stored no longer names an offered range.
+    ///
+    /// Takes the store as an argument, rather than reaching for
+    /// `UserDefaults.standard`, so the round trip can be pinned against an
+    /// isolated suite. `restored()` and `spendSpan`'s `didSet` both go through
+    /// this and `storeSpendSpan`, so what a test exercises is the one
+    /// production uses.
+    static func storedSpendSpan(in defaults: UserDefaults) -> SpendSpan {
+        defaults.string(forKey: Key.spendSpan)
+            .flatMap(SpendSpan.init(rawValue:)) ?? .default
+    }
+
+    static func storeSpendSpan(_ span: SpendSpan, in defaults: UserDefaults) {
+        defaults.set(span.rawValue, forKey: Key.spendSpan)
+    }
+
+    /// The key the chosen span lives under. Internal so a test can store a
+    /// value the picker no longer offers and prove the fallback; nothing
+    /// outside the module can see it either way.
+    static var spendSpanDefaultsKey: String { Key.spendSpan }
+
     /// Say on the card whether each limit will last its window.
     ///
     /// Off by default, and that is the same judgement the window clock gets:
@@ -654,6 +712,8 @@ final class AppSettings {
         isPanelVisible: Bool = true,
         hidesInFullScreen: Bool = true,
         followsActiveDisplay: Bool = false,
+        openSettingsShortcut: GlobalShortcut? = nil,
+        togglePanelShortcut: GlobalShortcut? = nil,
         deepSeekBasis: DeepSeekBasis = .default,
         deepSeekBudget: Double? = nil,
         deepSeekCurrency: String? = nil,
@@ -681,6 +741,7 @@ final class AppSettings {
         showsForecast: Bool = false,
         showsSecondRing: Bool = false,
         splitAccounts: Set<String> = [],
+        spendSpan: SpendSpan = .default,
         alertThreshold: AlertThreshold = .default,
         alertsOnReset: Bool = false,
         alertsOnFailure: Bool = false,
@@ -689,6 +750,8 @@ final class AppSettings {
         self.isPanelVisible = isPanelVisible
         self.hidesInFullScreen = hidesInFullScreen
         self.followsActiveDisplay = followsActiveDisplay
+        self.openSettingsShortcut = openSettingsShortcut
+        self.togglePanelShortcut = togglePanelShortcut
         self.deepSeekBasis = deepSeekBasis
         self.deepSeekBudget = deepSeekBudget
         self.deepSeekCurrency = deepSeekCurrency
@@ -715,6 +778,7 @@ final class AppSettings {
         self.showsForecast = showsForecast
         self.showsSecondRing = showsSecondRing
         self.splitAccounts = splitAccounts
+        self.spendSpan = spendSpan
         self.alertThreshold = alertThreshold
         self.alertsOnReset = alertsOnReset
         self.alertsOnFailure = alertsOnFailure
@@ -935,6 +999,10 @@ final class AppSettings {
             isPanelVisible: visible,
             hidesInFullScreen: defaults.object(forKey: Key.hidesInFullScreen) as? Bool ?? true,
             followsActiveDisplay: defaults.object(forKey: Key.followsActiveDisplay) as? Bool ?? false,
+            openSettingsShortcut: defaults.string(forKey: Key.openSettingsShortcut)
+                .flatMap(GlobalShortcut.init(storage:)),
+            togglePanelShortcut: defaults.string(forKey: Key.togglePanelShortcut)
+                .flatMap(GlobalShortcut.init(storage:)),
             deepSeekBasis: defaults.string(forKey: Key.deepSeekBasis)
                 .flatMap(DeepSeekBasis.init(rawValue:)) ?? .default,
             deepSeekBudget: defaults.object(forKey: Key.deepSeekBudget) as? Double,
@@ -966,6 +1034,7 @@ final class AppSettings {
             showsForecast: defaults.object(forKey: Key.showsForecast) as? Bool ?? false,
             showsSecondRing: defaults.object(forKey: Key.showsSecondRing) as? Bool ?? false,
             splitAccounts: Set(defaults.stringArray(forKey: Key.splitAccounts) ?? []),
+            spendSpan: Self.storedSpendSpan(in: defaults),
             alertThreshold: (defaults.object(forKey: Key.alertThreshold) as? Int)
                 .flatMap(AlertThreshold.init(rawValue:)) ?? .default,
             alertsOnReset: defaults.object(forKey: Key.alertsOnReset) as? Bool ?? false,
@@ -1055,6 +1124,8 @@ final class AppSettings {
         static let extraAccounts = "settings.extraAccounts"
         static let hidesInFullScreen = "settings.hidesInFullScreen"
         static let followsActiveDisplay = "settings.followsActiveDisplay"
+        static let openSettingsShortcut = "settings.openSettingsShortcut"
+        static let togglePanelShortcut = "settings.togglePanelShortcut"
         static let deepSeekBasis = "settings.deepSeekBasis"
         static let deepSeekBudget = "settings.deepSeekBudget"
         static let deepSeekCurrency = "settings.deepSeekCurrency"
@@ -1084,6 +1155,7 @@ final class AppSettings {
         static let showsForecast = "settings.showsForecast"
         static let showsSecondRing = "settings.showsSecondRing"
         static let splitAccounts = "settings.splitAccounts"
+        static let spendSpan = "settings.spendSpan"
         static let alertThreshold = "settings.alertThreshold"
         static let alertsOnReset = "settings.alertsOnReset"
         static let alertsOnFailure = "settings.alertsOnFailure"

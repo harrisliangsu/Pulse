@@ -30,6 +30,8 @@ struct SettingsGroup<Content: View>: View {
             .overlay {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .strokeBorder(.separator.opacity(0.5), lineWidth: 1)
+                    // Decoration must not sit above the chart's hover target.
+                    .allowsHitTesting(false)
             }
         }
     }
@@ -40,15 +42,20 @@ struct SettingsGroup<Content: View>: View {
 struct SettingsRow<Control: View>: View {
     let title: String
     let subtitle: String?
-    /// A provider's mark before the title. Used where the row *is* a provider
-    /// — reordering the rail, say, where the icons are what is being arranged.
-    let icon: Provider?
+    /// A mark before the title, named by its SVG in `Resources`. Used where
+    /// the row *is* the thing the mark stands for — reordering the rail, say,
+    /// where the icons are what is being arranged, or a spend row naming the
+    /// client that produced it.
+    ///
+    /// A resource name rather than a `Provider` because the spend pane draws
+    /// clients that are not providers at all; see `SpendAgent.iconResource`.
+    let icon: String?
     @ViewBuilder let control: Control
 
     init(
         _ title: String,
         subtitle: String? = nil,
-        icon: Provider? = nil,
+        icon: String? = nil,
         @ViewBuilder control: () -> Control
     ) {
         self.title = title
@@ -60,7 +67,7 @@ struct SettingsRow<Control: View>: View {
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
             if let icon {
-                LobeIconView(provider: icon, size: 15)
+                LobeIconView(resource: icon, size: 15)
             }
 
             VStack(alignment: .leading, spacing: 3) {
