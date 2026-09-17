@@ -237,7 +237,7 @@
 
 /* Liquid Glass */
 "Liquid Glass" = "液態玻璃";
-"Frosted glass instead of solid black." = "改用半透明材質，取代純黑背景。";
+"Frosted glass instead of a solid rail." = "用半透明材質，取代實心軌道。";
 "Drag it by a ring while this is on." = "開啟後只能按住圓環拖曳。";
 "Open Antigravity to see its usage." = "開啟 Antigravity 才讀得到它的用量。";
 "Asks the language server Antigravity runs while it is open." = "向 Antigravity 開啟時執行的語言伺服器讀取。";
@@ -524,3 +524,32 @@
 "Not set" = "未設定";
 "Press keys…" = "按下組合鍵…";
 "Add ⌘, ⌥ or ⌃" = "需要 ⌘、⌥ 或 ⌃";
+
+
+/* Fork-only: Qoder, Kimi, appearance, celebrations */
+"A Qoder personal token lasts. A browser session expires. Stored encrypted on this Mac." = "Qoder 個人令牌較耐用，瀏覽器登入會過期。加密保存在本機。";
+"Add a Qoder session in Settings." = "請在設定中新增 Qoder 的登入資訊。";
+"Appearance" = "外觀";
+"Auto" = "自動";
+"Celebrate a reset" = "限額重置時播放彩帶";
+"Celebrations" = "慶祝";
+"Dark" = "深色";
+"Dark, light, match the Mac, or glass." = "深色、淺色、跟隨系統，或毛玻璃。";
+"From the Kimi Code console. Optional if you sign in. Stored encrypted on this Mac." = "在 Kimi Code 控制台取得。已登入則可留空。加密保存在本機。";
+"Full-screen ribbons and a sound, named for the provider." = "全螢幕彩帶與一聲提示，並標出是哪一家。";
+"Glass" = "毛玻璃";
+"Kimi Code account" = "Kimi Code 帳號";
+"Kimi Code's saved login expired. Sign in again in Settings." = "Kimi Code 存的登入已過期。請在設定裡重新登入。";
+"Light" = "淺色";
+"No Qoder session found. Sign in at qoder.com first." = "找不到 Qoder 的登入資訊，請先在 qoder.com 登入。";
+"Opens Kimi Code's own page. Pulse only reads usage." = "會開啟 Kimi Code 自己的頁面。Pulse 只讀取用量。";
+"Reads Qoder Credits from the signed-in account page." = "從已登入的 Qoder 帳號頁讀取 Credits。";
+"Sign in to Kimi Code in Settings, or paste an API key." = "在設定裡登入 Kimi Code，或貼上 API key。";
+"Signed in. Pulse holds a login for this Mac." = "已登入。Pulse 在本機保存了這份登入。";
+"Signed in. The API key in Connection is used instead." = "已登入。Connection 裡的 API key 會優先使用。";
+"Signed-in account" = "已登入的帳號";
+"The Qoder session expired. Sign in again and add it." = "Qoder 的登入已過期，請重新登入後再新增。";
+"Tiny" = "極小";
+"Token or session" = "令牌或登入工作階段";
+"Use the signed-in account when possible, the API key when not." = "能登入就走登入，否則用 API key。";
+"Uses the Kimi Code login Pulse holds." = "使用 Pulse 保存的 Kimi Code 登入。";

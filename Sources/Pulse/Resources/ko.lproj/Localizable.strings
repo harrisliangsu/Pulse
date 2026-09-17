@@ -237,7 +237,7 @@
 
 /* Liquid Glass */
 "Liquid Glass" = "리퀴드 글래스";
-"Frosted glass instead of solid black." = "완전한 검정 대신 반투명 유리 재질을 씁니다.";
+"Frosted glass instead of a solid rail." = "단단한 레일 대신 반투명 유리 재질을 씁니다.";
 "Drag it by a ring while this is on." = "켜져 있는 동안에는 링을 잡고 끌어야 합니다.";
 "Open Antigravity to see its usage." = "사용량을 읽으려면 Antigravity를 여십시오.";
 "Asks the language server Antigravity runs while it is open." = "Antigravity가 열려 있을 때 실행하는 언어 서버에 물어봅니다.";
@@ -524,3 +524,32 @@
 "Not set" = "설정 안 됨";
 "Press keys…" = "키를 누르십시오…";
 "Add ⌘, ⌥ or ⌃" = "⌘, ⌥, ⌃ 중 하나가 필요";
+
+
+/* Fork-only: Qoder, Kimi, appearance, celebrations */
+"A Qoder personal token lasts. A browser session expires. Stored encrypted on this Mac." = "Qoder 개인 토큰은 오래가고, 브라우저 세션은 만료됩니다. 이 Mac에 암호화해 저장합니다.";
+"Add a Qoder session in Settings." = "설정에서 Qoder 세션을 추가하세요.";
+"Appearance" = "모양";
+"Auto" = "자동";
+"Celebrate a reset" = "한도 회복 축하";
+"Celebrations" = "축하";
+"Dark" = "다크";
+"Dark, light, match the Mac, or glass." = "다크, 라이트, Mac에 맞추기, 또는 유리.";
+"From the Kimi Code console. Optional if you sign in. Stored encrypted on this Mac." = "Kimi Code 콘솔에서 가져옵니다. 로그인한 경우 비워 둬도 됩니다. 이 Mac에 암호화해 저장합니다.";
+"Full-screen ribbons and a sound, named for the provider." = "전체 화면 리본과 소리, 어느 서비스인지도 표시합니다.";
+"Glass" = "유리";
+"Kimi Code account" = "Kimi Code 계정";
+"Kimi Code's saved login expired. Sign in again in Settings." = "저장된 Kimi Code 로그인이 만료되었습니다. 설정에서 다시 로그인하세요.";
+"Light" = "라이트";
+"No Qoder session found. Sign in at qoder.com first." = "Qoder 세션을 찾지 못했습니다. 먼저 qoder.com에서 로그인하세요.";
+"Opens Kimi Code's own page. Pulse only reads usage." = "Kimi Code 자체의 페이지를 엽니다. Pulse는 사용량만 읽습니다.";
+"Reads Qoder Credits from the signed-in account page." = "로그인한 계정 페이지에서 Qoder Credits를 읽습니다.";
+"Sign in to Kimi Code in Settings, or paste an API key." = "설정에서 Kimi Code에 로그인하거나 API 키를 붙여넣으세요.";
+"Signed in. Pulse holds a login for this Mac." = "로그인됨. Pulse가 이 Mac용 로그인을 보관합니다.";
+"Signed in. The API key in Connection is used instead." = "로그인됨. 연결의 API 키가 대신 사용됩니다.";
+"Signed-in account" = "로그인한 계정";
+"The Qoder session expired. Sign in again and add it." = "Qoder 세션이 만료되었습니다. 다시 로그인한 뒤 추가하세요.";
+"Tiny" = "매우 작게";
+"Token or session" = "토큰 또는 세션";
+"Use the signed-in account when possible, the API key when not." = "가능하면 로그인한 계정을 쓰고, 아니면 API 키를 씁니다.";
+"Uses the Kimi Code login Pulse holds." = "Pulse가 보관한 Kimi Code 로그인을 사용합니다.";
