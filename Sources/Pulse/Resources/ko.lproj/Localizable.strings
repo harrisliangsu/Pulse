@@ -78,6 +78,7 @@
 "Percentages on top" = "위에 백분율 표시";
 "Turn red at" = "빨간색으로 바뀌는 지점";
 "Where a ring turns from green to red." = "링이 초록에서 빨강으로 바뀌는 지점입니다.";
+"Where a ring turns from green to muted grey." = "링이 초록에서 차분한 회색으로 바뀌는 지점입니다.";
 "Ring colour scheme" = "링 색 구성";
 "The colours rings and figures use as a limit fills." = "사용량이 늘 때 링과 숫자에 쓰는 색입니다.";
 "Red alert" = "빨간색 경고";

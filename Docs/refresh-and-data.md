@@ -96,7 +96,7 @@ Providers without local transcripts (`keepsLocalTranscripts == false`) omit the 
 - `showsRemaining` (off by default) counts the same reading down instead of up. The **arc** follows the figure; **colour** still means closeness to the limit. No reading draws an empty track; spent fills the ring either way. Do not invert `usedFraction ?? 0`.
 - Word on the card follows the figure (“left” vs “used”). Accessibility too.
 - `UsageWindow.percentText`: nothing used → 0%; anything used → at least 1%. Both ends get the rounding rule, so used+left need not sum to 100.
-- Colour is usage (`UsageTint`), not brand. Per-account `RingTint` is opt-in; the colour language is `RingColourScheme` (Red alert may still win when spent; Gradient and Quiet never draw red); convert through sRGB; no opacity.
+- Colour is usage (`UsageTint`), not brand. Per-account `RingTint` is opt-in; the colour language is `RingColourScheme` (Red alert may still win when spent; Gradient never draws red; Quiet keeps green when healthy and greys only the alarm/spent band); convert through sRGB; no opacity.
 
 ## Forecast (`BurnRate`)
 

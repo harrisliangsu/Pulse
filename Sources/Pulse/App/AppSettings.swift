@@ -534,14 +534,15 @@ final class AppSettings {
         }
     }
 
-    /// How full a limit has to be before Red alert draws it red.
+    /// How full a limit has to be before Red alert draws it red, and
+    /// before Quiet draws it grey.
     ///
     /// A setting rather than a constant because "getting tight" is a judgement
     /// about how somebody works, not a fact about the limit: a weekly window
     /// three-quarters gone on a Monday and on a Friday are the same number and
     /// not the same news. Shown only while the scheme is Red alert — it is the
     /// green→red step, not an amber→red one. Gradient reuses the stored figure
-    /// as its yellow→orange step; Quiet ignores it.
+    /// as its yellow→orange step; Quiet reuses it as the green→grey step.
     ///
     /// No `onChange?()`: nothing about the panel's frame depends on it, and
     /// `@Observable` already redraws whoever read it.

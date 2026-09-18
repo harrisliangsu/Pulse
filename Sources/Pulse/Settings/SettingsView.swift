@@ -606,12 +606,14 @@ struct SettingsView: View {
                     .disabled(!settings.isPanelVisible)
                 }
 
-                if settings.ringColourScheme == .redAlert {
+                if settings.ringColourScheme == .redAlert || settings.ringColourScheme == .quiet {
                     SettingsRowDivider()
 
                     SettingsRow(
                         String.localized("Turn red at"),
-                        subtitle: String.localized("Where a ring turns from green to red.")
+                        subtitle: settings.ringColourScheme == .quiet
+                            ? String.localized("Where a ring turns from green to muted grey.")
+                            : String.localized("Where a ring turns from green to red.")
                     ) {
                         Picker(String.localized("Turn red at"), selection: Binding(
                             get: { settings.warningThreshold },

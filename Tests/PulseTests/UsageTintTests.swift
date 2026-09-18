@@ -6,10 +6,11 @@ import Testing
 /// The colour language each scheme speaks, and that 1.2.1's spent-only
 /// picker migrates onto it.
 ///
-/// Red alert is green and red only — no amber step. Gradient and Quiet must
-/// never emit alarm red, including when a limit is spent, which is the
-/// failure 1.2.1 Quiet had: it only overrode the spent hue and left 98% used
-/// on the old green→amber→red ladder.
+/// Red alert is green and red only — no amber step. Gradient never emits
+/// alarm red. Quiet keeps the same green band as Red alert and greys only
+/// the alarm / spent band — never a full-rail grey wash, and never red,
+/// which is the failure 1.2.2 Quiet had after 1.2.1 left 98% used on the
+/// old ladder.
 @Suite("Usage tint")
 struct UsageTintTests {
     private static func colour(
@@ -81,11 +82,24 @@ struct UsageTintTests {
 
     // MARK: Quiet
 
-    @Test("Quiet is a grey scale and never red or amber")
-    func quietNeverRedOrAmber() {
-        #expect(Self.colour(0.2, scheme: .quiet) == .pulseQuietLight)
-        #expect(Self.colour(0.5, scheme: .quiet) == .pulseQuiet)
+    @Test("Quiet keeps green below the threshold")
+    func quietHealthyStaysGreen() {
+        #expect(Self.colour(0.07, scheme: .quiet) == .pulseGood)
+        #expect(Self.colour(0.2, scheme: .quiet) == .pulseGood)
+        #expect(Self.colour(0.5, scheme: .quiet) == .pulseGood)
+        #expect(Self.colour(0.74, warningAt: .seventyFive, scheme: .quiet) == .pulseGood)
+        #expect(Self.colour(0.61, warningAt: .ninety, scheme: .quiet) == .pulseGood)
+        // 93% remaining is 7% used — the screenshot's healthy Cursor ring.
+        #expect(Self.colour(1 - 0.93, scheme: .quiet) == .pulseGood)
+    }
+
+    @Test("Quiet greys the alarm band and spent, and never red")
+    func quietAlarmAndSpentAreGreyNotRed() {
+        #expect(Self.colour(0.75, warningAt: .seventyFive, scheme: .quiet) == .pulseQuiet)
+        #expect(Self.colour(0.61, warningAt: .sixty, scheme: .quiet) == .pulseQuiet)
         #expect(Self.colour(0.98, scheme: .quiet) == .pulseQuiet)
+        // 2% remaining is 98% used — the screenshot's Codex ring.
+        #expect(Self.colour(1 - 0.02, scheme: .quiet) == .pulseQuiet)
         #expect(Self.colour(1, scheme: .quiet) == .pulseQuietDeep)
         #expect(Self.colour(0.1, warningAt: .ninety, spent: true, scheme: .quiet) == .pulseQuietDeep)
 
@@ -94,15 +108,21 @@ struct UsageTintTests {
             #expect(!colour.isPulseAlarmRed)
             #expect(colour != .pulseCaution)
             #expect(!Self.colour(used, spent: true, scheme: .quiet).isPulseAlarmRed)
+            #expect(Self.colour(used, spent: true, scheme: .quiet) == .pulseQuietDeep)
+        }
+        for threshold in WarningThreshold.allCases {
+            #expect(Self.colour(threshold.fraction.nextDown, warningAt: threshold, scheme: .quiet) == .pulseGood)
+            #expect(Self.colour(threshold.fraction, warningAt: threshold, scheme: .quiet) == .pulseQuiet)
+            #expect(!Self.colour(1, warningAt: threshold, scheme: .quiet).isPulseAlarmRed)
         }
     }
 
-    @Test("Quiet ignores the red threshold")
-    func quietIgnoresTheThreshold() {
-        #expect(
-            Self.colour(0.8, warningAt: .sixty, scheme: .quiet)
-                == Self.colour(0.8, warningAt: .ninety, scheme: .quiet)
-        )
+    @Test("Quiet uses the same threshold Red alert does")
+    func quietUsesTheThreshold() {
+        #expect(Self.colour(0.74, warningAt: .seventyFive, scheme: .quiet) == .pulseGood)
+        #expect(Self.colour(0.75, warningAt: .seventyFive, scheme: .quiet) == .pulseQuiet)
+        #expect(Self.colour(0.8, warningAt: .sixty, scheme: .quiet) == .pulseQuiet)
+        #expect(Self.colour(0.8, warningAt: .ninety, scheme: .quiet) == .pulseGood)
     }
 
     // MARK: Shared

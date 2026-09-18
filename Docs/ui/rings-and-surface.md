@@ -20,9 +20,9 @@ Colour means **usage**, not identity. One setting owns the whole colour language
 
 Three schemes, one value on the environment (`ringColourScheme`) so every ring, bar and figure agrees. `UsageTint.color(for:isExhausted:warningAt:scheme:)` and `UsageWindow.tint(warningAt:scheme:)` take both with **no default** — a default is how one ring comes to disagree with the one beside it.
 
-- **Red alert** — the default, and the **only** scheme that may draw red. Green below `warningThreshold`, red at or above it, spent deep red (`pulseExhausted`). No amber step. `Turn red at` (`WarningThreshold`, 60–90%, default 75) is nested under this scheme only. It reaches the panel through `EnvironmentValues.usageWarningThreshold`, set once in `FloatingUsagePanelView`.
+- **Red alert** — the default, and the **only** scheme that may draw red. Green below `warningThreshold`, red at or above it, spent deep red (`pulseExhausted`). No amber step. `Turn red at` (`WarningThreshold`, 60–90%, default 75) is nested under Red alert and Quiet. It reaches the panel through `EnvironmentValues.usageWarningThreshold`, set once in `FloatingUsagePanelView`.
 - **Gradient** — green → yellow/amber → deeper amber/orange by usage. `warningThreshold` is the yellow→orange step internally and is never shown as a red control. **Never red**, including when spent, exhausted, or locked.
-- **Quiet** — a neutral grey scale by usage (fuller = darker, still readable on the dark rail). **Never red, never amber.** No nested red controls.
+- **Quiet** — the same green band Red alert uses below the threshold; muted grey at or above it, and when spent. **Never red, never amber.** Not a grey wash of the whole rail — 93% remaining stays green; 2% remaining and a spent limit go grey. The 1.2.2 full-greyscale reading was a misread; [quiet-is-not-greyscale.md](../decisions/quiet-is-not-greyscale.md).
 
 `warningThreshold` is not a layout input, so it does not belong in `PanelMetrics`. Every offered figure sits above `UsageTint.cautionThreshold` (0.5), which is Gradient's green→yellow step.
 
