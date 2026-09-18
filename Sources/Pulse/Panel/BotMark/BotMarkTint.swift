@@ -37,7 +37,7 @@ enum BotMarkTint {
         case .glmCoding: BotMarkPalette.rgb(0x3A7BF7)
         case .kimiCode: BotMarkPalette.rgb(0x2F6BFF)
         case .codex, .cursor, .openCodeGo, .ollamaCloud, .zai,
-             .copilot, .grok, .grokBot, .commandCode, .devin:
+             .copilot, .grok, .grokBot, .qoder, .commandCode, .devin:
             nil
         }
     }
