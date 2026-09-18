@@ -575,11 +575,13 @@
 "Add a Qoder session in Settings." = "설정에서 Qoder 세션을 추가하세요.";
 "Appearance" = "모양";
 "Auto" = "자동";
+"Also celebrate hourly quota resets" = "시간 한도 회복도 축하";
 "Celebrate a reset" = "한도 회복 축하";
 "Celebrations" = "축하";
 "Dark" = "다크";
 "Dark, light, match the Mac, or glass." = "다크, 라이트, Mac에 맞추기, 또는 유리.";
 "From the Kimi Code console. Optional if you sign in. Stored encrypted on this Mac." = "Kimi Code 콘솔에서 가져옵니다. 로그인한 경우 비워 둬도 됩니다. 이 Mac에 암호화해 저장합니다.";
+"Five-hour windows, not only the week or month." = "주·월뿐만 아니라 5시간 한도가 회복될 때도 리본을 켭니다.";
 "Full-screen ribbons and a sound, named for the provider." = "전체 화면 리본과 소리, 어느 서비스인지도 표시합니다.";
 "Glass" = "유리";
 "Kimi Code account" = "Kimi Code 계정";

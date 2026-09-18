@@ -66,18 +66,22 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         case monthly
         case other(seconds: Int)
 
-        /// Ribbons are for a week or a month coming back, not a five-hour
-        /// session rolling over. Codex's session clock moves several times a
-        /// day; celebrating that is how the overlay played when nothing the
-        /// user would call a reset had happened.
-        var celebratesReset: Bool {
+        /// Week and month always. Five-hour only when the reader switched
+        /// that on — those windows roll several times a day, and Codex's
+        /// session clock used to throw ribbons when nothing the user would
+        /// call a reset had happened. Detection still refuses a clock that
+        /// only slides; this gate is the product default.
+        func celebratesReset(includingFiveHour: Bool) -> Bool {
             switch self {
             case .weekly, .monthly: true
+            case .fiveHour: includingFiveHour
             // Daily rolls over every day; message allowances have no reset —
             // neither is something a ribbon should celebrate.
-            case .fiveHour, .spend, .balance, .daily, .messages, .other: false
+            case .spend, .balance, .daily, .messages, .other: false
             }
         }
+
+        var celebratesReset: Bool { celebratesReset(includingFiveHour: false) }
     }
 
     /// Stable across refreshes, so SwiftUI keeps a row's identity while its

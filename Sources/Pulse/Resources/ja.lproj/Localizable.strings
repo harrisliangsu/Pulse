@@ -575,11 +575,13 @@
 "Add a Qoder session in Settings." = "設定で Qoder のセッションを追加してください。";
 "Appearance" = "外観";
 "Auto" = "自動";
+"Also celebrate hourly quota resets" = "時間枠のリセットもお祝い";
 "Celebrate a reset" = "リセットをお祝い";
 "Celebrations" = "お祝い";
 "Dark" = "ダーク";
 "Dark, light, match the Mac, or glass." = "ダーク、ライト、Mac に合わせる、またはガラス。";
 "From the Kimi Code console. Optional if you sign in. Stored encrypted on this Mac." = "Kimi Code コンソールから取得。サインイン済みなら省略可。この Mac に暗号化して保存します。";
+"Five-hour windows, not only the week or month." = "週や月だけでなく、5時間の枠でもリボンを出します。";
 "Full-screen ribbons and a sound, named for the provider." = "全画面のリボンと効果音。どのサービスかも表示します。";
 "Glass" = "ガラス";
 "Kimi Code account" = "Kimi Code アカウント";

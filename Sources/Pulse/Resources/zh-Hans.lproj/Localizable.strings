@@ -459,6 +459,8 @@
 "Celebrations" = "庆祝";
 "Celebrate a reset" = "限额重置时播放彩带";
 "Full-screen ribbons and a sound, named for the provider." = "全屏彩带和一声提示，并标出是哪一家。";
+"Also celebrate hourly quota resets" = "也庆祝小时额度重置";
+"Five-hour windows, not only the week or month." = "5 小时额度也会播放彩带，不只是周或月。";
 
 /* 设置侧边栏搜索 */
 "Search" = "搜索";
