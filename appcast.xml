@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.2.3</title>
+            <pubDate>Fri, 18 Sep 2026 04:17:29 -0000</pubDate>
+            <sparkle:version>1.2.3</sparkle:version>
+            <sparkle:shortVersionString>1.2.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.3</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.2.3</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>低调方案保住绿色，只把告警段改成灰。</strong> 设置 → 通用 → 环颜色方案 → <strong>低调</strong>不再把整条胶囊洗成灰。低于「变红阈值」时圆环、百分比和进度条仍用红色告警同一档绿色；达到或超过该线、或服务商标明额度用尽时，改为柔和灰——从不画红。剩余 93% 仍是绿；剩余 2% 和用尽是灰。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.3">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.2.3/Pulse-1.2.3.zip"
+                       length="8010675"
+                       type="application/octet-stream"
+                       sparkle:edSignature="ec7SaEeRGBCS/B63M2uSeC+iKDpqdIbLtlNbUMDLFC9TJe9QoRt9EOIi9WplPG5T1drSQ96aMUQw7qcoQKfnCg==" />
+        </item>
+        <item>
             <title>1.2.2</title>
             <pubDate>Fri, 18 Sep 2026 03:57:07 -0000</pubDate>
             <sparkle:version>1.2.2</sparkle:version>
