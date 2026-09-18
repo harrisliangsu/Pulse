@@ -6,6 +6,12 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.2.2
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **一个「环颜色方案」设置。** 设置 → 通用里，用尽时的单独颜色选择改为统一的**环颜色方案**：**红色告警**（只有绿/红，并保留嵌套的**变红阈值**）、**渐变**（从不画红）、**低调**（灰色，从不画红）。低调方案越过阈值也不再变红。原先的「强调 / 跟随用量 / 低调」会迁移到对应方案。
+- **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.2.1
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
