@@ -78,6 +78,7 @@
 "Percentages on top" = "上方顯示百分比";
 "Turn red at" = "轉紅門檻";
 "Where a ring turns from green to red." = "圓環從綠色轉為紅色的位置。";
+"Where a ring turns from green to muted grey." = "圓環從綠色轉為柔和灰的位置。";
 "Ring colour scheme" = "環顏色方案";
 "The colours rings and figures use as a limit fills." = "圓環和數字隨用量升高所用的顏色。";
 "Red alert" = "紅色告警";

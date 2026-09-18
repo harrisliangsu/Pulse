@@ -567,20 +567,11 @@ private struct UsageDockItem: View {
                 // the ring.
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-                // A spent limit colours the figure too, in the same hue the
-                // ring uses — Red alert's deep red, Gradient's orange peak,
-                // or Quiet's deep grey. At ring size a fourth hue on the
-                // stroke alone would read as the third.
-                .foregroundStyle(
-                    UsageTint.isSpent(headline)
-                        ? UsageTint.color(
-                            for: headline?.usedFraction ?? 1,
-                            isExhausted: true,
-                            warningAt: warningThreshold,
-                            scheme: ringColourScheme
-                        )
-                        : .primary.opacity(headline == nil && entry.figure == nil ? 0.4 : 1)
-                )
+                // Same hue as the ring and the card bar — Red alert's green
+                // or red, Gradient's climb, Quiet's green or muted grey.
+                // A fourth colour on the figure alone would disagree at a
+                // glance. No reading stays the dim primary.
+                .foregroundStyle(percentColour)
                 .monospacedDigit()
                 // Dimmed with the arc, so the whole ring goes quiet together
                 // while its reading is fetched, and returns with it.
@@ -594,6 +585,19 @@ private struct UsageDockItem: View {
                     value: headline?.percentText(remaining: entry.showsRemaining) ?? entry.figure
                 )
         }
+    }
+
+    private var percentColour: Color {
+        guard let headline else {
+            return .primary.opacity(entry.figure == nil ? 0.4 : 1)
+        }
+        return UsageTint.resolved(
+            usedFraction: headline.usedFraction,
+            isExhausted: UsageTint.isSpent(headline),
+            warningAt: warningThreshold,
+            scheme: ringColourScheme,
+            chosenTint: entry.tint
+        )
     }
 
     private var accessibilityValue: String {

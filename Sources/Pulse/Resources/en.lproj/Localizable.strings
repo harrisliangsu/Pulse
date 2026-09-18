@@ -78,6 +78,7 @@
 "Percentages on top" = "Percentages on top";
 "Turn red at" = "Turn red at";
 "Where a ring turns from green to red." = "Where a ring turns from green to red.";
+"Where a ring turns from green to muted grey." = "Where a ring turns from green to muted grey.";
 "Ring colour scheme" = "Ring colour scheme";
 "The colours rings and figures use as a limit fills." = "The colours rings and figures use as a limit fills.";
 "Red alert" = "Red alert";

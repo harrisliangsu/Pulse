@@ -78,6 +78,7 @@
 "Percentages on top" = "上にパーセントを表示";
 "Turn red at" = "赤にする位置";
 "Where a ring turns from green to red." = "リングが緑から赤に変わる位置です。";
+"Where a ring turns from green to muted grey." = "リングが緑から落ち着いたグレーに変わる位置です。";
 "Ring colour scheme" = "リングの配色";
 "The colours rings and figures use as a limit fills." = "使用量に応じてリングと数字に使う色です。";
 "Red alert" = "赤で警告";

@@ -390,7 +390,7 @@ private struct ProgressMetricRow: View {
                 // let a missing one through the check that exists to catch it.
                 Text(figureLabel)
                     .font(.system(size: DetailCardLayout.rowFontSize, weight: .medium, design: .rounded))
-                    .foregroundStyle(isSpent ? accent : .primary.opacity(0.9))
+                    .foregroundStyle(accent)
 
                 Spacer(minLength: 0)
 

@@ -23,8 +23,9 @@ extension UsageWindow {
 /// that means "pay attention", and a figure somebody nudged to 73 is not a
 /// clearer signal than one they picked. Gradient reuses the same figure as
 /// its yellow→orange step so a value stored under Red alert is not discarded
-/// if the scheme changes; Quiet ignores it. Every option sits above
-/// `UsageTint.cautionThreshold`, which is Gradient's green→yellow step.
+/// if the scheme changes; Quiet reuses it as the green→grey step. Every
+/// option sits above `UsageTint.cautionThreshold`, which is Gradient's
+/// green→yellow step.
 enum WarningThreshold: Int, CaseIterable, Identifiable, Sendable {
     case sixty = 60
     case seventy = 70
@@ -78,15 +79,16 @@ enum RingColourScheme: String, CaseIterable, Identifiable, Sendable {
 
 enum UsageTint {
     /// Comfortable below this. Gradient's green→yellow step; Red alert
-    /// ignores it (green runs up to the warning figure) and Quiet does too.
+    /// and Quiet ignore it (green runs up to the warning figure).
     static let cautionThreshold = 0.5
     /// Getting tight above this, unless somebody has moved it. The shipped
     /// default, and the fallback anywhere the setting has not reached.
     static let warningThreshold = WarningThreshold.default.fraction
 
     /// The scheme's colour for this reading. Red is produced only by
-    /// Red alert — Gradient and Quiet clamp the ladder so a spent, locked,
-    /// or 98%-used limit cannot go red.
+    /// Red alert — Gradient never climbs to it, and Quiet replaces the
+    /// alarm band with grey, so a spent, locked, or 98%-used limit
+    /// cannot go red.
     ///
     /// **No default for `scheme`.** Same reason `warningAt` has none: a
     /// default here is how one ring comes to disagree with the one beside it.
@@ -102,7 +104,7 @@ enum UsageTint {
         case .gradient:
             return gradient(for: usedFraction, isExhausted: isExhausted, warningAt: warningAt)
         case .quiet:
-            return quiet(for: usedFraction, isExhausted: isExhausted)
+            return quiet(for: usedFraction, isExhausted: isExhausted, warningAt: warningAt)
         }
     }
 
@@ -148,12 +150,13 @@ enum UsageTint {
         }
     }
 
-    /// Neutral greys by how full the limit is. Fuller is darker, kept above
-    /// the empty track so a spent ring still reads on the dark rail. No
-    /// amber, no red, at any usage.
-    private static func quiet(for usedFraction: Double, isExhausted: Bool) -> Color {
+    /// The same green band Red alert uses, with muted grey in place of
+    /// alarm red. Healthy stays green — Quiet is not a grey wash of the
+    /// whole rail. At or above the warning figure, or when spent, the
+    /// ring goes grey. Never red, never amber.
+    private static func quiet(for usedFraction: Double, isExhausted: Bool, warningAt: Double) -> Color {
         if isExhausted || usedFraction >= 1 { return .pulseQuietDeep }
-        return usedFraction < cautionThreshold ? .pulseQuietLight : .pulseQuiet
+        return usedFraction < warningAt ? .pulseGood : .pulseQuiet
     }
 
     static func isSpent(_ window: UsageWindow?) -> Bool {
@@ -259,12 +262,11 @@ extension Color {
     static let pulseExhausted = Color(red: 0.85, green: 0.09, blue: 0.13)
     /// Gradient's top: deeper amber/orange than the caution step, and not red.
     static let pulseGradientPeak = Color(red: 0.95, green: 0.48, blue: 0.12)
-    /// Quiet's low-usage grey — enough ink to see on black, light enough to
-    /// sit below the mid and spent steps.
-    static let pulseQuietLight = Color(red: 0.70, green: 0.72, blue: 0.76)
-    /// Quiet's mid-usage grey. Neutral on both the black rail and the light one.
+    /// Quiet's alarm-band grey — the muted stand-in for Red alert's warning
+    /// red. Healthy usage stays `pulseGood`; this is only for the line at
+    /// or above the threshold.
     static let pulseQuiet = Color(red: 0.58, green: 0.60, blue: 0.64)
-    /// Quiet's spent / full grey: darker than the mid step, still above the
+    /// Quiet's spent grey: darker than the alarm step, still above the
     /// empty track so a full arc does not vanish into the rail.
     static let pulseQuietDeep = Color(red: 0.46, green: 0.48, blue: 0.52)
 }
