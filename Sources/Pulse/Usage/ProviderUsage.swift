@@ -66,20 +66,22 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         case monthly
         case other(seconds: Int)
 
-        /// Ribbons follow the same unambiguous-reset evidence as the
-        /// notification: a week, a month, or a five-hour window that has
-        /// actually turned over. Codex's session clock still sliding a few
-        /// minutes is not that evidence — the detection rule refuses it —
-        /// so excluding the kind itself left Zhipu and Kimi silent on the
-        /// short quota people actually wait for.
-        var celebratesReset: Bool {
+        /// Week and month always. Five-hour only when the reader switched
+        /// that on — those windows roll several times a day, and Codex's
+        /// session clock used to throw ribbons when nothing the user would
+        /// call a reset had happened. Detection still refuses a clock that
+        /// only slides; this gate is the product default.
+        func celebratesReset(includingFiveHour: Bool) -> Bool {
             switch self {
-            case .fiveHour, .weekly, .monthly: true
+            case .weekly, .monthly: true
+            case .fiveHour: includingFiveHour
             // Daily rolls over every day; message allowances have no reset —
             // neither is something a ribbon should celebrate.
             case .spend, .balance, .daily, .messages, .other: false
             }
         }
+
+        var celebratesReset: Bool { celebratesReset(includingFiveHour: false) }
     }
 
     /// Stable across refreshes, so SwiftUI keeps a row's identity while its

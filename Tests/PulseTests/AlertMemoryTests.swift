@@ -88,6 +88,7 @@ struct AlertMemoryTests {
         announcesReset: Bool = true,
         announcesFailure: Bool = true,
         celebratesReset: Bool = false,
+        celebratesHourlyReset: Bool = false,
         staleMeansFailure: Bool = true,
         lowBalance: Double? = nil,
         now: Date = AlertMemoryTests.now
@@ -100,6 +101,7 @@ struct AlertMemoryTests {
             announcesReset: announcesReset,
             announcesFailure: announcesFailure,
             celebratesReset: celebratesReset,
+            celebratesHourlyReset: celebratesHourlyReset,
             lowBalance: lowBalance,
             staleMeansFailure: staleMeansFailure,
             now: now
@@ -561,8 +563,8 @@ struct AlertMemoryTests {
         )
     }
 
-    @Test("A five-hour window that turns over throws ribbons")
-    func fiveHourResetIsACelebration() {
+    @Test("A five-hour session rolling over does not throw ribbons by default")
+    func sessionResetIsNotACelebrationByDefault() {
         var memory = AlertMemory()
         let first = Date(timeIntervalSince1970: 1_800_003_600)
         let session = { (used: Double, resetsAt: Date) in
@@ -586,14 +588,106 @@ struct AlertMemoryTests {
                 Self.live(session(0.0, first.addingTimeInterval(5 * 3_600))),
                 threshold: .off,
                 celebratesReset: true
+            ).isEmpty
+        )
+    }
+
+    @Test("A five-hour window throws ribbons only when hourly celebration is on")
+    func fiveHourResetIsACelebrationWhenAsked() {
+        var memory = AlertMemory()
+        let first = Date(timeIntervalSince1970: 1_800_003_600)
+        let session = { (used: Double, resetsAt: Date) in
+            Self.window(
+                "session",
+                used: used,
+                resetsAt: resetsAt,
+                kind: .fiveHour,
+                windowSeconds: 5 * 3_600
+            )
+        }
+        _ = run(
+            &memory,
+            Self.live(session(0.80, first)),
+            threshold: .off,
+            celebratesReset: true,
+            celebratesHourlyReset: true
+        )
+        #expect(
+            run(
+                &memory,
+                Self.live(session(0.0, first.addingTimeInterval(5 * 3_600))),
+                threshold: .off,
+                celebratesReset: true,
+                celebratesHourlyReset: true
             ).map(\.kind) == [.celebration]
+        )
+    }
+
+    @Test("Hourly celebration alone does not throw ribbons")
+    func hourlyFlagAloneDoesNotCelebrate() {
+        var memory = AlertMemory()
+        let first = Date(timeIntervalSince1970: 1_800_003_600)
+        let session = { (used: Double, resetsAt: Date) in
+            Self.window(
+                "session",
+                used: used,
+                resetsAt: resetsAt,
+                kind: .fiveHour,
+                windowSeconds: 5 * 3_600
+            )
+        }
+        _ = run(
+            &memory,
+            Self.live(session(0.80, first)),
+            threshold: .off,
+            celebratesReset: false,
+            celebratesHourlyReset: true
+        )
+        #expect(
+            run(
+                &memory,
+                Self.live(session(0.0, first.addingTimeInterval(5 * 3_600))),
+                threshold: .off,
+                celebratesReset: false,
+                celebratesHourlyReset: true
+            ).isEmpty
         )
     }
 
     /// Zhipu's five-hour CREDIT_LIMIT states a length and no `nextResetTime`.
     /// The only evidence a turnover can give is the drop.
-    @Test("Zhipu's 5-hour limit, which reports no reset time, still throws ribbons")
-    func zhipuFiveHourResetCelebrates() {
+    @Test("Zhipu's 5-hour limit throws ribbons when hourly celebration is on")
+    func zhipuFiveHourResetCelebratesWhenAsked() {
+        var memory = AlertMemory()
+        let window = { (used: Double) in
+            Self.window(
+                "glmCoding.CREDIT_LIMIT.3-5.0",
+                used: used,
+                resetsAt: nil,
+                kind: .fiveHour,
+                windowSeconds: 5 * 3_600
+            )
+        }
+        _ = run(
+            &memory,
+            Self.live(window(0.80)),
+            threshold: .off,
+            celebratesReset: true,
+            celebratesHourlyReset: true
+        )
+        #expect(
+            run(
+                &memory,
+                Self.live(window(0.0)),
+                threshold: .off,
+                celebratesReset: true,
+                celebratesHourlyReset: true
+            ).map(\.kind) == [.celebration]
+        )
+    }
+
+    @Test("Zhipu's 5-hour limit stays silent when hourly celebration is off")
+    func zhipuFiveHourResetIsSilentByDefault() {
         var memory = AlertMemory()
         let window = { (used: Double) in
             Self.window(
@@ -616,15 +710,15 @@ struct AlertMemoryTests {
                 Self.live(window(0.0)),
                 threshold: .off,
                 celebratesReset: true
-            ).map(\.kind) == [.celebration]
+            ).isEmpty
         )
     }
 
     /// Kimi's timed `limits[]` row is five hours and carries its own reset
     /// stamp. A drop together with a five-hour jump is a refill on the first
     /// sample, the same as a weekly clock moving on.
-    @Test("Kimi's 5-hour limit throws ribbons when the clock jumps with the drop")
-    func kimiFiveHourResetCelebrates() {
+    @Test("Kimi's 5-hour limit throws ribbons when hourly celebration is on")
+    func kimiFiveHourResetCelebratesWhenAsked() {
         var memory = AlertMemory()
         let first = Date(timeIntervalSince1970: 1_800_003_600)
         let window = { (used: Double, resetsAt: Date) in
@@ -640,14 +734,16 @@ struct AlertMemoryTests {
             &memory,
             Self.live(window(0.80, first)),
             threshold: .off,
-            celebratesReset: true
+            celebratesReset: true,
+            celebratesHourlyReset: true
         )
         #expect(
             run(
                 &memory,
                 Self.live(window(0.0, first.addingTimeInterval(5 * 3_600))),
                 threshold: .off,
-                celebratesReset: true
+                celebratesReset: true,
+                celebratesHourlyReset: true
             ).map(\.kind) == [.celebration]
         )
     }
@@ -669,14 +765,16 @@ struct AlertMemoryTests {
             &memory,
             Self.live(session(0.80, first)),
             threshold: .off,
-            celebratesReset: true
+            celebratesReset: true,
+            celebratesHourlyReset: true
         )
         #expect(
             run(
                 &memory,
                 Self.live(session(0.0, first.addingTimeInterval(11 * 60))),
                 threshold: .off,
-                celebratesReset: true
+                celebratesReset: true,
+                celebratesHourlyReset: true
             ).isEmpty
         )
         #expect(
@@ -684,7 +782,8 @@ struct AlertMemoryTests {
                 &memory,
                 Self.live(session(0.0, first.addingTimeInterval(22 * 60))),
                 threshold: .off,
-                celebratesReset: true
+                celebratesReset: true,
+                celebratesHourlyReset: true
             ).map(\.kind) == [.celebration]
         )
     }

@@ -575,11 +575,13 @@
 "Add a Qoder session in Settings." = "請在設定中新增 Qoder 的登入資訊。";
 "Appearance" = "外觀";
 "Auto" = "自動";
+"Also celebrate hourly quota resets" = "也慶祝小時額度重置";
 "Celebrate a reset" = "限額重置時播放彩帶";
 "Celebrations" = "慶祝";
 "Dark" = "深色";
 "Dark, light, match the Mac, or glass." = "深色、淺色、跟隨系統，或毛玻璃。";
 "From the Kimi Code console. Optional if you sign in. Stored encrypted on this Mac." = "在 Kimi Code 控制台取得。已登入則可留空。加密保存在本機。";
+"Five-hour windows, not only the week or month." = "5 小時額度也會播放彩帶，不只是週或月。";
 "Full-screen ribbons and a sound, named for the provider." = "全螢幕彩帶與一聲提示，並標出是哪一家。";
 "Glass" = "毛玻璃";
 "Kimi Code account" = "Kimi Code 帳號";

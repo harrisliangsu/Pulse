@@ -199,6 +199,7 @@ struct AlertMemory: Codable, Sendable, Equatable {
         announcesReset: Bool,
         announcesFailure: Bool,
         celebratesReset: Bool = false,
+        celebratesHourlyReset: Bool = false,
         /// The balance to warn below, or nil for no warning on this account.
         lowBalance: Double?,
         staleMeansFailure: Bool,
@@ -381,11 +382,13 @@ struct AlertMemory: Codable, Sendable, Equatable {
                     }
                     // Ribbons are the opposite: they name the provider so you
                     // can tell who came back, whether or not you were warned.
-                    // Five-hour windows use this same evidence — Zhipu and
-                    // Kimi's short quota is the one that actually turns over
-                    // in a sitting. Codex's sliding session clock is refused
-                    // above, not by dropping the kind.
-                    if celebratesReset, window.kind.celebratesReset {
+                    // Five-hour windows stay off unless the reader asked:
+                    // they roll several times a day. Zhipu and Kimi's short
+                    // quota is that switch. Codex's sliding session clock is
+                    // still refused above, not by dropping the kind.
+                    if celebratesReset, window.kind.celebratesReset(
+                        includingFiveHour: celebratesHourlyReset
+                    ) {
                         produced.append(UsageAlert(account: account, kind: .celebration, window: window))
                     }
                     memory.announced = 0
@@ -676,6 +679,7 @@ final class UsageAlerts {
             announcesReset: settings.alertsOnReset,
             announcesFailure: settings.alertsOnFailure,
             celebratesReset: settings.celebratesReset,
+            celebratesHourlyReset: settings.celebratesHourlyReset,
             lowBalance: settings.lowBalanceAlert(for: account),
             staleMeansFailure: Self.staleMeansFailure(
                 route: settings.source(for: account), raw: raw, for: account

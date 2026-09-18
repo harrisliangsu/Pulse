@@ -714,6 +714,21 @@ struct SettingsView: View {
                     .labelsHidden()
                     .toggleStyle(.switch)
                 }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Also celebrate hourly quota resets"),
+                    subtitle: String.localized("Five-hour windows, not only the week or month.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.celebratesHourlyReset },
+                        set: { settings.celebratesHourlyReset = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.celebratesReset)
+                }
             }
 
             SettingsGroup(String.localized("Refresh")) {

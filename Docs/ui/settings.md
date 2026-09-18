@@ -26,7 +26,7 @@ An account pane grows a **Notifications** group of its own where `Provider.repor
 
 The general pane's **Notifications** group's three controls are not independent of each other: the reset toggle is greyed out while the threshold is Off, because a reset is only announced for a window that was warned about, and every control is greyed out in an unbundled build. Its subtitle reports `UNAuthorizationStatus`, not the switches. Rules: [../notifications.md](../notifications.md).
 
-**Celebrations** is a fourth switch, not a fourth notification. Full-screen ribbons and the system Hero sound when a **week, month, or five-hour** window turns over, with the account's name on them. Off by default. It does not go through `UNUserNotificationCenter`, so it is not greyed out in a `swift run` build and does not ask for a grant. It is not tied to "Warn at". Same unambiguous-reset evidence as the notification, one overlay per account per pass. A Codex session clock that only slides a few minutes is not that evidence.
+**Celebrations** is not a notification. Two switches: **Celebrate a reset** plays full-screen ribbons and the system Hero sound when a **week or month** turns over, with the account's name on them. **Also celebrate hourly quota resets** adds five-hour windows (Zhipu, Kimi, and anyone else who reports one). Both off by default. The hourly row is greyed out while the parent is Off. Neither goes through `UNUserNotificationCenter`, so they are not greyed out in a `swift run` build and do not ask for a grant. Not tied to "Warn at". Same unambiguous-reset evidence as the notification, one overlay per account per pass. A Codex session clock that only slides a few minutes is not that evidence.
 
 ## Controls
 

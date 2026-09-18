@@ -747,6 +747,18 @@ final class AppSettings {
         }
     }
 
+    /// Ribbons for a five-hour window as well as the week or month.
+    ///
+    /// Off by default, and does nothing while `celebratesReset` is off.
+    /// Zhipu and Kimi's short quota is the reason it exists; Codex's
+    /// session clock still has to pass the same jump-and-drop rule.
+    var celebratesHourlyReset: Bool {
+        didSet {
+            guard celebratesHourlyReset != oldValue else { return }
+            UserDefaults.standard.set(celebratesHourlyReset, forKey: Key.celebratesHourlyReset)
+        }
+    }
+
     /// Whether anything at all would be posted. What decides if permission is
     /// worth asking for. Ribbons are not in here: they are not a notification.
     var wantsAlerts: Bool {
@@ -860,7 +872,8 @@ final class AppSettings {
         alertThreshold: AlertThreshold = .default,
         alertsOnReset: Bool = false,
         alertsOnFailure: Bool = false,
-        celebratesReset: Bool = false
+        celebratesReset: Bool = false,
+        celebratesHourlyReset: Bool = false
     ) {
         self.isPanelVisible = isPanelVisible
         self.hidesInFullScreen = hidesInFullScreen
@@ -903,6 +916,7 @@ final class AppSettings {
         self.alertsOnReset = alertsOnReset
         self.alertsOnFailure = alertsOnFailure
         self.celebratesReset = celebratesReset
+        self.celebratesHourlyReset = celebratesHourlyReset
     }
 
     /// A stored route the provider doesn't offer resolves to `.automatic`
@@ -1225,7 +1239,8 @@ final class AppSettings {
                 .flatMap(AlertThreshold.init(rawValue:)) ?? .default,
             alertsOnReset: defaults.object(forKey: Key.alertsOnReset) as? Bool ?? false,
             alertsOnFailure: defaults.object(forKey: Key.alertsOnFailure) as? Bool ?? false,
-            celebratesReset: defaults.object(forKey: Key.celebratesReset) as? Bool ?? false
+            celebratesReset: defaults.object(forKey: Key.celebratesReset) as? Bool ?? false,
+            celebratesHourlyReset: defaults.object(forKey: Key.celebratesHourlyReset) as? Bool ?? false
         )
         settings.applyLanguage()
         PanelMetrics.use(settings.panelSize)
@@ -1353,6 +1368,7 @@ final class AppSettings {
         static let alertsOnReset = "settings.alertsOnReset"
         static let alertsOnFailure = "settings.alertsOnFailure"
         static let celebratesReset = "settings.celebratesReset"
+        static let celebratesHourlyReset = "settings.celebratesHourlyReset"
         static let offeredProviders = "settings.offeredProviders"
         static let providerOrder = "settings.providerOrder"
         /// Set the first time Pulse runs on this Mac, and never cleared.
