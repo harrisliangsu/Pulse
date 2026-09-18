@@ -20,8 +20,9 @@ struct UsageRingView: View {
     ///
     /// Nil is the default and the one that carries meaning — see `RingTint`.
     /// A chosen colour is identity, which is a different thing from status, so
-    /// a **spent** limit still shows the spent colour: being blocked is not a
-    /// matter of taste, and it is the one reading the app exists to give.
+    /// under Emphasize a **spent** limit still shows the spent colour: being
+    /// blocked is not a matter of taste. Follow usage and Quiet apply those
+    /// modes instead of the deep red.
     var chosenTint: Color?
     /// Whether the provider says this limit is **spent**, which it can say
     /// well short of 100% — Claude Code reports a locked reason, Codex flags a
@@ -99,6 +100,8 @@ struct UsageRingView: View {
 
     /// Where red begins, as the panel has been set. See `WarningThreshold`.
     @Environment(\.usageWarningThreshold) private var warningThreshold
+    /// How a spent limit is coloured. See `SpentRingColour`.
+    @Environment(\.spentRingColour) private var spentRingColour
 
 
     /// Gap between the progress ring and the dark disc it encircles.
@@ -198,7 +201,7 @@ struct UsageRingView: View {
         let spent = secondIsSpent || used >= 1
         let shown = showsRemaining && !spent ? 1 - used : used
         let colour = chosenTint.flatMap { spent ? nil : $0 }
-            ?? UsageTint.color(for: used, isExhausted: spent, warningAt: warningThreshold)
+            ?? UsageTint.color(for: used, isExhausted: spent, warningAt: warningThreshold, spentAs: spentRingColour)
 
         ZStack {
             Circle()
@@ -222,9 +225,15 @@ struct UsageRingView: View {
     /// What the arc and the halo are drawn in.
     private var arcColour: Color {
         let spent = isSpent || (usedFraction ?? 0) >= 1
-        let automatic = UsageTint.color(for: usedFraction ?? 0, isExhausted: spent, warningAt: warningThreshold)
+        let automatic = UsageTint.color(
+            for: usedFraction ?? 0,
+            isExhausted: spent,
+            warningAt: warningThreshold,
+            spentAs: spentRingColour
+        )
 
-        // Spent is the one state a chosen colour does not get to hide.
+        // Under Emphasize, spent is the one state a chosen colour does not
+        // get to hide. Follow usage and Quiet apply those modes instead.
         guard let chosenTint, !spent else { return automatic }
         return chosenTint
     }

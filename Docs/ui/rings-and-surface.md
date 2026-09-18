@@ -16,11 +16,17 @@ Optional, **off by default** (`AppSettings.panelAppearance == .glass`, `PanelSur
 
 ## Colour and spent
 
-Colour means **usage**, not identity (`UsageTint`: green / amber / red / spent deep red). `Provider` carries no accent; the icon is the brand. Brand-coloured rings read as a warning (Claude’s orange at 3% used).
+Colour means **usage**, not identity (`UsageTint`: green / amber / red / spent deep red, or Quiet’s muted grey). `Provider` carries no accent; the icon is the brand. Brand-coloured rings read as a warning (Claude’s orange at 3% used).
 
-Where amber becomes red is `AppSettings.warningThreshold` (`WarningThreshold`, 60–90%, default 75). It bounds the **caution** step and nothing else — green stays under `UsageTint.cautionThreshold` (0.5), and every offered figure is above it so the two steps can never cross. It reaches the panel through `EnvironmentValues.usageWarningThreshold`, set once in `FloatingUsagePanelView`: one number every ring, bar and figure has to agree on, and `UsageRingView`'s initializer is already at the type-checker's budget. It is not a layout input, so it does not belong in `PanelMetrics`. `UsageTint.color(for:isExhausted:warningAt:)` and `UsageWindow.tint(warningAt:)` take it with **no default** — a default is how one ring comes to disagree with the one beside it.
+Where amber becomes red is `AppSettings.warningThreshold` (`WarningThreshold`, 60–90%, default 75). It bounds the **caution** step and nothing else — green stays under `UsageTint.cautionThreshold` (0.5), and every offered figure is above it so the two steps can never cross. It reaches the panel through `EnvironmentValues.usageWarningThreshold`, set once in `FloatingUsagePanelView`: one number every ring, bar and figure has to agree on, and `UsageRingView`'s initializer is already at the type-checker's budget. It is not a layout input, so it does not belong in `PanelMetrics`.
 
-Per-account `RingTint` is opt-in. Spent still uses the spent colour (`UsageRingView.isSpent` from the **provider**, not from the fraction — a lock can happen well short of 100%). System colour well, stored as hex, converted through **sRGB**. No opacity (translucent reads as “no reading”).
+What a **spent** limit is coloured is `AppSettings.spentRingColour` (`SpentRingColour`, default Emphasize). The provider still says whether the limit is spent — this only picks the hue. Three modes, one value on the environment (`spentRingColour`) so every ring, bar and figure agrees, the same way the warning step does. `UsageTint.color(for:isExhausted:warningAt:spentAs:)` and `UsageWindow.tint(warningAt:spentAs:)` take both with **no default** — a default is how one ring comes to disagree with the one beside it.
+
+- **Emphasize** — spent is its own deep red (`pulseExhausted`), as it always was. A lock can happen well short of 100%.
+- **Follow usage** — do not force the spent hue; colour as if the reading were 100% on the same green / amber / red ladder. `warningThreshold` still decides where amber becomes red.
+- **Quiet** — a muted grey. The figure stays 0% and the arc still fills; the colour just stops shouting.
+
+Per-account `RingTint` is opt-in. Under Emphasize, spent still uses the spent colour (`UsageRingView.isSpent` from the **provider**, not from the fraction). Follow and Quiet apply those modes instead of deep red. System colour well, stored as hex, converted through **sRGB**. No opacity (translucent reads as “no reading”).
 
 Countdown (`showsRemaining`): arc follows the figure; colour still means closeness to the limit. No reading → empty track either way; spent fills the ring. Do not invert `nil` to a full “100% left” circle. [../refresh-and-data.md](../refresh-and-data.md)
 

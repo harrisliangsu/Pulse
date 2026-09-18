@@ -77,7 +77,12 @@
 "Top" = "上";
 "Percentages on top" = "上にパーセントを表示";
 "Turn red at" = "赤にする位置";
-"Where a ring stops being amber. A spent limit is red whatever this says." = "リングが黄から赤に変わる位置です。使い切った上限はこの設定に関係なく赤になります。";
+"Where a ring stops being amber." = "リングが黄から赤に変わる位置です。";
+"Spent ring colour" = "使い切り時のリング色";
+"Colour of a ring whose limit is spent." = "上限を使い切ったときのリングの色です。";
+"Emphasize" = "強調";
+"Follow usage" = "使用量に合わせる";
+"Quiet" = "控えめ";
 "Percentages at the side" = "横にパーセントを表示";
 "The figure under each ring, docked left or right." = "左右に寄せているとき、各リングの下に数値を表示します。";
 "Time until reset" = "リセットまでの時間";

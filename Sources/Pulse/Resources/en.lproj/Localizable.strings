@@ -77,7 +77,12 @@
 "Top" = "Top";
 "Percentages on top" = "Percentages on top";
 "Turn red at" = "Turn red at";
-"Where a ring stops being amber. A spent limit is red whatever this says." = "Where a ring stops being amber. A spent limit is red whatever this says.";
+"Where a ring stops being amber." = "Where a ring stops being amber.";
+"Spent ring colour" = "Spent ring colour";
+"Colour of a ring whose limit is spent." = "Colour of a ring whose limit is spent.";
+"Emphasize" = "Emphasize";
+"Follow usage" = "Follow usage";
+"Quiet" = "Quiet";
 "Percentages at the side" = "Percentages at the side";
 "The figure under each ring, docked left or right." = "The figure under each ring, docked left or right.";
 "Time until reset" = "Time until reset";

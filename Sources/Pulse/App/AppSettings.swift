@@ -540,8 +540,8 @@ final class AppSettings {
     /// about how somebody works, not a fact about the limit: a weekly window
     /// three-quarters gone on a Monday and on a Friday are the same number and
     /// not the same news. It moves the **caution** step's upper edge, nothing
-    /// else — green below 50%, yellow up to here, red above it. Spent stays
-    /// what the provider reports, and is never a matter of taste.
+    /// else — green below 50%, yellow up to here, red above it. Whether a
+    /// spent limit uses its own deep red is `spentRingColour`.
     ///
     /// No `onChange?()`: nothing about the panel's frame depends on it, and
     /// `@Observable` already redraws whoever read it.
@@ -549,6 +549,23 @@ final class AppSettings {
         didSet {
             guard warningThreshold != oldValue else { return }
             UserDefaults.standard.set(warningThreshold.rawValue, forKey: Key.warningThreshold)
+        }
+    }
+
+    /// What a spent limit’s ring is coloured.
+    ///
+    /// The provider still says whether the limit is spent. This only picks
+    /// the hue: Emphasize keeps the deep red the rail has always used, Follow
+    /// usage colours it like any other 100% reading, Quiet uses a muted grey.
+    /// Accounts stay on the rail and spent notifications still fire.
+    ///
+    /// No `onChange?()`: nothing about the panel's frame depends on it, and
+    /// `@Observable` already redraws whoever read it, the same as
+    /// `warningThreshold`.
+    var spentRingColour: SpentRingColour {
+        didSet {
+            guard spentRingColour != oldValue else { return }
+            UserDefaults.standard.set(spentRingColour.rawValue, forKey: Key.spentRingColour)
         }
     }
 
@@ -804,6 +821,7 @@ final class AppSettings {
         showsWindowClock: Bool = false,
         showsRemaining: Bool = false,
         warningThreshold: WarningThreshold = .default,
+        spentRingColour: SpentRingColour = .default,
         showsForecast: Bool = false,
         showsSecondRing: Bool = false,
         splitAccounts: Set<String> = [],
@@ -845,6 +863,7 @@ final class AppSettings {
         self.showsWindowClock = showsWindowClock
         self.showsRemaining = showsRemaining
         self.warningThreshold = warningThreshold
+        self.spentRingColour = spentRingColour
         self.showsForecast = showsForecast
         self.showsSecondRing = showsSecondRing
         self.splitAccounts = splitAccounts
@@ -1166,6 +1185,8 @@ final class AppSettings {
             showsRemaining: defaults.object(forKey: Key.showsRemaining) as? Bool ?? false,
             warningThreshold: (defaults.object(forKey: Key.warningThreshold) as? Int)
                 .flatMap(WarningThreshold.init(rawValue:)) ?? .default,
+            spentRingColour: defaults.string(forKey: Key.spentRingColour)
+                .flatMap(SpentRingColour.init(rawValue:)) ?? .default,
             showsForecast: defaults.object(forKey: Key.showsForecast) as? Bool ?? false,
             showsSecondRing: defaults.object(forKey: Key.showsSecondRing) as? Bool ?? false,
             splitAccounts: Set(defaults.stringArray(forKey: Key.splitAccounts) ?? []),
@@ -1291,6 +1312,7 @@ final class AppSettings {
         static let botColours = "settings.botColours"
         static let showsRemaining = "settings.showsRemaining"
         static let warningThreshold = "settings.warningThreshold"
+        static let spentRingColour = "settings.spentRingColour"
         static let showsForecast = "settings.showsForecast"
         static let showsSecondRing = "settings.showsSecondRing"
         static let splitAccounts = "settings.splitAccounts"
