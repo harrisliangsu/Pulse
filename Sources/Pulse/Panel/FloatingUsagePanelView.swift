@@ -200,6 +200,7 @@ struct FloatingUsagePanelView: View {
             // Where red begins, for every ring, bar and figure below here at
             // once. Read off `settings` in one place so they cannot disagree.
             .environment(\.usageWarningThreshold, settings.warningThreshold.fraction)
+            .environment(\.spentRingColour, settings.spentRingColour)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(String.localized("Pulse floating usage panel"))
             // Strings and layout constants are both read through plain
@@ -238,7 +239,7 @@ struct FloatingUsagePanelView: View {
         guard let worst,
               worst.isExhausted || worst.usedFraction >= settings.warningThreshold.fraction
         else { return nil }
-        return worst.tint(warningAt: settings.warningThreshold.fraction)
+        return worst.tint(warningAt: settings.warningThreshold.fraction, spentAs: settings.spentRingColour)
     }
 
     /// Only the providers switched on in settings, so the rail shrinks when

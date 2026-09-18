@@ -2,15 +2,28 @@ import SwiftUI
 import Testing
 @testable import Pulse
 
-/// Where the three usage colours change over.
+/// Where the three usage colours change over, and how a spent limit is coloured.
 ///
 /// The warning step is a setting now, so the thing worth pinning is that
-/// moving it moves *only* that step: green and spent do not follow it around,
-/// and every offered figure stays above the caution step it bounds.
+/// moving it moves *only* that step: green does not follow it around, and
+/// every offered figure stays above the caution step it bounds. Spent colour
+/// is a setting of its own — Emphasize keeps the deep red, Follow usage
+/// walks the same ladder at 100%, Quiet is a muted grey — and none of them
+/// may move the amber→red step.
 @Suite("Usage tint")
 struct UsageTintTests {
-    private static func colour(_ used: Double, warningAt: WarningThreshold, spent: Bool = false) -> Color {
-        UsageTint.color(for: used, isExhausted: spent, warningAt: warningAt.fraction)
+    private static func colour(
+        _ used: Double,
+        warningAt: WarningThreshold,
+        spent: Bool = false,
+        spentAs: SpentRingColour = .emphasize
+    ) -> Color {
+        UsageTint.color(
+            for: used,
+            isExhausted: spent,
+            warningAt: warningAt.fraction,
+            spentAs: spentAs
+        )
     }
 
     @Test("the warning step is where the setting puts it")
@@ -44,15 +57,39 @@ struct UsageTintTests {
         }
     }
 
-    @Test("spent is not a matter of where red begins")
-    func spentIgnoresTheSetting() {
+    @Test("Emphasize is not a matter of where red begins")
+    func emphasizeIgnoresTheSetting() {
         #expect(Self.colour(0.1, warningAt: .ninety, spent: true) == .pulseExhausted)
         #expect(Self.colour(1, warningAt: .ninety) == .pulseExhausted)
     }
 
-    @Test("the shipped default is the figure it always was")
-    func defaultIsUnchanged() {
+    @Test("Follow usage colours a spent limit like any other 100%")
+    func followUsageUsesTheLadderAtFull() {
+        for threshold in WarningThreshold.allCases {
+            #expect(Self.colour(0.1, warningAt: threshold, spent: true, spentAs: .followUsage) == .pulseWarning)
+            #expect(Self.colour(1, warningAt: threshold, spentAs: .followUsage) == .pulseWarning)
+        }
+    }
+
+    @Test("Quiet colours a spent limit in the muted grey")
+    func quietUsesTheMutedGrey() {
+        #expect(Self.colour(0.1, warningAt: .ninety, spent: true, spentAs: .quiet) == .pulseQuiet)
+        #expect(Self.colour(1, warningAt: .sixty, spentAs: .quiet) == .pulseQuiet)
+    }
+
+    @Test("Follow usage and Quiet leave an unspent reading on the ladder")
+    func unspentStillFollowsTheLadder() {
+        #expect(Self.colour(0.2, warningAt: .seventyFive, spentAs: .followUsage) == .pulseGood)
+        #expect(Self.colour(0.2, warningAt: .seventyFive, spentAs: .quiet) == .pulseGood)
+        #expect(Self.colour(0.76, warningAt: .seventyFive, spentAs: .followUsage) == .pulseWarning)
+        #expect(Self.colour(0.76, warningAt: .eighty, spentAs: .quiet) == .pulseCaution)
+    }
+
+    @Test("the shipped defaults are the figures they always were")
+    func defaultsAreUnchanged() {
         #expect(UsageTint.warningThreshold == 0.75)
         #expect(WarningThreshold.default == .seventyFive)
+        #expect(SpentRingColour.default == .emphasize)
+        #expect(AppSettings().spentRingColour == .emphasize)
     }
 }

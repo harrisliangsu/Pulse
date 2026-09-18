@@ -16,7 +16,7 @@ While Liquid Glass is on, the caption still says to drag the panel by a ring. Th
 
 Group order in the general pane: **Floating panel → Notifications → Refresh → Order → Application → Shortcuts → Language**. The two groups that decide what Pulse does *on its own* sit directly under the panel group, above the housekeeping ones. Notifications was added at the bottom, between Refresh and Language, and that was too far down to find — the panel group alone is sixteen rows.
 
-**Turn red at** lives at the foot of that group: `AppSettings.warningThreshold`, a picker of 60–90%. It moves only the amber→red step; spent is the provider's word and is red whatever the picker says, which is what its subtitle is for. The picker keeps its localized title for accessibility even though its visible label is supplied by the row. [rings-and-surface.md](rings-and-surface.md)
+**Turn red at** lives near the foot of that group: `AppSettings.warningThreshold`, a picker of 60–90%. It moves only the amber→red step. **Spent ring colour** sits under it: `AppSettings.spentRingColour`, Emphasize / Follow usage / Quiet, default Emphasize. Emphasize is the colour language the rail has always used (deep red when the provider says spent). The other two leave the spent *state* alone — accounts stay on the rail, notifications still fire — and only change the hue. Both pickers keep their localized title for accessibility even though the visible label is supplied by the row. [rings-and-surface.md](rings-and-surface.md)
 
 The usage-interval group is named **Refresh**, not Updates.
 

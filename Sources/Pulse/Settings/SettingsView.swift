@@ -591,7 +591,7 @@ struct SettingsView: View {
 
                 SettingsRow(
                     String.localized("Turn red at"),
-                    subtitle: String.localized("Where a ring stops being amber. A spent limit is red whatever this says.")
+                    subtitle: String.localized("Where a ring stops being amber.")
                 ) {
                     Picker(String.localized("Turn red at"), selection: Binding(
                         get: { settings.warningThreshold },
@@ -599,6 +599,25 @@ struct SettingsView: View {
                     )) {
                         ForEach(WarningThreshold.allCases) { threshold in
                             Text(threshold.title).tag(threshold)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+                    .disabled(!settings.isPanelVisible)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Spent ring colour"),
+                    subtitle: String.localized("Colour of a ring whose limit is spent.")
+                ) {
+                    Picker(String.localized("Spent ring colour"), selection: Binding(
+                        get: { settings.spentRingColour },
+                        set: { settings.spentRingColour = $0 }
+                    )) {
+                        ForEach(SpentRingColour.allCases) { mode in
+                            Text(mode.title).tag(mode)
                         }
                     }
                     .labelsHidden()

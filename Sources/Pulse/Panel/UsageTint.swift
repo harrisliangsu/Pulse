@@ -8,11 +8,12 @@ extension UsageWindow {
     /// read as a status even though it never was one: Claude Code's orange-red
     /// looked like a warning at 3% used. Colour here means one thing only —
     /// how close this limit is to running out.
-    /// **No default for `warningAt`.** Where red begins is a setting now, and
-    /// a default here is how one ring on the panel comes to disagree with the
-    /// one beside it — silently, and only for whoever moved the figure.
-    func tint(warningAt: Double) -> Color {
-        UsageTint.color(for: usedFraction, isExhausted: isExhausted, warningAt: warningAt)
+    /// **No default for `warningAt` or `spentAs`.** Where red begins, and
+    /// what a spent limit is coloured, are settings now, and a default here
+    /// is how one ring on the panel comes to disagree with the one beside it
+    /// — silently, and only for whoever moved the figure.
+    func tint(warningAt: Double, spentAs: SpentRingColour) -> Color {
+        UsageTint.color(for: usedFraction, isExhausted: isExhausted, warningAt: warningAt, spentAs: spentAs)
     }
 }
 
@@ -41,6 +42,32 @@ enum WarningThreshold: Int, CaseIterable, Identifiable, Sendable {
     var title: String { "\(rawValue)%" }
 }
 
+/// What a spent limit’s ring is coloured.
+///
+/// The provider still says whether the limit is spent — this only picks the
+/// hue. Emphasize is the colour language the rail has always used: a deep red
+/// of its own, darker than the warning step, so being blocked does not read
+/// as merely “nearly out”. Follow usage and Quiet leave that state alone
+/// (the account stays on the rail, the arc still fills, notifications still
+/// fire) and only change how loudly the ring says it.
+enum SpentRingColour: String, CaseIterable, Identifiable, Sendable {
+    case emphasize
+    case followUsage
+    case quiet
+
+    static let `default` = SpentRingColour.emphasize
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .emphasize: .localized("Emphasize")
+        case .followUsage: .localized("Follow usage")
+        case .quiet: .localized("Quiet")
+        }
+    }
+}
+
 enum UsageTint {
     /// Comfortable below this.
     static let cautionThreshold = 0.5
@@ -50,11 +77,37 @@ enum UsageTint {
 
     /// Spent is its own state, not just "more red". Being blocked and being
     /// nearly out call for different reactions, and at ring size a fourth hue
-    /// would just read as the third — so this one is darker *and* the figure
-    /// beside the ring changes colour too.
-    static func color(for usedFraction: Double, isExhausted: Bool = false, warningAt: Double) -> Color {
-        if isExhausted || usedFraction >= 1 { return .pulseExhausted }
+    /// would just read as the third — so Emphasize is darker *and* the figure
+    /// beside the ring changes colour too. Follow usage and Quiet are the
+    /// two ways to opt out of that shout; they do not change whether the
+    /// limit is spent.
+    ///
+    /// **No default for `spentAs`.** Same reason `warningAt` has none: a
+    /// default here is how one ring comes to disagree with the one beside it.
+    static func color(
+        for usedFraction: Double,
+        isExhausted: Bool = false,
+        warningAt: Double,
+        spentAs: SpentRingColour
+    ) -> Color {
+        if isExhausted || usedFraction >= 1 {
+            switch spentAs {
+            case .emphasize:
+                return .pulseExhausted
+            case .followUsage:
+                // Colour as if the reading were 100% on the same ladder —
+                // never the spent hue. Every offered warning step sits below
+                // 1, so this lands on warning red.
+                return ladder(for: 1, warningAt: warningAt)
+            case .quiet:
+                return .pulseQuiet
+            }
+        }
+        return ladder(for: usedFraction, warningAt: warningAt)
+    }
 
+    /// The green / amber / red steps, with no spent override.
+    private static func ladder(for usedFraction: Double, warningAt: Double) -> Color {
         switch usedFraction {
         case ..<cautionThreshold: return .pulseGood
         case ..<warningAt: return .pulseCaution
@@ -77,8 +130,9 @@ enum UsageTint {
 /// status it never was: Claude Code's orange-red looked like a warning at 3%
 /// used. So this is an option, off unless asked for.
 ///
-/// A spent limit still shows the spent colour whatever is chosen. Being
-/// blocked is not a matter of taste.
+/// A spent limit still shows the spent colour under Emphasize, whatever
+/// is chosen — being blocked is not a matter of taste. Follow usage and
+/// Quiet apply those modes instead of the deep red.
 ///
 /// Free rather than a fixed palette, because eight swatches is not a choice —
 /// and the eight had to be legible on both the panel's black and on Liquid
@@ -156,24 +210,37 @@ extension Color {
     /// Deeper and flatter than the warning red, so a spent limit doesn't just
     /// look like a slightly redder nearly-spent one.
     static let pulseExhausted = Color(red: 0.85, green: 0.09, blue: 0.13)
+    /// Quiet's spent hue: enough ink to keep the full arc visible, not enough
+    /// to read as an alarm. Neutral on both the black rail and the light one.
+    static let pulseQuiet = Color(red: 0.58, green: 0.60, blue: 0.64)
 }
 
-/// How full a limit has to be before the panel draws it in the warning colour.
+/// How full a limit has to be before the panel draws it in the warning colour,
+/// and how a spent limit is coloured.
 ///
-/// Through the environment rather than down the initializers. It is one number
-/// that every ring, bar and figure on the panel has to agree on, and the
-/// alternative is a field in `RailEntry`, another in the dock's item, and a
-/// seventeenth argument to a `UsageRingView` initializer that already had to be
-/// lifted out of `body` to fit the compiler's type-checking budget. It is not a
-/// layout input either, so it has no business in `PanelMetrics` beside the
-/// scale.
+/// Through the environment rather than down the initializers. They are two
+/// facts that every ring, bar and figure on the panel has to agree on, and the
+/// alternative is a field in `RailEntry`, another in the dock's item, and more
+/// arguments to a `UsageRingView` initializer that already had to be lifted
+/// out of `body` to fit the compiler's type-checking budget. Neither is a
+/// layout input, so they have no business in `PanelMetrics` beside the scale.
 private struct UsageWarningThresholdKey: EnvironmentKey {
     static let defaultValue = UsageTint.warningThreshold
+}
+
+private struct SpentRingColourKey: EnvironmentKey {
+    static let defaultValue = SpentRingColour.default
 }
 
 extension EnvironmentValues {
     var usageWarningThreshold: Double {
         get { self[UsageWarningThresholdKey.self] }
         set { self[UsageWarningThresholdKey.self] = newValue }
+    }
+
+    /// How a spent limit is coloured, for every ring, bar and figure below.
+    var spentRingColour: SpentRingColour {
+        get { self[SpentRingColourKey.self] }
+        set { self[SpentRingColourKey.self] = newValue }
     }
 }

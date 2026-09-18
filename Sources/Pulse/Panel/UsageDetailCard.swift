@@ -104,6 +104,8 @@ struct UsageDetailCard: View {
 
     /// Where red begins, so the card's bars agree with the rail's rings.
     @Environment(\.usageWarningThreshold) private var warningThreshold
+    /// How a spent limit is coloured, so the bars agree with the rings.
+    @Environment(\.spentRingColour) private var spentRingColour
 
     var body: some View {
         VStack(alignment: .leading, spacing: DetailCardLayout.contentSpacing) {
@@ -116,7 +118,7 @@ struct UsageDetailCard: View {
                     title: window.name,
                     resetDescription: Self.resetText(window),
                     progress: showsRemaining ? window.remainingFraction : window.usedFraction,
-                    accent: window.tint(warningAt: warningThreshold),
+                    accent: window.tint(warningAt: warningThreshold, spentAs: spentRingColour),
                     percentageText: window.percentText(remaining: showsRemaining),
                     isSpent: UsageTint.isSpent(window),
                     showsRemaining: showsRemaining,
@@ -388,7 +390,7 @@ private struct ProgressMetricRow: View {
                 // let a missing one through the check that exists to catch it.
                 Text(figureLabel)
                     .font(.system(size: DetailCardLayout.rowFontSize, weight: .medium, design: .rounded))
-                    .foregroundStyle(isSpent ? Color.pulseExhausted : .primary.opacity(0.9))
+                    .foregroundStyle(isSpent ? accent : .primary.opacity(0.9))
 
                 Spacer(minLength: 0)
 

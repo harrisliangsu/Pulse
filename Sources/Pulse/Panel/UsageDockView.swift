@@ -492,6 +492,9 @@ private struct UsageDockItem: View {
     private var usage: ProviderUsage { entry.usage }
     private var headline: UsageWindow? { entry.headline }
 
+    @Environment(\.usageWarningThreshold) private var warningThreshold
+    @Environment(\.spentRingColour) private var spentRingColour
+
     var body: some View {
         // The label goes above or below on a setting. `ringOffsetInItem` is
         // the same swap expressed as a number, and the hit testing runs on
@@ -564,11 +567,18 @@ private struct UsageDockItem: View {
                 // the ring.
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
-                // A spent limit colours the figure too. At ring size a fourth
-                // hue on the stroke alone would read as the third.
+                // A spent limit colours the figure too, in the same hue the
+                // ring uses — Emphasize's deep red, Follow usage's 100% step,
+                // or Quiet's grey. At ring size a fourth hue on the stroke
+                // alone would read as the third.
                 .foregroundStyle(
                     UsageTint.isSpent(headline)
-                        ? Color.pulseExhausted
+                        ? UsageTint.color(
+                            for: headline?.usedFraction ?? 1,
+                            isExhausted: true,
+                            warningAt: warningThreshold,
+                            spentAs: spentRingColour
+                        )
                         : .primary.opacity(headline == nil && entry.figure == nil ? 0.4 : 1)
                 )
                 .monospacedDigit()
