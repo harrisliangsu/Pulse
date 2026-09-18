@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.2.1</title>
+            <pubDate>Fri, 18 Sep 2026 03:25:20 -0000</pubDate>
+            <sparkle:version>1.2.1</sparkle:version>
+            <sparkle:shortVersionString>1.2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.1</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.2.1</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>额度用尽时的环颜色可以自己选。</strong> 设置 → 通用里，「变红阈值」下方新增「耗尽时的环颜色」：<strong>强调</strong>（默认，沿用原来的深红）、<strong>跟随用量</strong>（按普通 100% 读数上色）、<strong>低调</strong>（柔和灰）。选了后两种就不会再被强制画成深红。服务商仍决定额度是否用尽——这里只改颜色。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.1">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.2.1/Pulse-1.2.1.zip"
+                       length="8004382"
+                       type="application/octet-stream"
+                       sparkle:edSignature="FfxnxA6XtCbOM2xsOU3m5c1m33u/o3eVtUAVOya3NISX7yvJxlgsRzQxDUI4dOQluh+vF5obT88gokSdHauYDQ==" />
+        </item>
+        <item>
             <title>1.2.0</title>
             <pubDate>Fri, 18 Sep 2026 01:45:59 -0000</pubDate>
             <sparkle:version>1.2.0</sparkle:version>
