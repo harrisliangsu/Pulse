@@ -534,14 +534,14 @@ final class AppSettings {
         }
     }
 
-    /// How full a limit has to be before the panel draws it red.
+    /// How full a limit has to be before Red alert draws it red.
     ///
     /// A setting rather than a constant because "getting tight" is a judgement
     /// about how somebody works, not a fact about the limit: a weekly window
     /// three-quarters gone on a Monday and on a Friday are the same number and
-    /// not the same news. It moves the **caution** step's upper edge, nothing
-    /// else — green below 50%, yellow up to here, red above it. Whether a
-    /// spent limit uses its own deep red is `spentRingColour`.
+    /// not the same news. Shown only while the scheme is Red alert — it is the
+    /// green→red step, not an amber→red one. Gradient reuses the stored figure
+    /// as its yellow→orange step; Quiet ignores it.
     ///
     /// No `onChange?()`: nothing about the panel's frame depends on it, and
     /// `@Observable` already redraws whoever read it.
@@ -552,22 +552,52 @@ final class AppSettings {
         }
     }
 
-    /// What a spent limit’s ring is coloured.
+    /// The colour language every ring, bar and figure uses.
     ///
-    /// The provider still says whether the limit is spent. This only picks
-    /// the hue: Emphasize keeps the deep red the rail has always used, Follow
-    /// usage colours it like any other 100% reading, Quiet uses a muted grey.
-    /// Accounts stay on the rail and spent notifications still fire.
+    /// One setting, not a spent-only tweak beside a global red threshold.
+    /// Red alert is the default and the only scheme that may draw red;
+    /// Gradient and Quiet never do, including when a limit is spent. A stored
+    /// 1.2.1 `spentRingColour` migrates onto the matching scheme so Quiet
+    /// users keep Quiet.
     ///
     /// No `onChange?()`: nothing about the panel's frame depends on it, and
     /// `@Observable` already redraws whoever read it, the same as
     /// `warningThreshold`.
-    var spentRingColour: SpentRingColour {
+    var ringColourScheme: RingColourScheme {
         didSet {
-            guard spentRingColour != oldValue else { return }
-            UserDefaults.standard.set(spentRingColour.rawValue, forKey: Key.spentRingColour)
+            guard ringColourScheme != oldValue else { return }
+            Self.storeRingColourScheme(ringColourScheme, in: .standard)
         }
     }
+
+    /// The scheme last chosen, or the 1.2.1 spent-colour value migrated onto
+    /// it, or Red alert when nothing is stored.
+    ///
+    /// Takes the store as an argument so the migration can be pinned against
+    /// an isolated suite. `restored()` and `ringColourScheme`'s `didSet` both
+    /// go through this and `storeRingColourScheme`.
+    static func storedRingColourScheme(in defaults: UserDefaults) -> RingColourScheme {
+        if let stored = defaults.string(forKey: Key.ringColourScheme),
+           let scheme = RingColourScheme(rawValue: stored) {
+            return scheme
+        }
+        let migrated = RingColourScheme.migrating(
+            fromSpentRingColour: defaults.string(forKey: Key.spentRingColour)
+        )
+        // Persist only when there is something to migrate, so a fresh install
+        // stays absent-means-default the way `spendSpan` does.
+        if defaults.object(forKey: Key.spentRingColour) != nil {
+            defaults.set(migrated.rawValue, forKey: Key.ringColourScheme)
+        }
+        return migrated
+    }
+
+    static func storeRingColourScheme(_ scheme: RingColourScheme, in defaults: UserDefaults) {
+        defaults.set(scheme.rawValue, forKey: Key.ringColourScheme)
+    }
+
+    static var ringColourSchemeDefaultsKey: String { Key.ringColourScheme }
+    static var spentRingColourDefaultsKey: String { Key.spentRingColour }
 
     /// How far back the Token spend pane counts.
     ///
@@ -821,7 +851,7 @@ final class AppSettings {
         showsWindowClock: Bool = false,
         showsRemaining: Bool = false,
         warningThreshold: WarningThreshold = .default,
-        spentRingColour: SpentRingColour = .default,
+        ringColourScheme: RingColourScheme = .default,
         showsForecast: Bool = false,
         showsSecondRing: Bool = false,
         splitAccounts: Set<String> = [],
@@ -863,7 +893,7 @@ final class AppSettings {
         self.showsWindowClock = showsWindowClock
         self.showsRemaining = showsRemaining
         self.warningThreshold = warningThreshold
-        self.spentRingColour = spentRingColour
+        self.ringColourScheme = ringColourScheme
         self.showsForecast = showsForecast
         self.showsSecondRing = showsSecondRing
         self.splitAccounts = splitAccounts
@@ -1185,8 +1215,7 @@ final class AppSettings {
             showsRemaining: defaults.object(forKey: Key.showsRemaining) as? Bool ?? false,
             warningThreshold: (defaults.object(forKey: Key.warningThreshold) as? Int)
                 .flatMap(WarningThreshold.init(rawValue:)) ?? .default,
-            spentRingColour: defaults.string(forKey: Key.spentRingColour)
-                .flatMap(SpentRingColour.init(rawValue:)) ?? .default,
+            ringColourScheme: Self.storedRingColourScheme(in: defaults),
             showsForecast: defaults.object(forKey: Key.showsForecast) as? Bool ?? false,
             showsSecondRing: defaults.object(forKey: Key.showsSecondRing) as? Bool ?? false,
             splitAccounts: Set(defaults.stringArray(forKey: Key.splitAccounts) ?? []),
@@ -1312,6 +1341,8 @@ final class AppSettings {
         static let botColours = "settings.botColours"
         static let showsRemaining = "settings.showsRemaining"
         static let warningThreshold = "settings.warningThreshold"
+        static let ringColourScheme = "settings.ringColourScheme"
+        /// 1.2.1 spent-only picker. Read for migration; no longer written.
         static let spentRingColour = "settings.spentRingColour"
         static let showsForecast = "settings.showsForecast"
         static let showsSecondRing = "settings.showsSecondRing"

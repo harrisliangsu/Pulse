@@ -77,11 +77,11 @@
 "Top" = "上方";
 "Percentages on top" = "上方顯示百分比";
 "Turn red at" = "轉紅門檻";
-"Where a ring stops being amber." = "圓環由黃轉紅的位置。";
-"Spent ring colour" = "用盡時的環顏色";
-"Colour of a ring whose limit is spent." = "額度用盡時圓環的顏色。";
-"Emphasize" = "強調";
-"Follow usage" = "跟隨用量";
+"Where a ring turns from green to red." = "圓環從綠色轉為紅色的位置。";
+"Ring colour scheme" = "環顏色方案";
+"The colours rings and figures use as a limit fills." = "圓環和數字隨用量升高所用的顏色。";
+"Red alert" = "紅色告警";
+"Gradient" = "漸變";
 "Quiet" = "低調";
 "Percentages at the side" = "側邊顯示百分比";
 "The figure under each ring, docked left or right." = "貼在左右兩側時，在圓環下方顯示百分比。";

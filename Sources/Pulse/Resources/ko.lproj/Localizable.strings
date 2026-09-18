@@ -77,11 +77,11 @@
 "Top" = "위";
 "Percentages on top" = "위에 백분율 표시";
 "Turn red at" = "빨간색으로 바뀌는 지점";
-"Where a ring stops being amber." = "링이 노란색에서 빨간색으로 바뀌는 지점입니다.";
-"Spent ring colour" = "소진 시 링 색";
-"Colour of a ring whose limit is spent." = "한도를 다 썼을 때 링의 색입니다.";
-"Emphasize" = "강조";
-"Follow usage" = "사용량 따름";
+"Where a ring turns from green to red." = "링이 초록에서 빨강으로 바뀌는 지점입니다.";
+"Ring colour scheme" = "링 색 구성";
+"The colours rings and figures use as a limit fills." = "사용량이 늘 때 링과 숫자에 쓰는 색입니다.";
+"Red alert" = "빨간색 경고";
+"Gradient" = "그라데이션";
 "Quiet" = "차분하게";
 "Percentages at the side" = "옆에 백분율 표시";
 "The figure under each ring, docked left or right." = "좌우에 붙였을 때 각 링 아래에 수치를 표시합니다.";

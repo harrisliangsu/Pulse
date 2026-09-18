@@ -102,10 +102,10 @@ struct UsageDetailCard: View {
     /// are a hunt. These ride the card header: they take no extra height.
     var openSettings: (() -> Void)? = nil
 
-    /// Where red begins, so the card's bars agree with the rail's rings.
+    /// Where Red alert turns red, so the card's bars agree with the rail's rings.
     @Environment(\.usageWarningThreshold) private var warningThreshold
-    /// How a spent limit is coloured, so the bars agree with the rings.
-    @Environment(\.spentRingColour) private var spentRingColour
+    /// The colour language, so the bars agree with the rings.
+    @Environment(\.ringColourScheme) private var ringColourScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: DetailCardLayout.contentSpacing) {
@@ -118,7 +118,7 @@ struct UsageDetailCard: View {
                     title: window.name,
                     resetDescription: Self.resetText(window),
                     progress: showsRemaining ? window.remainingFraction : window.usedFraction,
-                    accent: window.tint(warningAt: warningThreshold, spentAs: spentRingColour),
+                    accent: window.tint(warningAt: warningThreshold, scheme: ringColourScheme),
                     percentageText: window.percentText(remaining: showsRemaining),
                     isSpent: UsageTint.isSpent(window),
                     showsRemaining: showsRemaining,
