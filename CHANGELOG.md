@@ -10,6 +10,12 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.2.2
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **One Ring colour scheme.** Settings → General replaces the spent-only colour picker with **Ring colour scheme**: **Red alert** (green and red only, with the nested **Turn red at** threshold), **Gradient** (never red), or **Quiet** (grey, never red). Quiet no longer reddens past the threshold. Existing Emphasize / Follow usage / Quiet values migrate onto the matching scheme.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.2.1
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
