@@ -66,16 +66,18 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         case monthly
         case other(seconds: Int)
 
-        /// Ribbons are for a week or a month coming back, not a five-hour
-        /// session rolling over. Codex's session clock moves several times a
-        /// day; celebrating that is how the overlay played when nothing the
-        /// user would call a reset had happened.
+        /// Ribbons follow the same unambiguous-reset evidence as the
+        /// notification: a week, a month, or a five-hour window that has
+        /// actually turned over. Codex's session clock still sliding a few
+        /// minutes is not that evidence — the detection rule refuses it —
+        /// so excluding the kind itself left Zhipu and Kimi silent on the
+        /// short quota people actually wait for.
         var celebratesReset: Bool {
             switch self {
-            case .weekly, .monthly: true
+            case .fiveHour, .weekly, .monthly: true
             // Daily rolls over every day; message allowances have no reset —
             // neither is something a ribbon should celebrate.
-            case .fiveHour, .spend, .balance, .daily, .messages, .other: false
+            case .spend, .balance, .daily, .messages, .other: false
             }
         }
     }

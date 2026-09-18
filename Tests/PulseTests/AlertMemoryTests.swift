@@ -561,8 +561,8 @@ struct AlertMemoryTests {
         )
     }
 
-    @Test("A five-hour session rolling over does not throw ribbons")
-    func sessionResetIsNotACelebration() {
+    @Test("A five-hour window that turns over throws ribbons")
+    func fiveHourResetIsACelebration() {
         var memory = AlertMemory()
         let first = Date(timeIntervalSince1970: 1_800_003_600)
         let session = { (used: Double, resetsAt: Date) in
@@ -586,7 +586,106 @@ struct AlertMemoryTests {
                 Self.live(session(0.0, first.addingTimeInterval(5 * 3_600))),
                 threshold: .off,
                 celebratesReset: true
+            ).map(\.kind) == [.celebration]
+        )
+    }
+
+    /// Zhipu's five-hour CREDIT_LIMIT states a length and no `nextResetTime`.
+    /// The only evidence a turnover can give is the drop.
+    @Test("Zhipu's 5-hour limit, which reports no reset time, still throws ribbons")
+    func zhipuFiveHourResetCelebrates() {
+        var memory = AlertMemory()
+        let window = { (used: Double) in
+            Self.window(
+                "glmCoding.CREDIT_LIMIT.3-5.0",
+                used: used,
+                resetsAt: nil,
+                kind: .fiveHour,
+                windowSeconds: 5 * 3_600
+            )
+        }
+        _ = run(
+            &memory,
+            Self.live(window(0.80)),
+            threshold: .off,
+            celebratesReset: true
+        )
+        #expect(
+            run(
+                &memory,
+                Self.live(window(0.0)),
+                threshold: .off,
+                celebratesReset: true
+            ).map(\.kind) == [.celebration]
+        )
+    }
+
+    /// Kimi's timed `limits[]` row is five hours and carries its own reset
+    /// stamp. A drop together with a five-hour jump is a refill on the first
+    /// sample, the same as a weekly clock moving on.
+    @Test("Kimi's 5-hour limit throws ribbons when the clock jumps with the drop")
+    func kimiFiveHourResetCelebrates() {
+        var memory = AlertMemory()
+        let first = Date(timeIntervalSince1970: 1_800_003_600)
+        let window = { (used: Double, resetsAt: Date) in
+            Self.window(
+                "limit.0.18000",
+                used: used,
+                resetsAt: resetsAt,
+                kind: .fiveHour,
+                windowSeconds: 5 * 3_600
+            )
+        }
+        _ = run(
+            &memory,
+            Self.live(window(0.80, first)),
+            threshold: .off,
+            celebratesReset: true
+        )
+        #expect(
+            run(
+                &memory,
+                Self.live(window(0.0, first.addingTimeInterval(5 * 3_600))),
+                threshold: .off,
+                celebratesReset: true
+            ).map(\.kind) == [.celebration]
+        )
+    }
+
+    @Test("A five-hour clock that only slid a few minutes still waits for a second sample")
+    func fiveHourCodexSlideStillNeedsConfirmation() {
+        var memory = AlertMemory()
+        let first = Date(timeIntervalSince1970: 1_800_003_600)
+        let session = { (used: Double, resetsAt: Date) in
+            Self.window(
+                "session",
+                used: used,
+                resetsAt: resetsAt,
+                kind: .fiveHour,
+                windowSeconds: 5 * 3_600
+            )
+        }
+        _ = run(
+            &memory,
+            Self.live(session(0.80, first)),
+            threshold: .off,
+            celebratesReset: true
+        )
+        #expect(
+            run(
+                &memory,
+                Self.live(session(0.0, first.addingTimeInterval(11 * 60))),
+                threshold: .off,
+                celebratesReset: true
             ).isEmpty
+        )
+        #expect(
+            run(
+                &memory,
+                Self.live(session(0.0, first.addingTimeInterval(22 * 60))),
+                threshold: .off,
+                celebratesReset: true
+            ).map(\.kind) == [.celebration]
         )
     }
 

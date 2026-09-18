@@ -10,6 +10,12 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.2.4
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Five-hour quotas throw ribbons too.** “Celebrate a reset” used to ignore anything shorter than a week, so Zhipu and Kimi coming back after a 5-hour window stayed silent. A real turnover of that short window now plays the same overlay. A clock that only slides a few minutes — Codex’s session — is still not a reset.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.2.3
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.

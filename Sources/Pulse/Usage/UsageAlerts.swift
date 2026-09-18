@@ -381,9 +381,10 @@ struct AlertMemory: Codable, Sendable, Equatable {
                     }
                     // Ribbons are the opposite: they name the provider so you
                     // can tell who came back, whether or not you were warned.
-                    // Five-hour sessions are excluded: they roll several times
-                    // a day, which is not the weekly/monthly event CodexBar
-                    // plays the fanfare for.
+                    // Five-hour windows use this same evidence — Zhipu and
+                    // Kimi's short quota is the one that actually turns over
+                    // in a sitting. Codex's sliding session clock is refused
+                    // above, not by dropping the kind.
                     if celebratesReset, window.kind.celebratesReset {
                         produced.append(UsageAlert(account: account, kind: .celebration, window: window))
                     }
