@@ -25,7 +25,13 @@
   <img src="Docs/demo.gif" width="340" alt="贴在屏幕边缘的 Pulse 悬浮胶囊">
 </p>
 
-Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服务自己上报的剩余额度——走的是该产品自己的客户端通道，而不是 Pulse 的服务器——无 Pulse 账号、无遥测。Pulse 不会自行编造用量百分比。
+Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服务自己上报的剩余额度——走的是该产品自己的客户端通道，而不是 Pulse 的服务器——用你已有的登录态，不回传任何东西。屏幕上的每个百分比，都来自服务商自己报告的数字。
+
+**1.2.0 新变化：** 可选的动画标记——用一个会随该账号状态反应的小机器人代替供应商图标，人格、形状和颜色都可以自己设置。[版本说明](https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.0)。
+
+<p align="center">
+  <img src="Docs/bot-mark.gif" width="340" alt="Pulse 动画标记：每个环里的小机器人会随该账号的状态反应">
+</p>
 
 ---
 
@@ -35,11 +41,11 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 - **智能用量着色**：环形进度随使用率平滑变色（绿 → 琥珀 → 红 → 用尽深红），亦可按账号自定义专属高亮色。
 - **实时工作状态灯**：圆环边缘带动态旋转光点，实时指示 Agent 是否正在生成或执行任务（支持 Claude Code 与 Codex）。
 - **时间窗口进度弧**：可选的外层时钟副弧线，直观呈现当前限额窗口的时间流逝比例。
-- **正数 / 倒数自由切换**：支持在“已消耗百分比（如 80% used）”与“剩余可用额度（如 20% left）”之间一键切换。
+- **正数 / 倒数自由切换**：支持在“已消耗百分比（如 `75% used`）”与“剩余可用额度（如 `25% left`）”之间切换。
 
 ### 悬停详情卡与智能消耗预测
 - **完整配额清单**：鼠标悬停在圆环上即可弹出详情卡，列出该平台的所有用量池、重置倒计时与生效状态。
-- **消耗速率与耗尽预测**：智能分析当前使用节奏是否足以撑到本轮周期重置；存在耗尽风险时，自动预测大致枯竭时间。
+- **消耗速率与耗尽预测（可选）**：开启后会分析当前使用节奏是否足以撑到本轮周期重置，并在存在耗尽风险时给出大致的枯竭时间；默认关闭。
 - **置顶核心配额**：可自由指定将关注的配额钉在圆环主视图，或由系统默认展示最临近用尽的配额。
 
 ### 原生丝滑、静默无扰
@@ -50,15 +56,20 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 - **限额恢复庆祝**：可在设置中打开，限额（非五小时）回来时播放彩带与系统 Hero 音效。
 - **全屏空间避让**：默认不在其他全屏应用（Spaces）中弹出干扰。
 - **原生质感**：深色、浅色或 macOS 26+ 的 **Liquid Glass（毛玻璃）**，外观里四选一，不再跟浅色叠两层开关。尺寸从极小到大。
+- **动画标记（可选）**：把供应商图标换成一个会随该账号状态反应的小机器人——正在干活、正在取数、额度用满还是闲着。默认关闭，按账号开启；八种人格、十八种形状，颜色也可以自己指定。
+- **浮动栏菜单与快捷键**：右键浮动栏——或收起后的细线，按住 Control 点击同样有效——可打开含「设置」与「退出」的菜单。在 **设置 › 通用 › 快捷键** 中，可自行将全局快捷键分配给**打开设置**与**显示或隐藏面板**；两者默认都不绑定。
+- **五种界面语言**：英文、简体中文、繁体中文、日语与韩语；大数缩写分别使用 K/M/B、万/亿、萬/億、万/億与 만/억。
 
 ### 多账号管理与本地消费账本
 - **多账号并行**：支持同一服务绑定多个订阅（Claude Code、Codex、Grok、Grok Bot、Kimi Code），并排查看并自定义标签。
-- **消费历史**：从本地记录、数据库与导出文件还原 token 消费，按官方公开 API 价格折算；默认查看最近 7 天，记住你选择的区间，并保留每个模型的用量与估算金额。
+- **Token 消耗（设置内查看）**：读取本地日志、数据库与导出文件，目录涵盖 **54 个客户端来源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 和 GitHub Copilot。Cursor、Trae 等导出来源需要先导出或捕获记录。这些来源与浮动栏上的配额服务商不同，各自支持的格式和真实客户端验证情况见[来源说明](Docs/token-spend-sources.md)。
+- **明确的用量估算**：默认查看最近 7 天，并记住所选区间。费用按公开 API 价格折算，不是订阅账单；未知价格保留为不可用，计数不完整或时间粒度较粗会明确标注，没有 token 计数的来源会如实标注为不可用。
+- **模型详情与图表**：点开单个模型可查看输入/输出/缓存读写用量与估算费用、有记录支撑的每日与每小时图表、各 Agent 的贡献，以及可排序、分页的明细表。指向图表即可读取对应日期或小时的 Token 数量。缺失的每日或每小时明细会标注为不可用。
 - **十九个服务商**：Claude Code、Codex、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、Qoder、z.ai、Zhipu、MiniMax（国际与国内）、火山引擎、Command Code、DeepSeek，以及 Devin。
 - **可脚本化**：`Pulse --json` 输出最近一次读数——套餐、每条限额、重置时间，以及数字有多旧——可接 tmux、sketchybar、Raycast 或 shell 提示符。它只读缓存不发请求，高频轮询也不花代价。
 - **开发者集成**：在设置中导出 Raycast 扩展及可直接配置的 tmux、sketchybar、终端脚本；通过账户链接直达对应设置页。[安装指南](Docs/integrations.md)。
 - **连接诊断**：查看实际读数来源、缓存使用情况、最近检查及回退结果；根据原因直接重连、重新登录或编辑凭据，并可复制不含账户信息和密钥的诊断报告。
-- **本地优先**：无 Pulse 服务器、无 Pulse 账号、无遥测。请求发往你已在使用的服务商（并遵循 macOS 系统代理设置）。
+- **本地优先**：Pulse 跑在你自己的 Mac 上，用你自己的登录态。它只发起三类连接，这里列的就是全部——你已在使用的服务商、为 Token 消耗页取公开模型价格的 [models.dev](https://models.dev)，以及检查更新的 GitHub/Sparkle。macOS 系统代理设置仍然生效。
 
 <p align="center">
   <img src="Docs/panel.webp" height="300" alt="详情卡片">
@@ -88,7 +99,7 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 
 ## 支持的服务商与读取方式
 
-Pulse 仅呈现各服务上报的数字，绝不依靠本地 Token 粗略估算。各产品的读取通道不同（已文档化的客户端接口、编辑器登录态、本地 language server、粘贴的密钥），并不是每一行都有公开的官方配额 API。贡献者细节见 [Docs/providers/README.md](Docs/providers/README.md)。
+Pulse 只呈现各服务上报的数字，每个百分比都来自那份回复本身。各产品的读取通道不同（已文档化的客户端接口、编辑器登录态、本地 language server、粘贴的密钥），并不是每一行都有公开的官方配额 API。贡献者细节见 [Docs/providers/README.md](Docs/providers/README.md)。
 
 | 服务商 | 读取通道与鉴权方式 | 说明与特性 |
 |---|---|---|
@@ -98,7 +109,7 @@ Pulse 仅呈现各服务上报的数字，绝不依靠本地 Token 粗略估算�
 | **Cursor** | Cursor 账号用量摘要接口 | 读取编辑器已保存凭据，分别展示 Fast / Slow 两个额度池 |
 | **Grok** | Grok Build CLI 代理接口 | 一个统一的周额度池，与网页/CLI/API 全线 Grok 共享 |
 | **Grok Bot** | Cursor 仪表盘接口 | Cursor 套餐内包含的 xAI 专属额度 |
-| **GitHub Copilot** | GitHub 设备码（Device Code）登录 | 仅申请极窄的 `read:user` 权限，绝不触碰你的仓库代码 |
+| **GitHub Copilot** | GitHub 设备码（Device Code）登录 | 只申请 `read:user` 这一项权限 |
 | **OpenCode Go** | 设置中填入 API Key，或读取 OpenCode CLI 登录信息 | — |
 | **Kimi Code** | 设置中设备码登录订阅，或填入 API Key | 订阅用户不必再去控制台建 key |
 | **Z.ai** | 设置中填入 API Key | 智谱国际站（`api.z.ai`），与国内账号独立 |
@@ -109,7 +120,7 @@ Pulse 仅呈现各服务上报的数字，绝不依靠本地 Token 粗略估算�
 | **Zhipu** | 设置中填入 API Key，或读取本地 GLM 工具已保存密钥 | 智谱国内站（`open.bigmodel.cn`） |
 | **Command Code** | 设置中填入 API Key，或读取 `cmd auth login` 已保存的登录 | 以美元计费的余额；含滚动 5 小时 / 周限额与月度套餐行（标记为**估算**） |
 | **DeepSeek** | 设置中填入 API Key；官方文档化的 `GET /user/balance` | 仅报告预付余额、无额度；圆环的度量基准由你选择 |
-| **Devin** | 什么都不用填——读取浏览器里的登录会话，不会弹钥匙串 | 每日与每周额度均由 Devin 报告。没有浏览器会话或手填凭据时，读取应用存下的带日期套餐；接口失败只使用账户与组织匹配的接口缓存（[Docs/providers/devin.md](Docs/providers/devin.md)）|
+| **Devin** | 什么都不用填——读取浏览器里的登录会话，无需钥匙串授权 | 每日与每周额度均由 Devin 报告。没有浏览器会话或手填凭据时，读取应用存下的带日期套餐；接口失败只使用账户与组织匹配的接口缓存（[Docs/providers/devin.md](Docs/providers/devin.md)）|
 
 ---
 
@@ -117,46 +128,47 @@ Pulse 仅呈现各服务上报的数字，绝不依靠本地 Token 粗略估算�
 
 1. 前往 [Releases](https://github.com/harrisliangsu/Pulse/releases/latest) 下载最新的 **`Pulse-x.y.z.dmg`**。
 2. 打开安装镜像，将 **Pulse** 拖拽至「应用程序（Applications）」文件夹即可。
+3. Pulse 常驻菜单栏。若菜单栏过于拥挤，右键浮动栏（或收起后的细线）并选择 **「设置…」**；也可在 **设置 › 通用 › 快捷键** 中为它分配一个全局快捷键。
 
 > [!NOTE]
-> **macOS 首次启动拦截处理**：  
-> Pulse 是开源项目且未参与 Apple 付费公证，macOS 首次启动会触发安全拦截：
+> **macOS 首次启动拦截处理**：<br>
+> Pulse 是未使用 Apple 开发者证书签名的开源项目，首次启动时 macOS 可能阻止应用：
 > - **图形界面方式**：启动 Pulse，关闭拦截弹窗，打开 **系统设置 → 隐私与安全性**，点击 **“仍要打开”**。
-> - **终端快速放行（推荐）**：
+> - **终端方式**：
 >   ```bash
 >   xattr -cr /Applications/Pulse.app
 >   ```
->   *(后续通过内置的 Sparkle 进行静默更新，无需再次授权)*。
+>   *应用内通过 Sparkle 提供更新。更新后，macOS 可能再次请求浏览器钥匙串访问权限。*
 
 ---
 
 ## 隐私与安全性
 
 Pulse 秉持“本地优先”与最小权限设计原则：
-- **无 Pulse 后端**：没有 Pulse 服务器、账号或遥测。应用直接请求你已在使用的服务商，不插入自有代理；macOS 系统代理设置仍然生效。
+- **无 Pulse 后端**：你的 Mac 用你自己的登录态直连你已在使用的服务商。同时会为 Token 消耗页从 [models.dev](https://models.dev) 获取公开模型价格，并向 GitHub/Sparkle 检查更新。macOS 系统代理设置仍然生效。
 - **凭据来源**：在产品本身如此工作时，复用本地开发工具已有的登录态（`~/.claude`、`~/.codex`、Cursor 本地状态等）；部分服务需要在设置中填写密钥或登录。
 - **本地加密存储**：手动输入的 API Key 和 Session 均经过加密保存于 Pulse 应用目录内，权限仅限当前系统用户。
-- **代码与对话**：Pulse 绝不读取或上传你的源码、终端上下文、Prompt 或模型生成内容。
+- **本地用量记录**：Pulse 从会话日志、数据库与导出文件中读取 token 数量，以及标题、工作目录等会话信息。这些记录可能包含对话文本；处理全程在你的 Mac 上完成，记录也留在本机。Pulse 只读取这些记录，仅此而已。
 
 ---
 
 ## 从源码构建
 
-Pulse 采用现代化 Swift 6 和原生 SwiftUI 构建，无沉重依赖。
+Pulse 采用原生 Swift 与 SwiftUI 构建。编译当前源码需要完整的 **Xcode**（而非 Command Line Tools），并需要 **macOS 26 SDK**；运行时支持 **macOS 14+**。
 
 ```bash
 # 克隆仓库
 git clone https://github.com/harrisliangsu/Pulse.git
 cd Pulse
 
-# 直接编译并运行
-swift run Pulse
-
-# 或打包为标准的 macOS App Bundle
+# 打包为 macOS App Bundle
 ./Scripts/bundle.sh
+
+# 启动
+open build.noindex/Pulse.app
 ```
 
-更多开发环境配置，请参阅 [Docs/build-from-source.md](Docs/build-from-source.md)。发版说明见 [Docs/releasing.md](Docs/releasing.md)。
+`swift run Pulse` 可快速编译运行而不打 Bundle，但通知与应用内更新只有打包后的应用才具备。开发环境配置见 [Docs/build-from-source.md](Docs/build-from-source.md)；发版说明见 [Docs/releasing.md](Docs/releasing.md)。
 
 ---
 

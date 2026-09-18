@@ -5,6 +5,37 @@ import Foundation
 /// Everything here comes from the provider — Pulse never derives a percentage
 /// of its own, because the token budgets behind these limits aren't published
 /// and any guess would be presented as fact.
+extension UsageWindow {
+    /// Whether this window has **unambiguously** turned over since it was last
+    /// seen live at `fraction`, with `resetsAt` as its reset time then.
+    ///
+    /// The rule the reset notification is built on, kept here because two
+    /// things now ask the question — the notification, and the rail's animated
+    /// mark, which celebrates a reset. One rule, one place; the alternative is
+    /// two copies drifting until the mark celebrates something the
+    /// notification would not mention.
+    ///
+    /// A figure that *fell* is not enough on its own: a rolling window —
+    /// Kimi's week, which can reset anywhere inside it — slides down a few
+    /// points at a time without anything having turned over. A reset time that
+    /// has moved forward is the provider saying so; a fraction that has
+    /// dropped forty points has not slid, it has turned over.
+    ///
+    /// **Never for a balance.** `Kind.balance` is prepaid credit and not a
+    /// limit: there is no window to turn over, `resetsAt` is always nil, and on
+    /// DeepSeek the fraction is a *setting* — so the test would fire when
+    /// somebody moved a picker.
+    func hasTurnedOver(since fraction: Double, resetsAt previous: Date?) -> Bool {
+        guard kind != .balance else { return false }
+        // A minute of slack: a reset time is often rounded, and a second of
+        // jitter is not a new window.
+        let movedOn = resetsAt.map { new in
+            previous.map { new.timeIntervalSince($0) > 60 } ?? false
+        } ?? false
+        return movedOn || fraction - usedFraction >= 0.4
+    }
+}
+
 struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
     /// What kind of window this is, kept as meaning rather than as text.
     ///

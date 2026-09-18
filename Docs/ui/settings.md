@@ -40,11 +40,19 @@ Default window: **920 × 660**, set on the `NSWindow`'s `contentRect`; the view'
 
 `ImageRenderer` cannot draw this window (split view + AppKit controls). Check by running the app.
 
+## About
+
+Two groups. The first is the app: version and update state, where the usage figures come from, and the **source address** — the URL itself as the subtitle rather than a sentence about it, because half the people reading that row will want to type it rather than click it.
+
+The second is **Credits**, and anything shipped here that somebody else made belongs in it: the design it was built from, the provider marks, and the animated marks' geometry ([../decisions/bot-mark-geometry.md](../decisions/bot-mark-geometry.md)). Crediting the icons and not the vendored artwork beside them would be the inconsistency, not the extra row.
+
 ## Provider panes
 
 A provider with one route has that route **named**, and the name belongs to the provider (`Provider.soleRoute`). A ternary (Cursor vs else Antigravity) made the next single-route provider inherit Antigravity’s sentence. Exhaustive `Provider` switch; omit the row when nil.
 
 Each pane has its own refresh, with last-reading time. Rail click is not the only way.
+
+Per-account rows live here rather than on the Panel pane, because they are choices about *one ring*: ring colour, the animated mark, and that mark's personality, colour and shape ([rings-and-surface.md](rings-and-surface.md)). All four are stored keyed by account id, and all four store "off" / "automatic" / "round" as an absent key rather than as a value. The personality and shape rows appear only while that account's mark is on — controls over something invisible otherwise, the same rule the colour well follows.
 
 Each account also has a **Connection diagnostics** group immediately after Connection: latest check, check time, last successful reading, actual source of displayed figures, explicit cache use, and expandable route checks. A failed check stays visible even when the card displays cached figures. Retry asks only that account; diagnostic copy contains allowlisted metadata ([../refresh-and-data.md](../refresh-and-data.md)). The contextual next step focuses the credential field, reconnects the status line, starts the existing sign-in, reads the chosen browser, opens the relevant app, copies a login command, or opens setup help. Provider-specific action mappings live in [../providers/README.md](../providers/README.md).
 

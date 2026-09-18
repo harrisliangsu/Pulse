@@ -51,6 +51,12 @@ struct FloatingUsagePanelView: View {
                 // two rings, never interrupts anything.
                 PanelPointerWatcher(onChange: pointerMoved)
             )
+            // **Named, because the pointer is reported in this space.** The
+            // watcher above fills this view and is flipped, so its points are
+            // this view's points — which is what lets a mark deep in the rail
+            // work out where the pointer is relative to itself without the
+            // rail's layout being restated anywhere.
+            .coordinateSpace(name: BotMarkView.panelSpace)
             .overlay(alignment: placement.edge.railAlignment) {
                 // The card hangs off the rail as an overlay rather than
                 // sitting beside it in a stack. In a stack, the container has
@@ -72,6 +78,21 @@ struct FloatingUsagePanelView: View {
                 // vanishing while another appears in its place.
                 UsageDockView(
                     entries: entries,
+                    // Where the pointer is on the panel, for the marks' eyes
+                    // to follow. Nil when it is off the panel, which is what
+                    // makes them look back to their own business.
+                    pointer: pointerPoint,
+                    // Twenty minutes with nothing written by any CLI. The
+                    // marks show it; nothing else reads it.
+                    //
+                    // **Nil is not quiet.** `lastWrite` is nil until the first
+                    // activity scan lands, and it is nil for somebody with no
+                    // CLI transcripts at all — so `?? true` had every mark
+                    // bored for the first seconds after launch, about nothing
+                    // it had looked at yet.
+                    isQuiet: store.activity.lastWrite.map {
+                        Date().timeIntervalSince($0) > 20 * 60
+                    } ?? false,
                     selectedSlot: selectedSlot,
                     edge: placement.edge,
                     isDocked: placement.isDocked,
@@ -279,6 +300,15 @@ struct FloatingUsagePanelView: View {
             isRunning: store.isRunning(account.provider),
             isRefreshing: store.isRefreshing(account),
             tint: settings.ringTint(for: account),
+            showsBotMark: settings.showsBotMark(for: account),
+            botPersona: settings.botPersona(for: account),
+            botBody: settings.botBody(for: account),
+            // **A reset outranks a finished turn.** Both can be true in the
+            // same few seconds — a turn that ends as the window rolls over —
+            // and the reset is the rarer news.
+            botEvent: store.justReset(account) ? .limitReset
+                : store.justFinishedWorking(account.provider) ? .workFinished : nil,
+            botColour: settings.botColour(for: account),
             slot: slot,
             // The group after the name, so two rings of one provider are told
             // apart by the one thing that differs between them.
@@ -371,6 +401,9 @@ struct FloatingUsagePanelView: View {
     /// relative to the card's own leading corner, so the tip keeps aiming at
     /// the ring even when the card has been clamped away from centre. Kept
     /// clear of the card's rounded corners by one corner radius.
+    /// The pointer, in the panel's own coordinates. See `pointerMoved`.
+    @State private var pointerPoint: CGPoint?
+
     private func pointerCentre(for index: Int) -> CGFloat {
         let raw = ringCentre(for: index) - cardPadding(for: index)
         let inset = DetailCardLayout.cornerRadius + DetailCardLayout.pointerHeight / 2
@@ -462,6 +495,11 @@ struct FloatingUsagePanelView: View {
     /// Closes the details, and eventually the rail itself, once the pointer is
     /// no longer on either.
     private func pointerMoved(_ point: CGPoint?) {
+        // Kept whatever it is over: a mark whose eyes follow the pointer
+        // should follow it across the gaps between rings too. `nil` is the
+        // pointer leaving the panel altogether.
+        if pointerPoint != point { pointerPoint = point }
+
         if let point, isOverContent(point) {
             hideAfterDelay?.cancel()
             hideAfterDelay = nil

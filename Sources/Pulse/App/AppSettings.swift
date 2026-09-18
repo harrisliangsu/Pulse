@@ -318,6 +318,68 @@ final class AppSettings {
         }
     }
 
+    /// Which rings draw an animated mark instead of the provider's logo,
+    /// keyed by account. A missing entry means the logo, which is the default.
+    ///
+    /// **Per account, not one switch for the rail.** A logo says which of
+    /// eighteen products a ring belongs to, and a mark gives that up for
+    /// motion — which is a trade worth making for the two or three rings
+    /// somebody actually watches work, and not for the rest. Per account
+    /// rather than per provider for the same reason `ringTints` is: two
+    /// accounts of one provider are two rings, and they are told apart by
+    /// exactly this kind of choice.
+    ///
+    /// **The mark takes the CLI-activity arc with it, on that ring only.** A
+    /// white travelling arc and a mark that visibly gets to work are one fact
+    /// drawn twice.
+    var botMarks: [String: Bool] {
+        didSet {
+            guard botMarks != oldValue else { return }
+            UserDefaults.standard.set(botMarks, forKey: Key.botMarks)
+        }
+    }
+
+    /// The persona chosen for an account's mark, keyed by account. A missing
+    /// entry means automatic, which is what almost everyone will leave it on.
+    ///
+    /// Automatic is dealt by position on the rail, so the ring beside this one
+    /// is a different character. Choosing one is for when somebody wants a
+    /// particular provider to be the sleepy one.
+    var botPersonas: [String: String] {
+        didSet {
+            guard botPersonas != oldValue else { return }
+            UserDefaults.standard.set(botPersonas, forKey: Key.botPersonas)
+        }
+    }
+
+    /// A colour chosen for an account's **mark**, keyed by account. A missing
+    /// entry means the brand colour, or one dealt across the rail.
+    ///
+    /// Separate from `ringTints` on purpose: the ring means how close the
+    /// limit is, the mark means which provider this is, and somebody who
+    /// wants a green bot in a red ring is asking for two different things.
+    var botColours: [String: String] {
+        didSet {
+            guard botColours != oldValue else { return }
+            UserDefaults.standard.set(botColours, forKey: Key.botColours)
+        }
+    }
+
+    /// The body shape chosen for an account's mark, keyed by account. A
+    /// missing entry is round, which is what every mark is until somebody
+    /// changes it.
+    ///
+    /// **Not dealt like the colours and the personas.** Those are dealt
+    /// because two rings that look identical are unreadable, and a colour or a
+    /// rhythm says nothing by itself. A shape somebody did not choose would be
+    /// the app making a claim about that provider with a silhouette.
+    var botShapes: [String: String] {
+        didSet {
+            guard botShapes != oldValue else { return }
+            UserDefaults.standard.set(botShapes, forKey: Key.botShapes)
+        }
+    }
+
     /// Which browser an account's session cookie is read from, keyed by
     /// account. A missing entry means "whichever, starting with the default
     /// one" — the same shape as `sources`, and for the same reason: naming one
@@ -726,6 +788,10 @@ final class AppSettings {
         sources: [String: String] = [:],
         sessionBrowsers: [String: String] = [:],
         ringTints: [String: String] = [:],
+        botMarks: [String: Bool] = [:],
+        botPersonas: [String: String] = [:],
+        botShapes: [String: String] = [:],
+        botColours: [String: String] = [:],
         refreshInterval: RefreshInterval = .default,
         autoCollapse: Bool = true,
         panelSize: PanelSize = .default,
@@ -764,6 +830,10 @@ final class AppSettings {
         self.sources = sources
         self.sessionBrowsers = sessionBrowsers
         self.ringTints = ringTints
+        self.botMarks = botMarks
+        self.botPersonas = botPersonas
+        self.botShapes = botShapes
+        self.botColours = botColours
         self.refreshInterval = refreshInterval
         self.autoCollapse = autoCollapse
         self.panelSize = panelSize
@@ -812,6 +882,67 @@ final class AppSettings {
         var updated = sources
         updated[account.id] = source == .automatic ? nil : source.rawValue
         sources = updated
+    }
+
+    /// Whether this account's ring draws the animated mark.
+    func showsBotMark(for account: AccountKey) -> Bool {
+        botMarks[account.id] ?? false
+    }
+
+    func setShowsBotMark(_ shows: Bool, for account: AccountKey) {
+        var updated = botMarks
+        // Off is the default, so it is stored as an absence rather than as a
+        // false — the same shape as a cleared ring colour.
+        updated[account.id] = shows ? true : nil
+        botMarks = updated
+    }
+
+    /// The persona chosen for an account's mark, or nil for automatic.
+    ///
+    /// A stored value that stops parsing — a persona removed in a later
+    /// version — reads as automatic rather than as a crash or a blank mark.
+    func botPersona(for account: AccountKey) -> BotMarkPersona? {
+        botPersonas[account.id].flatMap(BotMarkPersona.init(rawValue:))
+    }
+
+    func setBotPersona(_ persona: BotMarkPersona?, for account: AccountKey) {
+        var updated = botPersonas
+        updated[account.id] = persona?.rawValue
+        botPersonas = updated
+    }
+
+    /// The colour chosen for an account's mark, or nil for its brand colour.
+    func botColour(for account: AccountKey) -> Color? {
+        RingTint.color(from: botColours[account.id])
+    }
+
+    func setBotColour(_ colour: Color?, for account: AccountKey) {
+        // A colour with no hex would store nil and silently put the account
+        // back on automatic, which reads as the picker refusing to work —
+        // the same trap `setRingTint` documents.
+        guard let colour else {
+            var updated = botColours
+            updated[account.id] = nil
+            botColours = updated
+            return
+        }
+        guard let hex = colour.hexString else { return }
+        var updated = botColours
+        updated[account.id] = hex
+        botColours = updated
+    }
+
+    /// The shape an account's mark wears. A stored value that no longer
+    /// names a shape reads as round rather than as a blank ring.
+    func botBody(for account: AccountKey) -> BotMarkBody {
+        botShapes[account.id].flatMap(BotMarkBody.init(rawValue:)) ?? .default
+    }
+
+    func setBotBody(_ body: BotMarkBody, for account: AccountKey) {
+        var updated = botShapes
+        // Round is the default, so it is stored as an absence.
+        updated[account.id] = body == .default ? nil : body.rawValue
+        botShapes = updated
     }
 
     /// The colour chosen for an account's ring, or nil to colour it by usage.
@@ -1016,6 +1147,10 @@ final class AppSettings {
             sources: defaults.dictionary(forKey: Key.sources) as? [String: String] ?? [:],
             sessionBrowsers: defaults.dictionary(forKey: Key.sessionBrowsers) as? [String: String] ?? [:],
             ringTints: defaults.dictionary(forKey: Key.ringTints) as? [String: String] ?? [:],
+            botMarks: defaults.dictionary(forKey: Key.botMarks) as? [String: Bool] ?? [:],
+            botPersonas: defaults.dictionary(forKey: Key.botPersonas) as? [String: String] ?? [:],
+            botShapes: defaults.dictionary(forKey: Key.botShapes) as? [String: String] ?? [:],
+            botColours: defaults.dictionary(forKey: Key.botColours) as? [String: String] ?? [:],
             refreshInterval: (defaults.object(forKey: Key.refreshInterval) as? Int)
                 .flatMap(RefreshInterval.init(rawValue:)) ?? .default,
             autoCollapse: defaults.object(forKey: Key.autoCollapse) as? Bool ?? true,
@@ -1150,6 +1285,10 @@ final class AppSettings {
         static let sideRailShowsPercentages = "settings.sideRailShowsPercentages"
         static let labelAboveRing = "settings.labelAboveRing"
         static let showsWindowClock = "settings.showsWindowClock"
+        static let botMarks = "settings.botMarks"
+        static let botPersonas = "settings.botPersonas"
+        static let botShapes = "settings.botShapes"
+        static let botColours = "settings.botColours"
         static let showsRemaining = "settings.showsRemaining"
         static let warningThreshold = "settings.warningThreshold"
         static let showsForecast = "settings.showsForecast"

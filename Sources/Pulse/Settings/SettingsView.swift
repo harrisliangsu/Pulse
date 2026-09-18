@@ -1126,6 +1126,111 @@ struct SettingsView: View {
                 SettingsRowDivider()
 
                 SettingsRow(
+                    String.localized("Animated mark"),
+                    subtitle: String.localized("Draw a bot that reacts to this account instead of the provider's logo.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.showsBotMark(for: account) },
+                        set: { settings.setShowsBotMark($0, for: account) }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
+
+                // Only when there is a mark to give a character to. Shown
+                // otherwise it is a control over something invisible.
+                if settings.showsBotMark(for: account) {
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Bot personality"),
+                        subtitle: settings.botPersona(for: account) == nil
+                            ? String.localized("The character it plays: which motions it uses and how fast. Automatic keeps it different from the rings beside it.")
+                            : String.localized("The character you picked for this bot, wherever this ring sits.")
+                    ) {
+                        Picker("", selection: Binding(
+                            get: { settings.botPersona(for: account) },
+                            set: { settings.setBotPersona($0, for: account) }
+                        )) {
+                            Text(localized: "Automatic").tag(BotMarkPersona?.none)
+                            ForEach(BotMarkPersona.allCases) { persona in
+                                Text(persona.title).tag(BotMarkPersona?.some(persona))
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                    }
+
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Bot colour"),
+                        subtitle: settings.botColour(for: account) == nil
+                            ? String.localized("Its brand colour, or one dealt to stand apart from its neighbours.")
+                            : String.localized("A colour of your own for this bot.")
+                    ) {
+                        Picker("", selection: Binding(
+                            get: { settings.botColour(for: account) != nil },
+                            set: { custom in
+                                // Landing on the colour it already draws, so
+                                // switching to Custom changes nothing until
+                                // something is picked.
+                                settings.setBotColour(
+                                    custom ? BotMarkTint.body(for: account.provider) : nil,
+                                    for: account)
+                            }
+                        )) {
+                            Text(localized: "Automatic").tag(false)
+                            Text(localized: "Custom").tag(true)
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                    }
+
+                    if let chosen = settings.botColour(for: account) {
+                        SettingsRowDivider()
+
+                        SettingsRow(
+                            String.localized("Colour"),
+                            subtitle: chosen.hexString
+                        ) {
+                            ColorPicker(
+                                "",
+                                selection: Binding(
+                                    get: { chosen },
+                                    set: { settings.setBotColour($0, for: account) }
+                                ),
+                                // A translucent body reads as a dim one, and
+                                // dim is what "no reading" looks like.
+                                supportsOpacity: false
+                            )
+                            .labelsHidden()
+                        }
+                    }
+
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Bot shape"),
+                        subtitle: String.localized("Which body this bot wears. Round unless you change it.")
+                    ) {
+                        Picker("", selection: Binding(
+                            get: { settings.botBody(for: account) },
+                            set: { settings.setBotBody($0, for: account) }
+                        )) {
+                            ForEach(BotMarkBody.allCases) { body in
+                                Text(body.title).tag(body)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                    }
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
                     String.localized("Ring colour"),
                     // Which state it is in, said outright. A colour well always
                     // shows *a* colour, so on its own it cannot tell "automatic"
@@ -2504,6 +2609,20 @@ struct SettingsView: View {
                 ) {
                     EmptyView()
                 }
+
+                SettingsRowDivider()
+
+                // The address itself as the subtitle, not a sentence about it:
+                // somebody reading this pane wants to know where the source is,
+                // and half of them will want to type it rather than click.
+                SettingsRow(
+                    String.localized("Source code"),
+                    subtitle: "github.com/harrisliangsu/Pulse"
+                ) {
+                    Button(String.localized("Open")) {
+                        NSWorkspace.shared.open(URL(string: "https://github.com/harrisliangsu/Pulse")!)
+                    }
+                }
             }
 
             SettingsGroup(String.localized("Credits")) {
@@ -2525,6 +2644,22 @@ struct SettingsView: View {
                     subtitle: String.localized("Provider marks from github.com/lobehub/lobe-icons.")
                 ) {
                     EmptyView()
+                }
+
+                SettingsRowDivider()
+
+                // Credited for the same reason the icons above are: it is
+                // somebody else's work, shipped here. What that data is and
+                // where it came from: Docs/decisions/bot-mark-geometry.md.
+                SettingsRow(
+                    "Morph Bot",
+                    subtitle: String.localized("The animated marks are a port of github.com/iduu/grokbot-animation, itself a study of the bot on x.ai.")
+                ) {
+                    Button(String.localized("Open")) {
+                        NSWorkspace.shared.open(
+                            URL(string: "https://github.com/iduu/grokbot-animation")!
+                        )
+                    }
                 }
             }
         }

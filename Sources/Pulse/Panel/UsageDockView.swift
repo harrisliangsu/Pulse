@@ -251,6 +251,16 @@ struct RailEntry: Identifiable, Equatable {
     var isRefreshing: Bool = false
     /// A colour chosen for this ring, or nil to colour it by usage.
     var tint: Color?
+    /// Whether this ring draws the animated mark instead of the logo.
+    var showsBotMark: Bool = false
+    /// The persona chosen for this ring, or nil to let the rail deal one.
+    var botPersona: BotMarkPersona?
+    /// The shape this ring's mark wears.
+    var botBody: BotMarkBody = .default
+    /// Something that just happened to this account and is worth a one-shot.
+    var botEvent: BotMarkEvent?
+    /// A colour chosen for this ring's mark, or nil for its brand colour.
+    var botColour: Color?
     /// How much of the headline window's clock has run, or nil to leave the
     /// outer arc off — either because the setting is off, or because this
     /// window doesn't report enough to work it out.
@@ -289,6 +299,12 @@ struct RailEntry: Identifiable, Equatable {
 /// animated, with the rings fading in once it has opened enough to hold them.
 struct UsageDockView: View {
     let entries: [RailEntry]
+    /// Where the pointer is in the panel's coordinates, or nil when it is off
+    /// the panel. The marks' eyes follow it.
+    var pointer: CGPoint?
+    /// Whether no CLI has written anything for a while, which idle marks
+    /// show by getting bored — and sleepy about it at night.
+    var isQuiet = false
     let selectedSlot: String?
     let edge: PanelEdge
     /// Fused to a screen edge, or standing free on the desktop. Only the
@@ -388,10 +404,35 @@ struct UsageDockView: View {
             ? AnyLayout(VStackLayout(spacing: DockLayout.itemSpacing))
             : AnyLayout(HStackLayout(spacing: DockLayout.itemSpacing))
 
+        // Dealt here because this is the one place that knows the order the
+        // rings are actually in — the rail shows enabled accounts, so who sits
+        // next to whom is not knowable from `Provider.allCases`.
+        // Only when something is actually drawing a mark: the deal tries
+        // forty stride-and-rotation combinations, which is cheap but not free,
+        // and a rail of logos has no use for the answer.
+        let botTints = entries.contains(where: \.showsBotMark)
+            ? BotMarkTint.deal(over: entries.map(\.usage.provider),
+                               chosen: entries.map(\.botColour))
+            : []
+        // Dealt by position so the ring beside this one is a different
+        // character; a chosen persona simply wins over the deal.
+        let personas = entries.enumerated().map { index, entry in
+            entry.botPersona ?? BotMarkPersona.automatic(at: index)
+        }
+        // Everything worth looking at is away from the edge the rail is on.
+        let gaze = BotMarkGaze(edge: edge)
+
         return stack {
-            ForEach(entries) { entry in
+            ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
                 UsageDockItem(
                     entry: entry,
+                    botTint: index < botTints.count ? botTints[index] : .clear,
+                    botPersona: personas[index],
+                    botBody: entry.botBody,
+                    botGaze: gaze,
+                    botEvent: entry.botEvent,
+                    pointer: pointer,
+                    isQuiet: isQuiet,
                     isSelected: selectedSlot == entry.slot.id,
                     isInteractive: isExpanded,
                     showsPercentage: DockLayout.showsPercentages(on: edge.axis),
@@ -423,6 +464,20 @@ struct UsageDockView: View {
 
 private struct UsageDockItem: View {
     let entry: RailEntry
+    /// The body colour for this ring's animated mark, dealt across the rail.
+    let botTint: Color
+    /// The character this ring's mark plays.
+    let botPersona: BotMarkPersona
+    /// The shape it wears.
+    let botBody: BotMarkBody
+    /// Which way it looks.
+    let botGaze: BotMarkGaze
+    /// A one-shot for something that just happened.
+    let botEvent: BotMarkEvent?
+    /// The pointer in panel coordinates, for this ring's mark to look at.
+    let pointer: CGPoint?
+    /// Whether the machine has been quiet for a while.
+    let isQuiet: Bool
     let isSelected: Bool
     /// False while the rail is collapsed. The rings are still in the view
     /// tree then, only invisible — and an invisible ring with a live tracking
@@ -479,6 +534,14 @@ private struct UsageDockItem: View {
             lineWidth: DockLayout.ringLineWidth,
             isBusy: entry.isRunning,
             isRefreshing: entry.isRefreshing,
+            showsBotMark: entry.showsBotMark,
+            botTint: botTint,
+            botPersona: botPersona,
+            botBody: botBody,
+            botGaze: botGaze,
+            botEvent: botEvent,
+            botPointer: pointer,
+            botQuiet: isQuiet,
             highlight: isSelected,
             elapsedFraction: entry.elapsed,
             secondFraction: entry.second?.usedFraction,
