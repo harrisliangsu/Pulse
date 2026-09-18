@@ -36,8 +36,10 @@ enum BotMarkTint {
         case .antigravity: BotMarkPalette.rgb(0x4285F4)
         case .glmCoding: BotMarkPalette.rgb(0x3A7BF7)
         case .kimiCode: BotMarkPalette.rgb(0x2F6BFF)
+        // Fork-only provider: teal from Qoder's product palette (approx.).
+        case .qoder: BotMarkPalette.rgb(0x0D9488)
         case .codex, .cursor, .openCodeGo, .ollamaCloud, .zai,
-             .copilot, .grok, .grokBot, .qoder, .commandCode, .devin:
+             .copilot, .grok, .grokBot, .commandCode, .devin:
             nil
         }
     }

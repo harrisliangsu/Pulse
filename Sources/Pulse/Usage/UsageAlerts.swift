@@ -329,12 +329,40 @@ struct AlertMemory: Codable, Sendable, Equatable {
             var memory = seen ?? Window()
 
             if let seen {
-                // Said only when the evidence is unambiguous — the rule, and
-                // why it is that rule, live on `UsageWindow.hasTurnedOver`.
-                // The rail's mark asks the same question of the same code.
-                let unambiguous = window.hasTurnedOver(since: seen.fraction,
-                                                       resetsAt: seen.resetsAt)
+                let jump: TimeInterval = {
+                    guard let new = window.resetsAt, let old = seen.resetsAt else { return 0 }
+                    return new.timeIntervalSince(old)
+                }()
+                // A real turnover jumps by a large share of the window.
+                // Codex (and Spark) push `resetsAt` by a few minutes on every
+                // poll — CodexBar treats that as the same window, not a new
+                // one. A minute of slack was how the ribbons played twice.
+                //
+                // The rail's animated mark asks `UsageWindow.hasTurnedOver` for
+                // a lighter "something changed" signal; ribbons and reset
+                // notifications keep this stricter two-sighting rule so a
+                // Codex glitch does not throw confetti.
+                let significantJump = jump > max(
+                    30 * 60,
+                    TimeInterval(max(window.windowSeconds, 0)) * 0.25
+                )
                 let emptied = seen.fraction - window.usedFraction >= 0.4
+                // Said only when the evidence is unambiguous. A few points of
+                // drift is not a reset: a rolling window — Kimi's week, which
+                // can reset anywhere inside it — slides down without anything
+                // having turned over. A clock that inches forward *without*
+                // the tank emptying is not one either. A forty-point drop
+                // while the stated reset time holds still (or only slides a
+                // little) is a glitch until it shows up twice — Codex has
+                // read 0% used without refilling.
+                // **Never for a balance.** `Kind.balance` is prepaid credit;
+                // switching DeepSeek's denominator must not announce a reset.
+                let confirmed = window.kind != .balance && (
+                    emptied && significantJump
+                    || emptied && seen.resetsAt == nil
+                    || emptied && window.resetsAt == nil
+                    || emptied && seen.pendingReset
+                )
 
                 // **The step is cleared by the same evidence that would
                 // announce, not by the drop alone.** Clearing on any 5-point
@@ -344,7 +372,7 @@ struct AlertMemory: Codable, Sendable, Equatable {
                 // again at 93, for as long as it wobbled. "At most one
                 // notification per limit" was written on the tin and was not
                 // what it did.
-                if unambiguous {
+                if confirmed {
                     // And only for a limit that was worth mentioning on the way
                     // up. "Your 5-hour window reset" about a window that never
                     // got past 12% is a notification about nothing.
