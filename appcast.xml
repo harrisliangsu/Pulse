@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.2.4</title>
+            <pubDate>Fri, 18 Sep 2026 08:38:27 -0000</pubDate>
+            <sparkle:version>1.2.4</sparkle:version>
+            <sparkle:shortVersionString>1.2.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.4</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.2.4</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>5 小时彩带改为可选。</strong> 「限额恢复彩带」默认仍只庆祝周/月。新增 <strong>「也庆祝小时额度重置」</strong>，打开后智谱和 Kimi 的短窗口也会播放彩带。默认关闭。时钟只往前挪几分钟（Codex 的会话钟）仍然不算恢复。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.4">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.2.4/Pulse-1.2.4.zip"
+                       length="8016995"
+                       type="application/octet-stream"
+                       sparkle:edSignature="SdJ3oTi2SYxYsAC5W00JF5QLqnQTyuFibX8lLiMG5AMTiUY6jUl8Rl63WyGH2GwrgbaVyhBT+RIWikKUKBBbAA==" />
+        </item>
+        <item>
             <title>1.2.3</title>
             <pubDate>Fri, 18 Sep 2026 04:17:29 -0000</pubDate>
             <sparkle:version>1.2.3</sparkle:version>
