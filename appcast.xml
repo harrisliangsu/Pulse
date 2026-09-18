@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.2.2</title>
+            <pubDate>Fri, 18 Sep 2026 03:57:07 -0000</pubDate>
+            <sparkle:version>1.2.2</sparkle:version>
+            <sparkle:shortVersionString>1.2.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.2</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.2.2</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>一个「环颜色方案」设置。</strong> 设置 → 通用里，用尽时的单独颜色选择改为统一的<strong>环颜色方案</strong>：<strong>红色告警</strong>（只有绿/红，并保留嵌套的<strong>变红阈值</strong>）、<strong>渐变</strong>（从不画红）、<strong>低调</strong>（灰色，从不画红）。低调方案越过阈值也不再变红。原先的「强调 / 跟随用量 / 低调」会迁移到对应方案。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.2">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.2.2/Pulse-1.2.2.zip"
+                       length="8010122"
+                       type="application/octet-stream"
+                       sparkle:edSignature="+VBZ9WS5Rav4oB2jOQ1YFPHJMEhmJZohbmrB04HPbDw94cNSLNPmna8sAoHqIEN40n1dm52K7fgI8y3hnD+NBg==" />
+        </item>
+        <item>
             <title>1.2.1</title>
             <pubDate>Fri, 18 Sep 2026 03:25:20 -0000</pubDate>
             <sparkle:version>1.2.1</sparkle:version>
