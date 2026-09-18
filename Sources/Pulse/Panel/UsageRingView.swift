@@ -20,9 +20,9 @@ struct UsageRingView: View {
     ///
     /// Nil is the default and the one that carries meaning — see `RingTint`.
     /// A chosen colour is identity, which is a different thing from status, so
-    /// under Emphasize a **spent** limit still shows the spent colour: being
-    /// blocked is not a matter of taste. Follow usage and Quiet apply those
-    /// modes instead of the deep red.
+    /// under Red alert a **spent** limit still shows the spent colour: being
+    /// blocked is not a matter of taste. Gradient and Quiet keep the chosen
+    /// tint; the scheme is what stops alarm red.
     var chosenTint: Color?
     /// Whether the provider says this limit is **spent**, which it can say
     /// well short of 100% — Claude Code reports a locked reason, Codex flags a
@@ -98,10 +98,10 @@ struct UsageRingView: View {
     @State private var spinning = false
     @State private var refreshSpinning = false
 
-    /// Where red begins, as the panel has been set. See `WarningThreshold`.
+    /// Where Red alert turns red, as the panel has been set. See `WarningThreshold`.
     @Environment(\.usageWarningThreshold) private var warningThreshold
-    /// How a spent limit is coloured. See `SpentRingColour`.
-    @Environment(\.spentRingColour) private var spentRingColour
+    /// The colour language for this ring. See `RingColourScheme`.
+    @Environment(\.ringColourScheme) private var ringColourScheme
 
 
     /// Gap between the progress ring and the dark disc it encircles.
@@ -200,8 +200,13 @@ struct UsageRingView: View {
         let used = min(max(fraction, 0), 1)
         let spent = secondIsSpent || used >= 1
         let shown = showsRemaining && !spent ? 1 - used : used
-        let colour = chosenTint.flatMap { spent ? nil : $0 }
-            ?? UsageTint.color(for: used, isExhausted: spent, warningAt: warningThreshold, spentAs: spentRingColour)
+        let colour = UsageTint.resolved(
+            usedFraction: used,
+            isExhausted: spent,
+            warningAt: warningThreshold,
+            scheme: ringColourScheme,
+            chosenTint: chosenTint
+        )
 
         ZStack {
             Circle()
@@ -225,17 +230,13 @@ struct UsageRingView: View {
     /// What the arc and the halo are drawn in.
     private var arcColour: Color {
         let spent = isSpent || (usedFraction ?? 0) >= 1
-        let automatic = UsageTint.color(
-            for: usedFraction ?? 0,
+        return UsageTint.resolved(
+            usedFraction: usedFraction ?? 0,
             isExhausted: spent,
             warningAt: warningThreshold,
-            spentAs: spentRingColour
+            scheme: ringColourScheme,
+            chosenTint: chosenTint
         )
-
-        // Under Emphasize, spent is the one state a chosen colour does not
-        // get to hide. Follow usage and Quiet apply those modes instead.
-        guard let chosenTint, !spent else { return automatic }
-        return chosenTint
     }
 
     /// How much of the circle the coloured arc covers.

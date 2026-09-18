@@ -16,17 +16,17 @@ Optional, **off by default** (`AppSettings.panelAppearance == .glass`, `PanelSur
 
 ## Colour and spent
 
-Colour means **usage**, not identity (`UsageTint`: green / amber / red / spent deep red, or Quiet’s muted grey). `Provider` carries no accent; the icon is the brand. Brand-coloured rings read as a warning (Claude’s orange at 3% used).
+Colour means **usage**, not identity. One setting owns the whole colour language: `AppSettings.ringColourScheme` (`RingColourScheme`, default Red alert). 1.2.1's spent-only picker (Emphasize / Follow usage / Quiet) only overrode the spent hue, so Quiet still went red at 98% used through the green→amber→red ladder. The scheme is the vocabulary; a global threshold plus a spent-only tweak is not. `Provider` carries no accent; the icon is the brand. Brand-coloured rings read as a warning (Claude’s orange at 3% used).
 
-Where amber becomes red is `AppSettings.warningThreshold` (`WarningThreshold`, 60–90%, default 75). It bounds the **caution** step and nothing else — green stays under `UsageTint.cautionThreshold` (0.5), and every offered figure is above it so the two steps can never cross. It reaches the panel through `EnvironmentValues.usageWarningThreshold`, set once in `FloatingUsagePanelView`: one number every ring, bar and figure has to agree on, and `UsageRingView`'s initializer is already at the type-checker's budget. It is not a layout input, so it does not belong in `PanelMetrics`.
+Three schemes, one value on the environment (`ringColourScheme`) so every ring, bar and figure agrees. `UsageTint.color(for:isExhausted:warningAt:scheme:)` and `UsageWindow.tint(warningAt:scheme:)` take both with **no default** — a default is how one ring comes to disagree with the one beside it.
 
-What a **spent** limit is coloured is `AppSettings.spentRingColour` (`SpentRingColour`, default Emphasize). The provider still says whether the limit is spent — this only picks the hue. Three modes, one value on the environment (`spentRingColour`) so every ring, bar and figure agrees, the same way the warning step does. `UsageTint.color(for:isExhausted:warningAt:spentAs:)` and `UsageWindow.tint(warningAt:spentAs:)` take both with **no default** — a default is how one ring comes to disagree with the one beside it.
+- **Red alert** — the default, and the **only** scheme that may draw red. Green below `warningThreshold`, red at or above it, spent deep red (`pulseExhausted`). No amber step. `Turn red at` (`WarningThreshold`, 60–90%, default 75) is nested under this scheme only. It reaches the panel through `EnvironmentValues.usageWarningThreshold`, set once in `FloatingUsagePanelView`.
+- **Gradient** — green → yellow/amber → deeper amber/orange by usage. `warningThreshold` is the yellow→orange step internally and is never shown as a red control. **Never red**, including when spent, exhausted, or locked.
+- **Quiet** — a neutral grey scale by usage (fuller = darker, still readable on the dark rail). **Never red, never amber.** No nested red controls.
 
-- **Emphasize** — spent is its own deep red (`pulseExhausted`), as it always was. A lock can happen well short of 100%.
-- **Follow usage** — do not force the spent hue; colour as if the reading were 100% on the same green / amber / red ladder. `warningThreshold` still decides where amber becomes red.
-- **Quiet** — a muted grey. The figure stays 0% and the arc still fills; the colour just stops shouting.
+`warningThreshold` is not a layout input, so it does not belong in `PanelMetrics`. Every offered figure sits above `UsageTint.cautionThreshold` (0.5), which is Gradient's green→yellow step.
 
-Per-account `RingTint` is opt-in. Under Emphasize, spent still uses the spent colour (`UsageRingView.isSpent` from the **provider**, not from the fraction). Follow and Quiet apply those modes instead of deep red. System colour well, stored as hex, converted through **sRGB**. No opacity (translucent reads as “no reading”).
+Per-account `RingTint` is opt-in. Under Red alert, spent red still wins over a chosen tint (`UsageRingView.isSpent` from the **provider**, not from the fraction — a lock can happen well short of 100%). Under Gradient and Quiet the scheme wins over alarm red; a chosen tint is kept, including when spent. System colour well, stored as hex, converted through **sRGB**. No opacity (translucent reads as “no reading”).
 
 Countdown (`showsRemaining`): arc follows the figure; colour still means closeness to the limit. No reading → empty track either way; spent fills the ring. Do not invert `nil` to a full “100% left” circle. [../refresh-and-data.md](../refresh-and-data.md)
 

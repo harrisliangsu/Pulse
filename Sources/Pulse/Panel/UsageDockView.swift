@@ -493,7 +493,7 @@ private struct UsageDockItem: View {
     private var headline: UsageWindow? { entry.headline }
 
     @Environment(\.usageWarningThreshold) private var warningThreshold
-    @Environment(\.spentRingColour) private var spentRingColour
+    @Environment(\.ringColourScheme) private var ringColourScheme
 
     var body: some View {
         // The label goes above or below on a setting. `ringOffsetInItem` is
@@ -568,16 +568,16 @@ private struct UsageDockItem: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
                 // A spent limit colours the figure too, in the same hue the
-                // ring uses — Emphasize's deep red, Follow usage's 100% step,
-                // or Quiet's grey. At ring size a fourth hue on the stroke
-                // alone would read as the third.
+                // ring uses — Red alert's deep red, Gradient's orange peak,
+                // or Quiet's deep grey. At ring size a fourth hue on the
+                // stroke alone would read as the third.
                 .foregroundStyle(
                     UsageTint.isSpent(headline)
                         ? UsageTint.color(
                             for: headline?.usedFraction ?? 1,
                             isExhausted: true,
                             warningAt: warningThreshold,
-                            spentAs: spentRingColour
+                            scheme: ringColourScheme
                         )
                         : .primary.opacity(headline == nil && entry.figure == nil ? 0.4 : 1)
                 )

@@ -8,22 +8,23 @@ extension UsageWindow {
     /// read as a status even though it never was one: Claude Code's orange-red
     /// looked like a warning at 3% used. Colour here means one thing only —
     /// how close this limit is to running out.
-    /// **No default for `warningAt` or `spentAs`.** Where red begins, and
-    /// what a spent limit is coloured, are settings now, and a default here
-    /// is how one ring on the panel comes to disagree with the one beside it
-    /// — silently, and only for whoever moved the figure.
-    func tint(warningAt: Double, spentAs: SpentRingColour) -> Color {
-        UsageTint.color(for: usedFraction, isExhausted: isExhausted, warningAt: warningAt, spentAs: spentAs)
+    /// **No default for `warningAt` or `scheme`.** The scheme owns the whole
+    /// colour language, and a default here is how one ring on the panel comes
+    /// to disagree with the one beside it — silently, and only for whoever
+    /// moved the figure.
+    func tint(warningAt: Double, scheme: RingColourScheme) -> Color {
+        UsageTint.color(for: usedFraction, isExhausted: isExhausted, warningAt: warningAt, scheme: scheme)
     }
 }
 
-/// Where the ring turns red.
+/// Where Red alert turns from green to red.
 ///
-/// A short list rather than a slider: this is the one step in the colour
-/// language that means "pay attention", and a figure somebody nudged to 73 is
-/// not a clearer signal than one they picked. Every option sits above
-/// `UsageTint.cautionThreshold`, so moving this one never has to push the
-/// yellow step out of its way.
+/// A short list rather than a slider: this is the one step in that scheme
+/// that means "pay attention", and a figure somebody nudged to 73 is not a
+/// clearer signal than one they picked. Gradient reuses the same figure as
+/// its yellow→orange step so a value stored under Red alert is not discarded
+/// if the scheme changes; Quiet ignores it. Every option sits above
+/// `UsageTint.cautionThreshold`, which is Gradient's green→yellow step.
 enum WarningThreshold: Int, CaseIterable, Identifiable, Sendable {
     case sixty = 60
     case seventy = 70
@@ -42,77 +43,117 @@ enum WarningThreshold: Int, CaseIterable, Identifiable, Sendable {
     var title: String { "\(rawValue)%" }
 }
 
-/// What a spent limit’s ring is coloured.
+/// The colour language every ring, bar and figure uses.
 ///
-/// The provider still says whether the limit is spent — this only picks the
-/// hue. Emphasize is the colour language the rail has always used: a deep red
-/// of its own, darker than the warning step, so being blocked does not read
-/// as merely “nearly out”. Follow usage and Quiet leave that state alone
-/// (the account stays on the rail, the arc still fills, notifications still
-/// fire) and only change how loudly the ring says it.
-enum SpentRingColour: String, CaseIterable, Identifiable, Sendable {
-    case emphasize
-    case followUsage
+/// One setting, not a global red threshold plus a spent-only tweak. 1.2.1's
+/// `SpentRingColour` (Emphasize / Follow usage / Quiet) only overrode the
+/// spent hue, so Quiet still went red at 98% used through the green→amber→red
+/// ladder. The scheme owns the palette; red exists only in Red alert.
+enum RingColourScheme: String, CaseIterable, Identifiable, Sendable {
+    case redAlert
+    case gradient
     case quiet
 
-    static let `default` = SpentRingColour.emphasize
+    static let `default` = RingColourScheme.redAlert
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .emphasize: .localized("Emphasize")
-        case .followUsage: .localized("Follow usage")
+        case .redAlert: .localized("Red alert")
+        case .gradient: .localized("Gradient")
         case .quiet: .localized("Quiet")
+        }
+    }
+
+    /// Maps the 1.2.1 spent-only picker so Quiet users keep Quiet.
+    static func migrating(fromSpentRingColour stored: String?) -> RingColourScheme {
+        switch stored {
+        case "followUsage": .gradient
+        case "quiet": .quiet
+        default: .redAlert
         }
     }
 }
 
 enum UsageTint {
-    /// Comfortable below this.
+    /// Comfortable below this. Gradient's green→yellow step; Red alert
+    /// ignores it (green runs up to the warning figure) and Quiet does too.
     static let cautionThreshold = 0.5
     /// Getting tight above this, unless somebody has moved it. The shipped
     /// default, and the fallback anywhere the setting has not reached.
     static let warningThreshold = WarningThreshold.default.fraction
 
-    /// Spent is its own state, not just "more red". Being blocked and being
-    /// nearly out call for different reactions, and at ring size a fourth hue
-    /// would just read as the third — so Emphasize is darker *and* the figure
-    /// beside the ring changes colour too. Follow usage and Quiet are the
-    /// two ways to opt out of that shout; they do not change whether the
-    /// limit is spent.
+    /// The scheme's colour for this reading. Red is produced only by
+    /// Red alert — Gradient and Quiet clamp the ladder so a spent, locked,
+    /// or 98%-used limit cannot go red.
     ///
-    /// **No default for `spentAs`.** Same reason `warningAt` has none: a
+    /// **No default for `scheme`.** Same reason `warningAt` has none: a
     /// default here is how one ring comes to disagree with the one beside it.
     static func color(
         for usedFraction: Double,
         isExhausted: Bool = false,
         warningAt: Double,
-        spentAs: SpentRingColour
+        scheme: RingColourScheme
     ) -> Color {
-        if isExhausted || usedFraction >= 1 {
-            switch spentAs {
-            case .emphasize:
-                return .pulseExhausted
-            case .followUsage:
-                // Colour as if the reading were 100% on the same ladder —
-                // never the spent hue. Every offered warning step sits below
-                // 1, so this lands on warning red.
-                return ladder(for: 1, warningAt: warningAt)
-            case .quiet:
-                return .pulseQuiet
-            }
+        switch scheme {
+        case .redAlert:
+            return redAlert(for: usedFraction, isExhausted: isExhausted, warningAt: warningAt)
+        case .gradient:
+            return gradient(for: usedFraction, isExhausted: isExhausted, warningAt: warningAt)
+        case .quiet:
+            return quiet(for: usedFraction, isExhausted: isExhausted)
         }
-        return ladder(for: usedFraction, warningAt: warningAt)
     }
 
-    /// The green / amber / red steps, with no spent override.
-    private static func ladder(for usedFraction: Double, warningAt: Double) -> Color {
+    /// Apply a chosen tint, then let Red alert's spent red win as it always
+    /// has. Gradient and Quiet keep the chosen tint — including when spent —
+    /// so a custom colour is never forced to alarm red by the scheme.
+    static func resolved(
+        usedFraction: Double,
+        isExhausted: Bool,
+        warningAt: Double,
+        scheme: RingColourScheme,
+        chosenTint: Color?
+    ) -> Color {
+        let automatic = color(
+            for: usedFraction,
+            isExhausted: isExhausted,
+            warningAt: warningAt,
+            scheme: scheme
+        )
+        guard let chosenTint else { return automatic }
+        if scheme == .redAlert && (isExhausted || usedFraction >= 1) {
+            return automatic
+        }
+        return chosenTint
+    }
+
+    /// Green below the threshold, red at or above it, spent deep red.
+    /// No amber step — that was the 1.2.1 ladder Quiet could not opt out of.
+    private static func redAlert(for usedFraction: Double, isExhausted: Bool, warningAt: Double) -> Color {
+        if isExhausted || usedFraction >= 1 { return .pulseExhausted }
+        return usedFraction < warningAt ? .pulseGood : .pulseWarning
+    }
+
+    /// Green → yellow/amber → deeper amber/orange. The warning figure is the
+    /// yellow→orange step, never a red one. Spent uses the top of the same
+    /// climb.
+    private static func gradient(for usedFraction: Double, isExhausted: Bool, warningAt: Double) -> Color {
+        if isExhausted || usedFraction >= 1 { return .pulseGradientPeak }
         switch usedFraction {
         case ..<cautionThreshold: return .pulseGood
         case ..<warningAt: return .pulseCaution
-        default: return .pulseWarning
+        default: return .pulseGradientPeak
         }
+    }
+
+    /// Neutral greys by how full the limit is. Fuller is darker, kept above
+    /// the empty track so a spent ring still reads on the dark rail. No
+    /// amber, no red, at any usage.
+    private static func quiet(for usedFraction: Double, isExhausted: Bool) -> Color {
+        if isExhausted || usedFraction >= 1 { return .pulseQuietDeep }
+        return usedFraction < cautionThreshold ? .pulseQuietLight : .pulseQuiet
     }
 
     static func isSpent(_ window: UsageWindow?) -> Bool {
@@ -130,9 +171,9 @@ enum UsageTint {
 /// status it never was: Claude Code's orange-red looked like a warning at 3%
 /// used. So this is an option, off unless asked for.
 ///
-/// A spent limit still shows the spent colour under Emphasize, whatever
-/// is chosen — being blocked is not a matter of taste. Follow usage and
-/// Quiet apply those modes instead of the deep red.
+/// Under Red alert, a spent limit still shows the spent colour whatever is
+/// chosen — being blocked is not a matter of taste. Gradient and Quiet keep
+/// the chosen tint; the scheme is what stops alarm red, not a forced grey.
 ///
 /// Free rather than a fixed palette, because eight swatches is not a choice —
 /// and the eight had to be legible on both the panel's black and on Liquid
@@ -199,6 +240,12 @@ extension Color {
             blue: Double(value & 0xFF) / 255
         )
     }
+
+    /// The two reds Red alert may emit. Gradient and Quiet must never
+    /// return either, at any usage or when spent.
+    var isPulseAlarmRed: Bool {
+        self == .pulseWarning || self == .pulseExhausted
+    }
 }
 
 extension Color {
@@ -210,13 +257,20 @@ extension Color {
     /// Deeper and flatter than the warning red, so a spent limit doesn't just
     /// look like a slightly redder nearly-spent one.
     static let pulseExhausted = Color(red: 0.85, green: 0.09, blue: 0.13)
-    /// Quiet's spent hue: enough ink to keep the full arc visible, not enough
-    /// to read as an alarm. Neutral on both the black rail and the light one.
+    /// Gradient's top: deeper amber/orange than the caution step, and not red.
+    static let pulseGradientPeak = Color(red: 0.95, green: 0.48, blue: 0.12)
+    /// Quiet's low-usage grey — enough ink to see on black, light enough to
+    /// sit below the mid and spent steps.
+    static let pulseQuietLight = Color(red: 0.70, green: 0.72, blue: 0.76)
+    /// Quiet's mid-usage grey. Neutral on both the black rail and the light one.
     static let pulseQuiet = Color(red: 0.58, green: 0.60, blue: 0.64)
+    /// Quiet's spent / full grey: darker than the mid step, still above the
+    /// empty track so a full arc does not vanish into the rail.
+    static let pulseQuietDeep = Color(red: 0.46, green: 0.48, blue: 0.52)
 }
 
-/// How full a limit has to be before the panel draws it in the warning colour,
-/// and how a spent limit is coloured.
+/// How full a limit has to be before Red alert draws it red, and which
+/// colour language the panel is speaking.
 ///
 /// Through the environment rather than down the initializers. They are two
 /// facts that every ring, bar and figure on the panel has to agree on, and the
@@ -228,8 +282,8 @@ private struct UsageWarningThresholdKey: EnvironmentKey {
     static let defaultValue = UsageTint.warningThreshold
 }
 
-private struct SpentRingColourKey: EnvironmentKey {
-    static let defaultValue = SpentRingColour.default
+private struct RingColourSchemeKey: EnvironmentKey {
+    static let defaultValue = RingColourScheme.default
 }
 
 extension EnvironmentValues {
@@ -238,9 +292,9 @@ extension EnvironmentValues {
         set { self[UsageWarningThresholdKey.self] = newValue }
     }
 
-    /// How a spent limit is coloured, for every ring, bar and figure below.
-    var spentRingColour: SpentRingColour {
-        get { self[SpentRingColourKey.self] }
-        set { self[SpentRingColourKey.self] = newValue }
+    /// The colour language for every ring, bar and figure below.
+    var ringColourScheme: RingColourScheme {
+        get { self[RingColourSchemeKey.self] }
+        set { self[RingColourSchemeKey.self] = newValue }
     }
 }
