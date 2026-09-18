@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.2.0</title>
+            <pubDate>Fri, 18 Sep 2026 01:45:59 -0000</pubDate>
+            <sparkle:version>1.2.0</sparkle:version>
+            <sparkle:shortVersionString>1.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.0</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.2.0</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>动画标记。</strong> 可以把某个账号环里的供应商图标换成一个会动的小机器人，默认关闭，在该账号的设置页里逐个开启。它只说面板已经知道的事：该供应商的 CLI 正在跑、Pulse 正在取新读数、额度已用满、还没有读数、或者什么都没发生。开启动画标记的环不再画白色活动弧——转动的白弧和一个明显在干活的小机器人是同一件事画了两遍。</li><li><strong>人格、形状与颜色。</strong> 八种人格决定它播放哪些动作和节奏，默认自动分配，保证相邻的环是不同的角色；十八种身体形状可选，默认都是圆形；颜色默认取供应商品牌色，没有品牌色的会自动分配一个与邻居区分开的色相，也可以自己指定。三项都按账号设置。</li><li><strong>它会对正在发生的事做出反应。</strong> 眼睛跟随面板上的鼠标，被指着的那个会停下来倾听；干活时在「工作、生成、书写」之间切换，非工作时间干活会一边生气一边干；长时间没有任何 CLI 写入会无聊，深夜则犯困；额度重置时庆祝，一轮活干完时兴奋。重置的判定用的是通知系统同一条规则，与通知是否开启无关。</li><li><strong>标记文案更清楚。</strong> 标记说 Pulse 在做什么，而不是它拒绝做什么；不再声称没看见的事，也不再反复解算静止画面。</li><li><strong>关于页加入项目地址。</strong> 同时注明动画标记的移植出处。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.0">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.2.0/Pulse-1.2.0.zip"
+                       length="7988142"
+                       type="application/octet-stream"
+                       sparkle:edSignature="3E157jqY/QZ2BENcg/kD/EbBu5hpooor5JSss4bCgryJsOX6UFw76LMurqefvC3vh3cNq1gGAhYWlruc/MaZBw==" />
+        </item>
+        <item>
             <title>1.1.3</title>
             <pubDate>Thu, 17 Sep 2026 01:33:10 -0000</pubDate>
             <sparkle:version>1.1.3</sparkle:version>
