@@ -10,6 +10,12 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.2.1
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Choose how a spent ring is coloured.** Settings → General has a Spent ring colour picker under Turn red at: **Emphasize** (the default, the same deep red as before), **Follow usage** (colour as any other 100% reading), or **Quiet** (a muted grey). Exhausted is no longer forced deep-red if you pick otherwise. The provider still says whether the limit is spent — this only picks the hue.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.2.0
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
