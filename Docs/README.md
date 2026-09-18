@@ -9,9 +9,9 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 | Doc | Owns |
 |---|---|
 | [architecture.md](architecture.md) | App shell, settings state, first-run / offer-once, login item, defaults domain |
-| [ui/README.md](ui/README.md) | Panel geometry, input, glass/rings, settings window |
-| [refresh-and-data.md](refresh-and-data.md) | Refresh loop, cache, activity, ledger, forecast, estimate |
-| [token-spend.md](token-spend.md) | The Token spend pane: which agents are read, what may be said about the figures |
+| [ui/README.md](ui/README.md) | Panel geometry, input, rail menu, shortcuts, glass/rings, settings window |
+| [refresh-and-data.md](refresh-and-data.md) | Refresh loop, cache, activity, ledger, forecast, estimate, chart hover |
+| [token-spend.md](token-spend.md) | Token spend pane: agents read, model drill-down, pricing, what may be said about the figures |
 | [token-spend-sources.md](token-spend-sources.md) | The complete agent/source catalog: default macOS location, format, counters reported, evidence level |
 | [notifications.md](notifications.md) | When Pulse posts a notification, and what it refuses to say |
 | [development.md](development.md) | Localization, resources, layout budgets, how to add UI |
@@ -37,7 +37,11 @@ When those notes disagree with `providers/README.md` or the code, the code and t
 ## Also in this folder
 
 - [plan.md](plan.md) — working notes, not a contract.
-- Screenshots and `demo.gif` used by the READMEs.
+- Screenshots, `demo.gif` and `bot-mark.gif` used by the READMEs and by [ui/rings-and-surface.md](ui/rings-and-surface.md).
+
+## Release notes
+
+What each release changed, and the source of both the GitHub release page and the Sparkle update text: [../CHANGELOG.md](../CHANGELOG.md). How a release is cut: [releasing.md](releasing.md).
 
 ## User-facing
 

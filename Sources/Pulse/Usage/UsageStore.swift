@@ -86,6 +86,9 @@ final class UsageStore {
     /// Whether either CLI is working right now. Its own clock — see
     /// `AgentActivityMonitor`.
     let activity = AgentActivityMonitor()
+    /// Watches live readings for a limit turning over, so the rail's mark can
+    /// celebrate one. Independent of the alert rules; see `ResetWatch`.
+    private let resetWatch = ResetWatch()
 
     init(settings: AppSettings, alerts: UsageAlerts? = nil) {
         self.settings = settings
@@ -160,6 +163,22 @@ final class UsageStore {
 
     /// Whether a provider's CLI is working at this moment.
     func isRunning(_ provider: Provider) -> Bool { activity.running.contains(provider) }
+
+    /// Whether this provider's CLI finished a turn just now.
+    ///
+    /// The rail's mark celebrates a finished turn. Six seconds is long enough
+    /// for the celebration to start on the next frame and short enough that
+    /// reopening the panel a minute later does not replay it.
+    func justFinishedWorking(_ provider: Provider, within span: TimeInterval = 6,
+                             now: Date = Date()) -> Bool {
+        guard let at = activity.finishedAt[provider] else { return false }
+        return now.timeIntervalSince(at) >= 0 && now.timeIntervalSince(at) <= span
+    }
+
+    /// Whether this account's limit turned over just now. See `ResetWatch`.
+    func justReset(_ account: AccountKey, now: Date = Date()) -> Bool {
+        resetWatch.justReset(account, now: now)
+    }
 
     /// Whether this provider is being refreshed explicitly from its ring.
     /// Automatic background passes stay silent on the rail.
@@ -808,7 +827,11 @@ final class UsageStore {
             raw: raw.recordingSoleRoute(), displayed: fetched,
             previous: diagnostics[id], now: Date()
         )
-        guard let alerts, let account = AccountKey(id: id) else { return }
+        guard let account = AccountKey(id: id) else { return }
+        // Before the alert rules, and regardless of whether they are on: the
+        // mark's celebration is not a notification.
+        resetWatch.observe(fetched, as: account)
+        guard let alerts else { return }
         // Both: the panel shows the reconciled reading, and the alert rules
         // need the answer the service actually gave — `reconciled` swaps a
         // failure for cached figures, which loses the reason with it.

@@ -298,12 +298,24 @@ final class AgentActivityMonitor {
     /// adaptive refresh interval.
     private(set) var lastWrite: Date?
 
+    /// When each provider's turn last *ended*, which is a different fact from
+    /// "is it running" and is not derivable from it after the event.
+    ///
+    /// The rail's animated mark celebrates a finished turn, and it may only do
+    /// that for something witnessed: this is the witness. Kept here because
+    /// this is the one place that sees the transition — a view comparing its
+    /// own previous render would celebrate whenever SwiftUI rebuilt it.
+    private(set) var finishedAt: [Provider: Date] = [:]
+
     /// Fast enough that the spinner starts and stops with the turn rather than
     /// lagging it noticeably, slow enough to be free.
     private static let interval: TimeInterval = 2
 
     private var timer: Timer?
     private var isScanning = false
+    /// Bumped by `stop()`, so a scan that was already in flight can tell that
+    /// it has outlived the monitor. See `sample()`.
+    private var generation = 0
 
     func start() {
         guard timer == nil else { return }
@@ -317,9 +329,12 @@ final class AgentActivityMonitor {
     }
 
     func stop() {
+        generation += 1
         timer?.invalidate()
         timer = nil
         guard !running.isEmpty else { return }
+        // Not a finish: the monitor stopping says nothing about the turn. A
+        // celebration here would fire every time the panel was hidden.
         running = []
     }
 
@@ -327,15 +342,30 @@ final class AgentActivityMonitor {
         guard !isScanning else { return }
         isScanning = true
 
+        let generation = self.generation
         Task {
             let states = await Task.detached(priority: .utility) { AgentActivity.states() }.value
             self.isScanning = false
+
+            // **A scan that outlived the monitor says nothing.** `stop()`
+            // clears `running` on purpose and does not record a finish,
+            // because the monitor stopping is not a turn ending. A result
+            // arriving after that used to be written anyway, which left a
+            // provider marked as running with no timer left to clear it — and
+            // then, on the next `start()`, the diff against an empty scan
+            // reported a *finish* for a turn that had ended unobserved hours
+            // earlier. The rail celebrated it.
+            guard generation == self.generation, self.timer != nil else { return }
 
             let active = Set(states.filter(\.value.isWorking).keys)
             // Assign only on a change: this runs every couple of seconds, and
             // `@Observable` would otherwise redraw the rail each time for
             // nothing.
-            if active != running { running = active }
+            if active != running {
+                let now = Date()
+                for provider in running.subtracting(active) { finishedAt[provider] = now }
+                running = active
+            }
 
             let newest = states.values.compactMap(\.lastWrite).max()
             if newest != lastWrite { lastWrite = newest }

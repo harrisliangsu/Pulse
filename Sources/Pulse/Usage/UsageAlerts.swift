@@ -337,6 +337,11 @@ struct AlertMemory: Codable, Sendable, Equatable {
                 // Codex (and Spark) push `resetsAt` by a few minutes on every
                 // poll — CodexBar treats that as the same window, not a new
                 // one. A minute of slack was how the ribbons played twice.
+                //
+                // The rail's animated mark asks `UsageWindow.hasTurnedOver` for
+                // a lighter "something changed" signal; ribbons and reset
+                // notifications keep this stricter two-sighting rule so a
+                // Codex glitch does not throw confetti.
                 let significantJump = jump > max(
                     30 * 60,
                     TimeInterval(max(window.windowSeconds, 0)) * 0.25
