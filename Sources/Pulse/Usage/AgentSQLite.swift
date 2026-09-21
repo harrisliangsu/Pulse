@@ -19,6 +19,7 @@ enum AgentSQLite {
     /// Nil when the file is missing or cannot be opened. The connection is
     /// closed on every path out, including after `body` returns.
     static func read<T>(at url: URL, _ body: (OpaquePointer) -> T) -> T? {
+        guard !Task.isCancelled else { return nil }
         var handle: OpaquePointer?
         guard
             sqlite3_open_v2(url.path, &handle, SQLITE_OPEN_READONLY, nil) == SQLITE_OK,
@@ -36,6 +37,11 @@ enum AgentSQLite {
     /// A statement that will not prepare yields nothing and no error; this is
     /// how a schema mismatch reads as "no rows" rather than as a failure.
     static func each(_ db: OpaquePointer, sql: String, _ body: (OpaquePointer) -> Void) {
+        guard !Task.isCancelled else { return }
+        // Also interrupts an expensive query *before* it produces its first
+        // row. Checking only sqlite3_step's result cannot stop a JOIN/sort.
+        sqlite3_progress_handler(db, 1_000, { _ in Task.isCancelled ? 1 : 0 }, nil)
+        defer { sqlite3_progress_handler(db, 0, nil, nil) }
         var statement: OpaquePointer?
         guard
             sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK,
@@ -45,7 +51,9 @@ enum AgentSQLite {
             return
         }
         defer { sqlite3_finalize(prepared) }
-        while sqlite3_step(prepared) == SQLITE_ROW { body(prepared) }
+        while !Task.isCancelled, sqlite3_step(prepared) == SQLITE_ROW {
+            autoreleasepool { body(prepared) }
+        }
     }
 
     /// A column as a string. NULL is nil, never the empty string.

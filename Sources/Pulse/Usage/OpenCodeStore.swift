@@ -142,11 +142,8 @@ enum OpenCodeStore {
         _ sql: String,
         _ row: (OpaquePointer?) -> Void
     ) {
-        var statement: OpaquePointer?
-        guard sqlite3_prepare_v2(handle, sql, -1, &statement, nil) == SQLITE_OK else { return }
-        defer { sqlite3_finalize(statement) }
-
-        while sqlite3_step(statement) == SQLITE_ROW { row(statement) }
+        guard let handle else { return }
+        AgentSQLite.each(handle, sql: sql) { row($0) }
     }
 
     /// `time.created` in milliseconds, with the row's own column as the

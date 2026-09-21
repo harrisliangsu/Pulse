@@ -9,6 +9,7 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 | Doc | Owns |
 |---|---|
 | [architecture.md](architecture.md) | App shell, settings state, first-run / offer-once, login item, defaults domain |
+| [networking.md](networking.md) | System/manual proxy boundary, URLSession coverage, helper environment, Sparkle exception |
 | [ui/README.md](ui/README.md) | Panel geometry, input, rail menu, shortcuts, glass/rings, settings window |
 | [refresh-and-data.md](refresh-and-data.md) | Refresh loop, cache, activity, ledger, forecast, estimate, chart hover |
 | [token-spend.md](token-spend.md) | Token spend pane: agents read, model drill-down, pricing, what may be said about the figures |

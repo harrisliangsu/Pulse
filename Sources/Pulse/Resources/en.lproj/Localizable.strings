@@ -84,6 +84,11 @@
 "Red alert" = "Red alert";
 "Gradient" = "Gradient";
 "Quiet" = "Quiet";
+"Where a ring stops being amber. A spent limit is red whatever this says." = "Where a ring stops being amber. A spent limit is red whatever this says.";
+"Alert colour when docked" = "Alert colour when docked";
+"Off keeps the collapsed rail neutral even when a limit needs attention." = "Off keeps the collapsed rail neutral even when a limit needs attention.";
+"Ring activity animation" = "Ring activity animation";
+"The turning mark for a working CLI or a reading being fetched. Off leaves the ring still." = "The turning mark for a working CLI or a reading being fetched. Off leaves the ring still.";
 "Percentages at the side" = "Percentages at the side";
 "The figure under each ring, docked left or right." = "The figure under each ring, docked left or right.";
 "Time until reset" = "Time until reset";
@@ -266,6 +271,8 @@
 /* Panel size */
 "Size" = "Size";
 "Spacing" = "Spacing";
+"Round ends" = "Round ends";
+"The rail's ends and the card's tail follow the ring's own curve." = "The rail's ends and the card's tail follow the ring's own curve.";
 "How much air there is between the rings." = "How much air there is between the rings.";
 "Tight" = "Tight";
 "Loose" = "Loose";
@@ -320,7 +327,7 @@
 "%@ · up to date" = "%@ · up to date";
 "Update to %@" = "Update to %@";
 "Check automatically" = "Check automatically";
-"Once a day. Updates are offered, never installed on their own." = "Once a day. Updates are offered, never installed on their own.";
+"Every two hours. Updates are offered, never installed on their own." = "Every two hours. Updates are offered, never installed on their own.";
 "Couldn't reach the update feed." = "Couldn't reach the update feed.";
 "Uses the key you entered." = "Uses the key you entered.";
 "Signed-in account" = "Signed-in account";
@@ -514,6 +521,9 @@
 
 // Token spend: every agent's history added up.
 "Token spend" = "Token spend";
+"Read local usage records" = "Read local usage records";
+"When enabled, scans local records and exports." = "When enabled, scans local records and exports.";
+"Reading %@…" = "Reading %@…";
 "Span" = "Span";
 "Counting" = "Counting";
 "Read from local records and exports, priced at models.dev's published rates." = "Read from local records and exports, priced at models.dev's published rates.";
@@ -596,3 +606,49 @@
 "Not set" = "Not set";
 "Press keys…" = "Press keys…";
 "Add ⌘, ⌥ or ⌃" = "Add ⌘, ⌥ or ⌃";
+
+/* Xiaomi Coding Plan */
+"No Xiaomi session found. Sign in at platform.xiaomimimo.com first." = "No Xiaomi session found. Sign in at platform.xiaomimimo.com first.";
+"Sign in to Xiaomi's platform in a browser to see usage." = "Sign in to Xiaomi's platform in a browser to see usage.";
+"Xiaomi's saved session expired. Sign in again in your browser." = "Xiaomi's saved session expired. Sign in again in your browser.";
+"No Coding Plan on this Xiaomi account." = "No Coding Plan on this Xiaomi account.";
+"Reads the console with your signed-in browser session." = "Reads the console with your signed-in browser session.";
+
+/* Network proxy */
+"Network" = "Network";
+"Proxy" = "Proxy";
+"Use macOS settings or a proxy only for Pulse." = "Use macOS settings or a proxy only for Pulse.";
+"Follow System" = "Follow System";
+"Manual" = "Manual";
+"Type" = "Type";
+"HTTP" = "HTTP";
+"SOCKS5" = "SOCKS5";
+"Host" = "Host";
+"The proxy server's name or address." = "The proxy server's name or address.";
+"Enter a host." = "Enter a host.";
+"Port" = "Port";
+"A number from 1 to 65535." = "A number from 1 to 65535.";
+"Enter a whole number from 1 to 65535." = "Enter a whole number from 1 to 65535.";
+
+/* Provider selection */
+"Choose services to monitor" = "Choose services to monitor";
+"New services detected" = "New services detected";
+"Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings.";
+"This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place.";
+"Detected on this Mac" = "Detected on this Mac";
+"Select detected services" = "Select detected services";
+"Done" = "Done";
+"Enable a service in its settings to start monitoring." = "Enable a service in its settings to start monitoring.";
+"Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage.";
+"Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access.";
+"Reads the running editor's local language server and connection token. No Keychain prompt." = "Reads the running editor's local language server and connection token. No Keychain prompt.";
+"Reads the login saved in Cursor's local database. No Keychain prompt." = "Reads the login saved in Cursor's local database. No Keychain prompt.";
+"Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "Reads the login saved in ~/.grok/auth.json. No Keychain prompt.";
+"Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt.";
+"Uses a key entered in Settings, or reads the saved GLM key files. No Keychain prompt." = "Uses a key entered in Settings, or reads the saved GLM key files. No Keychain prompt.";
+"Uses a key entered in Settings, or reads ~/.commandcode/auth.json. No Keychain prompt." = "Uses a key entered in Settings, or reads ~/.commandcode/auth.json. No Keychain prompt.";
+"Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan." = "Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan.";
+"Runs arkcli with its saved login, or uses access keys entered in Settings. Pulse does not request Keychain access." = "Runs arkcli with its saved login, or uses access keys entered in Settings. Pulse does not request Keychain access.";
+"Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "Uses a browser session you import in Settings. Importing may ask for browser Keychain access.";
+"Uses the GitHub login you connect in Settings. No Keychain prompt." = "Uses the GitHub login you connect in Settings. No Keychain prompt.";
+"Uses only the API key you enter in Settings. No Keychain prompt." = "Uses only the API key you enter in Settings. No Keychain prompt.";

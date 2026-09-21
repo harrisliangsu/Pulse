@@ -10,6 +10,8 @@ What Pulse says about these readings unprompted: [notifications.md](notification
 
 `UsageStore` is `@Observable`. The interval is **adaptive by default** (`AdaptiveRefresh`): **2–30 minutes** (`floor` 120s, `ceiling` 1800s). It is **not** a 60-second repeating timer. (An older comment on `UsageStore` said that; the code schedules a one-shot.)
 
+Monitoring begins only after a non-empty provider choice. Before that, constructing a store creates credential-free placeholders, and `start`, full refresh, per-account refresh and settings changes cannot read or fetch providers. Cache restoration reads only enabled accounts. The chooser and upgrade rules are in [architecture.md](architecture.md#provider-choice-before-monitoring).
+
 Because the wait changes each pass, `scheduleNext` sets `Timer.scheduledTimer(..., repeats: false)` and reschedules after every refresh.
 
 **One timer, but not one cadence.** Under `.automatic` each provider has its own interval and the timer is set for whichever is due soonest; a pass then asks only the accounts that are actually due (`UsageStore.providersToAsk`, paced from `askedAt` — *asked*, not answered, or a provider that refuses every time reads as permanently due and spins the loop). Everything not asked keeps the reading it has, because the commit loop is gated on the same set. A **fixed** interval chosen in Settings applies to everything equally: somebody who picked five minutes meant five minutes.
@@ -48,7 +50,7 @@ Guards:
 
 Releasing a stalled pass is not ending it. Abandoned work still writes when it answers. Every pass is stamped (`generation` / `currentPass`) and must still be current before writing `usage` or clearing flags.
 
-Disabled providers are not fetched. A provider pane can still refresh that account by name.
+Disabled providers are not fetched by the loop or by opening their Settings pane. After initial setup, a deliberate refresh can still ask that account by name. Automatic history loading is restricted to enabled primary accounts, and Codex's account-history method checks the primary account is enabled before starting its helper.
 
 `windowSeconds` is not evidence that a length was reported. `UsageWindow.reportsLength` distinguishes a real duration from a sort key. The window-clock arc and burn-rate divide only when the length was actually stated.
 
@@ -90,6 +92,8 @@ A white arc inside the ring while that provider’s CLI is working (`AgentActivi
 The arc rides the **empty ring** between icon and usage stroke, Core Animation, not `TimelineView`. Reset `spinning` on disappear.
 
 Providers without local transcripts (`keepsLocalTranscripts == false`) omit the mark rather than showing a permanent idle.
+
+**`AppSettings.animatesRingActivity`, on by default, gates both this arc and the coloured mark a refresh draws over the usage arc** (`UsageRingView.isRefreshing`, same idea, the provider's own colour instead of white). Off, `isBusy`/`isRefreshing` are still tracked — nothing about what Pulse knows changes — but the ring draws neither turning mark and stops dimming the usage arc while a reading is fetched. One switch for both, since they are the same kind of cue (something is happening right now) drawn two ways.
 
 ## Countdown, rounding, colour
 

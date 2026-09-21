@@ -84,7 +84,7 @@ struct ZaiUsageService: Sendable {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 15
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request) else {
+        guard let (data, response) = try? await NetworkSession.shared.data(for: request) else {
             return .unavailable(provider, reason: .unreachable)
         }
 
@@ -391,7 +391,7 @@ extension ZaiUsageService {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 20
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        guard let (data, response) = try? await NetworkSession.shared.data(for: request),
               (response as? HTTPURLResponse)?.statusCode == 200,
               let reply = try? JSONDecoder().decode(Statistics.self, from: data),
               reply.success == true, reply.code == 200,

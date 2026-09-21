@@ -117,7 +117,7 @@ actor ModelPrices {
         request.timeoutInterval = 30
 
         guard
-            let (data, response) = try? await URLSession.shared.data(for: request),
+            let (data, response) = try? await NetworkSession.shared.data(for: request),
             (response as? HTTPURLResponse)?.statusCode == 200,
             let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return nil }

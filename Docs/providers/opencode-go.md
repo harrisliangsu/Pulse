@@ -31,4 +31,4 @@ Reply: `usage.{rolling,weekly,monthly}`, each with `status`, `percent` (how much
 
 ## First run
 
-A key OpenCode already saved counts as installed. Without this, someone whose only agent is OpenCode Go detects nothing and gets the everything-on fallback. With no key, it stays off until switched on in Settings (`canReportWithoutSetup`).
+Presence of `~/.local/share/opencode/auth.json` marks the chooser row as detected. Its contents are not read until OpenCode Go is selected. An empty or unreadable file still counts as detected; the hint neither verifies a key nor enables the provider.

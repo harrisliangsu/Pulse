@@ -84,16 +84,21 @@
 "Red alert" = "紅色告警";
 "Gradient" = "漸變";
 "Quiet" = "低調";
+"Where a ring stops being amber. A spent limit is red whatever this says." = "圓環由黃轉紅的位置。已用盡的額度一律顯示紅色。";
+"Alert colour when docked" = "貼邊警報色";
+"Off keeps the collapsed rail neutral even when a limit needs attention." = "關閉後，收合的細欄一律維持中性色，即使額度需要留意。";
+"Ring activity animation" = "圓環旋轉動畫";
+"The turning mark for a working CLI or a reading being fetched. Off leaves the ring still." = "CLI 執行中或正在抓取新資料時，圓環上出現的旋轉標記。關閉後圓環保持靜止。";
 "Percentages at the side" = "側邊顯示百分比";
 "The figure under each ring, docked left or right." = "貼在左右兩側時，在圓環下方顯示百分比。";
 "Time until reset" = "距離重設的時間";
-"Animated mark" = "動畫標記";
-"Bot personality" = "小機器人人格";
+"Animated mark" = "小機器人";
+"Bot personality" = "小機器人個性";
 "Bot shape" = "小機器人形狀";
 "Bot colour" = "小機器人顏色";
-"Its brand colour, or one dealt to stand apart from its neighbours." = "使用品牌色，或自動分配一個與鄰居區分開的顏色。";
+"Its brand colour, or one dealt to stand apart from its neighbours." = "用服務商的品牌色；沒有品牌色的，自動挑一個和相鄰的環錯開的顏色。";
 "A colour of your own for this bot." = "你為這個小機器人指定的顏色。";
-"Which body this bot wears. Round unless you change it." = "這個小機器人用哪種身體。不改就是圓形。";
+"Which body this bot wears. Round unless you change it." = "小機器人的身體形狀，預設是圓形。";
 "Blob" = "圓形";
 "Pebble" = "卵石";
 "Bean" = "豆形";
@@ -112,8 +117,8 @@
 "Cloud" = "雲朵";
 "Teardrop" = "水滴";
 "Leaf" = "葉片";
-"The character it plays: which motions it uses and how fast. Automatic keeps it different from the rings beside it." = "它扮演的角色：用哪些動作、節奏多快。自動會讓它和相鄰的環各不相同。";
-"The character you picked for this bot, wherever this ring sits." = "你為這個小機器人指定的性格，不隨它在軌道上的位置變化。";
+"The character it plays: which motions it uses and how fast. Automatic keeps it different from the rings beside it." = "它扮演的角色，決定它做哪些動作、動得多快。選「自動」時，相鄰的環不會撞到同一個角色。";
+"The character you picked for this bot, wherever this ring sits." = "你為這個小機器人指定的個性，不管它排在第幾個都不變。";
 "Calm" = "沉穩";
 "Eager" = "熱切";
 "Steady" = "踏實";
@@ -122,7 +127,7 @@
 "Playful" = "頑皮";
 "Stoic" = "冷面";
 "Proud" = "得意";
-"Draw a bot that reacts to this account instead of the provider's logo." = "用會隨該帳號狀態反應的小機器人取代供應商圖示。";
+"Draw a bot that reacts to this account instead of the provider's logo." = "代替服務商圖示，跟著這個帳號的狀態做動作。";
 "A second arc outside each ring, for how much of the window has passed." = "在圓環外側加一圈弧線，顯示本輪已經過了多少。";
 "Figure above the ring" = "數字顯示在圓環上方";
 "Show what's left" = "顯示剩餘額度";
@@ -266,6 +271,8 @@
 /* Panel size */
 "Size" = "整體大小";
 "Spacing" = "間距";
+"Round ends" = "正圓端部";
+"The rail's ends and the card's tail follow the ring's own curve." = "細欄兩端和卡片尾巴跟著圓環本身的弧度走。";
 "How much air there is between the rings." = "調整圓環之間的間距。";
 "Tight" = "緊湊";
 "Loose" = "寬鬆";
@@ -313,7 +320,7 @@
 "%@ · up to date" = "%@ · 已是最新版";
 "Update to %@" = "更新到 %@";
 "Check automatically" = "自動檢查";
-"Once a day. Updates are offered, never installed on their own." = "每天一次。只會提示，不會自行安裝。";
+"Every two hours. Updates are offered, never installed on their own." = "每兩小時檢查一次。只會提示，不會自行安裝。";
 "Couldn't reach the update feed." = "連不上更新來源。";
 "Uses the key you entered." = "使用你填入的金鑰。";
 "API key" = "API 金鑰";
@@ -486,6 +493,9 @@
 
 // Token spend: every agent's history added up.
 "Token spend" = "Token 用量支出";
+"Read local usage records" = "讀取本機用量記錄";
+"When enabled, scans local records and exports." = "開啟後會掃描本機記錄與匯出的檔案。";
+"Reading %@…" = "正在讀取 %@…";
 "Span" = "統計區間";
 "Counting" = "統計方式";
 "Read from local records and exports, priced at models.dev's published rates." = "讀取本機的記錄與匯出檔，並以 models.dev 公布的價格計價。";
@@ -599,3 +609,48 @@
 "Token or session" = "令牌或登入工作階段";
 "Use the signed-in account when possible, the API key when not." = "能登入就走登入，否則用 API key。";
 "Uses the Kimi Code login Pulse holds." = "使用 Pulse 保存的 Kimi Code 登入。";
+/* Xiaomi Coding Plan */
+"No Xiaomi session found. Sign in at platform.xiaomimimo.com first." = "找不到小米的登入資訊，請先在 platform.xiaomimimo.com 登入。";
+"Sign in to Xiaomi's platform in a browser to see usage." = "在瀏覽器登入小米開放平台後才能看到用量。";
+"Xiaomi's saved session expired. Sign in again in your browser." = "小米的登入資訊已過期，請在瀏覽器重新登入。";
+"No Coding Plan on this Xiaomi account." = "這個小米帳號上沒有 Coding Plan。";
+"Reads the console with your signed-in browser session." = "用你已登入的瀏覽器工作階段讀取主控台。";
+
+/* 網路代理 */
+"Network" = "網路";
+"Proxy" = "代理";
+"Use macOS settings or a proxy only for Pulse." = "使用 macOS 系統設定，或只為 Pulse 指定代理。";
+"Follow System" = "跟隨系統";
+"Manual" = "手動";
+"Type" = "類型";
+"HTTP" = "HTTP";
+"SOCKS5" = "SOCKS5";
+"Host" = "主機";
+"The proxy server's name or address." = "代理伺服器的主機名稱或位址。";
+"Enter a host." = "請輸入主機。";
+"Port" = "連接埠";
+"A number from 1 to 65535." = "輸入 1 到 65535 之間的數字。";
+"Enter a whole number from 1 to 65535." = "請輸入 1 到 65535 之間的整數。";
+
+/* 服務選擇 */
+"Choose services to monitor" = "選擇要監控的服務";
+"New services detected" = "找到新支援的服務";
+"Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "請至少勾選一項服務。按「完成」後，Pulse 才會讀取所選服務的登入資訊並查詢用量。之後可以在設定中更改。";
+"This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "這個版本新增支援以下服務，也在你的 Mac 上找到了它們。勾選想加入的服務即可，原有選擇會保留。";
+"Detected on this Mac" = "已在這部 Mac 上找到";
+"Select detected services" = "勾選已找到的服務";
+"Done" = "完成";
+"Enable a service in its settings to start monitoring." = "在左側選擇服務，開啟「在面板中顯示」即可開始監控。";
+"Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "讀取 Claude Code 存在鑰匙圈或憑證檔案中的登入資訊。可能要求鑰匙圈存取權限，包括 Claude 桌面版的 cookie 儲存空間。";
+"Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "讀取 ~/.codex/auth.json，也可能啟動 codex app-server 使用已儲存的登入。Pulse 不會要求鑰匙圈存取權限。";
+"Reads the running editor's local language server and connection token. No Keychain prompt." = "連線至執行中的編輯器，讀取本機語言伺服器的用量與連線權杖。不會出現鑰匙圈提示。";
+"Reads the login saved in Cursor's local database. No Keychain prompt." = "讀取 Cursor 本機資料庫中儲存的登入資訊。不會出現鑰匙圈提示。";
+"Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "讀取 ~/.grok/auth.json 中儲存的登入資訊。不會出現鑰匙圈提示。";
+"Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取 OpenCode 的 auth.json。不會出現鑰匙圈提示。";
+"Uses a key entered in Settings, or reads the saved GLM key files. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取本機儲存的 GLM 金鑰檔案。不會出現鑰匙圈提示。";
+"Uses a key entered in Settings, or reads ~/.commandcode/auth.json. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取 ~/.commandcode/auth.json。不會出現鑰匙圈提示。";
+"Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan." = "讀取本機 Chromium 瀏覽器中 Devin 網頁版的登入資訊，不會跳出授權視窗；也可能讀取桌面版儲存的方案。";
+"Runs arkcli with its saved login, or uses access keys entered in Settings. Pulse does not request Keychain access." = "啟動 arkcli 使用已儲存的登入，或使用在設定中輸入的存取金鑰。Pulse 不會要求鑰匙圈存取權限。";
+"Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "使用你在設定中匯入的瀏覽器登入工作階段。匯入時可能要求瀏覽器的鑰匙圈存取權限。";
+"Uses the GitHub login you connect in Settings. No Keychain prompt." = "使用你在設定中連結的 GitHub 登入。不會出現鑰匙圈提示。";
+"Uses only the API key you enter in Settings. No Keychain prompt." = "只使用你在設定中輸入的 API 金鑰。不會出現鑰匙圈提示。";

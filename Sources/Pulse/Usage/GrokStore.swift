@@ -30,6 +30,7 @@ enum GrokStore {
         let directories = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)) ?? []
 
         for directory in directories {
+            guard !Task.isCancelled else { return .empty }
             // The folder is the working directory, percent-encoded.
             let project = directory.lastPathComponent.removingPercentEncoding.map {
                 URL(fileURLWithPath: $0).lastPathComponent
@@ -37,10 +38,8 @@ enum GrokStore {
 
             let runs = (try? manager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
             for run in runs {
+                guard !Task.isCancelled else { return .empty }
                 let file = run.appending(path: "updates.jsonl")
-                guard manager.fileExists(atPath: file.path),
-                      let data = try? Data(contentsOf: file, options: .mappedIfSafe)
-                else { continue }
 
                 var tokens = 0
                 var cost = 0.0
@@ -49,9 +48,8 @@ enum GrokStore {
                 var title: String?
                 var runSlots: [String: (tokens: Int, cost: Double)] = [:]
 
-                for line in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
-                    guard let root = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
-                          let params = root["params"] as? [String: Any],
+                for root in AgentLogIO.jsonLines(at: file) {
+                    guard let params = root["params"] as? [String: Any],
                           let update = params["update"] as? [String: Any]
                     else { continue }
 

@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 
 /// Qwen Code's chat transcripts.
@@ -30,18 +29,13 @@ enum QwenSessionReader {
         var incomplete = false
 
         for file in AgentLogIO.files(in: roots, extensions: ["jsonl"]) {
-            guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else { continue }
-            let fragment = digest(data)
+            guard let fragment = AgentLogIO.digest(at: file) else { continue }
             let project = projectSegment(file)
             let fileStem = file.deletingPathExtension().lastPathComponent
             let fallbackID = [project, fileStem].compactMap { $0 }.joined(separator: "-")
 
             var emitted = 0
-            for line in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
-                guard
-                    let object = try? JSONSerialization.jsonObject(with: Data(line)),
-                    let row = object as? [String: Any]
-                else { continue }
+            for row in AgentLogIO.jsonLines(at: file) {
                 guard row["type"] as? String == "assistant" else { continue }
                 guard let metadata = row["usageMetadata"] as? [String: Any] else { continue }
                 guard let usage = decode(metadata) else { continue }
@@ -156,9 +150,4 @@ enum QwenSessionReader {
         return components[index + 1].isEmpty ? nil : components[index + 1]
     }
 
-    /// A content digest, so a byte-identical mirror of one fragment folds while
-    /// two genuinely different fragments of one session stay distinct.
-    private static func digest(_ data: Data) -> String {
-        SHA256.hash(data: data).map { String(format: "%02x", Int($0)) }.joined()
-    }
 }

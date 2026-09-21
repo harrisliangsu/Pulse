@@ -518,6 +518,15 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
         /// there, and saying "add a key" about a field that has one is the
         /// kind of message that sends people to re-paste what already works.
         case devinOrganizationMissing
+        /// Xiaomi's console answers only to a browser session; the same
+        /// three ways it can fail as Ollama's, named separately because the
+        /// remedy names a different site.
+        case xiaomiSessionMissing
+        case xiaomiSessionExpired
+        /// The session works and the account has no Coding Plan on it — it
+        /// buys tokens by the yuan instead. A complete answer, not a fault,
+        /// and the same distinction `zaiNoCodingPlan` exists for.
+        case xiaomiNoCodingPlan
         /// No key has been entered for a provider that needs one.
         case apiKeyMissing
         /// There is a key, and the service refused it.
@@ -552,6 +561,9 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             case .grokBotNotIncluded: .localized("This Cursor plan doesn't include Grok Bot.")
             case .signedOut: .localized("Sign in to this account again in Settings.")
             case .notSignedIn: .localized("Sign in from Settings to see usage.")
+            case .xiaomiSessionMissing: .localized("Sign in to Xiaomi's platform in a browser to see usage.")
+            case .xiaomiSessionExpired: .localized("Xiaomi's saved session expired. Sign in again in your browser.")
+            case .xiaomiNoCodingPlan: .localized("No Coding Plan on this Xiaomi account.")
             case .ollamaSessionMissing: .localized("Add an Ollama session in Settings.")
             case .ollamaSessionExpired: .localized("The Ollama session expired. Sign in again and add it.")
             case .qoderSessionMissing: .localized("Add a Qoder session in Settings.")

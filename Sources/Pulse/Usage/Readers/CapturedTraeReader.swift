@@ -46,8 +46,9 @@ enum CapturedTraeReader {
         var seen: Set<String> = []
         var distinct: [URL] = []
         for file in files.sorted(by: { $0.path < $1.path }) {
-            guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else { continue }
-            if seen.insert(CapturedSupport.digest(of: data)).inserted { distinct.append(file) }
+            guard !Task.isCancelled else { return [] }
+            guard let digest = AgentLogIO.digest(at: file) else { continue }
+            if seen.insert(digest).inserted { distinct.append(file) }
         }
         return distinct
     }
@@ -58,6 +59,7 @@ enum CapturedTraeReader {
 
         var records: [AgentUsageRecord] = []
         for session in sessions {
+            guard !Task.isCancelled else { return [] }
             guard let sessionID = AgentLogIO.text(session["session_id"]) else { continue }
             // `usage_time` is epoch seconds by this schema. A non-positive
             // value is not a usable time.

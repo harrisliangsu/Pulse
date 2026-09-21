@@ -32,9 +32,8 @@ enum GJCUsageReader {
         var seenFiles: [String: Set<String>] = [:]
 
         for file in AgentLogIO.files(in: roots, extensions: ["jsonl"]) {
-            guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else { continue }
-            let digest = StructuredLogSupport.hash(data)
-            let lines = data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true)
+            guard let digest = AgentLogIO.digest(at: file) else { continue }
+            let lines = LogLines(at: file)
 
             // The header is read first so a mirror can be recognised before
             // any of its lines has been counted.

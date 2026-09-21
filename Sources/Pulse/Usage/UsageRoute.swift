@@ -30,10 +30,11 @@ enum UsageRoute: String, Codable, Sendable {
     static func soleRoute(for account: AccountKey) -> UsageRoute? {
         if !account.isPrimary { return .endpoint }
         switch account.provider {
-        case .claudeCode, .codex, .volcengine, .devin: return nil
+        case .claudeCode, .codex, .volcengine, .kimiCode, .devin: return nil
         case .antigravity: return .languageServer
-        case .ollamaCloud, .qoder: return .webSession
-        case .cursor, .openCodeGo, .kimiCode, .zai, .glmCoding, .minimax,
+        // Browser session rather than a key (Ollama, Xiaomi, fork Qoder).
+        case .ollamaCloud, .qoder, .xiaomiMiMo: return .webSession
+        case .cursor, .openCodeGo, .zai, .glmCoding, .minimax,
              .minimaxCN, .copilot, .grok, .grokBot, .commandCode, .deepSeek:
             return .endpoint
         }

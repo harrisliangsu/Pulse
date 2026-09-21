@@ -2,9 +2,8 @@ import Foundation
 
 /// Whether a turn is happening outside working hours.
 ///
-/// Used for one thing: a working mark takes `angry` into its playlist at
-/// night and at weekends, because a turn at eleven is still work and the
-/// character has an opinion about it.
+/// A working mark takes `angry` into its playlist outside these hours. Rest
+/// uses a separate night window: a Saturday afternoon is not bedtime.
 ///
 /// **The hours are a guess and are meant to be edited.** Nobody's calendar is
 /// in this app, so there is nothing to read: 09:00–21:00 Monday to Friday is a
@@ -14,6 +13,12 @@ import Foundation
 enum BotMarkHours {
     static let start = 9
     static let end = 21
+
+    /// Decorative night-time rest, independent of weekday/weekend work hours.
+    static func isNight(at date: Date = Date(), calendar: Calendar = .current) -> Bool {
+        guard let hour = calendar.dateComponents([.hour], from: date).hour else { return false }
+        return hour >= 23 || hour < 8
+    }
 
     static func isOvertime(at date: Date = Date(), calendar: Calendar = .current) -> Bool {
         guard let hour = calendar.dateComponents([.hour], from: date).hour else { return false }

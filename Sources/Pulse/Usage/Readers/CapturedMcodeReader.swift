@@ -179,19 +179,20 @@ enum CapturedMcodeReader {
     }
 
     /// Every JSON object line, tolerating a BOM and a single bad byte.
-    private static func objects(at url: URL) -> [[String: Any]] {
-        guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return [] }
-        var objects: [[String: Any]] = []
-        for line in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
-            var bytes = Data(line)
-            if bytes.starts(with: [0xEF, 0xBB, 0xBF]) { bytes.removeFirst(3) }
-            guard
-                let value = try? JSONSerialization.jsonObject(with: bytes),
-                let object = value as? [String: Any]
-            else { continue }
-            objects.append(object)
+    private static func objects(at url: URL) -> AnySequence<[String: Any]> {
+        AnySequence {
+            let lines = LogLines(at: url).makeIterator()
+            return AnyIterator {
+                while var bytes = lines.next() {
+                    if bytes.starts(with: [0xEF, 0xBB, 0xBF]) { bytes.removeFirst(3) }
+                    let object: [String: Any]? = autoreleasepool {
+                        (try? JSONSerialization.jsonObject(with: bytes)) as? [String: Any]
+                    }
+                    if let object { return object }
+                }
+                return nil
+            }
         }
-        return objects
     }
 
     /// A stream timestamp in seconds or milliseconds, per the capture schema:

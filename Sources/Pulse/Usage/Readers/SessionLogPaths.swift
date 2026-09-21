@@ -106,6 +106,7 @@ enum SessionLogPaths {
     /// the default too — nothing is redirected on a guess.
     static func settingsSessionDir(at url: URL, home: URL) -> [URL]? {
         guard
+            !Task.isCancelled,
             let data = try? Data(contentsOf: url),
             let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
             let raw = object["sessionDir"]

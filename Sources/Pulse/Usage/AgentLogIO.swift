@@ -1,4 +1,6 @@
+import CryptoKit
 import Foundation
+import os
 
 /// Read-only helpers for the files an agent leaves behind.
 ///
@@ -33,7 +35,8 @@ enum AgentLogIO {
     static func files(
         in roots: [URL],
         extensions: Set<String> = [],
-        names: Set<String> = []
+        names: Set<String> = [],
+        excludingRootDirectories: Set<String> = []
     ) -> [URL] {
         let manager = FileManager.default
         let wantsExtension = !extensions.isEmpty
@@ -45,10 +48,11 @@ enum AgentLogIO {
             .sorted { $0.path < $1.path }
             .filter { seenRoots.insert($0.path).inserted }
 
-        let keys: [URLResourceKey] = [.isRegularFileKey]
+        let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey]
         var candidates: [URL] = []
 
         for root in ordered {
+            guard !Task.isCancelled else { return [] }
             var isDirectory: ObjCBool = false
             guard manager.fileExists(atPath: root.path, isDirectory: &isDirectory) else { continue }
 
@@ -59,7 +63,15 @@ enum AgentLogIO {
                     options: [.skipsPackageDescendants]
                 ) else { continue }
 
-                for case let file as URL in walker {
+                while let file = autoreleasepool(invoking: { walker.nextObject() as? URL }) {
+                    guard !Task.isCancelled else { return [] }
+                    if !excludingRootDirectories.isEmpty,
+                       file.deletingLastPathComponent().standardizedFileURL == root,
+                       excludingRootDirectories.contains(file.lastPathComponent),
+                       (try? file.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true {
+                        walker.skipDescendants()
+                        continue
+                    }
                     guard matches(
                         file, extensions: extensions, names: names,
                         wantsExtension: wantsExtension, wantsName: wantsName
@@ -83,8 +95,12 @@ enum AgentLogIO {
             }
         }
 
-        var resolved: [(canonical: String, url: URL)] = candidates.map { file in
-            (canonical: file.resolvingSymlinksInPath().path, url: file)
+        var resolved: [(canonical: String, url: URL)] = []
+        for file in candidates {
+            guard !Task.isCancelled else { return [] }
+            resolved.append(autoreleasepool {
+                (canonical: file.resolvingSymlinksInPath().path, url: file)
+            })
         }
         resolved.sort { lhs, rhs in
             if lhs.canonical == rhs.canonical { return lhs.url.path < rhs.url.path }
@@ -93,6 +109,7 @@ enum AgentLogIO {
         var seen: Set<String> = []
         var files: [URL] = []
         for file in resolved where seen.insert(file.canonical).inserted {
+            guard !Task.isCancelled else { return [] }
             files.append(file.url)
         }
         return files
@@ -114,30 +131,57 @@ enum AgentLogIO {
 
     // MARK: - JSON
 
+    /// Exact whole-file identity without faulting an entire mapped transcript
+    /// into memory. Cancellation stops between chunks, as it does for lines.
+    static func digest(at url: URL) -> String? {
+        guard !Task.isCancelled, let file = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { try? file.close() }
+        var hash = SHA256()
+        do {
+            while !Task.isCancelled {
+                let data = try autoreleasepool { try file.read(upToCount: 64 * 1024) }
+                // Foundation may use nil rather than empty Data for EOF.
+                guard let data, !data.isEmpty else {
+                    return hash.finalize().map { String(format: "%02x", Int($0)) }.joined()
+                }
+                hash.update(data: data)
+            }
+        } catch {
+            return nil
+        }
+        return nil
+    }
+
     /// Parses a whole file as JSON. Malformed content or unreadable bytes are
     /// nil, never a partial value.
     static func json(at url: URL) -> Any? {
+        guard !Task.isCancelled else { return nil }
         guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return nil }
-        return try? JSONSerialization.jsonObject(with: data)
+        guard !Task.isCancelled else { return nil }
+        let value = autoreleasepool { try? JSONSerialization.jsonObject(with: data) }
+        return Task.isCancelled ? nil : value
     }
 
-    /// Parses a JSONL file into objects, skipping any line that is not one.
+    /// Lazily parses JSONL objects, skipping any line that is not one. Each
+    /// iteration opens its own stream; conversation payloads are not retained
+    /// in a whole-file array before the caller can extract usage counters.
     ///
     /// A log being appended to can end mid-line, and one corrupt row must not
     /// cost the rest. Non-object JSON (an array, a bare number) is skipped for
     /// the same reason the caller wants objects.
-    static func jsonLines(at url: URL) -> [[String: Any]] {
-        guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return [] }
-
-        var rows: [[String: Any]] = []
-        for line in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
-            guard
-                let value = try? JSONSerialization.jsonObject(with: Data(line)),
-                let object = value as? [String: Any]
-            else { continue }
-            rows.append(object)
+    static func jsonLines(at url: URL) -> AnySequence<[String: Any]> {
+        AnySequence {
+            let lines = LogLines(at: url).makeIterator()
+            return AnyIterator {
+                while let line = lines.next() {
+                    let object: [String: Any]? = autoreleasepool {
+                        (try? JSONSerialization.jsonObject(with: line)) as? [String: Any]
+                    }
+                    if let object { return object }
+                }
+                return nil
+            }
         }
-        return rows
     }
 
     /// A JSON object, or nil for anything that is not one.
@@ -209,14 +253,13 @@ enum AgentLogIO {
     /// non-finite number and a value a `Date` cannot hold are both nil. The
     /// clock and a file's modification date are never used to fill a gap.
     static func timestamp(_ value: Any?, milliseconds: Bool = false) -> Date? {
-        guard let value else { return nil }
+        guard !Task.isCancelled, let value else { return nil }
 
         if let string = value as? String {
             let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { return nil }
-            if let date = Self.iso(trimmed) { return date }
-            guard let number = Double(trimmed) else { return nil }
-            return date(from: number, milliseconds: milliseconds)
+            if let number = Double(trimmed) { return date(from: number, milliseconds: milliseconds) }
+            return Self.iso(trimmed)
         }
 
         if let number = value as? NSNumber {
@@ -237,16 +280,20 @@ enum AgentLogIO {
         return date
     }
 
-    /// Parses an ISO 8601 string with a stated offset, fractional seconds or
-    /// neither. **Built per call**: `ISO8601DateFormatter` is not `Sendable`,
-    /// and this type is reached from many readers at once.
-    private static func iso(_ text: String) -> Date? {
-        let withFraction = ISO8601DateFormatter()
-        withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = withFraction.date(from: text) { return date }
-
+    /// ISO8601DateFormatter is not Sendable. Keep the two parsers behind a lock
+    /// rather than constructing them for every record in a large transcript.
+    private struct ISOParsers {
+        let fraction: ISO8601DateFormatter = {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return formatter
+        }()
         let plain = ISO8601DateFormatter()
-        plain.formatOptions = [.withInternetDateTime]
-        return plain.date(from: text)
+    }
+
+    private static let isoParsers = OSAllocatedUnfairLock(uncheckedState: ISOParsers())
+
+    private static func iso(_ text: String) -> Date? {
+        isoParsers.withLock { $0.fraction.date(from: text) ?? $0.plain.date(from: text) }
     }
 }

@@ -369,8 +369,8 @@ enum ClaudeDesktopSession {
     /// every other request Pulse makes to the same hosts. The session belongs
     /// to the desktop app; Pulse borrows it for the length of one call and
     /// keeps nothing. Ephemeral, and told twice not to store cookies.
-    private static let session: URLSession = {
-        let configuration = URLSessionConfiguration.ephemeral
+    private static func session() -> URLSession {
+        let configuration = NetworkSession.configured(.ephemeral)
         configuration.httpShouldSetCookies = false
         configuration.httpCookieAcceptPolicy = .never
         configuration.httpCookieStorage = nil
@@ -380,9 +380,11 @@ enum ClaudeDesktopSession {
         configuration.urlCache = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         return URLSession(configuration: configuration)
-    }()
+    }
 
     private static func get(_ url: URL, cookie: String) async -> ReadOutcome {
+        let session = session()
+        defer { session.invalidateAndCancel() }
         var request = URLRequest(url: url)
         request.timeoutInterval = 20
         request.setValue(cookie, forHTTPHeaderField: "Cookie")

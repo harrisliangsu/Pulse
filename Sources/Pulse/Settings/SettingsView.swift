@@ -45,6 +45,14 @@ struct SettingsView: View {
     /// The budget being typed, kept as text so a half-entered number is not
     /// read as a denominator on every keystroke.
     @State private var deepSeekBudget = ""
+    /// Manual proxy fields are committed as one valid endpoint rather than on
+    /// every keystroke.
+    @State private var proxyHost = ""
+    @State private var proxyPort = ""
+    @State private var proxyHostInvalid = false
+    @State private var proxyPortInvalid = false
+    private enum ProxyField: Hashable { case host, port }
+    @FocusState private var proxyField: ProxyField?
     /// The low-balance figure being typed, kept as text for the same reason.
     @State private var lowBalance = ""
     @State private var savedKey = ""
@@ -84,23 +92,28 @@ struct SettingsView: View {
     /// filled one account at a time as their panes are opened.
     @State private var spend = SpendSummary()
     @State private var isScanningSpend = false
+    @State private var spendRead = SpendReadState()
+    @State private var spendProgress: AgentLedgers.Progress?
+    @State private var spendRescan = 0
     /// The agent the spend pane is looking at on its own, and that agent's own
     /// figures. Kept beside the combined ones rather than derived on the fly:
     /// both come out of the same ledgers and the same span, so they cannot
     /// disagree about what a month is.
     @State private var spendFocus: SpendAgent?
     @State private var focusedSpend = SpendSummary()
-    @State private var spendLedgers: [SpendAgent: UsageLedger] = [:]
+    private var spendLedgers: [SpendAgent: UsageLedger] { spendRead.snapshot?.ledgers ?? [:] }
     /// Present sources — installed, or captured/exported somewhere Pulse reads
     /// — that produced no records at all. Named together at the foot of the
     /// pane so a silent source is not mistaken for a zero reading. Not
     /// span-dependent: "nothing was read" is the same answer over any span.
-    @State private var spendNoRecords: [SpendAgent] = []
+    private var spendNoRecords: [SpendAgent] {
+        SpendAgent.allCases.filter { spendLedgers[$0]?.allTime.tokens == 0 }
+    }
     /// Whether any present source held history a reader could not decode —
     /// a compressed transcript, say. The pane shows a short generic status
     /// rather than dropping those records silently; the readers' own English
     /// diagnostics never reach the view.
-    @State private var spendHasReadLimitations = false
+    private var spendHasReadLimitations: Bool { spendRead.snapshot?.notes.isEmpty == false }
     /// The model the spend pane has drilled into, and that model's own figures
     /// over the same span — crossed with `spendFocus` when an agent is open, so
     /// a model opened from an agent's list counts only that agent's work in it.
@@ -178,7 +191,7 @@ struct SettingsView: View {
             // do. `ideal` matches the frame so first layout and every rebuild
             // land on the same width; `max` keeps a stretched sidebar from
             // eating the pane.
-            .navigationSplitViewColumnWidth(min: 200, ideal: 200, max: 320)
+            .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
             // `.sidebar`, not `.automatic`: this window has no `NSToolbar` —
             // see `SettingsWindowController` on why the title bar is left to
             // AppKit — and automatic placement has nowhere to put the field.
@@ -206,21 +219,43 @@ struct SettingsView: View {
                         case .general: general
                         case .account(let account): accountPane(account)
                         case .spend:
-                            TokenSpendView(
-                                summary: spend,
-                                focus: $spendFocus,
-                                focused: focusedSpend,
-                                modelFocus: $selectedModel,
-                                modelSummary: modelSpend,
-                                noRecords: spendNoRecords,
-                                hasReadLimitations: spendHasReadLimitations,
-                                span: Binding(
-                                    get: { settings.spendSpan },
-                                    set: { settings.spendSpan = $0 }
-                                ),
-                                isLoading: isScanningSpend,
-                                refresh: { Task { await loadSpend(refresh: true) } }
-                            )
+                            SettingsGroup(String.localized("Token spend")) {
+                                SettingsRow(
+                                    String.localized("Read local usage records"),
+                                    subtitle: String.localized("When enabled, scans local records and exports.")
+                                ) {
+                                    Toggle(String.localized("Read local usage records"), isOn: Binding(
+                                        get: { settings.readsTokenSpend },
+                                        set: { settings.readsTokenSpend = $0 }
+                                    ))
+                                    .labelsHidden()
+                                    .toggleStyle(.switch)
+                                }
+                                if settings.readsTokenSpend, isScanningSpend, let progress = spendProgress {
+                                    SettingsRowDivider()
+                                    SettingsRow(String.localized("Reading \(progress.agent.displayName)…")) {
+                                        Text(verbatim: "\(progress.index + 1)/\(progress.total)")
+                                            .monospacedDigit()
+                                    }
+                                }
+                            }
+                            if settings.readsTokenSpend {
+                                TokenSpendView(
+                                    summary: spend,
+                                    focus: $spendFocus,
+                                    focused: focusedSpend,
+                                    modelFocus: $selectedModel,
+                                    modelSummary: modelSpend,
+                                    noRecords: spendNoRecords,
+                                    hasReadLimitations: spendHasReadLimitations,
+                                    span: Binding(
+                                        get: { settings.spendSpan },
+                                        set: { settings.spendSpan = $0 }
+                                    ),
+                                    isLoading: isScanningSpend,
+                                    refresh: { spendRescan += 1 }
+                                )
+                            }
                         case .about: about
                         case .integrations: DeveloperIntegrationsView(settings: settings)
                         }
@@ -232,9 +267,9 @@ struct SettingsView: View {
                 // Keyed on the pane and enabled state, so enabling an account
                 // also reconsiders its history's empty-state explanation.
                 .task(id: historyKey) { await loadHistory() }
-                // Opening the pane reads; changing the span only re-adds up
-                // what has already been read, which is why the refresh is not
-                // forced here and is a button instead.
+                // A completed read survives sidebar changes in this window.
+                // Only an initial visit or Rescan reads; changing the span
+                // re-adds up what is already in memory.
                 // **Two tasks, because they cost different things.** Reading
                 // every agent's store is seconds on a cold launch; adding the
                 // numbers up again for a different span is microseconds. Keyed
@@ -340,6 +375,10 @@ struct SettingsView: View {
 
     private var general: some View {
         VStack(alignment: .leading, spacing: 22) {
+            if settings.needsProviderSelection {
+                Text(localized: "Enable a service in its settings to start monitoring.")
+                    .foregroundStyle(.secondary)
+            }
             SettingsGroup(String.localized("Floating panel")) {
                 SettingsRow(
                     String.localized("Show floating panel"),
@@ -405,6 +444,21 @@ struct SettingsView: View {
                     .labelsHidden()
                     .pickerStyle(.segmented)
                     .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                    .disabled(!settings.isPanelVisible)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Round ends"),
+                    subtitle: String.localized("The rail's ends and the card's tail follow the ring's own curve.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.usesRoundEnds },
+                        set: { settings.usesRoundEnds = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
                     .disabled(!settings.isPanelVisible)
                 }
 
@@ -627,6 +681,37 @@ struct SettingsView: View {
                         .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
                         .disabled(!settings.isPanelVisible)
                     }
+
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Alert colour when docked"),
+                    subtitle: String.localized("Off keeps the collapsed rail neutral even when a limit needs attention.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.dockShowsAlertColor },
+                        set: { settings.dockShowsAlertColor = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Ring activity animation"),
+                    subtitle: String.localized("The turning mark for a working CLI or a reading being fetched. Off leaves the ring still.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.animatesRingActivity },
+                        set: { settings.animatesRingActivity = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible)
                 }
             }
 
@@ -746,6 +831,84 @@ struct SettingsView: View {
                     }
                     .labelsHidden()
                     .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+                }
+            }
+
+            SettingsGroup(String.localized("Network")) {
+                SettingsRow(
+                    String.localized("Proxy"),
+                    subtitle: String.localized("Use macOS settings or a proxy only for Pulse.")
+                ) {
+                    Picker("", selection: Binding(
+                        get: { settings.networkProxy.mode },
+                        set: { mode in
+                            var proxy = settings.networkProxy
+                            proxy.mode = mode
+                            settings.networkProxy = proxy
+                            if mode == .system {
+                                proxyHostInvalid = false
+                                proxyPortInvalid = false
+                            }
+                        }
+                    )) {
+                        ForEach(NetworkProxyMode.allCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+                }
+
+                if settings.networkProxy.mode == .manual {
+                    SettingsRowDivider()
+
+                    SettingsRow(String.localized("Type")) {
+                        Picker("", selection: Binding(
+                            get: { settings.networkProxy.kind },
+                            set: { kind in
+                                var proxy = settings.networkProxy
+                                proxy.kind = kind
+                                settings.networkProxy = proxy
+                            }
+                        )) {
+                            ForEach(NetworkProxyKind.allCases) { kind in
+                                Text(kind.title).tag(kind)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                    }
+
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Host"),
+                        subtitle: proxyHostInvalid
+                            ? String.localized("Enter a host.")
+                            : String.localized("The proxy server's name or address.")
+                    ) {
+                        TextField("", text: $proxyHost, prompt: Text(verbatim: "127.0.0.1"))
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: SettingsLayout.controlWidth)
+                            .focused($proxyField, equals: .host)
+                            .onSubmit { saveManualProxy() }
+                    }
+
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Port"),
+                        subtitle: proxyPortInvalid
+                            ? String.localized("Enter a whole number from 1 to 65535.")
+                            : String.localized("A number from 1 to 65535.")
+                    ) {
+                        TextField("", text: $proxyPort, prompt: Text(verbatim: "7897"))
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: SettingsLayout.controlWidth)
+                            .focused($proxyField, equals: .port)
+                            .onSubmit { saveManualProxy() }
+                    }
                 }
             }
 
@@ -912,6 +1075,33 @@ struct SettingsView: View {
                 }
             }
         }
+        .onAppear {
+            proxyHost = settings.networkProxy.host
+            proxyPort = settings.networkProxy.port.map(String.init) ?? ""
+            proxyHostInvalid = false
+            proxyPortInvalid = false
+        }
+        .onChange(of: proxyField) { previous, current in
+            guard previous != nil, previous != current else { return }
+            saveManualProxy()
+        }
+    }
+
+    /// Host and port become one setting only after both fields are valid. The
+    /// text remains as typed on refusal so the row can explain what to fix.
+    private func saveManualProxy() {
+        let host = NetworkProxySettings.validHost(proxyHost)
+        let port = NetworkProxySettings.validPort(proxyPort)
+        proxyHostInvalid = host == nil
+        proxyPortInvalid = port == nil
+        guard let host, let port else { return }
+
+        var proxy = settings.networkProxy
+        proxy.host = host
+        proxy.port = port
+        settings.networkProxy = proxy
+        proxyHost = host
+        proxyPort = String(port)
     }
 
     /// What a shortcut row says under its title.
@@ -1043,23 +1233,49 @@ struct SettingsView: View {
             // Off the main thread: this opens a database or two and may ask
             // the keychain, and the settings window should not freeze while it
             // does.
-            let found: BrowserCookies.Found? = await Task.detached(priority: .userInitiated) {
-                switch account.provider {
-                case .qoder:
+            // **Which site, and which cookies of it are worth keeping.** Two
+            // providers read a session now, and the normalizer is the thing
+            // that decides what leaves the browser — a shared one that kept
+            // everything it found would forward whichever cookie either site
+            // adds next.
+            //
+            // **Exhaustive, no `default`.** A fall-through would hand the next
+            // provider added Ollama's host and Ollama's filter, and it would
+            // find nothing and say so in that provider's own pane — the
+            // failure `Provider.soleRoute` was made exhaustive to prevent,
+            // where Grok's pane described Antigravity's language server.
+            let host: String
+            let keep: @Sendable (String) -> String?
+            switch account.provider {
+            case .ollamaCloud:
+                host = "ollama.com"
+                keep = { try? OllamaSessionCookie.normalize($0) }
+            case .xiaomiMiMo:
+                host = XiaomiMiMoClient.host
+                keep = { try? XiaomiMiMoCookie.normalize($0) }
+            case .qoder:
+                // Primary host; CN / www variants are tried by Qoder's own import if needed.
+                host = "qoder.com"
+                keep = { try? QoderSessionCookie.normalize($0) }
+            case .claudeCode, .codex, .antigravity, .cursor, .openCodeGo,
+                 .kimiCode, .zai, .glmCoding, .minimax, .minimaxCN, .copilot,
+                 .grok, .grokBot, .volcengine, .commandCode, .deepSeek, .devin:
+                // Not session-based: `readSession` sends those to
+                // `readBrowserStorage` before it gets here.
+                return
+            }
+
+            let found = await Task.detached(priority: .userInitiated) { () -> BrowserCookies.Found? in
+                if account.provider == .qoder {
                     let hosts = ["qoder.com", "www.qoder.com", "qoder.com.cn", "www.qoder.com.cn"]
-                    for host in hosts {
-                        if let session = BrowserCookies.session(forHost: host, allowing: browsers, keep: {
-                            try? QoderSessionCookie.normalize($0)
-                        }) {
+                    for candidate in hosts {
+                        if let session = BrowserCookies.session(forHost: candidate, allowing: browsers, keep: keep) {
                             return session
                         }
                     }
-                    return BrowserCookies.Found?.none
-                default:
-                    return BrowserCookies.session(forHost: "ollama.com", allowing: browsers) {
-                        try? OllamaSessionCookie.normalize($0)
-                    }
+                    return nil
                 }
+                return BrowserCookies.session(forHost: host, allowing: browsers, keep: keep)
             }.value
 
             if let found {
@@ -1076,9 +1292,17 @@ struct SettingsView: View {
             }
 
             if pane == .account(account) {
-                sessionMessage = account.provider == .qoder
-                    ? String.localized("No Qoder session found. Sign in at qoder.com first.")
-                    : String.localized("No Ollama session found. Sign in at ollama.com first.")
+                // Named per provider for the same reason the switch above is
+                // exhaustive: a shared sentence would send somebody to the
+                // wrong site.
+                sessionMessage = switch account.provider {
+                case .qoder:
+                    String.localized("No Qoder session found. Sign in at qoder.com first.")
+                case .xiaomiMiMo:
+                    String.localized("No Xiaomi session found. Sign in at platform.xiaomimimo.com first.")
+                default:
+                    String.localized("No Ollama session found. Sign in at ollama.com first.")
+                }
             }
         }
     }
@@ -1135,6 +1359,11 @@ struct SettingsView: View {
 
     private func accountPaneBody(_ account: AccountKey, _ provider: Provider) -> some View {
         VStack(alignment: .leading, spacing: 22) {
+            if !settings.isEnabled(account), account.isPrimary {
+                Text(provider.monitoringAccessDescription)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             SettingsGroup(String.localized("Panel")) {
                 SettingsRow(String.localized("Show in panel")) {
                     Toggle("", isOn: Binding(
@@ -1319,20 +1548,22 @@ struct SettingsView: View {
                 }
             }
 
-            connection(for: account)
-                .id("connection")
+            if !settings.needsProviderSelection {
+                connection(for: account)
+                    .id("connection")
 
-            ConnectionDiagnosticsView(
-                account: account, store: store, settings: settings,
-                isSigningIn: signingIn != nil || githubTask != nil,
-                repairMessage: repairMessages[account.id],
-                repair: { repair($0, for: account) }
-            )
-            .id(account)
+                ConnectionDiagnosticsView(
+                    account: account, store: store, settings: settings,
+                    isSigningIn: signingIn != nil || githubTask != nil,
+                    repairMessage: repairMessages[account.id],
+                    repair: { repair($0, for: account) }
+                )
+                .id(account)
 
-            accounts(for: account)
+                accounts(for: account)
 
-            liveUsage(for: account)
+                liveUsage(for: account)
+            }
 
             // Both are built from the transcripts the CLI leaves behind, so
             // for a provider that keeps none they would be a column of zeroes
@@ -1364,7 +1595,8 @@ struct SettingsView: View {
                 history(for: account)
             }
         }
-        .onChange(of: provider, initial: true) { _, shown in
+        .onChange(of: "\(account.id)|\(settings.isEnabled(account))", initial: true) { _, _ in
+            let shown = provider
             // The stored figure, shown in the field rather than left blank
             // beside a ring that is measuring against it.
             if shown == .deepSeek {
@@ -1375,7 +1607,12 @@ struct SettingsView: View {
             }
             // Copilot has no key field, but its token lives in the same store
             // and the pane needs to know whether there is one.
-            guard shown.usesAPIKey || shown == .copilot else { return }
+            guard settings.isEnabled(account), account.isPrimary,
+                  shown.usesAPIKey || shown == .copilot else {
+                apiKey = ""
+                savedKey = ""
+                return
+            }
             apiKey = APIKeyStore.key(for: shown) ?? ""
             savedKey = apiKey
         }
@@ -1471,57 +1708,74 @@ struct SettingsView: View {
         return "\(account.id)|\(settings.isEnabled(account))"
     }
 
-    /// What the combined figures depend on: the pane being open, and how far
-    /// back it is counting.
-    /// What a *read* depends on: only whether the pane is open.
-    private var spendLoadKey: String {
-        if case .spend = pane { return "spend" }
-        return "-"
+    /// One task owns opening, enabling and manual rescans. Leaving, disabling
+    /// or closing the settings window cancels that same task, even mid-rescan.
+    private var spendLoadKey: SpendReadState.Request {
+        // Keep these separate even away from the pane: closing the window
+        // there must still run the release path rather than keep the same "-".
+        SpendReadState.Request(
+            isEnabled: settings.readsTokenSpend,
+            isWindowVisible: navigation.isWindowVisible,
+            isPaneSelected: pane == .spend,
+            rescan: spendRescan
+        )
     }
 
     /// What the *figures* depend on, which is read back out of what was loaded.
     private var spendKey: String {
-        guard case .spend = pane else { return "-" }
+        guard case .spend = pane, settings.readsTokenSpend else { return "-" }
         return "\(settings.spendSpan.rawValue)|\(spendFocus?.rawValue ?? "")|\(selectedModel ?? "")"
     }
 
     /// Every agent's ledger, added up.
     ///
-    /// **Rescanning is the button, not the default.** Going through a few
-    /// hundred megabytes of transcripts on every pane switch would make this
-    /// the slowest thing in the window; `UsageLedgerReader` already caches one
-    /// ledger per provider, and reusing them is arithmetic.
-    private func loadSpend(refresh: Bool = false) async {
-        guard case .spend = pane else { return }
-        // Nothing to say about a read that is already in hand: the actor's
-        // own cache answers, and flipping the spinner for it is what made a
-        // cached page look like a rescan.
-        let wasEmpty = spendLedgers.isEmpty
-        if wasEmpty || refresh { isScanningSpend = true }
-        defer { isScanningSpend = false }
-
-        // Every agent that has left a record on this Mac, which is a wider
-        // list than the providers with rings: `AgentLedgers` delegates the two
-        // Pulse already reads and parses the rest itself.
-        let ledgers = await AgentLedgers.shared.ledgers(refresh: refresh)
+    /// Sidebar visits reuse the last completed snapshot. Turning reading off
+    /// or closing the window releases it; a later visit revalidates disk caches.
+    private func loadSpend() async {
         guard !Task.isCancelled else { return }
+        spendProgress = nil
+        isScanningSpend = false
 
-        spendLedgers = ledgers
-        // A source that is present but produced no token records is named at
-        // the foot of the pane rather than drawn as an empty row or a token
-        // reading of zero. This is a zero-token list on purpose: a source that
-        // reports money but no tokens belongs here too, because it has no
-        // usage *records* to show. Ordered by the catalogue so the list is
-        // stable between reads.
-        spendNoRecords = SpendAgent.present.filter { agent in
-            guard let ledger = ledgers[agent] else { return false }
-            return ledger.allTime.tokens == 0
+        let id: UUID
+        let refresh: Bool
+        switch spendRead.prepare(spendLoadKey) {
+        case .retain:
+            return
+        case .release:
+            clearSpendSummaries()
+            return
+        case .scan(let nextID, let force):
+            id = nextID
+            refresh = force
+            clearSpendSummaries()
         }
-        // Only a limitation on a source that actually exists counts; the
-        // presence test inside `readNotes` does that filtering.
-        let readNotes = await AgentLedgers.shared.readNotes()
-        spendHasReadLimitations = !readNotes.isEmpty
+
+        isScanningSpend = true
+        defer {
+            if spendRead.finish(id) {
+                isScanningSpend = false
+                spendProgress = nil
+            }
+        }
+
+        let result: AgentLedgers.Snapshot
+        do {
+            result = try await AgentLedgers.shared.scan(refresh: refresh) { progress in
+                guard spendRead.isCurrent(id), !Task.isCancelled else { return }
+                spendProgress = progress
+            }
+        } catch {
+            return
+        }
+        guard !Task.isCancelled, settings.readsTokenSpend, navigation.isWindowVisible,
+              pane == .spend, spendRead.complete(result, for: id) else { return }
         recomputeSpend()
+    }
+
+    private func clearSpendSummaries() {
+        spend = SpendSummary()
+        focusedSpend = SpendSummary()
+        modelSpend = ModelSpendSummary()
     }
 
     /// The same function over the same ledgers, twice: once for everything and
@@ -1540,6 +1794,7 @@ struct SettingsView: View {
     /// and the model on the next, so the drill-down no longer adds up to the row
     /// it was opened from.
     private func recomputeSpend() {
+        guard settings.readsTokenSpend else { return }
         let span = settings.spendSpan.days
         let now = Date()
         let calendar = Calendar.current
@@ -1564,6 +1819,12 @@ struct SettingsView: View {
         // which do not say which account was signed in at the time.
         guard case .account(let account) = pane else { return }
         let provider = account.provider
+        guard settings.isEnabled(account), account.isPrimary else {
+            ledgers[provider] = .empty
+            historyReads[provider] = .notAsked
+            codexAccount = nil
+            return
+        }
 
         loadingHistory = provider
         // Only if it is still ours. `saveKey` starts an unstructured reload
@@ -1576,19 +1837,6 @@ struct SettingsView: View {
         // statistics cover the whole account, so there is nothing local to
         // read and nothing to cache between panes.
         if provider == .zai || provider == .glmCoding {
-            // A pane can be opened for an account that is switched off — it is
-            // how one gets switched on. Nothing on the refresh loop touches a
-            // disabled provider, and neither should this: it is the one place
-            // a key would otherwise leave the Mac for something the user has
-            // turned off.
-            guard settings.isEnabled(account) else {
-                ledgers[provider] = .empty
-                // Nothing was asked, and the empty state has to say so rather
-                // than report on a request that never happened.
-                historyReads[provider] = .notAsked
-                return
-            }
-
             let key = APIKeyStore.key(for: provider)
             let read = await ZaiUsageService(provider: provider, enteredKey: key).history()
 
@@ -2628,7 +2876,7 @@ struct SettingsView: View {
 
                     SettingsRow(
                         String.localized("Check automatically"),
-                        subtitle: String.localized("Once a day. Updates are offered, never installed on their own.")
+                        subtitle: String.localized("Every two hours. Updates are offered, never installed on their own.")
                     ) {
                         Toggle("", isOn: Binding(
                             get: { update.checksAutomatically },

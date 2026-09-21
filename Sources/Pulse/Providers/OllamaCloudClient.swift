@@ -167,7 +167,7 @@ struct OllamaCloudClient: Sendable {
     }
 
     func fetch(cookie: String) async throws -> OllamaCloudSnapshot {
-        let configuration = URLSessionConfiguration.ephemeral
+        let configuration = NetworkSession.configured(.ephemeral)
         configuration.httpShouldSetCookies = false
         configuration.httpCookieStorage = nil
         configuration.urlCache = nil

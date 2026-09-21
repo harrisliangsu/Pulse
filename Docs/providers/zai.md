@@ -96,7 +96,7 @@ GLM also reads a key already on this Mac, first readable line only:
 - `~/.config/bigmodel/api_key`
 - `~/.config/zhipu/api_key`
 
-That is both a fallback and the first-run evidence that this Mac is set up for it.
+For the chooser, only the presence of those files is checked; no key is read. The fallback reads their contents only after Zhipu is selected.
 
 **Never consulted for the international route.** Quietly sending a BigModel key to `api.z.ai` reports a refused key for a plan the user does not have.
 

@@ -6,6 +6,19 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.3.0
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **同步上游 qunqin24/Pulse 1.3.0**（含本仓库尚未合入的上游 1.2.1 改动）。
+- **首次启动先选择要监控的服务。** 选定前不读凭据、不开始监控；以后升级发现新的本机服务时只会提示，不会擅自开启。
+- **代理设置。** 可继续跟随 macOS，或指定 HTTP / HTTPS / SOCKS5。供应商请求、登录流程以及 Codex、arkcli 等辅助进程共用同一选择。
+- **Token 消耗改为明确选择后才读取。** 新安装默认关闭；开启后只在查看该设置页时扫描本机会话，离开页面会取消未完成的读取。大型 JSONL 改为流式解析。
+- **小米 Coding Plan** 成为新服务商（MiMo 控制台浏览器会话，不是 API key）。没有套餐时会直说，而不是画 0%。
+- **更新检查改为每两小时一次**（原先一天一次）。仍然只提示，不会自己安装。
+- **修复 Codex 会让 CPU 空转的问题**（`codex app-server` 退出后仍读已关闭管道）。
+- **上游带来的栏/环打磨：** 可贴边告警色开关、CLI 活动/刷新环动画开关、栏端随圆环弧度（默认柔和）、小机器人看向屏幕内侧且眼睛不跑出脸外、更完整的动作编排、更亮的 Kimi 机器人蓝、重写的中文机器人设置文案。
+- **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带（含可选小时额度）、环颜色方案（红色告警 / 渐变 / 低调）、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.2.4
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。

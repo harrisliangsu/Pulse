@@ -51,4 +51,4 @@ Same two endpoints with the token Pulse holds. Never looks at `~/.grok/auth.json
 
 ## First run
 
-Presence of `~/.grok`. Without that gate, offer-once would switch Grok on at the next update for everyone as a grey ring.
+Presence of `~/.grok` marks the chooser row as detected, without opening its auth file. New support is suggested once on upgrade if detected, never enabled automatically.

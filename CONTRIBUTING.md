@@ -57,6 +57,21 @@ Before merging a docs-or-behaviour change:
 - [ ] Links from CLAUDE.md’s “Read by task” table still resolve.
 - [ ] You did not add build or shipping instructions that contradict [Docs/build-from-source.md](Docs/build-from-source.md) / [Docs/releasing.md](Docs/releasing.md).
 
+## Answering an issue
+
+**Reply in the language it was reported in, and keep it to what was asked.**
+The interface, the READMEs and the issue templates are in five languages
+because they are read by everybody; a reply is read by one person, and
+translating it for them is noise. Nothing in this repo asks for bilingual
+comments — that was inferred once from the rest of the project and it was wrong.
+
+Length follows the same rule. A reporter who diagnosed the bug themselves does
+not need it explained back to them: "fixed in x.y.z, thanks" is the whole reply.
+Save the full account — cause, what changed, what it is tested against — for
+the commit message and the topic doc, which are where somebody goes looking for
+it later. A draft written before the fix shipped is not the reply to send after
+it shipped; write the short one instead of trimming the long one.
+
 ## Code of the house (short)
 
 - Do not strip `#Preview` to get a green `swift build`.

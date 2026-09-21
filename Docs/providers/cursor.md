@@ -45,4 +45,4 @@ Grok Bot is billed against the Cursor account but is a **separate weekly allowan
 
 ## First run
 
-`CursorAppLogin.hasStoredLogin()`, not the app bundle — same “has this ever run here” evidence as `~/.claude`, and it does not care where the app was dragged to.
+The Cursor `state.vscdb` file's presence, not its contents or the app bundle. `ProviderDiscovery` uses it only to mark the chooser row as detected; reading the token waits until selection.

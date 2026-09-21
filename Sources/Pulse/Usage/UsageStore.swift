@@ -28,6 +28,7 @@ final class UsageStore {
     private(set) var currentInterval: TimeInterval = AdaptiveRefresh.floor
 
     private let settings: AppSettings
+    private var networkProxy: NetworkProxySettings
     /// Posts notifications about the readings that land here. Nil in previews,
     /// which have no bundle to post from and nothing to say anyway.
     private let alerts: UsageAlerts?
@@ -92,6 +93,7 @@ final class UsageStore {
 
     init(settings: AppSettings, alerts: UsageAlerts? = nil) {
         self.settings = settings
+        networkProxy = settings.networkProxy
         self.alerts = alerts
         codex = CodexUsageService(server: appServer)
 
@@ -112,8 +114,9 @@ final class UsageStore {
         // holds something for this provider, not whether the user pastes it.
         // Asked the other way, Copilot's own pane read "Reading…" for ever —
         // which is the exact behaviour this function exists to prevent.
-        guard account.isPrimary, account.provider.keepsOwnCredential,
-              !account.provider.canReportWithoutSetup
+        // A placeholder must not probe keys. This store also exists while the
+        // chooser is open, and holds slots for providers that were not chosen.
+        guard account.isPrimary, account.provider.keepsOwnCredential
         else { return .unavailable(account, reason: .loading) }
 
         // And the remedy differs: a sign-in is not a key to paste.
@@ -123,6 +126,8 @@ final class UsageStore {
             .kimiSignInRequired
         } else if account.provider == .qoder {
             .qoderSessionMissing
+        } else if account.provider == .xiaomiMiMo {
+            .xiaomiSessionMissing
         } else if account.provider.usesSessionCookie {
             .ollamaSessionMissing
         } else {
@@ -135,7 +140,8 @@ final class UsageStore {
     /// reports. Fetched when the settings pane asks rather than on the refresh
     /// loop: nothing on the rail shows them, and the call starts a process.
     func codexAccountUsage() async -> CodexAccountUsage? {
-        await CodexAccountUsageService(server: appServer).fetch()
+        guard settings.isEnabled(AccountKey(.codex)) else { return nil }
+        return await CodexAccountUsageService(server: appServer).fetch()
     }
 
     /// Picks up a key that was just entered, or one that changed.
@@ -153,7 +159,7 @@ final class UsageStore {
         for provider in Provider.allCases where provider.keepsOwnCredential {
             let account = AccountKey(provider)
             guard case .unavailable(let reason) = usage[account.id]?.state,
-                  [.loading, .apiKeyMissing, .ollamaSessionMissing, .qoderSessionMissing, .apiKeyRefused,
+                  [.loading, .apiKeyMissing, .ollamaSessionMissing, .qoderSessionMissing, .xiaomiSessionMissing, .apiKeyRefused,
                    .signedOut, .notSignedIn, .kimiSignInRequired, .kimiLoginExpired]
                     .contains(reason)
             else { continue }
@@ -187,7 +193,7 @@ final class UsageStore {
     }
 
     func start() {
-        guard observers.isEmpty else { return }
+        guard !settings.needsProviderSelection, observers.isEmpty else { return }
         observe()
         loadAPIKeys()
         updateActivityMonitor()
@@ -207,7 +213,7 @@ final class UsageStore {
         // a moment later put yesterday's percentages over it. Racing was never
         // worth anything here: this is a disk read, and the requests it was
         // running beside take a round trip.
-        Task { [accounts = settings.allAccounts] in
+        Task { [accounts = settings.shownAccounts] in
             for account in accounts {
                 guard let cached = await UsageCache.shared.lastReading(for: account) else { continue }
                 // Nothing has been fetched yet, so anything but the seeded
@@ -322,15 +328,29 @@ final class UsageStore {
 
     /// Re-reads settings that affect the loop itself, then refreshes.
     func settingsChanged() {
+        guard !settings.needsProviderSelection else { return }
+        let proxyChanged = networkProxy != settings.networkProxy
+        networkProxy = settings.networkProxy
         loadAPIKeys()
         updateActivityMonitor()
-        refresh()
+        guard proxyChanged else {
+            refresh()
+            return
+        }
+
+        // The process inherits its environment only when it starts. Tear down
+        // one already running before the full pass is queued, so its next call
+        // is made by a child carrying the new proxy.
+        Task { [weak self, appServer] in
+            await appServer.shutDown()
+            self?.refresh()
+        }
     }
 
     /// Nothing shows the spinner while the panel is off screen or the display
     /// is asleep, so nothing needs watching either.
     private func updateActivityMonitor() {
-        if settings.isPanelVisible && !screensAsleep {
+        if !settings.needsProviderSelection && settings.isPanelVisible && !screensAsleep {
             activity.start()
         } else {
             activity.stop()
@@ -356,6 +376,7 @@ final class UsageStore {
     /// - Parameter dueOnly: leave every provider alone whose own cadence has
     ///   not come round yet. True only from the timer; see `providersToAsk`.
     func refresh(dueOnly: Bool = false) {
+        guard !settings.needsProviderSelection else { return }
         if isRefreshing, let started = refreshStartedAt,
            Date().timeIntervalSince(started) > Self.passCeiling {
             // Whatever it was waiting for is not coming. Letting the next pass
@@ -390,6 +411,7 @@ final class UsageStore {
         let kimi = KimiCodeUsageService(enteredKey: apiKeys[.kimiCode])
         let ollama = OllamaCloudUsageService(cookie: apiKeys[.ollamaCloud])
         let qoder = QoderUsageService(cookie: apiKeys[.qoder])
+        let xiaomi = XiaomiMiMoUsageService(cookie: apiKeys[.xiaomiMiMo])
         let zai = ZaiUsageService(provider: .zai, enteredKey: apiKeys[.zai])
         let glm = ZaiUsageService(provider: .glmCoding, enteredKey: apiKeys[.glmCoding])
         let minimax = MiniMaxUsageService(provider: .minimax, enteredKey: apiKeys[.minimax])
@@ -456,6 +478,9 @@ final class UsageStore {
             async let qoderUsage = wanted.contains(.qoder)
                 ? await qoder.fetch()
                 : ProviderUsage.unavailable(.qoder, reason: .loading)
+            async let xiaomiUsage = wanted.contains(.xiaomiMiMo)
+                ? await xiaomi.fetch()
+                : ProviderUsage.unavailable(.xiaomiMiMo, reason: .loading)
             async let kimiUsage = wanted.contains(.kimiCode)
                 ? await kimi.fetch(source: kimiSource)
                 : ProviderUsage.unavailable(.kimiCode, reason: .loading)
@@ -502,6 +527,7 @@ final class UsageStore {
             let (rawCopilot, rawGrok, rawGrokBot) = await (copilotUsage, grokUsage, grokBotUsage)
             let (rawVolcengine, rawCommandCode) = await (volcengineUsage, commandCodeUsage)
             let (rawDeepSeek, rawDevin) = await (deepSeekUsage, devinUsage)
+            let rawXiaomi = await xiaomiUsage
 
             // **The disowning is checked before anything is written, not just
             // before the readings are handed to the panel.** `reconciled`
@@ -542,6 +568,7 @@ final class UsageStore {
                 (.commandCode, rawCommandCode),
                 (.deepSeek, rawDeepSeek),
                 (.devin, rawDevin),
+                (.xiaomiMiMo, rawXiaomi),
             ] where wanted.contains(provider) {
                 results.append(BatchResult(
                     provider: provider,
@@ -606,6 +633,7 @@ final class UsageStore {
     /// narrower: it should not start the other provider's helper or spend a
     /// second endpoint request when the user asked about one ring.
     func refresh(_ account: AccountKey) {
+        guard !settings.needsProviderSelection else { return }
         // The same ceiling as the full pass, and for the same reason: this
         // path sets the flag too, so a ring click that never came back would
         // block every refresh after it.
@@ -636,6 +664,7 @@ final class UsageStore {
         let kimi = KimiCodeUsageService(enteredKey: key)
         let ollama = OllamaCloudUsageService(cookie: key)
         let qoder = QoderUsageService(cookie: key)
+        let xiaomi = XiaomiMiMoUsageService(cookie: key)
         let zai = ZaiUsageService(provider: provider, enteredKey: key)
         let minimax = MiniMaxUsageService(provider: provider, enteredKey: key)
         let volcengine = VolcengineUsageService(enteredKey: key)
@@ -691,6 +720,8 @@ final class UsageStore {
                 raw = await deepSeek.fetch()
             case .devin:
                 raw = await devinAccount.fetch(source: source)
+            case .xiaomiMiMo:
+                raw = await xiaomi.fetch()
             }
             }
 
@@ -765,7 +796,7 @@ final class UsageStore {
         // Nothing else can be signed in to, so nothing else gets here.
         case .antigravity, .cursor, .openCodeGo, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine, .qoder,
-             .commandCode, .deepSeek, .devin:
+             .commandCode, .deepSeek, .devin, .xiaomiMiMo:
             .unavailable(account, reason: .loading)
         }
     }
@@ -877,6 +908,7 @@ final class UsageStore {
 
     private func scheduleNext() {
         timer?.invalidate()
+        guard !settings.needsProviderSelection else { return }
 
         signals.isPanelVisible = settings.isPanelVisible
         signals.isConstrained = screensAsleep

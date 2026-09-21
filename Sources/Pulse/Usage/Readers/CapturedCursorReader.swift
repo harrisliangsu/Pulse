@@ -150,8 +150,9 @@ enum CapturedCursorReader {
         var seen: Set<String> = []
         var distinct: [URL] = []
         for file in files.sorted(by: { $0.path < $1.path }) {
-            guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else { continue }
-            if seen.insert(CapturedSupport.digest(of: data)).inserted { distinct.append(file) }
+            guard !Task.isCancelled else { return [] }
+            guard let digest = AgentLogIO.digest(at: file) else { continue }
+            if seen.insert(digest).inserted { distinct.append(file) }
         }
         return distinct
     }
@@ -174,6 +175,7 @@ enum CapturedCursorReader {
 
         var records: [AgentUsageRecord] = []
         for event in events {
+            guard !Task.isCancelled else { return nil }
             // A blank model names nothing, and no time means the event cannot
             // be placed on a day; both are skipped, never guessed.
             guard
@@ -206,6 +208,7 @@ enum CapturedCursorReader {
 
     /// `nil` when the header is not a Cursor CSV; otherwise the rows it holds.
     private static func csvRecords(at url: URL, account: String) -> [AgentUsageRecord]? {
+        guard !Task.isCancelled else { return nil }
         guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return nil }
         let rows = CapturedCSV.rows(in: String(decoding: data, as: UTF8.self))
             .filter { row in row.contains { !$0.trimmingCharacters(in: .whitespaces).isEmpty } }

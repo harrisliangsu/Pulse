@@ -324,14 +324,29 @@ actor UsageLedgerReader {
     private typealias Buckets = [String: [String: TokenTally]]
 
     private var cached: [Provider: UsageLedger] = [:]
+    private let home: URL
+    private let cacheDirectory: URL?
 
-    func ledger(for provider: Provider, refresh: Bool = false) async -> UsageLedger {
+    init(home: URL = URL(fileURLWithPath: NSHomeDirectory()), cacheDirectory: URL? = nil) {
+        self.home = home
+        self.cacheDirectory = cacheDirectory
+    }
+
+    func ledger(
+        for provider: Provider, refresh: Bool = false, prices suppliedPrices: [String: ModelPrice]? = nil
+    ) async -> UsageLedger {
+        guard !Task.isCancelled else { return .empty }
         if !refresh, let cached = cached[provider] { return cached }
 
         let scanned = scan(provider)
-        let prices = await ModelPrices.shared.prices()
+        guard !Task.isCancelled else { return .empty }
+        let prices: [String: ModelPrice]
+        if let suppliedPrices { prices = suppliedPrices }
+        else { prices = await ModelPrices.shared.prices() }
+        guard !Task.isCancelled else { return .empty }
         var ledger = Self.priced(scanned.buckets, with: prices, calendar: .current)
         ledger.sessions = sessions(scanned.files, provider: provider, prices: prices)
+        guard !Task.isCancelled else { return .empty }
         cached[provider] = ledger
         return ledger
     }
@@ -410,6 +425,7 @@ actor UsageLedgerReader {
         var dayTally: [Date: TokenTally] = [:]
 
         for (key, models) in buckets {
+            guard !Task.isCancelled else { return .empty }
             guard let start = sharedSlotFormatter.date(from: key) else { continue }
             let day = calendar.startOfDay(for: start)
 
@@ -486,21 +502,23 @@ actor UsageLedgerReader {
     // MARK: - Scanning
 
     private func scan(_ provider: Provider) -> (buckets: Buckets, files: [String: FileCache.Entry]) {
-        var cache = FileCache.load(for: provider)
+        var cache = FileCache.load(for: provider, directory: cacheDirectory)
         var buckets: Buckets = [:]
         var fresh: [String: FileCache.Entry] = [:]
 
-        for file in Self.logFiles(for: provider) {
+        for file in Self.logFiles(for: provider, home: home) {
+            guard !Task.isCancelled else { return ([:], [:]) }
             guard let stamp = FileCache.Stamp(file) else { continue }
             let key = file.path
 
             // A log file is rewritten only by being appended to, so size and
             // modification date together are enough to know nothing changed.
             let entry: FileCache.Entry
-            if let known = cache.files[key], known.stamp == stamp {
+            if let known = cache.files.removeValue(forKey: key), known.stamp == stamp {
                 entry = known
             } else {
-                let scanned = parse(file, provider: provider)
+                let scanned = autoreleasepool { parse(file, provider: provider) }
+                guard !Task.isCancelled else { return ([:], [:]) }
                 entry = FileCache.Entry(
                     stamp: stamp, days: scanned.days, title: scanned.title, cwd: scanned.cwd
                 )
@@ -515,7 +533,7 @@ actor UsageLedgerReader {
         }
 
         cache.files = fresh
-        cache.save(for: provider)
+        cache.save(for: provider, directory: cacheDirectory)
         return (buckets, fresh)
     }
 
@@ -532,6 +550,7 @@ actor UsageLedgerReader {
         var sessions: [UsageLedger.Session] = []
 
         for (path, entry) in files {
+            guard !Task.isCancelled else { return [] }
             var tokens = 0
             var cost = 0.0
             var start: Date?
@@ -595,8 +614,7 @@ actor UsageLedgerReader {
         return last
     }
 
-    private static func logFiles(for provider: Provider) -> [URL] {
-        let home = URL(fileURLWithPath: NSHomeDirectory())
+    private static func logFiles(for provider: Provider, home: URL) -> [URL] {
         let root: URL? = switch provider {
         case .claudeCode: home.appending(path: ".claude/projects")
         case .codex: home.appending(path: ".codex/sessions")
@@ -604,7 +622,7 @@ actor UsageLedgerReader {
         // store rather than the JSONL these two parsers read.
         case .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
-             .volcengine, .qoder, .commandCode, .deepSeek, .devin: nil
+             .volcengine, .qoder, .commandCode, .deepSeek, .devin, .xiaomiMiMo: nil
         }
 
         guard let root else { return [] }
@@ -615,7 +633,12 @@ actor UsageLedgerReader {
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
         ) else { return [] }
 
-        return walker.compactMap { $0 as? URL }.filter { $0.pathExtension == "jsonl" }
+        var files: [URL] = []
+        while let file = autoreleasepool(invoking: { walker.nextObject() as? URL }) {
+            guard !Task.isCancelled else { return [] }
+            if file.pathExtension == "jsonl" { files.append(file) }
+        }
+        return files
     }
 
     /// What a transcript says about itself: what it was called and where it
@@ -639,15 +662,14 @@ actor UsageLedgerReader {
         var cwd: String?
     }
 
-    private func parse(_ file: URL, provider: Provider) -> Scanned {
-        guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else { return Scanned() }
-
+    // Internal for the on-disk streaming/cancellation regression fixtures.
+    func parse(_ file: URL, provider: Provider) -> Scanned {
         switch provider {
-        case .claudeCode: return parseClaudeCode(data)
-        case .codex: return parseCodex(data)
+        case .claudeCode: return parseClaudeCode(LogLines(at: file))
+        case .codex: return parseCodex(LogLines(at: file))
         case .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
-             .volcengine, .qoder, .commandCode, .deepSeek, .devin: return Scanned()
+             .volcengine, .qoder, .commandCode, .deepSeek, .devin, .xiaomiMiMo: return Scanned()
         }
     }
 
@@ -685,6 +707,10 @@ actor UsageLedgerReader {
     /// `~/.claude` ([Docs/testing.md](../../Docs/testing.md) allows this when
     /// the comment says so — do not tidy it back). It changes no token count.
     func parseClaudeCode(_ data: Data) -> Scanned {
+        parseClaudeCode(LogLines(data: data))
+    }
+
+    private func parseClaudeCode(_ lines: LogLines) -> Scanned {
         var scanned = Scanned()
         var days: [String: [String: TokenTally]] = [:]
         // Retries and resumed sessions can write the same reply twice; the
@@ -692,7 +718,7 @@ actor UsageLedgerReader {
         // which is where they actually happen.
         var seen: Set<String> = []
 
-        for line in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
+        lines.forEachLine { line in
             // What the session is called and where it ran. **A user-set title
             // can arrive long after the opening prompt** — Claude Code writes
             // `customTitle` when the conversation is renamed — so that one is
@@ -735,10 +761,10 @@ actor UsageLedgerReader {
                 model != "<synthetic>",
                 let timestamp = root["timestamp"] as? String,
                 let slot = slot(fromISO8601: timestamp)
-            else { continue }
+            else { return }
 
             if let id = message["id"] as? String {
-                guard seen.insert(id).inserted else { continue }
+                guard seen.insert(id).inserted else { return }
             }
 
             let tally = TokenTally(
@@ -747,7 +773,7 @@ actor UsageLedgerReader {
                 cacheRead: int(usage["cache_read_input_tokens"]),
                 output: int(usage["output_tokens"])
             )
-            guard tally.total > 0 else { continue }
+            guard tally.total > 0 else { return }
 
             days[slot, default: [:]][model] = (days[slot]?[model] ?? TokenTally()) + tally
         }
@@ -761,13 +787,13 @@ actor UsageLedgerReader {
     /// running total only ever climbs, which makes the differences safe to add
     /// up — and it sidesteps the duplicate readings that summing Codex's own
     /// per-turn field would double-count.
-    private func parseCodex(_ data: Data) -> Scanned {
+    private func parseCodex(_ lines: LogLines) -> Scanned {
         var scanned = Scanned()
         var days: [String: [String: TokenTally]] = [:]
         var model: String?
         var previous: [String: Int]?
 
-        for line in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
+        lines.forEachLine { line in
             if scanned.title == nil || scanned.cwd == nil {
                 // The directory is stated once in the session header; the
                 // opening prompt is a `response_item` whose payload is a
@@ -792,8 +818,8 @@ actor UsageLedgerReader {
             }
 
             let isCount = contains(line, "\"token_count\"")
-            guard isCount || contains(line, "\"model\"") else { continue }
-            guard let root = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { continue }
+            guard isCount || contains(line, "\"model\"") else { return }
+            guard let root = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { return }
 
             let payload = root["payload"] as? [String: Any] ?? [:]
 
@@ -808,7 +834,7 @@ actor UsageLedgerReader {
                 let timestamp = root["timestamp"] as? String,
                 let slot = slot(fromISO8601: timestamp),
                 let model
-            else { continue }
+            else { return }
 
             let current = [
                 "input": int(totals["input_tokens"]),
@@ -829,7 +855,7 @@ actor UsageLedgerReader {
                 cacheRead: delta["cached"] ?? 0,
                 output: delta["output"] ?? 0
             )
-            guard tally.total > 0 else { continue }
+            guard tally.total > 0 else { return }
 
             days[slot, default: [:]][model] = (days[slot]?[model] ?? TokenTally()) + tally
         }
@@ -907,21 +933,23 @@ private struct FileCache: Codable {
 
     var files: [String: Entry] = [:]
 
-    static func load(for provider: Provider) -> FileCache {
+    static func load(for provider: Provider, directory: URL?) -> FileCache {
         guard
-            let data = try? Data(contentsOf: file(for: provider)),
+            let data = try? Data(contentsOf: file(for: provider, directory: directory)),
             let cache = try? JSONDecoder().decode(FileCache.self, from: data)
         else { return FileCache() }
         return cache
     }
 
-    func save(for provider: Provider) {
-        PulseStorage.prepare()
+    func save(for provider: Provider, directory: URL?) {
+        guard !Task.isCancelled else { return }
+        if directory == nil { PulseStorage.prepare() }
         guard let data = try? JSONEncoder().encode(self) else { return }
-        try? data.write(to: Self.file(for: provider), options: .atomic)
+        guard !Task.isCancelled else { return }
+        try? data.write(to: Self.file(for: provider, directory: directory), options: .atomic)
     }
 
-    private static func file(for provider: Provider) -> URL {
+    private static func file(for provider: Provider, directory: URL?) -> URL {
         // The `2` is the bucket format. Quarter-hours replaced whole days, and
         // an old file's keys would parse as nothing at all — silently, which
         // is the worst way for a cache to be wrong.
@@ -937,6 +965,6 @@ private struct FileCache: Codable {
         // after that was dropped — and a transcript that has not changed is
         // never opened again, so the fix to the parser alone could not reach
         // them. Renaming the file forces the one rescan that rereads them.
-        PulseStorage.directory.appending(path: "ledger-4-\(provider.rawValue).json")
+        (directory ?? PulseStorage.directory).appending(path: "ledger-4-\(provider.rawValue).json")
     }
 }

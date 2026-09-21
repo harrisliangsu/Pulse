@@ -416,7 +416,8 @@ enum SpendAgent: String, CaseIterable, Identifiable, Sendable {
     /// always used and do not honour an environment override; the rest are
     /// resolved by their family, which does.
     func inputs(home: URL, environment: [String: String]) -> [URL] {
-        switch self {
+        guard !Task.isCancelled else { return [] }
+        return switch self {
         case .claudeCode: [home.appending(path: ".claude/projects")]
         case .codex: [home.appending(path: ".codex/sessions")]
         case .openCode: [home.appending(path: ".local/share/opencode/opencode.db")]

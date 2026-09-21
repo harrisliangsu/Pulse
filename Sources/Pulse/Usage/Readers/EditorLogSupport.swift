@@ -139,23 +139,29 @@ enum EditorLog {
     /// nothing is filled from a file's modification date or the clock.
     static func naiveTimestamp(_ line: String) -> Date? {
         let trimmed = line.drop { $0 == " " || $0 == "\t" }
-        let formats = [
-            "yyyy/MM/dd HH:mm:ss.SSS",
-            "yyyy/MM/dd HH:mm:ss",
-            "yyyy-MM-dd HH:mm:ss.SSS",
-            "yyyy-MM-dd HH:mm:ss",
-        ]
-        for format in formats {
-            let length = format.count
-            guard trimmed.count >= length else { continue }
+        for (length, formatter) in naiveFormats {
             let candidate = String(trimmed.prefix(length))
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            formatter.dateFormat = format
+            guard candidate.count == length else { continue }
             if let date = formatter.date(from: candidate) { return date }
         }
         return nil
     }
+
+    // DateFormatter is thread-safe on supported macOS versions. Construct once
+    // and never mutate, rather than allocating four formatters per log line.
+    private static let naiveFormats: [(Int, DateFormatter)] = {
+        [
+            "yyyy/MM/dd HH:mm:ss.SSS",
+            "yyyy/MM/dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss.SSS",
+            "yyyy-MM-dd HH:mm:ss",
+        ].map { format in
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = format
+            return (format.count, formatter)
+        }
+    }()
 
     // MARK: - Records
 

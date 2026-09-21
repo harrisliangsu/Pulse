@@ -53,7 +53,7 @@ Pulse does not read the standalone app’s `sand-secrets.json`.
 
 ## First run
 
-**Only the standalone app** (`/Applications/Grok Bot.app` or `~/Applications/Grok Bot.app`). Grok Bot is also used inside Cursor, but a Cursor login is no evidence the plan *includes* it — keyed on that, every Cursor user’s first run would carry a ring that says “your plan doesn’t include this”.
+**Only the standalone app** (`/Applications/Grok Bot.app` or `~/Applications/Grok Bot.app`) supplies a detected hint. Grok Bot is also used inside Cursor, but a Cursor login is no evidence the plan *includes* it. The chooser still lists it for everyone, unchecked; it never reads Cursor's token during discovery.
 
 ## Investigation leftovers (not current work)
 

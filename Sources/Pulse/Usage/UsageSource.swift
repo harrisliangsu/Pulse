@@ -137,6 +137,10 @@ enum UsageSource: String, CaseIterable, Identifiable, Sendable {
             // Never shown: one route, and it borrows the login Grok's own CLI
             // stored, exactly as Cursor's does.
             .localized("Reads your account's limits with the login Grok saved.")
+        case (_, .xiaomiMiMo):
+            // Never shown: one route, and it reads the console with the
+            // browser session rather than with a key.
+            .localized("Reads the console with your signed-in browser session.")
         case (_, .ollamaCloud):
             // Never shown: one route, and it reads a page rather than an API.
             .localized("Reads your quota from Ollama's own settings page.")
@@ -349,6 +353,14 @@ enum PanelMetrics {
     nonisolated(unsafe) private static var storedLabelAboveRing = false
     nonisolated(unsafe) private static var storedForecast = false
 
+    /// Whether the rail's ends are half circles rather than softened corners.
+    ///
+    /// Here with the rest because it moves `DockLayout.verticalPadding`: the
+    /// two styles sit the end ring differently in the end, so the rail is
+    /// 16pt longer with round ends and the AppKit frame is worked out from
+    /// that before SwiftUI lays anything out.
+    nonisolated(unsafe) private static var storedRoundEnds = false
+
     /// How many rings the panel has to leave room for.
     ///
     /// Not `Provider.allCases.count` any more: one provider can be signed in
@@ -364,6 +376,7 @@ enum PanelMetrics {
     static var topRailShowsPercentages: Bool { lock.withLock { storedTopPercentages } }
     static var sideRailShowsPercentages: Bool { lock.withLock { storedSidePercentages } }
     static var labelAboveRing: Bool { lock.withLock { storedLabelAboveRing } }
+    static var usesRoundEnds: Bool { lock.withLock { storedRoundEnds } }
     static var railCapacity: Int { lock.withLock { storedCapacity } }
 
     static func use(_ size: PanelSize) {
@@ -384,6 +397,10 @@ enum PanelMetrics {
 
     static func putLabelAboveRing(_ above: Bool) {
         lock.withLock { storedLabelAboveRing = above }
+    }
+
+    static func useRoundEnds(_ uses: Bool) {
+        lock.withLock { storedRoundEnds = uses }
     }
 
     /// Whether the card carries a forecast line under every limit.

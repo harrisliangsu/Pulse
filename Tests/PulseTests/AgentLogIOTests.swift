@@ -89,10 +89,10 @@ struct AgentLogIOTests {
             "{\"c\":3}\n",
             to: lines
         )
-        let rows = AgentLogIO.jsonLines(at: lines)
+        let rows = Array(AgentLogIO.jsonLines(at: lines))
         #expect(rows.count == 3)
         #expect(rows.compactMap { $0["a"] as? Int ?? $0["b"] as? Int ?? $0["c"] as? Int } == [1, 2, 3])
-        #expect(AgentLogIO.jsonLines(at: root.appending(path: "missing.jsonl")).isEmpty)
+        #expect(Array(AgentLogIO.jsonLines(at: root.appending(path: "missing.jsonl"))).isEmpty)
 
         #expect(AgentLogIO.text("  hi  ") == "hi")
         #expect(AgentLogIO.text("   ") == nil)

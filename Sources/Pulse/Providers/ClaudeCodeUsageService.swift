@@ -150,7 +150,7 @@ struct ClaudeCodeUsageService: Sendable {
 
         for attempt in 0...Self.retryLimit {
             do {
-                let (data, response) = try await URLSession.shared.data(for: request)
+                let (data, response) = try await NetworkSession.shared.data(for: request)
                 guard let http = response as? HTTPURLResponse else { return .failed(.unreachable) }
 
                 switch http.statusCode {
@@ -321,7 +321,7 @@ struct ClaudeCodeUsageService: Sendable {
             request.setValue("claude-cli (external, cli)", forHTTPHeaderField: "User-Agent")
             request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-            guard let (data, response) = try? await URLSession.shared.data(for: request),
+            guard let (data, response) = try? await NetworkSession.shared.data(for: request),
                   (response as? HTTPURLResponse)?.statusCode == 200,
                   let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
             else { return nil }

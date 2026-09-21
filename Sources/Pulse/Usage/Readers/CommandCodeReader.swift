@@ -35,11 +35,15 @@ enum CommandCodeReader {
     // MARK: - One session
 
     private struct Entry {
-        let row: [String: Any]
         let index: Int
         let id: String?
         let parent: String?
         let type: String?
+        let model: String?
+        let role: String?
+        let timestamp: Date?
+        let session: String?
+        let tally: TokenTally?
     }
 
     private static func parse(_ file: URL, configModel: String?) -> [AgentUsageRecord] {
@@ -53,13 +57,28 @@ enum CommandCodeReader {
                 headerSession = EditorLog.nonBlank(AgentLogIO.text(row["id"])) ?? headerSession
                 continue
             }
+            let message = AgentLogIO.object(row["message"])
+            let role = EditorLog.nonBlank(AgentLogIO.text(message?["role"]))
+                ?? EditorLog.nonBlank(AgentLogIO.text(row["role"]))
+            let tally = AgentLogIO.object(row["usage"]).map { usage in
+                TokenTally(
+                    input: EditorLog.int(usage["inputTokens"]),
+                    cacheWrite: EditorLog.int(usage["cacheWriteTokens"]),
+                    cacheRead: EditorLog.int(usage["cacheReadTokens"]),
+                    output: EditorLog.int(usage["outputTokens"])
+                )
+            }
             entries.append(
                 Entry(
-                    row: row,
                     index: index,
                     id: EditorLog.nonBlank(AgentLogIO.text(row["id"])),
                     parent: EditorLog.nonBlank(AgentLogIO.text(row["parentId"])),
-                    type: type
+                    type: type,
+                    model: EditorLog.modelID(AgentLogIO.text(row["model"])),
+                    role: role,
+                    timestamp: role == "assistant" ? AgentLogIO.timestamp(row["timestamp"]) : nil,
+                    session: EditorLog.nonBlank(AgentLogIO.text(row["sessionId"])),
+                    tally: tally
                 )
             )
         }
@@ -67,6 +86,7 @@ enum CommandCodeReader {
         let hasTree = entries.contains { $0.parent != nil }
         var byID: [String: Entry] = [:]
         for entry in entries {
+            guard !Task.isCancelled else { return [] }
             if let id = entry.id { byID[id] = entry }
         }
         var inheritedModels: [String: String] = [:]
@@ -75,39 +95,25 @@ enum CommandCodeReader {
         var currentModel: String?
 
         for entry in entries {
+            guard !Task.isCancelled else { return [] }
             if entry.type == "model_change" {
-                if let model = EditorLog.modelID(AgentLogIO.text(entry.row["model"])) {
+                if let model = entry.model {
                     currentModel = model
                 }
                 continue
             }
 
-            let message = AgentLogIO.object(entry.row["message"]) ?? [:]
-            let role = EditorLog.nonBlank(AgentLogIO.text(message["role"]))
-                ?? EditorLog.nonBlank(AgentLogIO.text(entry.row["role"]))
-            guard role == "assistant" else { continue }
-
-            let usage = AgentLogIO.object(entry.row["usage"])
-            guard let usage else { continue }
-
-            guard let timestamp = AgentLogIO.timestamp(entry.row["timestamp"]) else { continue }
-
-            let tally = TokenTally(
-                input: EditorLog.int(usage["inputTokens"]),
-                cacheWrite: EditorLog.int(usage["cacheWriteTokens"]),
-                cacheRead: EditorLog.int(usage["cacheReadTokens"]),
-                output: EditorLog.int(usage["outputTokens"])
-            )
+            guard entry.role == "assistant", let timestamp = entry.timestamp, let tally = entry.tally else { continue }
             guard tally.total > 0 else { continue }
 
             guard
-                let model = EditorLog.modelID(AgentLogIO.text(entry.row["model"]))
+                let model = entry.model
                     ?? (hasTree ? ancestorModel(of: entry, entries: byID, cache: &inheritedModels) : currentModel)
                     ?? configModel
             else { continue }
 
             let session = headerSession
-                ?? EditorLog.nonBlank(AgentLogIO.text(entry.row["sessionId"]))
+                ?? entry.session
                 ?? stem
             // An explicit message id names the call even if an export changes
             // its timestamp. The builder folds replays across files once.
@@ -139,9 +145,10 @@ enum CommandCodeReader {
         var cursor = entry.parent
         var model: String?
         while let id = cursor, visited.insert(id).inserted {
+            guard !Task.isCancelled else { return nil }
             if let cached = cache[id] { model = cached; break }
             guard let ancestor = entries[id] else { break }
-            if let stated = EditorLog.modelID(AgentLogIO.text(ancestor.row["model"])) {
+            if let stated = ancestor.model {
                 model = stated
                 break
             }

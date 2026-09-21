@@ -44,6 +44,7 @@ the GitHub UI) before the next tagged release.
 - `LSUIElement` = true.
 - `CFBundleURLTypes` registers `pulse` for settings/account navigation. The developer kit is copied to `Contents/Resources/Integrations` from an explicit file list: scripts, Raycast source, manifest, lockfile, icon and tests; no `node_modules` or generated extension output. This copy needs no Node.js build on release CI. [integrations.md](integrations.md)
 - Universal: `--arch arm64 --arch x86_64`. Zip with **`ditto`**, not `zip` (plain zip flattens bundle symlinks).
+- **The SDK stamp is checked, not assumed.** macOS draws an app's controls to the SDK version in its `LC_BUILD_VERSION`, and below 26 it uses the previous design. `Package.swift` stamps 26.0 in `linkerSettings` — the manifest, not this script, so that a build run from Xcode matches a release — and this script reads it back off **every slice** after linking and refuses to package anything lower. The flag alone is not enough: when SwiftPM last got this wrong there was no error and no failing test, only an app drawn the old way. [decisions/sdk-stamp-and-appearance.md](decisions/sdk-stamp-and-appearance.md)
 - **Output is `build.noindex/`.** Spotlight indexes any `.app`; a project-folder build appears beside the installed copy, and whichever is opened claims the login item and rewrites Claude Code’s status-line path to itself. A `.metadata_never_index` marker was tried and did **not** stop indexing (historical); the `.noindex` suffix is what Spotlight honours. Do not rename it back.
 - Sparkle is copied into `Contents/Frameworks` and `@executable_path/../Frameworks` is added to the rpath. Sign **inside out** (nested XPC / updater first).
 - Ad-hoc signature is **not** distribution signing. It stops macOS calling the bundle damaged when moved. Gatekeeper still warns on first open until Developer ID + notarisation.
@@ -62,6 +63,8 @@ Sparkle updates from the **zip**, not the DMG. The image is for people.
 `AppUpdate.swift`. Safe without Apple Developer ID because of the **EdDSA** key: Sparkle refuses any archive not signed by the private half whose public half is in `Info.plist`. Apple signing is recommended by Sparkle, not required. Notarisation would only help Gatekeeper on **first** launch, which no updater can fix.
 
 - `SUFeedURL` is only present in a bundle. `AppUpdate` starts nothing on `swift run`.
+- **Checked every two hours** (`SUScheduledCheckInterval` 7200), against Sparkle's own default of a day. A day suits an app that ships every few months; this one ships fixes for things it is doing wrong now, and somebody burning a core on a bug fixed yesterday should not wait out the rest of the day to be told. Sparkle clamps anything under an hour (`SPUUpdaterSettings.minimumUpdateCheckInterval`) and measures from the **last check** rather than from launch (`SPUUpdater.m`, `intervalSinceCheck < updateCheckInterval`), so relaunching does not re-check and this is at most twelve requests a day.
+- **Checking is not installing.** `SUEnableAutomaticChecks` is true and `SUAutomaticallyUpdate` is false: an update is offered, never applied behind the user. Checks start without Sparkle's permission prompt because this is an `.accessory` app whose panel never becomes key — that prompt opens behind everything and goes unanswered. The toggle lives in Settings instead.
 - Sparkle’s delegate cannot be main-actor-isolated; `UpdaterRelay` sits between it and the `@Observable` model.
 - `didAbortWithError` also fires for the user closing the window; only a genuine feed failure is reported.
 - Notes live in the feed `<description>`, **not** `sparkle:releaseNotesLink` (that loads the whole GitHub page in a WebView). If both are present, the link wins — the link must be absent.
@@ -69,4 +72,7 @@ Sparkle updates from the **zip**, not the DMG. The image is for people.
 - Public key: `Scripts/sparkle-public-key.txt` (committed). Private key: `SPARKLE_PRIVATE_KEY` only.
 - `Scripts/appcast.py` signs the zip and appends to `appcast.xml`. The workflow commits the feed **after** publishing (the feed points at the release asset).
 
-`Scripts/changelog.py` converts one CHANGELOG section to HTML for Sparkle (`--zh` for Chinese). Grammar: bullets, `**bold**`, `` `code` ``, links. `Scripts/release-notes.py` builds the bilingual GitHub Release body from both changelogs.
+`Scripts/changelog.py` reads one version entry from `CHANGELOG.md` or (with `--zh`) from `CHANGELOG.zh-CN.md`, as markdown or `--html` for the Sparkle feed. Grammar: bullets, `**bold**`, `` `code` ``, links.
+
+**GitHub Release notes on this fork** are assembled by `Scripts/release-notes.py` (Chinese first, then English), not by upstream's `changelog.py --release-notes`. Each language file carries its own `## x.y.z` section — there are no `**中文**` / `**English**` markers inside a single CHANGELOG entry. The workflow checks that both files have the version section before it builds.
+

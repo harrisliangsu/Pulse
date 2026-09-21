@@ -30,6 +30,7 @@ enum DSHUsageReader {
         var records: [AgentUsageRecord] = []
 
         for file in transcriptFiles(roots) {
+            guard !Task.isCancelled else { return [] }
             guard case let .success(data) = read(file), !data.isEmpty else { continue }
 
             var sessionID: String?
@@ -38,7 +39,7 @@ enum DSHUsageReader {
             var headerProvider: String?
             var headerModel: String?
 
-            for raw in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
+            for raw in LogLines(data: data) {
                 guard
                     let value = try? JSONSerialization.jsonObject(with: Data(raw)),
                     let event = value as? [String: Any],
@@ -141,6 +142,7 @@ enum DSHUsageReader {
     static func notes(roots: [URL]) -> [String] {
         transcriptFiles(roots).compactMap { file in
             guard
+                !Task.isCancelled,
                 let data = try? Data(contentsOf: file, options: .mappedIfSafe),
                 let failure = compressedFailure(data)
             else { return nil }

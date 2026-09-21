@@ -80,6 +80,7 @@ enum DSHZstdDecoder {
         rawLimit: Int = maxRawBytes,
         decodedLimit: Int = maxDecodedBytes
     ) throws -> Data {
+        try Task.checkCancellation()
         guard data.count <= rawLimit else { throw Failure.tooLarge }
         let api = try library()
         guard let stream = api.create() else { throw Failure.corrupt("no decoder stream") }
@@ -97,6 +98,7 @@ enum DSHZstdDecoder {
 
             try withUnsafeTemporaryAllocation(of: UInt8.self, capacity: chunk) { buffer in
                 while true {
+                    try Task.checkCancellation()
                     let consumedBefore = input.pos
                     var out = ZSTD_outBuffer(dst: buffer.baseAddress, size: chunk, pos: 0)
 

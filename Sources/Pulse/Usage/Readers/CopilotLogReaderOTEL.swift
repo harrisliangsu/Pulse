@@ -144,7 +144,7 @@ enum CopilotOTELReader {
         var agent: String?
     }
 
-    private static func traceContext(_ rows: [[String: Any]]) -> [String: Context] {
+    private static func traceContext(_ rows: some Sequence<[String: Any]>) -> [String: Context] {
         var contexts: [String: Context] = [:]
         for row in rows {
             guard let trace = identification(row).trace else { continue }

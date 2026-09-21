@@ -99,8 +99,9 @@ jobs:
       - name: Release notes
         run: |
           # Bilingual GitHub Release body (Chinese first). Sparkle still reads
-          # the English CHANGELOG.md via appcast.py — these pages are separate
-          # on purpose. Presence of both entries was checked before the build.
+          # CHANGELOG.zh-CN.md (preferred) / CHANGELOG.md via appcast.py — these
+          # pages are separate on purpose. Presence of both entries was checked
+          # before the build.
           Scripts/release-notes.py "$VERSION" > notes.md
 
       - name: Publish

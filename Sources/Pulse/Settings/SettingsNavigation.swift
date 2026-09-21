@@ -5,6 +5,7 @@ import Observation
 @Observable
 final class SettingsNavigation {
     var pane: SettingsPane = .general
+    var isWindowVisible = false
     private(set) var requestID = UUID()
 
     func open(_ link: PulseLink, accounts: [AccountKey]) {

@@ -41,11 +41,9 @@ Only `apiKey` is read. The CLI also writes `auth.staging.json` and `auth.local.j
 
 **`COMMAND_CODE_API_KEY` is deliberately not read.** The CLI honours it, but Pulse is a launched app and does not inherit the user's shell environment — looking would find nothing on the machines where it is set, and would only add a way to be confusing about it.
 
-## First-run evidence: the key, not the directory
+## First-run evidence: file presence only
 
-`canReportWithoutSetup` and `installedOnThisMac()` both test for the **stored key**, never for `~/.commandcode`.
-
-The directory is not evidence. The CLI creates it to unpack its bundled skills into, on a machine where nobody has signed in — this repository's own development Mac has a `~/.commandcode` holding nothing but `skills/`. Gating on the directory would switch the ring on at the next update for everyone who ever ran `cmd` once, and they would get a grey ring asking for a key to a service they have no account with. That is exactly the greyed-out rail the offer-once rule exists to prevent.
+The chooser marks Command Code as detected if `~/.commandcode/auth.json` exists, without reading it. The surrounding `~/.commandcode` directory alone is not the signal: the CLI also creates it for bundled skills. Detection no longer checks whether the file contains a key and never enables the provider. Reading the key waits until the user selects it.
 
 ## Route
 

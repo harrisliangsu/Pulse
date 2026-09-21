@@ -119,8 +119,7 @@ enum DroidSessionReader {
     /// does not.
     static func transcriptModel(sibling url: URL) -> String? {
         let transcript = url.deletingLastPathComponent().appending(path: sessionID(for: url) + ".jsonl")
-        guard let data = try? Data(contentsOf: transcript, options: .mappedIfSafe) else { return nil }
-        for line in data.split(separator: UInt8(ascii: "\n")) {
+        for line in LogLines(at: transcript) {
             guard let text = String(data: Data(line), encoding: .utf8) else { continue }
             guard let marker = text.range(of: "Model:") else { continue }
             let remainder = text[marker.upperBound...].drop { $0 == " " || $0 == "\t" }
