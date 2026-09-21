@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.3.0</title>
+            <pubDate>Mon, 21 Sep 2026 01:51:34 -0000</pubDate>
+            <sparkle:version>1.3.0</sparkle:version>
+            <sparkle:shortVersionString>1.3.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.3.0</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.3.0</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>同步上游 qunqin24/Pulse 1.3.0</strong>（含本仓库尚未合入的上游 1.2.1 改动）。</li><li><strong>首次启动先选择要监控的服务。</strong> 选定前不读凭据、不开始监控；以后升级发现新的本机服务时只会提示，不会擅自开启。</li><li><strong>代理设置。</strong> 可继续跟随 macOS，或指定 HTTP / HTTPS / SOCKS5。供应商请求、登录流程以及 Codex、arkcli 等辅助进程共用同一选择。</li><li><strong>Token 消耗改为明确选择后才读取。</strong> 新安装默认关闭；开启后只在查看该设置页时扫描本机会话，离开页面会取消未完成的读取。大型 JSONL 改为流式解析。</li><li><strong>小米 Coding Plan</strong> 成为新服务商（MiMo 控制台浏览器会话，不是 API key）。没有套餐时会直说，而不是画 0%。</li><li><strong>更新检查改为每两小时一次</strong>（原先一天一次）。仍然只提示，不会自己安装。</li><li><strong>修复 Codex 会让 CPU 空转的问题</strong>（<code>codex app-server</code> 退出后仍读已关闭管道）。</li><li><strong>上游带来的栏/环打磨：</strong> 可贴边告警色开关、CLI 活动/刷新环动画开关、栏端随圆环弧度（默认柔和）、小机器人看向屏幕内侧且眼睛不跑出脸外、更完整的动作编排、更亮的 Kimi 机器人蓝、重写的中文机器人设置文案。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带（含可选小时额度）、环颜色方案（红色告警 / 渐变 / 低调）、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.3.0">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.3.0/Pulse-1.3.0.zip"
+                       length="8402775"
+                       type="application/octet-stream"
+                       sparkle:edSignature="ZoxxKaxuL4ZkhRqmpaeMzcu95Z3D+IqmOhMJA7rbhEebSXB+ToZ+VUPrlW5kPS3E8xsO9EnH7URXkcT+Kb/GAg==" />
+        </item>
+        <item>
             <title>1.2.4</title>
             <pubDate>Fri, 18 Sep 2026 08:38:27 -0000</pubDate>
             <sparkle:version>1.2.4</sparkle:version>
