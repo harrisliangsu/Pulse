@@ -48,8 +48,11 @@ enum AgentCache {
     /// deliberately taken from the inputs and never from the contents the
     /// readers derive: reading a store must not change its own stamp, or
     /// every read would invalidate the cache it just filled.
-    static func stamp(for inputs: [URL], prices: [String: ModelPrice]) -> Stamp {
-        Stamp(source: sourceFingerprint(of: inputs), prices: priceFingerprint(prices))
+    static func stamp(
+        for inputs: [URL], prices: [String: ModelPrice], excludingRootDirectories: Set<String> = []
+    ) -> Stamp {
+        Stamp(source: sourceFingerprint(of: inputs, excludingRootDirectories: excludingRootDirectories),
+              prices: priceFingerprint(prices))
     }
 
     static func stamp(for store: URL, prices: [String: ModelPrice]) -> Stamp {
@@ -80,7 +83,7 @@ enum AgentCache {
     /// a read invalidate the cache it was about to validate. Hidden files and
     /// hidden log subdirectories are **included**: these stores are often
     /// dot-directories, and a log inside one is not optional.
-    static func sourceFingerprint(of inputs: [URL]) -> String {
+    static func sourceFingerprint(of inputs: [URL], excludingRootDirectories: Set<String> = []) -> String {
         var seen: Set<String> = []
         let ordered = inputs
             .map { $0.standardizedFileURL }
@@ -89,9 +92,10 @@ enum AgentCache {
 
         var lines: [String] = []
         for store in ordered {
+            guard !Task.isCancelled else { return "" }
             // The root itself, before anything inside it.
             lines.append("root\t\(store.path)")
-            lines.append(contentsOf: Self.fingerprintLines(of: store))
+            lines.append(contentsOf: Self.fingerprintLines(of: store, excludingRootDirectories: excludingRootDirectories))
         }
 
         // Sorted so the enumerator's order cannot make one unchanged store
@@ -104,7 +108,7 @@ enum AgentCache {
     ///
     /// A missing root is a line of its own, so "root not there" is told apart
     /// from "different root" and from the same root with contents.
-    private static func fingerprintLines(of store: URL) -> [String] {
+    private static func fingerprintLines(of store: URL, excludingRootDirectories: Set<String>) -> [String] {
         let manager = FileManager.default
         var isDirectory: ObjCBool = false
         guard manager.fileExists(atPath: store.path, isDirectory: &isDirectory) else {
@@ -114,21 +118,30 @@ enum AgentCache {
         var lines: [String] = []
 
         if isDirectory.boolValue {
-            let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey, .contentModificationDateKey]
+            let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey, .fileSizeKey, .contentModificationDateKey]
             if let walker = manager.enumerator(
                 at: store,
                 includingPropertiesForKeys: keys,
                 options: [.skipsPackageDescendants]
             ) {
-                for case let file as URL in walker {
+                while let file = autoreleasepool(invoking: { walker.nextObject() as? URL }) {
+                    guard !Task.isCancelled else { return [] }
+                    if !excludingRootDirectories.isEmpty,
+                       file.deletingLastPathComponent().standardizedFileURL == store.standardizedFileURL,
+                       excludingRootDirectories.contains(file.lastPathComponent),
+                       (try? file.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true {
+                        walker.skipDescendants()
+                        continue
+                    }
                     // A database's shared-memory index, wherever the database
                     // sits. It is not data and a read touches it.
                     if file.lastPathComponent.hasSuffix("-shm") { continue }
-                    guard
-                        let values = try? file.resourceValues(forKeys: Set(keys)),
-                        values.isRegularFile == true
-                    else { continue }
-                    lines.append(Self.line(file.path, values.fileSize ?? 0, values.contentModificationDate))
+                    let line: String? = autoreleasepool {
+                        guard let values = try? file.resourceValues(forKeys: Set(keys)),
+                              values.isRegularFile == true else { return nil }
+                        return Self.line(file.path, values.fileSize ?? 0, values.contentModificationDate)
+                    }
+                    if let line { lines.append(line) }
                 }
             }
         } else {
@@ -282,10 +295,12 @@ enum AgentCache {
         at url: URL? = nil
     ) -> (stamp: Stamp, ledger: UsageLedger)? {
         guard
+            !Task.isCancelled,
             let data = try? Data(contentsOf: url ?? file(for: agent)),
             let saved = try? JSONDecoder().decode(Saved.self, from: data),
             saved.version == version
         else { return nil }
+        guard !Task.isCancelled else { return nil }
 
         var ledger = UsageLedger(
             origin: saved.ledger.origin,
@@ -332,6 +347,7 @@ enum AgentCache {
         for agent: SpendAgent,
         at url: URL? = nil
     ) {
+        guard !Task.isCancelled else { return }
         let stored = StoredLedger(
             origin: ledger.origin,
             hasAggregateTiming: ledger.hasAggregateTiming,
@@ -365,12 +381,13 @@ enum AgentCache {
         )
 
         guard let data = try? JSONEncoder().encode(Saved(version: version, stamp: stamp, ledger: stored)) else { return }
+        guard !Task.isCancelled else { return }
         let destination = url ?? file(for: agent)
         if url == nil { PulseStorage.prepare() }
         try? data.write(to: destination, options: .atomic)
     }
 
-    private static func file(for agent: SpendAgent) -> URL {
+    static func file(for agent: SpendAgent, directory: URL = PulseStorage.directory) -> URL {
         // **The number is the stored shape.** A `1` has a store-shaped stamp
         // and sessions without buckets; a `2` has the right stamp but no
         // per-model detail on its days or slots, so a model's categories and
@@ -388,6 +405,6 @@ enum AgentCache {
         // hour, or trusted as a whole, so it must not decode.
         // Version 6 adds session calendar days and invalidates the former
         // vendor-pricing, Devin mirror and Command Code rewind totals.
-        PulseStorage.directory.appending(path: "agent-\(version)-\(agent.rawValue).json")
+        directory.appending(path: "agent-\(version)-\(agent.rawValue).json")
     }
 }

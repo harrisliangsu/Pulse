@@ -128,6 +128,7 @@ enum AgentUsageLedger {
         var acceptedTotal = 0
 
         for record in records {
+            guard !Task.isCancelled else { return .empty }
             guard let model = Self.nonBlank(record.model) else { continue }
 
             // **Every count is a real, non-negative one that fits an `Int`.**

@@ -84,6 +84,11 @@
 "Red alert" = "赤で警告";
 "Gradient" = "グラデーション";
 "Quiet" = "控えめ";
+"Where a ring stops being amber. A spent limit is red whatever this says." = "リングが黄から赤に変わる位置です。使い切った上限はこの設定に関係なく赤になります。";
+"Alert colour when docked" = "端に寄せたときの警告色";
+"Off keeps the collapsed rail neutral even when a limit needs attention." = "オフにすると、上限に注意が必要なときでも折りたたんだレールは中立色のままになります。";
+"Ring activity animation" = "リングの回転アニメーション";
+"The turning mark for a working CLI or a reading being fetched. Off leaves the ring still." = "CLI が動作中のときや取得中に現れる回転マーク。オフにするとリングは静止したままになります。";
 "Percentages at the side" = "横にパーセントを表示";
 "The figure under each ring, docked left or right." = "左右に寄せているとき、各リングの下に数値を表示します。";
 "Time until reset" = "リセットまでの時間";
@@ -266,6 +271,8 @@
 /* Panel size */
 "Size" = "全体のサイズ";
 "Spacing" = "間隔";
+"Round ends" = "端を真円に";
+"The rail's ends and the card's tail follow the ring's own curve." = "レールの両端とカードの尾が、リングと同じ弧を描きます。";
 "How much air there is between the rings." = "リングどうしの間隔を調整します。";
 "Tight" = "狭い";
 "Loose" = "広い";
@@ -313,7 +320,7 @@
 "%@ · up to date" = "%@ · 最新です";
 "Update to %@" = "%@ に更新";
 "Check automatically" = "自動で確認";
-"Once a day. Updates are offered, never installed on their own." = "1 日 1 回です。案内するだけで、勝手にインストールはしません。";
+"Every two hours. Updates are offered, never installed on their own." = "2 時間ごとに確認します。案内するだけで、勝手にインストールはしません。";
 "Couldn't reach the update feed." = "更新フィードに接続できませんでした。";
 "Uses the key you entered." = "入力したキーを使います。";
 "API key" = "API キー";
@@ -486,6 +493,9 @@
 
 // Token spend: every agent's history added up.
 "Token spend" = "トークン使用量";
+"Read local usage records" = "ローカルの使用量記録を読み取る";
+"When enabled, scans local records and exports." = "オンにすると、この Mac の記録とエクスポートファイルを読み取ります。";
+"Reading %@…" = "%@ を読み取り中…";
 "Span" = "集計期間";
 "Counting" = "集計方法";
 "Read from local records and exports, priced at models.dev's published rates." = "ローカルの記録と書き出しから読み取り、models.dev が公開する価格で換算します。";
@@ -599,3 +609,48 @@
 "Token or session" = "トークンまたはセッション";
 "Use the signed-in account when possible, the API key when not." = "可能ならサインイン済みアカウントを使い、ダメなら API キーを使います。";
 "Uses the Kimi Code login Pulse holds." = "Pulse が保持する Kimi Code のログインを使います。";
+/* Xiaomi Coding Plan */
+"No Xiaomi session found. Sign in at platform.xiaomimimo.com first." = "Xiaomi のセッションが見つかりません。先に platform.xiaomimimo.com でサインインしてください。";
+"Sign in to Xiaomi's platform in a browser to see usage." = "ブラウザで Xiaomi のプラットフォームにサインインすると使用量が表示されます。";
+"Xiaomi's saved session expired. Sign in again in your browser." = "Xiaomi の保存済みセッションが期限切れです。ブラウザでサインインし直してください。";
+"No Coding Plan on this Xiaomi account." = "この Xiaomi アカウントに Coding Plan はありません。";
+"Reads the console with your signed-in browser session." = "サインイン済みのブラウザセッションでコンソールを読みます。";
+
+/* ネットワークプロキシ */
+"Network" = "ネットワーク";
+"Proxy" = "プロキシ";
+"Use macOS settings or a proxy only for Pulse." = "macOS のシステム設定を使うか、Pulse 専用のプロキシを指定します。";
+"Follow System" = "システム設定に従う";
+"Manual" = "手動";
+"Type" = "種類";
+"HTTP" = "HTTP";
+"SOCKS5" = "SOCKS5";
+"Host" = "ホスト";
+"The proxy server's name or address." = "プロキシサーバのホスト名またはアドレス。";
+"Enter a host." = "ホストを入力してください。";
+"Port" = "ポート";
+"A number from 1 to 65535." = "1〜65535 の数字。";
+"Enter a whole number from 1 to 65535." = "1〜65535 の整数を入力してください。";
+
+/* 監視するサービスの選択 */
+"Choose services to monitor" = "監視するサービスを選択";
+"New services detected" = "新たに対応したサービス";
+"Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "サービスを1つ以上選んでください。「完了」を押すと、選んだサービスのログイン情報を読み取り、使用量の確認を始めます。後から設定で変更できます。";
+"This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "このバージョンで新たに対応したサービスが Mac に見つかりました。追加するものを選んでください。これまでの選択はそのままです。";
+"Detected on this Mac" = "この Mac で検出";
+"Select detected services" = "検出したサービスを選択";
+"Done" = "完了";
+"Enable a service in its settings to start monitoring." = "左側でサービスを選び、「パネルに表示」をオンにすると監視を始めます。";
+"Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "キーチェーンまたは認証情報ファイルから Claude Code のログインを読み取ります。Claude デスクトップの Cookie 保存領域を含め、キーチェーンへのアクセスを求めることがあります。";
+"Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "~/.codex/auth.json を読み取り、保存済みのログインで codex app-server を起動する場合があります。Pulse はキーチェーンへのアクセスを求めません。";
+"Reads the running editor's local language server and connection token. No Keychain prompt." = "起動中のエディタのローカル言語サーバから使用量と接続トークンを読み取ります。キーチェーンの確認はありません。";
+"Reads the login saved in Cursor's local database. No Keychain prompt." = "Cursor のローカルデータベースに保存されたログインを読み取ります。キーチェーンの確認はありません。";
+"Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "~/.grok/auth.json に保存されたログインを読み取ります。キーチェーンの確認はありません。";
+"Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "設定で入力したキーを使うか、OpenCode の auth.json を読み取ります。キーチェーンの確認はありません。";
+"Uses a key entered in Settings, or reads the saved GLM key files. No Keychain prompt." = "設定で入力したキーを使うか、保存済みの GLM キーファイルを読み取ります。キーチェーンの確認はありません。";
+"Uses a key entered in Settings, or reads ~/.commandcode/auth.json. No Keychain prompt." = "設定で入力したキーを使うか、~/.commandcode/auth.json を読み取ります。キーチェーンの確認はありません。";
+"Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan." = "この Mac の Chromium 系ブラウザから Devin の Web ログインを読み取ります。確認ダイアログは出ません。デスクトップアプリの保存済みプランも読む場合があります。";
+"Runs arkcli with its saved login, or uses access keys entered in Settings. Pulse does not request Keychain access." = "保存済みのログインで arkcli を起動するか、設定で入力したアクセスキーを使います。Pulse はキーチェーンへのアクセスを求めません。";
+"Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "設定で読み込んだブラウザのログインセッションを使います。読み込み時にブラウザのキーチェーンへのアクセスを求めることがあります。";
+"Uses the GitHub login you connect in Settings. No Keychain prompt." = "設定で連携した GitHub のログインを使います。キーチェーンの確認はありません。";
+"Uses only the API key you enter in Settings. No Keychain prompt." = "設定で入力した API キーだけを使います。キーチェーンの確認はありません。";

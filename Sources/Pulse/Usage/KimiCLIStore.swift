@@ -23,11 +23,8 @@ enum KimiCLIStore {
         var buckets: [String: [String: TokenTally]] = [:]
         var sessions: [UsageLedger.Session] = []
 
-        let manager = FileManager.default
-        guard let walker = manager.enumerator(at: root, includingPropertiesForKeys: nil) else { return .empty }
-
-        for case let file as URL in walker where file.lastPathComponent == "wire.jsonl" {
-            guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else { continue }
+        for file in AgentLogIO.files(in: [root], names: ["wire.jsonl"]) {
+            guard !Task.isCancelled else { return .empty }
 
             var tokens = 0
             var cost = 0.0
@@ -36,9 +33,8 @@ enum KimiCLIStore {
             var sessionSlots: [String: (tokens: Int, cost: Double)] = [:]
             let model = "kimi (unnamed)"
 
-            for line in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
-                guard let root = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
-                      let message = root["message"] as? [String: Any],
+            for root in AgentLogIO.jsonLines(at: file) {
+                guard let message = root["message"] as? [String: Any],
                       let payload = message["payload"] as? [String: Any]
                 else { continue }
 

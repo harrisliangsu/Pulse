@@ -65,7 +65,7 @@ struct GrokBotUsageService: Sendable {
         // carry across a redirect to another host — unlike `Authorization`,
         // which it strips. So redirects are refused outright, for the reason
         // `CursorUsageService` refuses them.
-        let configuration = URLSessionConfiguration.ephemeral
+        let configuration = NetworkSession.configured(.ephemeral)
         configuration.httpShouldSetCookies = false
         configuration.httpCookieStorage = nil
         configuration.urlCache = nil

@@ -140,6 +140,7 @@ enum VSCodeTaskLogReader {
 
         init?(textFile: URL) {
             guard
+                !Task.isCancelled,
                 let data = try? Data(contentsOf: textFile, options: .mappedIfSafe),
                 let text = String(data: data, encoding: .utf8)
             else { return nil }
@@ -163,6 +164,7 @@ enum VSCodeTaskLogReader {
             var found: [String] = []
             var searchStart = text.startIndex
             while let open = text.range(of: "<environment_details>", range: searchStart..<text.endIndex) {
+                guard !Task.isCancelled else { return [] }
                 guard
                     let close = text.range(
                         of: "</environment_details>", range: open.upperBound..<text.endIndex

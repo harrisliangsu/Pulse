@@ -24,6 +24,8 @@ The canonical id is `SpendAgent.sourceID` (the string the reader families dispat
 
 The six new reader families expose two entry points: `inputs(client:home:environment:)` declares input candidates, and `records(client:roots:)` decodes them into `AgentUsageRecord` increments. Existing inputs form the cache fingerprint; roots are rediscovered after reading. Every counter is priced through the shared function in [token-spend.md](token-spend.md#what-the-readers-agree-on). Compression failures (a missing decoder, corrupt frame or size limit) are reported through `notes`; a read with notes is shown but **not persisted** to disk.
 
+The combined pane is opt-in and defaults off. Reading/cancellation and the local memory probe are documented in [token-spend.md](token-spend.md#opt-in-reading-and-cancellation). JSONL input is streamed; a caller's cancellation is checked during traversal and parsing, and cancelled results are not cached.
+
 ## Group A — session logs (`SessionLogReaders`)
 
 Pi-shaped JSONL: a session header, assistant `message` records, and a `usage` object with four independent buckets. Cross-session dedup by response/message identity so a fork copy collapses.
@@ -56,6 +58,8 @@ Pi-shaped JSONL: a session header, assistant `message` records, and a `usage` ob
 | `commandcode` | `~/.commandcode/projects/<slug>/<session>.jsonl` | modern real; a legacy line with no `usage` block contributes **nothing** | spec |
 | `opencodereview` | `~/.opencodereview/sessions/<encoded-repo>/<session-id>.jsonl` | the store's own total settles the cache relation; no total with a positive cache is skipped, and remaining records are partial | spec |
 | `zcode` | `~/.zcode/projects/**/*.jsonl`, `~/.zcode/cli/db/db.sqlite` | modern real; a reported total subtracts the cache overlap, a bare total is unclassified, a legacy line with no usage contributes nothing | spec |
+
+Tencent's two product roots also supply extension `.log` files. Their root-level `binaries/` subtree is excluded from reading and cache fingerprinting; runtime downloads are not usage inputs. With transcripts present, extension-log scanning stops at the first valid fallback record: that proves the partial-counts flag, and none of the fallback's counters are added. The format/precedence contract remains the same.
 
 The VS Code task logs are `ui_messages.json` (`say == "api_req_started"`), each carrying the four counts in an inner JSON string. Cherry Studio appends the same API call several times with one `requestId`; the reader merges those by field-wise maximum so a streamed snapshot is not counted as new usage. Command Code is a tree, but **every reply with reported usage counts**, including abandoned branches: `/rewind` changes context, not already consumed tokens. Its session/message id folds replays, while its own ancestry resolves an omitted model so a sibling branch's model change cannot reprice it. Tencent's **JSONL transcript is the only reconcilable channel**: when it is present the extension log and the aggregate database are not returned, because they share no identity with its message ids and adding them would double count; when that excluded fallback held records, the transcript records are marked `isPartial`. With no transcript, the fallback stands alone — and a mirrored log line may then be counted twice, which is preferred to folding two real same-second requests into one.
 

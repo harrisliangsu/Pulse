@@ -85,15 +85,13 @@ struct CodexUsageService: Sendable {
         }
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        // `URLSession` follows the system proxy settings, so on a machine
-        // behind a VPN or proxy client this call rides that tunnel — which is
-        // what you want, since the endpoint may only be reachable through it.
-        // The cost is that a tunnel dropping a connection surfaces as a
-        // request failure, so a stumble is retried before it becomes an error
-        // in the UI.
+        // The request follows Pulse's chosen proxy (the system setting unless
+        // a manual one is configured). The cost is that a tunnel dropping a
+        // connection surfaces as a request failure, so a stumble is retried
+        // before it becomes an error in the UI.
         for attempt in 0...Self.retryLimit {
             do {
-                let (data, response) = try await URLSession.shared.data(for: request)
+                let (data, response) = try await NetworkSession.shared.data(for: request)
                 guard let http = response as? HTTPURLResponse else { return .failed(.unreachable) }
 
                 switch http.statusCode {

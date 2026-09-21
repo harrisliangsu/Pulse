@@ -14,6 +14,7 @@ A decision records a reason, not proof the measurement still holds — a local p
 | [reported-figures.md](reported-figures.md) | [../refresh-and-data.md](../refresh-and-data.md) |
 | [bundle-and-defaults.md](bundle-and-defaults.md) | [../architecture.md](../architecture.md), [../releasing.md](../releasing.md) |
 | [release-notes-in-changelog.md](release-notes-in-changelog.md) | [../releasing.md](../releasing.md) |
+| [sdk-stamp-and-appearance.md](sdk-stamp-and-appearance.md) | [../releasing.md](../releasing.md) |
 | [localization.md](localization.md) | [../development.md](../development.md) |
 | [bot-mark-geometry.md](bot-mark-geometry.md) | [../ui/rings-and-surface.md](../ui/rings-and-surface.md) |
 | [quiet-is-not-greyscale.md](quiet-is-not-greyscale.md) | [../ui/rings-and-surface.md](../ui/rings-and-surface.md) |

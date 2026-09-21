@@ -19,6 +19,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var panelController: FloatingPanelController?
     private var settingsWindow: SettingsWindowController?
+    private var providerSetupWindow: ProviderSetupWindowController?
+    private var preparedClaude = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
@@ -34,10 +36,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // happened to trigger it. The write then returns an error, which
         // `CodexAppServer.write(_:to:)` reads as the helper being gone.
         signal(SIGPIPE, SIG_IGN)
-
-        // Keep the registered status line path pointing at wherever this
-        // build actually lives, since rebuilding can move it.
-        StatusLineHook.repairPathIfNeeded()
 
         // Caches whose format changed are invalidated by renaming the file;
         // this takes the orphans away rather than leaving them on disk.
@@ -55,48 +53,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Daily at most, and only from a bundle — see `AppUpdate`.
         update.checkIfDue()
 
-        // Asks for the Claude desktop app's keychain item now rather than
-        // leaving it behind a setting nobody would think to open. Fenced and
-        // asked once — see `requestPermissionAtLaunch`. It runs off this
-        // thread, since the dialog blocks whoever raised it.
-        let claudeCode = AccountKey(.claudeCode)
-        let claudeSource = settings.source(for: claudeCode)
-        ClaudeDesktopSession.requestPermissionAtLaunch(
-            willBeUsed: settings.isEnabled(claudeCode)
-                && [.automatic, .desktopApp].contains(claudeSource)
-        ) { [weak self] in
-            // A grant is a new route, and the pass that just went out did not
-            // have it.
-            self?.store.refresh(claudeCode)
-        }
-
-        // Before the first pass, so nothing is decided about a reading before
-        // the memory of what has already been said is in place. Deliberately
-        // does not ask for permission — see `UsageAlerts.start`.
-        alerts.start { [weak self] in self?.showSettings() }
-
-        store.start()
-
-        let controller = FloatingPanelController(
-            store: store,
-            settings: settings,
-            placement: placement,
-            openSettings: { [weak self] in self?.showSettings() }
-        )
-        panelController = controller
-
         settings.onChange = { [weak self] in
-            controller.settingsChanged()
-            self?.settingsWindow?.refreshTitle()
-            // Changing where the figures come from — or how often they're
-            // read — should show up now, not at the next tick.
-            self?.store.settingsChanged()
+            self?.settingsChanged()
         }
-
-        // A secondary click on the rail is a way into settings that does not
-        // go through the menu bar at all — which is the point, since a full
-        // menu bar is where Pulse's icon stops being reachable. Issue #24.
-        controller.contextMenu = { [weak self] in self?.panelMenu() ?? NSMenu() }
 
         // Same issue, from the other side: a combination that works with no
         // pointer involved. Both unset until somebody sets one.
@@ -109,14 +68,68 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         shortcuts.apply(settings)
 
-        if settings.isPanelVisible {
-            controller.show()
+        if settings.needsProviderSelection {
+            showProviderSelection(providers: Set(Provider.allCases), isInitial: true)
+        } else {
+            startMonitoring()
+            if !settings.suggestedProviders.isEmpty {
+                showProviderSelection(providers: settings.suggestedProviders, isInitial: false)
+            }
         }
+    }
 
-        // Once ever, and only for someone who has Claude Code. After the panel
-        // is actually on screen: a modal put up any earlier blocks the launch
-        // and asks for something while the app is still invisible.
-        StatusLineHook.offerOnFirstRun()
+    private func showProviderSelection(providers: Set<Provider>, isInitial: Bool) {
+        let window = ProviderSetupWindowController(settings: settings, providers: providers, isInitial: isInitial)
+        providerSetupWindow = window
+        window.show()
+    }
+
+    private func settingsChanged() {
+        settingsWindow?.refreshTitle()
+        providerSetupWindow?.refreshTitle()
+        guard !settings.needsProviderSelection else { return }
+        if panelController == nil {
+            // Enabling a service in Settings is also an initial choice.
+            providerSetupWindow?.close()
+            startMonitoring()
+        } else {
+            panelController?.settingsChanged()
+            store.settingsChanged()
+            prepareClaudeIfSelected()
+        }
+    }
+
+    private func startMonitoring() {
+        guard !settings.needsProviderSelection, panelController == nil else { return }
+        alerts.start { [weak self] in self?.showSettings() }
+        let controller = FloatingPanelController(store: store, settings: settings, placement: placement, openSettings: { [weak self] in self?.showSettings() })
+        panelController = controller
+        controller.contextMenu = { [weak self] in self?.panelMenu() ?? NSMenu() }
+        if settings.isPanelVisible { controller.show() }
+        store.start()
+        prepareClaudeIfSelected()
+    }
+
+    private func prepareClaudeIfSelected() {
+        let claude = AccountKey(.claudeCode)
+        guard settings.isEnabled(claude), !preparedClaude else { return }
+        preparedClaude = true
+        // Let the selection window close before either system prompt appears.
+        Task { [weak self] in
+            guard let self else { return }
+            guard self.settings.isEnabled(claude) else {
+                self.preparedClaude = false
+                return
+            }
+            StatusLineHook.repairPathIfNeeded()
+            ClaudeDesktopSession.requestPermissionAtLaunch(
+                willBeUsed: [.automatic, .desktopApp].contains(self.settings.source(for: claude))
+            ) { [weak self] in
+                guard let self, self.settings.isEnabled(claude) else { return }
+                self.store.refresh(claude)
+            }
+            StatusLineHook.offerOnFirstRun(willBeUsed: self.settings.isEnabled(claude))
+        }
     }
 
     func showSettings() {

@@ -45,7 +45,7 @@ Documented at Claude Code’s status-line docs. Claude Code pipes a blob carryin
 
 **A window whose reset time has passed is dropped here too, not aged.** This route is a push. A Mac that has not run Claude Code since yesterday is still holding yesterday’s blob; any five-hour window in it reset long ago. Shown with “as of” it still reads as a limit you are inside. Once every window has gone, `capturedUsage` returns nil and the caller says it is waiting on Claude Code. `UsageCache` had this rule from the start; this is the *other* place an old reading can come from and it went without — a reset 28 hours in the past reached the card. Found because the window-clock arc drew a full circle: 9% used looked plausible, a spent clock on a five-hour window did not.
 
-The hook edits `~/.claude/settings.json`. It backs the file up to `settings.json.pulse-backup` on first touch, remembers any status-line command that was already there so it can chain and restore, and rewrites its own path on launch (`repairPathIfNeeded`) because rebuilding moves the executable.
+The hook edits `~/.claude/settings.json`. It backs the file up to `settings.json.pulse-backup` on first touch, remembers any status-line command that was already there so it can chain and restore, and rewrites its own path (`repairPathIfNeeded`) because rebuilding moves the executable. Both automatic path repair and the one-time connection offer wait until the primary Claude Code account is enabled.
 
 ## Desktop app route
 
@@ -61,7 +61,7 @@ Web client paths (not public API): `/api/bootstrap` and `/api/organizations/{id}
 
 **The two apps can be signed in as different people.** `ClaudeAccountIdentity` compares this session’s account/organisation/email against whatever the CLI token last said (captured in passing by the profile call). A comparison with nothing on one side is **not** a mismatch: someone who has only ever used the desktop app may never have had a working CLI token, and refusing the route until one appeared would withhold it from exactly the person it exists for. A pinned `.desktopApp` skips the comparison.
 
-At launch, if Claude Code is enabled and its source is Automatic or Desktop App, Pulse may request `Claude Safe Storage` once when a desktop cookie store exists. Automatic refreshes do not raise a new unsolicited Keychain prompt each pass.
+After provider selection (or at launch for an existing enabled choice), if Claude Code's source is Automatic or Desktop App, Pulse may request `Claude Safe Storage` once when a desktop cookie store exists. Enabling Claude later in Settings also reaches this path. The chooser describes that grant before it is requested. Automatic refreshes do not raise a new unsolicited Keychain prompt each pass.
 
 ## Added accounts
 
@@ -77,4 +77,4 @@ Claude Code reports `severity` and `locked_reason` per limit. A `locked_reason` 
 
 ## First run
 
-Presence of `~/.claude`, never its contents.
+Presence of `~/.claude`, the Claude Application Support directory, or `Claude.app` in `/Applications` or `~/Applications`, never their contents. These only mark the chooser row as detected. CLI credential reads, the desktop Keychain request and the status-line offer all wait for selection.

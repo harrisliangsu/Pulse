@@ -44,20 +44,14 @@ enum TencentBuddyReader {
 
     static func records(client: String, roots: [URL]) -> [AgentUsageRecord] {
         let files = AgentLogIO.files(
-            in: roots, extensions: ["jsonl", "log"], names: ["workbuddy.db"]
+            in: roots, extensions: ["jsonl", "log"], names: ["workbuddy.db"],
+            excludingRootDirectories: ["binaries"]
         )
 
         var transcript: [AgentUsageRecord] = []
-        var fallback: [AgentUsageRecord] = []
-        for file in files {
-            switch file.pathExtension {
-            case "jsonl": transcript += jsonl(client: client, file: file)
-            case "log": fallback += extensionLog(client: client, file: file)
-            default:
-                if file.lastPathComponent == "workbuddy.db" {
-                    fallback += sqlite(client: client, file: file)
-                }
-            }
+        for file in files where file.pathExtension == "jsonl" {
+            guard !Task.isCancelled else { return [] }
+            transcript += autoreleasepool { jsonl(client: client, file: file) }
         }
 
         // **The transcript wins and the fallback is not appended.** The
@@ -66,12 +60,22 @@ enum TencentBuddyReader {
         // both channels saw. When the excluded fallback held records the
         // returned set is only the confirmed subset, and is marked partial so
         // the doubt is shown rather than stated in a comment and counted.
-        if !transcript.isEmpty {
-            let partial = !fallback.isEmpty
-            return transcript
-                .map { Self.marking($0, partial: partial) }
-                .sorted { $0.timestamp < $1.timestamp }
+        var fallback: [AgentUsageRecord] = []
+        for file in files where file.pathExtension != "jsonl" {
+            guard !Task.isCancelled else { return [] }
+            let read = autoreleasepool {
+                file.pathExtension == "log"
+                    ? extensionLog(client: client, file: file, firstOnly: !transcript.isEmpty)
+                    : sqlite(client: client, file: file)
+            }
+            if !transcript.isEmpty, !read.isEmpty {
+                // Only existence matters for the partial flag. No need to
+                // decode/store millions of fallback rows we will not count.
+                return transcript.map { marking($0, partial: true) }.sorted { $0.timestamp < $1.timestamp }
+            }
+            fallback += read
         }
+        if !transcript.isEmpty { return transcript.sorted { $0.timestamp < $1.timestamp } }
         return fallback.sorted { $0.timestamp < $1.timestamp }
     }
 
@@ -169,12 +173,7 @@ enum TencentBuddyReader {
 
     // MARK: - Extension log
 
-    private static func extensionLog(client: String, file: URL) -> [AgentUsageRecord] {
-        guard
-            let data = try? Data(contentsOf: file, options: .mappedIfSafe),
-            let text = String(data: data, encoding: .utf8)
-        else { return [] }
-
+    private static func extensionLog(client: String, file: URL, firstOnly: Bool = false) -> [AgentUsageRecord] {
         let workspace = file.lastPathComponent
             .components(separatedBy: "__").first
             .flatMap { EditorLog.nonBlank($0) }
@@ -182,8 +181,9 @@ enum TencentBuddyReader {
         var models: [String: String] = [:]
         var records: [AgentUsageRecord] = []
 
-        for line in text.split(separator: "\n", omittingEmptySubsequences: true) {
-            let raw = String(line)
+        for line in LogLines(at: file) {
+            guard let raw = String(data: line, encoding: .utf8),
+                  raw.contains("[CraftInvokableAgent]") || raw.contains("[AgentReporter]") else { continue }
             guard let timestamp = EditorLog.naiveTimestamp(raw) else { continue }
 
             if let prepared = prepared(raw) {
@@ -212,6 +212,7 @@ enum TencentBuddyReader {
                     unclassifiedTokens: parts.unclassified
                 )
             )
+            if firstOnly { return records }
         }
         return records
     }

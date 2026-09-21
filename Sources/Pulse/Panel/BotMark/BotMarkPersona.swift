@@ -3,19 +3,18 @@ import Foundation
 /// A mark's personality: which of the upstream's states it plays for each
 /// mood, and how quickly it moves.
 ///
-/// Eight of these exist so that a rail of marks is not eight copies of one
-/// character. A colour tells two rings apart at a glance; a different rhythm
-/// tells them apart while you watch them.
+/// Eight authored choreographies give each character its own default pose,
+/// idle scene, task effects, attention response and finish acknowledgement.
+/// Motion scales are an accent on those scenes, not their only difference.
 ///
 /// **A persona does not touch the body.** Which shape a mark wears is the
 /// reader's choice — `BotMarkBody`, round by default — and tying it to
 /// temperament would mean picking "sleepy" to get a bean.
 ///
-/// **A persona may change how a mood is said, never what it says.** `spent`
-/// plays `sad` for one persona and `bored` for another — both are "this limit
-/// is finished", drawn by a character who takes it differently. None of them
-/// may play `working` for a provider that is idle, or `idle` for one that is
-/// spent: the mood is the reading, and the persona is only the accent.
+/// **A persona may change how a mood is said, never what it says.** Task
+/// effects need work or a fetch, celebration needs a witnessed reset, and a
+/// spent/unavailable account does not play a carefree idle scene. Only sleepy
+/// can use drowsy. These meanings are pinned across complete routines.
 enum BotMarkPersona: String, CaseIterable, Identifiable, Sendable {
     case calm
     case eager
@@ -28,102 +27,48 @@ enum BotMarkPersona: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    /// How the mood is played.
-    ///
-    /// Every state named here means the same thing as the mood it stands for.
-    /// The differences are temperament: an eager mark is *excited* to be
-    /// working where a stoic one is merely working, and a sleepy one is
-    /// *drowsy* about a spent limit where a proud one is *sad* about it.
+    /// The first pose, also used by Reduce Motion. The full routine is kept
+    /// beside its timings, so this cannot drift from what the view plays.
     func state(for mood: BotMarkMood) -> String {
-        switch mood {
-        case .working:
-            switch self {
-            case .eager, .playful: "excited"
-            case .curious: "searching"
-            case .sleepy, .stoic, .calm, .steady, .proud: "working"
-            }
-        case .fetching:
-            switch self {
-            case .curious, .eager: "curious"
-            case .sleepy, .steady: "listening"
-            case .calm, .playful, .stoic, .proud: "searching"
-            }
-        case .spent:
-            switch self {
-            case .sleepy: "drowsy"
-            case .stoic, .steady: "bored"
-            case .calm, .eager, .curious, .playful, .proud: "sad"
-            }
-        case .asleep:
-            switch self {
-            case .stoic: "powering-down"
-            case .sleepy: "drowsy"
-            default: "sleeping"
-            }
-        case .idle:
-            switch self {
-            case .eager: "curious"
-            case .steady: "humming"
-            case .sleepy: "bored"
-            case .playful: "playful"
-            case .proud: "proud"
-            case .calm, .curious, .stoic: "idle"
-            }
-        }
+        routine(for: mood).states.first ?? "idle"
     }
 
-    /// What a working mark takes in turn.
-    ///
-    /// **Work is not one state.** A single state loops every second and a half
-    /// for as long as the turn lasts, which reads as a screensaver rather than
-    /// as work. These are the upstream states that mean something is being
-    /// done — `working` at it, `spawning` generating, `writing` with the
-    /// pencil out, `searching` for something, `excited` about it — mixed a
-    /// little differently per character.
-    ///
-    /// `angry` joins the list out of hours, and only then: a turn at eleven at
-    /// night is still work, done by somebody who would rather not be. It is
-    /// the one state here that says nothing about the work itself, which is
-    /// why it is never in the list during the day.
-    func workingStates(overtime: Bool) -> [String] {
-        var states: [String]
+    private var choreography: BotMarkChoreography {
         switch self {
-        case .calm: states = ["working", "spawning", "writing"]
-        case .eager: states = ["excited", "spawning", "working"]
-        case .steady: states = ["working", "writing", "spawning"]
-        case .curious: states = ["searching", "spawning", "working"]
-        case .sleepy: states = ["working", "writing", "searching"]
-        case .playful: states = ["excited", "writing", "spawning"]
-        case .stoic: states = ["working", "writing", "thinking"]
-        case .proud: states = ["working", "spawning", "excited"]
+        case .calm: .calm
+        case .eager: .eager
+        case .steady: .steady
+        case .curious: .curious
+        case .sleepy: .sleepy
+        case .playful: .playful
+        case .stoic: .stoic
+        case .proud: .proud
         }
-        if overtime { states.append("angry") }
-        return Self.distinct(states)
     }
 
-    /// What an idle mark takes in turn.
-    ///
-    /// **Quiet is a fact, so it may be shown.** `quiet` is "no CLI has written
-    /// anything for twenty minutes", which is the rail's own reading of
-    /// nothing happening: a mark that gets visibly bored after a while, and
-    /// sleepy about it late at night, is the same reading with a day in it.
-    /// Neither replaces the persona's own idle state — they join it, so a
-    /// bored mark still comes back to itself.
-    func idleStates(quiet: Bool, overtime: Bool) -> [String] {
-        let resting = state(for: .idle)
-        guard quiet else { return [resting] }
-        // Deduplicated, because the sleepy character rests *at* `bored`: its
-        // quiet playlist would otherwise be that state twice, which rotates
-        // between two identical entries.
-        return Self.distinct([resting, overtime ? "drowsy" : "bored"])
+    func routine(for mood: BotMarkMood) -> BotMarkRoutine {
+        switch mood {
+        case .idle: choreography.idle
+        case .working: choreography.working
+        case .fetching: choreography.fetching
+        case .spent: choreography.spent
+        case .unavailable: choreography.unavailable
+        }
     }
 
-    /// First occurrences, in order. `Set` would lose the order, and the order
-    /// is what makes the first entry the character's own.
-    private static func distinct(_ states: [String]) -> [String] {
-        var seen: Set<String> = []
-        return states.filter { seen.insert($0).inserted }
+    func workingRoutine(overtime: Bool) -> BotMarkRoutine {
+        overtime ? choreography.overtime : choreography.working
     }
+
+    func idleRoutine(quiet: Bool, night: Bool) -> BotMarkRoutine {
+        self == .sleepy && quiet && night ? BotMarkChoreography.sleepyNight : choreography.idle
+    }
+
+    var attentionRoutine: BotMarkRoutine { choreography.attention }
+    var completionState: String { choreography.completion }
+
+    func workingStates(overtime: Bool) -> [String] { workingRoutine(overtime: overtime).states }
+    func idleStates(quiet: Bool, night: Bool) -> [String] { idleRoutine(quiet: quiet, night: night).states }
 
     /// How long it waits between things.
     ///

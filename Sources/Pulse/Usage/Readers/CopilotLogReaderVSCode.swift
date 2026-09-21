@@ -146,7 +146,7 @@ enum CopilotVSCodeReader {
     // MARK: - Reconstructing the append/patch log
 
     /// Replays the file's lines into the request array they describe.
-    private static func reconstruct(_ rows: [[String: Any]]) -> [[String: Any]] {
+    private static func reconstruct(_ rows: some Sequence<[String: Any]>) -> [[String: Any]] {
         var requests: [Any] = []
 
         for row in rows {

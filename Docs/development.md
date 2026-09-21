@@ -31,6 +31,18 @@ Five languages: English, Simplified Chinese, Traditional Chinese, Japanese and K
 - Chinese full stop `。` is full-width and already has trailing space; do not add another (`glassSubtitle`).
 - SwiftPM lowercases `zh-Hans.lproj` to `zh-hans.lproj` in the built bundle. `Bundle.preferredLocalizations` is case-insensitive; `path(forResource: "zh-Hans", ofType: "lproj")` returns nil.
 
+### A translation is written, not converted
+
+`check-localization.sh` compares keys. **Nothing checks whether a translation reads like the language it is in**, so that is a review job, done by reading the rows in the running app rather than the pairs in the file. Every rule below is a shipped mistake.
+
+- **No English syntax.** The worst offender in Chinese is a long attributive stacked in front of its noun: *用会随该账号状态反应的小机器人代替供应商图标*. English builds that way and Chinese does not — it wants two clauses. Keep a list parallel, too: *用哪些动作、节奏多快* joins a noun phrase to a predicate.
+- **Translate the thing, not the word.** `Animated mark` became *动画标记*, naming the ring's logo slot — an idea that exists in this codebase and nowhere in the reader's head. The row is a small robot, so it is *小机器人*.
+- **A control agrees with its own settings.** That same toggle sat directly above three rows saying *小机器人…*, so the switch and the things it switched were named differently. Japanese and Korean still have this split (`アニメーションマーク` / `애니메이션 마크` over `ボットの…` / `봇 …`) and want someone who reads them.
+- **Mind the register.** *人格* is a psychiatric word; a cartoon face has *性格*, or *個性* in Taiwan.
+- **Do not invent objects the interface has not got.** *不随它在轨道上的位置变化* gave the rail an 轨道 nobody had mentioned.
+- **zh-Hant is not zh-Hans run through a converter.** Vocabulary differs (*個性* / *性格*, *預設* / *默认*), and so does terminology: zh-Hant says *服務商* where zh-Hans says *供应商*.
+- **One term per concept per language.** zh-Hans currently breaks this: *供应商* in the navigation, *服务商* in two strings. Worth settling next time that pane is open.
+
 `./Scripts/check-localization.sh` compares **every** `.strings` file against English — it globs `*.lproj` rather than naming a pair, so a language added to the app but not to the script cannot go unchecked — **and** every key the source asks for (`Scripts/localization-keys.py` — a scanner, not a regex, because interpolations nest). Comparing only the two files missed a renamed string literal that fell back to English while both files still agreed.
 
 Why implicit `Text` fails, and the scanner’s blind spots: [decisions/localization.md](decisions/localization.md).
@@ -54,6 +66,6 @@ When checking the key by hand, `plutil -extract … -o -`. Without `-o -` `pluti
 - New panel chrome: take size from `PanelMetrics`; keep the card an overlay; do not resize the window while a card opens ([ui/panel-geometry.md](ui/panel-geometry.md)).
 - New pointer behaviour: not `.onHover`; not exit events ([ui/input.md](ui/input.md)).
 - New settings copy: one-line subtitles. Reasoning belongs in docs, not on screen, except the money card’s provenance ([ui/settings.md](ui/settings.md)).
-- New `Provider` case: SVG, service returning `ProviderUsage`, branches in `UsageStore.refresh` / `refresh(_:)`, answers to `keepsLocalTranscripts` / `hasSourceChoice` / `supportsMultipleAccounts` / `canReportWithoutSetup`. `AgentActivity.root(for:)` and `UsageLedger.logFiles(for:)` return optional roots. Routes and auth: [providers/README.md](providers/README.md).
+- New `Provider` case: SVG, service returning `ProviderUsage`, branches in `UsageStore.refresh` / `refresh(_:)`, answers to `keepsLocalTranscripts` / `hasSourceChoice` / `supportsMultipleAccounts`, presence-only discovery and a five-language `monitoringAccessDescription`. `AgentActivity.root(for:)` and `UsageLedger.logFiles(for:)` return optional roots. Routes and auth: [providers/README.md](providers/README.md).
 
 `ImageRenderer` cannot draw `NavigationSplitView` or AppKit-backed controls — check Settings by running the app.

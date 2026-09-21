@@ -79,7 +79,8 @@ enum AgentRecordReaders {
     /// The normalized increments a client's roots contain. Pricing, windows
     /// and origin are the caller's job; a reader here never invents a count.
     static func records(client: String, roots: [URL]) -> [AgentUsageRecord] {
-        switch family(for: client) {
+        guard !Task.isCancelled else { return [] }
+        return switch family(for: client) {
         case .sessionLogs:
             SessionLogReaders.records(client: client, roots: roots)
         case .editorLogs:
@@ -111,7 +112,8 @@ enum AgentRecordReaders {
     /// own English diagnostics; a UI is expected to map their presence, not
     /// their text, to its own copy.
     static func notes(client: String, roots: [URL]) -> [String] {
-        switch family(for: client) {
+        guard !Task.isCancelled else { return [] }
+        return switch family(for: client) {
         case .databaseLogs:
             DatabaseLogReaders.notes(client: client, roots: roots)
         case .structuredLogs:

@@ -35,11 +35,12 @@ enum ConnectionRemedy: Equatable {
         case .notSignedIn, .signedOut, .kimiSignInRequired, .kimiLoginExpired: return .signIn
         case .apiKeyMissing, .apiKeyRefused, .devinOrganizationMissing: return .editCredential
         case .ollamaSessionMissing, .ollamaSessionExpired,
-             .qoderSessionMissing, .qoderSessionExpired: return .readBrowser
+             .qoderSessionMissing, .qoderSessionExpired,
+             .xiaomiSessionMissing, .xiaomiSessionExpired: return .readBrowser
         case .claudeDesktopKeyRefused, .unreachable, .rateLimited, .serverError,
              .codexServerFailed: return .retry
         case .codexNotInstalled, .volcengineCLIMissing, .noLimitsReported,
-             .grokBotNotIncluded, .zaiNoCodingPlan, .ollamaPageChanged, .unreadableReply:
+             .grokBotNotIncluded, .zaiNoCodingPlan, .xiaomiNoCodingPlan, .ollamaPageChanged, .unreadableReply:
             return .help
         }
     }
@@ -76,6 +77,7 @@ enum ConnectionRemedy: Equatable {
         case .deepSeek: "deepseek"
         case .qoder: "qoder"
         case .devin: "devin"
+        case .xiaomiMiMo: "xiaomi-coding-plan"
         }
         // Fork docs live here; upstream help links would send people to the wrong repo.
         return URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/\(page).md")!

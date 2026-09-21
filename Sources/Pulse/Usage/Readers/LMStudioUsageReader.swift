@@ -38,11 +38,13 @@ enum LMStudioUsageReader {
         var records: [AgentUsageRecord] = []
 
         for file in AgentLogIO.files(in: roots, extensions: ["log"]) {
+            guard !Task.isCancelled else { return [] }
             guard let text = try? String(contentsOf: file, encoding: .utf8) else { continue }
             let path = StructuredLogSupport.path(file)
 
             var cursor = text.startIndex
             while let marker = text.range(of: "\"usage\"", range: cursor..<text.endIndex) {
+                guard !Task.isCancelled else { return [] }
                 guard let block = usageBlock(in: text, after: marker.upperBound) else {
                     cursor = marker.upperBound
                     continue

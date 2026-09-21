@@ -39,7 +39,7 @@ struct CursorUsageService: Sendable {
         // The session goes out as a `Cookie` header, which `URLSession` will
         // happily carry across a redirect to another host — unlike
         // `Authorization`, which it strips. So redirects are refused outright.
-        let configuration = URLSessionConfiguration.ephemeral
+        let configuration = NetworkSession.configured(.ephemeral)
         configuration.httpShouldSetCookies = false
         configuration.httpCookieStorage = nil
         configuration.urlCache = nil

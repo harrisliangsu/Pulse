@@ -19,7 +19,7 @@ import Foundation
 /// ones that exist, the cache stamp is taken over that whole set, and the set
 /// is resolved *again* after the read: a root appended to — or one that
 /// disappeared — while Pulse was reading produces a ledger the before stamp no
-/// longer describes, so it is kept for this process only and never written as
+/// longer describes, so it is kept for this view only and never written as
 /// a stable disk cache.
 ///
 /// **A partially decoded read is never a stable cache.** A reader can meet
@@ -31,84 +31,89 @@ import Foundation
 actor AgentLedgers {
     static let shared = AgentLedgers()
 
-    private var cached: [SpendAgent: UsageLedger] = [:]
+    struct Progress: Sendable {
+        let agent: SpendAgent
+        let index: Int
+        let total: Int
+    }
 
-    /// What each agent's stores really looked like when it was last read, so a
-    /// relaunch does not repeat the work.
-    ///
-    /// **The in-memory cache is not enough.** It answers for the life of the
-    /// process; the page is opened once a day for a minute, and a cold read of
-    /// a ten-thousand-row database is the whole of that minute. The stamp is
-    /// computed from the store's own inputs — see `AgentCache.Stamp` for why
-    /// the store's size and date are not one of them.
-    private var stamps: [SpendAgent: AgentCache.Stamp] = [:]
+    struct Snapshot: Sendable {
+        var ledgers: [SpendAgent: UsageLedger] = [:]
+        var notes: [SpendAgent: [String]] = [:]
+    }
 
-    /// Reader limits met by the last read of each agent, kept so the UI can
-    /// state them without re-opening — and re-decompressing — the stores.
-    ///
-    /// A partial read stays here with its in-memory ledger until a refresh
-    /// reads again; a valid disk-cache hit clears the entry, because a cache
-    /// written from a complete read has nothing to report.
-    private var notesByAgent: [SpendAgent: [String]] = [:]
+    private let home: URL
+    private let environment: [String: String]
+    private let cacheDirectory: URL?
+    private let transcriptReader: UsageLedgerReader
+    private let prices: @Sendable () async -> [String: ModelPrice]
 
-    func ledgers(refresh: Bool = false) async -> [SpendAgent: UsageLedger] {
-        var all: [SpendAgent: UsageLedger] = [:]
+    /// Injected locations/prices let cancellation tests run the real scan and
+    /// cache boundary without opening a user's stores or contacting models.dev.
+    init(
+        home: URL = URL(fileURLWithPath: NSHomeDirectory()),
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        cacheDirectory: URL? = nil,
+        prices: @escaping @Sendable () async -> [String: ModelPrice] = { await ModelPrices.shared.prices() }
+    ) {
+        self.home = home
+        self.environment = environment
+        self.cacheDirectory = cacheDirectory
+        self.prices = prices
+        transcriptReader = cacheDirectory == nil && home == URL(fileURLWithPath: NSHomeDirectory())
+            ? .shared : UsageLedgerReader(home: home, cacheDirectory: cacheDirectory)
+    }
 
-        let home = URL(fileURLWithPath: NSHomeDirectory())
-        let environment = ProcessInfo.processInfo.environment
-        let prices = await ModelPrices.shared.prices()
+    /// Runs in the caller's task: cancelling the pane propagates into the
+    /// synchronous file/row loops. No detached worker can outlive that task.
+    /// The actor keeps no second copy of a finished scan after the pane closes.
+    func scan(
+        refresh: Bool = false,
+        progress: @MainActor @Sendable (Progress) -> Void = { _ in }
+    ) async throws -> Snapshot {
+        try Task.checkCancellation()
+        let prices = await prices()
+        try Task.checkCancellation()
+        let present = SpendAgent.present(home: home, environment: environment)
+        var result = Snapshot()
+        for (index, agent) in present.enumerated() {
+            try Task.checkCancellation()
+            await progress(Progress(agent: agent, index: index, total: present.count))
+            try Task.checkCancellation()
 
-        for agent in SpendAgent.present(home: home, environment: environment) {
-            if !refresh, let known = cached[agent] {
-                // Its notes, if any, belong to this same in-memory read and
-                // stay beside it.
-                all[agent] = known
-                continue
-            }
-
-            let ledger: UsageLedger
             if let provider = agent.provider {
-                // Its own cache, its own file, unchanged.
-                ledger = await UsageLedgerReader.shared.ledger(for: provider, refresh: refresh)
-                notesByAgent[agent] = nil
+                // Revalidate per-file stamps on each visit; unchanged transcripts
+                // are still served by that reader's disk cache.
+                result.ledgers[agent] = await transcriptReader.ledger(for: provider, refresh: true, prices: prices)
             } else {
-                let before = Self.stamp(agent, home: home, environment: environment, prices: prices)
-
-                if !refresh, let before, let saved = AgentCache.load(agent), saved.stamp == before {
-                    // **A valid cache is a complete read, and is not
-                    // re-decoded.** It was only ever written when the reader
-                    // had no limit to report, so it neither re-opens the store
-                    // nor claims a new failure. Nothing to say about it.
-                    ledger = saved.ledger
-                    notesByAgent[agent] = nil
-                } else {
-                    let outcome = Self.read(agent, prices: prices, home: home, environment: environment)
-                    ledger = outcome.ledger
-                    // Kept whether or not it is cached: the UI must be able to
-                    // say what could not be read.
-                    notesByAgent[agent] = outcome.notes.isEmpty ? nil : outcome.notes
-
-                    // **Confirm the read left the stores where it found them**,
-                    // and that nothing could not be decoded. A root appended to
-                    // while Pulse was reading it, a root that appeared or was
-                    // removed, or a compressed transcript this build could not
-                    // open, all produce a ledger that is not the whole and must
-                    // not be frozen as one — no retry loop, just an honest miss
-                    // next time.
-                    let after = Self.stamp(agent, home: home, environment: environment, prices: prices)
-                    if Self.canPersist(notes: outcome.notes, before: before, after: after),
-                       let before {
-                        AgentCache.save(ledger, stamp: before, for: agent)
-                    }
+                let read = try autoreleasepool {
+                    try readCached(agent, prices: prices, refresh: refresh)
                 }
-                stamps[agent] = before
+                result.ledgers[agent] = read.ledger
+                if !read.notes.isEmpty { result.notes[agent] = read.notes }
             }
+            try Task.checkCancellation()
+        }
+        return result
+    }
 
-            cached[agent] = ledger
-            all[agent] = ledger
+    private func readCached(_ agent: SpendAgent, prices: [String: ModelPrice], refresh: Bool) throws -> ReadResult {
+        let before = Self.stamp(agent, home: home, environment: environment, prices: prices)
+        try Task.checkCancellation()
+        let file = cacheDirectory.map { AgentCache.file(for: agent, directory: $0) }
+        if !refresh, let before, let saved = AgentCache.load(agent, at: file), saved.stamp == before {
+            try Task.checkCancellation()
+            return ReadResult(ledger: saved.ledger, notes: [])
         }
 
-        return all
+        let outcome = Self.read(agent, prices: prices, home: home, environment: environment)
+        try Task.checkCancellation()
+        let after = Self.stamp(agent, home: home, environment: environment, prices: prices)
+        try Task.checkCancellation()
+        if Self.canPersist(notes: outcome.notes, before: before, after: after), let before {
+            AgentCache.save(outcome.ledger, stamp: before, for: agent, at: file)
+        }
+        return outcome
     }
 
     /// Whether a read may be written to the disk cache.
@@ -127,20 +132,6 @@ actor AgentLedgers {
         return after == before
     }
 
-    /// The reader limits from this process's reads, per agent.
-    ///
-    /// **It does not rescan anything.** The limits were found while the ledgers
-    /// were read and are returned as they stand, so opening the pane again does
-    /// not re-open a store or re-decompress it. A source that has since been
-    /// removed is dropped, so a stale note never outlives its store.
-    func readNotes() -> [SpendAgent: [String]] {
-        let home = URL(fileURLWithPath: NSHomeDirectory())
-        let environment = ProcessInfo.processInfo.environment
-        let present = Set(SpendAgent.present(home: home, environment: environment))
-        notesByAgent = notesByAgent.filter { present.contains($0.key) }
-        return notesByAgent
-    }
-
     /// The stamp for an agent's existing roots, or nil when it has none.
     private static func stamp(
         _ agent: SpendAgent,
@@ -150,11 +141,14 @@ actor AgentLedgers {
     ) -> AgentCache.Stamp? {
         let stores = agent.stores(home: home, environment: environment)
         guard !stores.isEmpty else { return nil }
-        return AgentCache.stamp(for: stores, prices: prices)
+        return AgentCache.stamp(
+            for: stores, prices: prices,
+            excludingRootDirectories: [.codeBuddy, .workBuddy].contains(agent) ? ["binaries"] : []
+        )
     }
 
     /// One agent's read: the ledger it produced, and any limit the reader met.
-    struct ReadResult {
+    struct ReadResult: Sendable {
         let ledger: UsageLedger
         let notes: [String]
     }
@@ -167,6 +161,7 @@ actor AgentLedgers {
         home: URL,
         environment: [String: String]
     ) -> ReadResult {
+        guard !Task.isCancelled else { return ReadResult(ledger: .empty, notes: []) }
         let stores = agent.stores(home: home, environment: environment)
 
         switch agent {

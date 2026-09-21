@@ -41,6 +41,8 @@ Treat remaining warnings as failures.
 
 CI and release pin a **macOS 26** image because `glassEffect` needs that SDK to compile even behind `#available`. A local build on an older SDK will not match CI.
 
+macOS also draws an app's controls to the SDK recorded in its binary, not to the version it is running on, and SwiftPM has stamped the **deployment target** there instead. `Package.swift` sets it explicitly in `linkerSettings` so that every build path agrees — including running the package from Xcode, which does not go through `Scripts/bundle.sh`. If a build ever comes out with the pre-Tahoe controls, read the stamp before looking for a UI bug: `otool -arch arm64 -l <binary> | grep -A 4 LC_BUILD_VERSION`, and anything below 26 is this. [decisions/sdk-stamp-and-appearance.md](decisions/sdk-stamp-and-appearance.md)
+
 ## What `swift run` is not
 
 A loose executable is a different app from `Pulse.app`:

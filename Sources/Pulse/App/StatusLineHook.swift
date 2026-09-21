@@ -245,15 +245,16 @@ enum StatusLineHook {
     ///
     /// It is still a question rather than a default. Connecting writes into
     /// *another program's* configuration and changes what that program prints
-    /// at the bottom of the screen — reading a credential is invisible and
-    /// harmless, this is neither.
+    /// at the bottom of the screen. Selecting Claude permits reading its login,
+    /// not editing its configuration, so connecting needs its own answer.
     ///
-    /// Asked at first launch and never again, whatever the answer: the reply
+    /// Asked after Claude Code is selected and never again, whatever the answer: the reply
     /// is recorded before the alert is even shown, so a crash mid-question
     /// cannot turn into a second one. Declining is not a dead end — the row in
     /// Settings stays, and an expired login now says where to find it.
     @MainActor
-    static func offerOnFirstRun() {
+    static func offerOnFirstRun(willBeUsed: Bool) {
+        guard willBeUsed else { return }
         let defaults = UserDefaults.standard
         guard !defaults.bool(forKey: Key.offered) else { return }
 

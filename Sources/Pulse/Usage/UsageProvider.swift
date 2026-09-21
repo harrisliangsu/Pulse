@@ -25,6 +25,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     case commandCode
     case deepSeek
     case devin
+    case xiaomiMiMo
 
     var id: String { rawValue }
 
@@ -91,6 +92,12 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // the quota and the account are Devin's, and Devin is what the reader
         // subscribed to.
         case .devin: "Devin"
+        // The plan, not the platform. Xiaomi's open platform sells inference
+        // by the yuan to anyone with a key; this ring is about the monthly
+        // token allowance bought on top of that, which is the thing with a
+        // denominator and the thing the buyer signed up for. "Xiaomi MiMo"
+        // would name the platform and leave the two products sharing a row.
+        case .xiaomiMiMo: "Xiaomi Coding Plan"
         }
     }
 
@@ -128,6 +135,12 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         case .commandCode: "commandcode"
         case .deepSeek: "deepseek"
         case .devin: "devin"
+        // Xiaomi publishes no symbol for MiMo — the mark is a two-line
+        // "Xiaomi / MiMo" lockup and that is what the console's own favicon
+        // is. Shipped as it stands rather than cropped to something Xiaomi
+        // does not use; at ring size it reads as a shape rather than as words,
+        // which is the trade for being the real mark.
+        case .xiaomiMiMo: "xiaomimimo"
         }
     }
 
@@ -150,7 +163,8 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // which is true today and better than a column of zeroes.
         case .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
-             .volcengine, .qoder, .commandCode, .deepSeek, .devin: false        }
+             .volcengine, .qoder, .commandCode, .deepSeek, .devin, .xiaomiMiMo: false
+        }
     }
 
     /// Whether this provider's limits can be drawn as one ring per model
@@ -196,7 +210,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         case .claudeCode, .codex, .volcengine, .kimiCode, .devin: true
         case .antigravity, .cursor, .openCodeGo, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot, .qoder,
-             .commandCode, .deepSeek: false
+             .commandCode, .deepSeek, .xiaomiMiMo: false
         }
     }
 
@@ -232,7 +246,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // about elsewhere, so there is nothing here to state.
         case .claudeCode, .codex, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine, .qoder,
-             .commandCode, .deepSeek, .devin:
+             .commandCode, .deepSeek, .devin, .xiaomiMiMo:
             nil
         }
     }
@@ -244,7 +258,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// anyone on the plan who doesn't run the CLI on this Mac.
     var usesAPIKey: Bool {
         [.openCodeGo, .kimiCode, .ollamaCloud, .zai, .glmCoding, .minimax, .minimaxCN, .volcengine, .qoder,
-         .commandCode, .deepSeek, .devin].contains(self)
+         .commandCode, .deepSeek, .devin, .xiaomiMiMo].contains(self)
     }
 
     /// Whether this Mac can see the thing this provider is billing for.
@@ -279,7 +293,12 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// signed-in settings page — so a session is the only credential there is,
     /// and calling it an API key in Settings would send people looking for one
     /// that does not exist.
-    var usesSessionCookie: Bool { self == .ollamaCloud || self == .qoder }
+    /// Xiaomi joins Ollama (and fork Qoder) for the same reason: the platform's
+    /// API keys buy inference and answer none of the console's account routes,
+    /// so the plan and the balance are behind the web session and nothing else.
+    var usesSessionCookie: Bool {
+        self == .ollamaCloud || self == .qoder || self == .xiaomiMiMo
+    }
 
     /// Whether this provider's credential is read out of a browser rather than
     /// out of another tool's files.
@@ -291,17 +310,6 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// Settings: which browser, and a button to go and look.
     var readsBrowserStorage: Bool { usesSessionCookie || self == .devin }
 
-    /// Whether this provider can report anything at all without being set up.
-    ///
-    /// The key-based ones cannot: with no key they draw a ring that says
-    /// "enter an API key in Settings" and nothing else, for a service the
-    /// person may well not have an account with. Switching those on
-    /// uninvited — which is what the offer-once rule did — spends a slot on
-    /// the rail to advertise a plan, and with eleven providers that is most
-    /// of the rail.
-    ///
-    /// So a new provider appears by itself only when it has something to say.
-    /// The rest wait in Settings, where they can be switched on deliberately.
     /// Whether Pulse holds a credential of its own for this provider.
     ///
     /// **Not the same question as `usesAPIKey`**, which asks whether the user
@@ -311,152 +319,4 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// signed-in account reporting "sign in again": the token was saved and
     /// then never loaded back for the fetch.
     var keepsOwnCredential: Bool { usesAPIKey || self == .copilot }
-
-    var canReportWithoutSetup: Bool {
-        guard keepsOwnCredential else { return borrowsAnExistingLogin }
-        if APIKeyStore.key(for: self) != nil { return true }
-        if self == .kimiCode, AccountCredentialStore.credentials(for: AccountKey(self)) != nil {
-            return true
-        }
-
-        // Two of them can find a credential another tool already saved, which
-        // counts: nothing has to be pasted for those to work.
-        return switch self {
-        case .openCodeGo: OpenCodeGoUsageService.storedKey() != nil
-        case .glmCoding: ZaiUsageService.storedKey(for: .glmCoding) != nil
-        // The key `cmd auth login` wrote, not the directory around it:
-        // `~/.commandcode` is created for bundled skills before anybody has
-        // signed in, so its presence is evidence the CLI ran here and none at
-        // all that there is an account to report on.
-        case .commandCode: CommandCodeUsageService.storedKey() != nil
-        // The pasted token buys the *live* route; the app's own saved plan
-        // needs nothing at all, so an install is enough to have something to
-        // say. Without this, adding the paste field would have turned a
-        // working provider into one that waits for a credential.
-        case .devin: DevinUsageService.isInstalled()
-        default: false
-        }
-    }
-
-    /// For a provider that borrows another tool's login: whether there is one
-    /// on this Mac to borrow.
-    ///
-    /// **Needing no key is not the same as having something to say**, and
-    /// reading it that way is what the offer-once rule above would otherwise
-    /// do with a new provider. Grok borrows what `grok login` stored and Grok
-    /// Bot what the Cursor editor stored; with neither installed they would be
-    /// switched on at the next update for everyone, and the rail would grow
-    /// two rings reading "sign in to something you have never heard of" — the
-    /// exact greyed-out rail the rule exists to prevent, arriving as an
-    /// upgrade rather than on a first run.
-    ///
-    /// Only the two added here are gated. The others were offered before this
-    /// question was asked of anything, so they are stamped in every stored
-    /// list already and their answer cannot change what anyone sees; the rule
-    /// is for what comes next.
-    private var borrowsAnExistingLogin: Bool {
-        let home = URL(fileURLWithPath: NSHomeDirectory())
-        return switch self {
-        case .grok: FileManager.default.fileExists(atPath: home.appending(path: ".grok").path)
-        case .grokBot: CursorAppLogin.hasStoredLogin()
-        // Nothing is pasted for Devin and nothing is signed in to: the app's
-        // own store is the only source, so an app that has never run here
-        // would put a permanently empty ring on the rail.
-        case .devin: DevinUsageService.isInstalled()
-        default: true
-        }
-    }
-
-    /// Whether this agent looks installed, for the **first run only**.
-    ///
-    /// Showing all four to someone who uses one is three quarters of a rail
-    /// greyed out, reading as broken rather than as not-yet-configured — and a
-    /// rail half again as tall as it needs to be. So the first launch starts
-    /// with what is actually here, and the rest are a switch away in Settings.
-    ///
-    /// Only the presence of a directory is checked, never its contents: this
-    /// is "has this agent ever run here", not anything about the account.
-    /// Kimi Code is absent by design: it has nothing to install and Pulse
-    /// never goes looking for its key, so there is nothing to find.
-    static func installedOnThisMac() -> Set<Provider> {
-        let home = URL(fileURLWithPath: NSHomeDirectory())
-        let manager = FileManager.default
-
-        var found: Set<Provider> = []
-        if manager.fileExists(atPath: home.appending(path: ".claude").path) {
-            found.insert(.claudeCode)
-        }
-        if manager.fileExists(atPath: home.appending(path: ".codex").path) {
-            found.insert(.codex)
-        }
-        if manager.fileExists(atPath: home.appending(path: ".grok").path) {
-            found.insert(.grok)
-        }
-        // The standalone app only. Grok Bot can also be used inside Cursor,
-        // but a Cursor login is no evidence the plan *includes* it — every
-        // Cursor user would get a ring that says "your plan doesn't include
-        // this", which is the greyed-out rail this whole function exists to
-        // avoid. It is a switch away in Settings for anyone who has it.
-        let grokBot = ["/Applications/Grok Bot.app",
-                       home.appending(path: "Applications/Grok Bot.app").path]
-        if grokBot.contains(where: manager.fileExists(atPath:)) {
-            found.insert(.grokBot)
-        }
-        // Not everyone installs into /Applications.
-        let antigravity = ["/Applications/Antigravity.app",
-                           home.appending(path: "Applications/Antigravity.app").path]
-        if antigravity.contains(where: manager.fileExists(atPath:)) {
-            found.insert(.antigravity)
-        }
-
-        // Cursor's own store, rather than the bundle: it is the same
-        // "has this ever run here" evidence as `~/.claude`, and it does not
-        // care where the app was dragged to.
-        if CursorAppLogin.hasStoredLogin() {
-            found.insert(.cursor)
-        }
-
-        // OpenCode Go has nothing to install, but a key OpenCode already saved
-        // is the same kind of evidence: this Mac is set up for it. Without
-        // this, someone whose only agent is OpenCode Go detects nothing and
-        // gets the everything-on fallback.
-        if OpenCodeGoUsageService.storedKey() != nil {
-            found.insert(.openCodeGo)
-        }
-
-        // The same evidence for the mainland GLM plan: its relay and console
-        // tools leave the key in a one-line file. z.ai's international route
-        // has no such file, so it is never detected — nothing to find.
-        if ZaiUsageService.storedKey(for: .glmCoding) != nil {
-            found.insert(.glmCoding)
-        }
-
-        let qoderApps = ["/Applications/Qoder.app",
-                         "/Applications/Qoder IDE.app",
-                         home.appending(path: "Applications/Qoder.app").path,
-                         home.appending(path: "Applications/Qoder IDE.app").path]
-        if qoderApps.contains(where: manager.fileExists(atPath:))
-            || manager.fileExists(atPath: home.appending(path: ".qoder").path) {
-            found.insert(.qoder)
-        }
-
-        // Command Code is an npm package with no bundle to look for, so the
-        // login its CLI saved is the evidence. **Not `~/.commandcode`**, which
-        // the CLI creates to unpack its bundled skills into on a machine that
-        // has never been signed in — the directory is evidence it ran, and this
-        // question is about whether there is an account behind it.
-        if CommandCodeUsageService.storedKey() != nil {
-            found.insert(.commandCode)
-        }
-
-        // Devin's own store, rather than the bundle: the plan is read from the
-        // app's global state, so a machine that has the app but has never run
-        // it has nothing to report — and one that ran it before the app was
-        // moved or renamed still does.
-        if DevinUsageService.isInstalled() {
-            found.insert(.devin)
-        }
-
-        return found
-    }
 }

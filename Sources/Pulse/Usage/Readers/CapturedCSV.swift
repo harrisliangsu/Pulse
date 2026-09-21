@@ -27,8 +27,7 @@ enum CapturedCSV {
     /// RFC 4180 asks for. Nothing is repaired: an unterminated quote is simply
     /// the last field to the end of the file.
     static func rows(in text: String) -> [[String]] {
-        var characters = Array(text.unicodeScalars)
-        if characters.first?.value == 0xFEFF { characters.removeFirst() }
+        let characters = text.unicodeScalars
 
         var rows: [[String]] = []
         var record: [String] = []
@@ -46,22 +45,25 @@ enum CapturedCSV {
             record = []
         }
 
-        var index = 0
-        while index < characters.count {
+        var index = characters.startIndex
+        if characters.first?.value == 0xFEFF { index = characters.index(after: index) }
+        while index < characters.endIndex {
+            guard !Task.isCancelled else { return [] }
             let character = characters[index]
+            let next = characters.index(after: index)
             if inQuotes {
                 if character == "\"" {
                     // A doubled quote is one literal quote; a lone one closes.
-                    if index + 1 < characters.count, characters[index + 1] == "\"" {
+                    if next < characters.endIndex, characters[next] == "\"" {
                         field.append("\"")
-                        index += 2
+                        index = characters.index(after: next)
                     } else {
                         inQuotes = false
-                        index += 1
+                        index = next
                     }
                 } else {
                     field.append(character)
-                    index += 1
+                    index = next
                 }
                 continue
             }
@@ -69,19 +71,19 @@ enum CapturedCSV {
             switch character {
             case "\"":
                 inQuotes = true
-                index += 1
+                index = next
             case ",":
                 endField()
-                index += 1
+                index = next
             case "\r":
-                if index + 1 < characters.count, characters[index + 1] == "\n" { index += 2 } else { index += 1 }
+                index = next < characters.endIndex && characters[next] == "\n" ? characters.index(after: next) : next
                 endRecord()
             case "\n":
-                index += 1
+                index = next
                 endRecord()
             default:
                 field.append(character)
-                index += 1
+                index = next
             }
         }
 

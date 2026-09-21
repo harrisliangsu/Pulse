@@ -1,10 +1,10 @@
 # Providers
 
-Pulse tracks **eighteen** `Provider` cases. There is no Pulse backend and no Pulse account. Each provider reports its own usage by whatever route that product actually offers — often an undocumented account endpoint the product itself calls, sometimes a documented usage path, sometimes a local helper that only exists while an editor is open.
+Pulse tracks **twenty** `Provider` cases. There is no Pulse backend and no Pulse account. Each provider reports its own usage by whatever route that product actually offers — often an undocumented account endpoint the product itself calls, sometimes a documented usage path, sometimes a local helper that only exists while an editor is open.
 
 This directory is the home for routes, credentials, cookies, extra logins, and the failure lessons that belong to those. Current service code is authoritative. Historical measurements and “do not repeat” notes are labelled as such. Nothing here claims a runtime test of a live account.
 
-This page is about **quota providers** — the eighteen cases Pulse can draw a ring for. Token spend readers are a different, overlapping catalogue of agents that left records on this Mac, most of which Pulse draws no ring for; they and their stores are documented in [`../token-spend.md`](../token-spend.md) and [`../token-spend-sources.md`](../token-spend-sources.md), not here. Do not add a spend reader to this directory.
+This page is about **quota providers** — the twenty cases Pulse can draw a ring for (nineteen upstream plus fork-only Qoder). Token spend readers are a different, overlapping catalogue of agents that left records on this Mac, most of which Pulse draws no ring for; they and their stores are documented in [`../token-spend.md`](../token-spend.md) and [`../token-spend-sources.md`](../token-spend-sources.md), not here. Do not add a spend reader to this directory.
 
 Shared types: [`../../Sources/Pulse/Usage/UsageProvider.swift`](../../Sources/Pulse/Usage/UsageProvider.swift), [`../../Sources/Pulse/Usage/MonitoredAccount.swift`](../../Sources/Pulse/Usage/MonitoredAccount.swift), [`../../Sources/Pulse/Usage/ProviderUsage.swift`](../../Sources/Pulse/Usage/ProviderUsage.swift), [`../../Sources/Pulse/Usage/UsageSource.swift`](../../Sources/Pulse/Usage/UsageSource.swift). Sign-in machinery: [authentication.md](authentication.md).
 
@@ -16,11 +16,11 @@ Accounts the stored rail does not mention are appended **in name order**, not in
 
 | `Provider` | Ring name | Icon | Credential | Extra accounts | Route choice | Local transcripts | First-run evidence |
 |---|---|---|---|---|---|---|---|
-| `.claudeCode` | Claude Code | `claude` | Borrow CLI login; Pulse OAuth for extras | yes | endpoint / desktop / status line | yes | `~/.claude` exists |
+| `.claudeCode` | Claude Code | `claude` | Borrow CLI login; Pulse OAuth for extras | yes | endpoint / desktop / status line | yes | `~/.claude`, Claude support directory, or `Claude.app` exists |
 | `.codex` | Codex | `openai` | Borrow `~/.codex/auth.json`; Pulse OAuth for extras | yes | endpoint / app-server | yes | `~/.codex` exists |
 | `.antigravity` | Antigravity | `antigravity` | Loopback language server while the app is open | no | one, named | no | `Antigravity.app` |
-| `.cursor` | Cursor | `cursor` | Cookie built from the editor’s stored token | no (deliberate) | one, named | no | Cursor `state.vscdb` login |
-| `.openCodeGo` | OpenCode Go | `opencode` | Pasted key, else OpenCode’s `auth.json` | no | pasted / found key | no | OpenCode stored key |
+| `.cursor` | Cursor | `cursor` | Cookie built from the editor’s stored token | no (deliberate) | one, named | no | Cursor `state.vscdb` exists |
+| `.openCodeGo` | OpenCode Go | `opencode` | Pasted key, else OpenCode’s `auth.json` | no | pasted / found key | no | OpenCode `auth.json` exists |
 | `.kimiCode` | Kimi Code | `kimi` | Pasted key, or Pulse device-code login | yes | sign-in / pasted key | no | none — stays off until switched on |
 | `.ollamaCloud` | Ollama Cloud | `ollama` | Browser session cookie (not an API key) | no | session | no | none |
 | `.zai` | z.ai | `zai` | Pasted key | no | pasted key | no | none |
@@ -32,13 +32,14 @@ Accounts the stored rail does not mention are appended **in name order**, not in
 | `.grokBot` | Grok Bot | `xai` | Cursor cookie; Cursor web login for extras | yes | one, named (primary) | no | **standalone** `Grok Bot.app` only |
 | `.volcengine` | Volcengine | `volcengine` | `arkcli`'s own login, else a pasted `AK:SK` pair | no | arkcli / signed endpoint | no | none — stays off until switched on |
 | `.qoder` | Qoder | `qoder` | Browser session cookie (not an API key) | no | session | no | `Qoder.app` / `Qoder IDE.app` / `~/.qoder` |
-
-Per-provider pages: [claude-code.md](claude-code.md), [codex.md](codex.md), [antigravity.md](antigravity.md), [cursor.md](cursor.md), [opencode-go.md](opencode-go.md), [kimi-code.md](kimi-code.md), [ollama-cloud.md](ollama-cloud.md), [zai.md](zai.md), [minimax.md](minimax.md), [copilot.md](copilot.md), [grok.md](grok.md), [grok-bot.md](grok-bot.md), [volcengine.md](volcengine.md), [qoder.md](qoder.md).
-| `.commandCode` | Command Code | `commandcode` | Pasted key, else `~/.commandcode/auth.json` | no | pasted / found key | no | the CLI's stored key, **not** `~/.commandcode` |
-| `.deepSeek` | DeepSeek | `deepseek` | Pasted key | no | one, documented | no | none — stays off until a key is entered |
+| `.commandCode` | Command Code | `commandcode` | Pasted key, else `~/.commandcode/auth.json` | no | pasted / found key | no | `~/.commandcode/auth.json` exists |
+| `.deepSeek` | DeepSeek | `deepseek` | Pasted key | no | one, documented | no | none |
 | `.devin` | Devin | `devin` | Browser `localStorage` (no keychain); optional pasted `token org` | no | saved plan / endpoint | no | the app's `state.vscdb` exists |
+| `.xiaomiMiMo` | Xiaomi Coding Plan | `xiaomimimo` | Browser session for `platform.xiaomimimo.com`, or a pasted `Cookie:` header | no | one, named | no | none |
 
-Per-provider pages: [claude-code.md](claude-code.md), [codex.md](codex.md), [antigravity.md](antigravity.md), [cursor.md](cursor.md), [opencode-go.md](opencode-go.md), [kimi-code.md](kimi-code.md), [ollama-cloud.md](ollama-cloud.md), [zai.md](zai.md), [minimax.md](minimax.md), [copilot.md](copilot.md), [grok.md](grok.md), [grok-bot.md](grok-bot.md), [volcengine.md](volcengine.md), [command-code.md](command-code.md), [deepseek.md](deepseek.md), [devin.md](devin.md).
+Per-provider pages: [claude-code.md](claude-code.md), [codex.md](codex.md), [antigravity.md](antigravity.md), [cursor.md](cursor.md), [opencode-go.md](opencode-go.md), [kimi-code.md](kimi-code.md), [ollama-cloud.md](ollama-cloud.md), [zai.md](zai.md), [minimax.md](minimax.md), [copilot.md](copilot.md), [grok.md](grok.md), [grok-bot.md](grok-bot.md), [volcengine.md](volcengine.md), [qoder.md](qoder.md), [command-code.md](command-code.md), [deepseek.md](deepseek.md), [devin.md](devin.md), [xiaomi-coding-plan.md](xiaomi-coding-plan.md).
+
+Ollama Cloud, Xiaomi Coding Plan, and fork-only Qoder are read from a **browser session** rather than a key or another tool's files; they share [`BrowserCookies.swift`](../../Sources/Pulse/Auth/BrowserCookies.swift) and nothing else, because what counts as a session differs per site and a shared filter would forward whichever cookie either one adds next.
 
 Z.ai and GLM Coding Plan share [`ZaiUsageService.swift`](../../Sources/Pulse/Providers/ZaiUsageService.swift). MiniMax and MiniMax CN share [`MiniMaxUsageService.swift`](../../Sources/Pulse/Providers/MiniMaxUsageService.swift). Two rings, two accounts, two keys — not a region switch inside one provider.
 
@@ -74,29 +75,31 @@ There is no `.openCodeKeyRefused`. OpenCode Go uses `.apiKeyRefused` like the ot
 
 ### Disabled providers are not fetched
 
-A switched-off provider is not on the refresh pass. A provider’s own Settings pane can still refresh it by name while it is off. Shared loop: [`../refresh-and-data.md`](../refresh-and-data.md).
+A switched-off provider is not on the refresh pass. Its Settings pane does not preload credentials or history on appearance. After the initial choice, a deliberate refresh can still ask it by name while it is off. Shared loop: [`../refresh-and-data.md`](../refresh-and-data.md).
 
 ### First-run evidence (per provider)
 
-Offer-once, `Key.hasRun` / `Key.offeredProviders`, empty-rail vs empty provider set: [`../architecture.md`](../architecture.md).
+Chooser, legacy restoration, offer-once and empty-rail rules: [`../architecture.md`](../architecture.md#provider-choice-before-monitoring).
 
-`canReportWithoutSetup` is not “needs no key”. Grok and Grok Bot borrow another tool’s login; with neither installed they would be switched on at the next update as grey rings saying “sign in to something you have never heard of”. Grok is gated on `~/.grok`; Grok Bot on the **standalone app**, not on a Cursor login (every Cursor user would otherwise get “your plan doesn’t include this”). OpenCode Go, mainland GLM and Command Code still count as ready when another tool already saved a key. Command Code’s test is that key, **not** `~/.commandcode`: the CLI creates that directory to unpack bundled skills into before anyone has signed in, so the directory says it ran here and nothing about whether there is an account behind it. The rest wait in Settings. They are still stamped as offered, so the decision is taken once.
+`ProviderDiscovery.swift` checks only whether named files, directories or app bundles exist. It does not open a database, parse a key file, read browser storage or query Keychain. OpenCode Go, mainland GLM and Command Code therefore count as **detected even if their files are empty or unreadable**. Detection is a hint, not evidence of a valid account or a paid plan, and never enables a ring. Every provider appears in the initial chooser with its checkbox off.
+
+`ProviderAccess.swift` supplies the descriptions shown before selection, also used above a disabled provider's Settings controls. Claude describes both CLI Keychain/file access and the desktop cookie-store grant; Codex names its auth file and helper; Cursor and Grok Bot name Cursor's local database; Grok names its own auth file; Devin names Chromium web storage and the saved desktop plan, with no Keychain prompt. Ollama and Xiaomi explain that browser sessions are imported from Settings and that importing can ask for browser Keychain access. The key-only providers describe the entered key, OpenCode/Zhipu/Command Code name their local fallbacks, Copilot names its Settings login, Volcengine names arkcli/access keys, and Antigravity names the local server and connection token.
 
 ### Seeded state is not “Loading…”
 
-`UsageStore.initialState` does not seed every account as `.loading`. An account that needs a credential Pulse has not got never resolves while nothing is queued for it, and a Settings pane sat on “Reading…” indefinitely. It is seeded with the reason. `loadAPIKeys` rewrites that only over a placeholder, never over a reading actually taken.
+`UsageStore.initialState` does not seed every account as `.loading`. Providers that keep a credential start with a setup reason, without checking the credential store. The first selected fetch determines whether a saved login works. `loadAPIKeys` reads only enabled providers and rewrites placeholders, never readings already taken. The removed `canReportWithoutSetup` probe must not return here: seeding slots for unselected providers is not permission to read their keys.
 
 ### Cache (provider differences)
 
 Shared drop/age/24h/cold-start rules: [`../refresh-and-data.md`](../refresh-and-data.md).
 
-Do not paper over `.apiKeyMissing`, `.ollamaSessionMissing`, `.qoderSessionMissing`, `.signedOut`, `.claudeDesktopNotSignedIn`, `.claudeDesktopKeyRefused`, `.kimiSignInRequired`, or `.kimiLoginExpired`. Claude Code’s status-line capture is marked `.live` for ten minutes (`freshFor`) even when an endpoint reading taken later exists — reconciliation is by `observedAt`, not by which route called itself live. See [claude-code.md](claude-code.md).
+Do not paper over `.apiKeyMissing`, `.ollamaSessionMissing`, `.qoderSessionMissing`, `.xiaomiSessionMissing`, `.signedOut`, `.claudeDesktopNotSignedIn`, `.claudeDesktopKeyRefused`, `.kimiSignInRequired`, or `.kimiLoginExpired`. Claude Code’s status-line capture is marked `.live` for ten minutes (`freshFor`) even when an endpoint reading taken later exists — reconciliation is by `observedAt`, not by which route called itself live. See [claude-code.md](claude-code.md).
 
 ### Keys and logins Pulse keeps
 
 Not the same question as “does Settings draw a paste field”.
 
-- `usesAPIKey` — Settings paste UI: OpenCode Go, Kimi Code, Ollama Cloud, Z.ai, GLM Coding Plan, MiniMax, MiniMax CN, Volcengine, Command Code, Qoder, DeepSeek, Devin. Volcengine’s, Command Code’s and Devin’s are **optional** — each has a route that needs nothing pasted. Devin’s field holds a token *and* an organization, whitespace-separated, and is only for a reader whose browser is not a Chromium ([devin.md](devin.md)). Ollama’s and Qoder’s values are **session cookies** (`usesSessionCookie`); calling them an API key in Settings would send people looking for one that does not exist.
+- `usesAPIKey` — Settings paste UI: OpenCode Go, Kimi Code, Ollama Cloud, Z.ai, GLM Coding Plan, MiniMax, MiniMax CN, Volcengine, Command Code, Qoder, DeepSeek, Devin, Xiaomi Coding Plan. Volcengine’s, Command Code’s and Devin’s are **optional** — each has a route that needs nothing pasted. Devin’s field holds a token *and* an organization, whitespace-separated, and is only for a reader whose browser is not a Chromium ([devin.md](devin.md)). Ollama’s, Qoder’s and Xiaomi’s values are **session cookies** (`usesSessionCookie`); calling them an API key in Settings would send people looking for one that does not exist.
 - `keepsOwnCredential` — Pulse stores something in `keys.dat`: the paste providers **plus Copilot**. Reading `usesAPIKey` where *storage* was meant left a signed-in Copilot account reporting “sign in again”: the token was saved and then never loaded for the fetch.
 - Extra-account OAuth / Cursor web logins live in `accounts.dat`, not `keys.dat`. See [authentication.md](authentication.md).
 
@@ -138,6 +141,6 @@ Claude vs Codex token fields (exclude vs include cache; running total vs per-tur
 
 ## Adding a provider
 
-A new case needs: `Provider` answers (`displayName`, `iconResource`, `keepsLocalTranscripts`, `providesHistory`, `hasSourceChoice` / `soleRoute`, `usesAPIKey` / `usesSessionCookie` / `keepsOwnCredential`, `canReportWithoutSetup` / first-run evidence, `supportsMultipleAccounts`), an SVG in `Sources/Pulse/Resources/`, a service returning `ProviderUsage`, branches in `UsageStore` refresh and `fetchAdded` if relevant, and this directory updated in the same patch. `AgentActivity` and `UsageLedger` already return optional roots, so an agent with no transcripts opts out there.
+A new case needs: `Provider` answers (`displayName`, `iconResource`, `keepsLocalTranscripts`, `providesHistory`, `hasSourceChoice` / `soleRoute`, `usesAPIKey` / `usesSessionCookie` / `keepsOwnCredential`, presence-only discovery, localized `monitoringAccessDescription`, `supportsMultipleAccounts`), an SVG in `Sources/Pulse/Resources/`, a service returning `ProviderUsage`, branches in `UsageStore` refresh and `fetchAdded` if relevant, and this directory updated in the same patch. `AgentActivity` and `UsageLedger` already return optional roots, so an agent with no transcripts opts out there.
 
 Do not document how to obtain someone else’s auth tokens in issues or the repo. Do not paste session cookies, keys, or page HTML into pull requests.

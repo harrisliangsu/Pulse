@@ -32,7 +32,7 @@ Status handling is the ordinary one: `401`/`403` → `.apiKeyRefused`, `429` →
 
 ## Credential
 
-A key pasted into Settings, kept encrypted on this Mac by `APIKeyStore`. There is nothing to borrow — DeepSeek's key lives on its web console and no CLI on this Mac stores one — so `canReportWithoutSetup` is false and the provider stays off until a key is entered.
+A key pasted into Settings, kept encrypted on this Mac by `APIKeyStore`. There is nothing to borrow — DeepSeek's key lives on its web console and no CLI on this Mac stores one. The chooser offers it unchecked, without a detected hint; selecting it still requires entering a key in Settings.
 
 ## There is no allowance, so the ring has no denominator
 

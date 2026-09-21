@@ -159,7 +159,7 @@ enum GitHubDeviceLogin {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await URLSession.shared.data(for: request)
+            (data, response) = try await NetworkSession.shared.data(for: request)
         } catch {
             // Cancelling is not the service failing to answer.
             if error is CancellationError { throw error }

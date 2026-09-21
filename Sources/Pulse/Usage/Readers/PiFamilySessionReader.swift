@@ -108,7 +108,16 @@ enum PiTranscript {
     /// The working directories recorded by the session headers under `roots`.
     static func cwdValues(in roots: [URL]) -> [String] {
         AgentLogIO.files(in: roots, extensions: ["jsonl"])
-            .compactMap { parse($0).header.cwd }
+            .compactMap { file in
+                // Discovery needs the header alone, not every conversation in
+                // every session (this is also called while stamping inputs).
+                for row in AgentLogIO.jsonLines(at: file) {
+                    if row["type"] as? String == "title" { continue }
+                    guard row["type"] as? String == "session", AgentLogIO.text(row["id"]) != nil else { return nil }
+                    return AgentLogIO.text(row["cwd"])
+                }
+                return nil
+            }
     }
 
     // MARK: - Usage

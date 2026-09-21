@@ -74,13 +74,12 @@ enum OpenCodeReviewReader {
     }
 
     private static func parse(_ file: URL) -> (records: [AgentUsageRecord], skippedUnprovable: Bool) {
-        guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else {
+        guard let fragment = AgentLogIO.digest(at: file) else {
             return ([], false)
         }
-        let rows = Self.rows(in: data)
+        let rows = AgentLogIO.jsonLines(at: file)
         // The file's own digest is a deterministic fragment identity: a
         // byte-identical mirror shares it, two different files do not.
-        let fragment = EditorLog.digest(data)
         let stem = file.deletingPathExtension().lastPathComponent
 
         var sessionFromStart: String?
@@ -141,18 +140,6 @@ enum OpenCodeReviewReader {
             )
         }
         return (records, skippedUnprovable)
-    }
-
-    private static func rows(in data: Data) -> [[String: Any]] {
-        var rows: [[String: Any]] = []
-        for line in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
-            guard
-                let value = try? JSONSerialization.jsonObject(with: Data(line)),
-                let object = value as? [String: Any]
-            else { continue }
-            rows.append(object)
-        }
-        return rows
     }
 
     /// One usage object reduced, or a flag that it cannot be split.

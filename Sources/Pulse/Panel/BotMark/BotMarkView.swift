@@ -10,14 +10,8 @@ func drawBotMark(_ frame: BotMarkFrame, config: BotMarkConfig,
     let extent = min(size.width, size.height)
     let scale = extent / (frame.viewBoxRadius * 2)
     let origin = BotMarkFrame.viewBoxCentre - frame.viewBoxRadius
-    var base = CGAffineTransform(scaleX: scale, y: scale)
+    let base = CGAffineTransform(scaleX: scale, y: scale)
         .translatedBy(x: -origin, y: -origin)
-    if frame.flipX {
-        base = base.concatenating(
-            CGAffineTransform(translationX: extent / 2, y: 0)
-                .scaledBy(x: -1, y: 1)
-                .translatedBy(x: -extent / 2, y: 0))
-    }
 
     func paint(_ items: [BotMarkFrame.Painted], in context: inout GraphicsContext) {
         for item in items {
@@ -83,9 +77,26 @@ func drawBotMark(_ frame: BotMarkFrame, config: BotMarkConfig,
 ///
 /// A rail against the right-hand edge of the screen has everything worth
 /// looking at to its left, and a mark staring off the edge of the display
-/// looks like it is facing a wall. The lean is added to the mark's own
-/// wandering gaze, not substituted for it, so it still glances about — from a
-/// head that is turned the right way.
+/// looks like it is facing a wall.
+///
+/// **Two mechanisms, because one of them cannot do it alone.** A standing
+/// lean moves the middle of the mark's wandering gaze. Turning the gaze round
+/// (`mirrored`) negates it. Only the turn can fix a pose that is
+/// *intrinsically* lopsided — several upstream states and expressions rest
+/// with the eyes well off to one side, and measured over ten minutes a
+/// `sleepy` mark sat right of centre on 97% of frames no matter how hard the
+/// lean pulled. Only the lean can fix a *symmetric* wander, which negating it
+/// leaves exactly as symmetric as it found it. Both together are what stops a
+/// right-hand rail facing the wall.
+///
+/// So the engine always leans the same way — `bias` is positive whichever
+/// edge this is — and `mirrored` decides which way that lands.
+///
+/// **It turns the gaze, not the mark.** Mirroring the whole drawing aimed the
+/// eyes correctly and looked ridiculous: the body flipped over like a card,
+/// which is not what a character does when it looks the other way. The engine
+/// scales its horizontal gaze terms instead, so the body stays put and the
+/// eyes travel across — see `BotMarkEngine.facing`.
 enum BotMarkGaze: Sendable {
     case ahead
     case left
@@ -95,13 +106,12 @@ enum BotMarkGaze: Sendable {
     /// clamp that pins an eye against the inside of the body.
     private static let lean = 7.0
 
-    var bias: Double {
-        switch self {
-        case .ahead: 0
-        case .left: -Self.lean
-        case .right: Self.lean
-        }
-    }
+    /// Always outward in the engine's own space. `mirrored` turns it around.
+    var bias: Double { self == .ahead ? 0 : Self.lean }
+
+    /// Whether the gaze is turned round. Only the left-facing case needs it:
+    /// the engine's own lean already points right.
+    var mirrored: Bool { self == .left }
 
     /// The rail's own edge decides it: docked right, look left; docked left,
     /// look right. A top rail runs horizontally and has screen on both sides,
@@ -136,8 +146,8 @@ struct BotMarkView: View {
     /// Where the pointer is in the panel's coordinate space, or nil when it is
     /// off the panel.
     var pointer: CGPoint?
-    /// Whether this ring is the one being pointed at. An idle mark stops what
-    /// it is doing and listens.
+    /// Whether this ring is the one being pointed at. An idle mark turns its
+    /// attention to the reader with its character's own short response.
     var isPointedAt = false
     /// Whether nothing has happened on this machine for a while — see
     /// `BotMarkPersona.idleStates`.
@@ -224,52 +234,25 @@ struct BotMarkView: View {
         .accessibilityHidden(true)
     }
 
-    /// What this mark should be taking in turn.
-    ///
-    /// Being pointed at outranks the idle playlist and nothing else: a mark
-    /// that is working carries on working while you look at it, and one that
-    /// is spent does not cheer up because the pointer arrived.
-    private func states(overtime: Bool) -> [String] {
-        switch mood {
-        case .working: persona.workingStates(overtime: overtime)
-        case .idle: isPointedAt ? ["listening"] : persona.idleStates(quiet: isQuiet,
-                                                                     overtime: overtime)
-        case .fetching, .spent, .asleep: [persona.state(for: mood)]
-        }
-    }
-
-    private func programme() -> BotMarkProgramme {
-        let overtime = BotMarkHours.isOvertime()
-        var programme = BotMarkProgramme(states: states(overtime: overtime))
+    private func programme(at date: Date = Date()) -> BotMarkProgramme {
+        var programme = BotMarkProgramme.forMood(
+            mood, persona: persona, isQuiet: isQuiet, isPointedAt: isPointedAt, at: date
+        )
         programme.event = event
-        programme.mood = mood
         programme.shape = bodyShape.shape
-        programme.tempo = persona.tempo * mood.tempoEmphasis
-        programme.motionScale = persona.motionScale
-        programme.gazeScale = persona.gazeScale
-        programme.eyeScale = persona.eyeScale
         programme.gazeBias = gaze.bias
-        programme.rotationScale = mood.rotationEmphasis
-        programme.squashScale = mood.squashEmphasis
+        programme.flipX = gaze.mirrored
         programme.color = tint
         programme.eyeColor = eyeTint
         programme.viewWidth = size
-        // **On at every size, including 25pt.** These were gated off below
-        // 48pt on the theory that confetti at ring size is a few stray
-        // pixels — and the confetti is, but the *ribbons* are not: they orbit
-        // at half the body's width and the particle system scales them up on
-        // a small canvas (`sizeScale`, up to 2.6×). They are also the only
-        // thing in this whole vocabulary that unmistakably reads as "this is
-        // doing something" at ring size, which is the question the rail exists
-        // to answer. They appear when the body spins, which `working` does
-        // every few seconds.
-        programme.particlesEnabled = true
+        // No size gate: busy/event ribbons stay visible even at 25pt. The
+        // programme fences them by mood/event, so an idle spin is just play.
         programme.pointer = pointerOffset
         return programme
     }
 
     private func advance(_ date: Date) -> (frame: BotMarkFrame, config: BotMarkConfig) {
-        let programme = programme()
+        let programme = programme(at: date)
         let frame = engine.advance(to: date.timeIntervalSinceReferenceDate, programme: programme)
         // The colours are the only part of the config the drawing needs, and
         // they do not change with the state of the playlist.
@@ -282,7 +265,11 @@ struct BotMarkView: View {
         var shape: String
         var tempo: Double
         var motionScale: Double
+        var gazeScale: Double
+        var eyeScale: Double
+        var viewWidth: Double
         var gazeBias: Double
+        var flipX: Bool
         var squashScale: Double
         var rotationScale: Double
     }
@@ -309,7 +296,9 @@ struct BotMarkView: View {
         quiet.pointer = nil
 
         let key = StillKey(state: quiet.states[0], shape: quiet.shape, tempo: quiet.tempo,
-                           motionScale: quiet.motionScale, gazeBias: quiet.gazeBias,
+                           motionScale: quiet.motionScale, gazeScale: quiet.gazeScale,
+                           eyeScale: quiet.eyeScale, viewWidth: quiet.viewWidth, gazeBias: quiet.gazeBias,
+                           flipX: quiet.flipX,
                            squashScale: quiet.squashScale, rotationScale: quiet.rotationScale)
         if let cached = stills[key] {
             // The colours are not part of the key: they change nothing about

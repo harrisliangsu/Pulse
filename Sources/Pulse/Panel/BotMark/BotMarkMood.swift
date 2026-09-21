@@ -19,7 +19,7 @@ enum BotMarkMood: String, CaseIterable, Identifiable, Sendable {
     /// The provider says this limit is spent.
     case spent
     /// No reading at all: signed out, disabled, or nothing back yet.
-    case asleep
+    case unavailable
 
     var id: String { rawValue }
 
@@ -34,7 +34,7 @@ enum BotMarkMood: String, CaseIterable, Identifiable, Sendable {
         case .working: "working"
         case .fetching: "searching"
         case .spent: "sad"
-        case .asleep: "sleeping"
+        case .unavailable: "confused"
         }
     }
 
@@ -51,7 +51,7 @@ enum BotMarkMood: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .working: 2.4
         case .fetching: 1.6
-        case .idle, .spent, .asleep: 1
+        case .idle, .spent, .unavailable: 1
         }
     }
 
@@ -67,7 +67,7 @@ enum BotMarkMood: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .working: 3
         case .fetching: 2
-        case .idle, .spent, .asleep: 1
+        case .idle, .spent, .unavailable: 1
         }
     }
 
@@ -83,7 +83,7 @@ enum BotMarkMood: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .working: 0.5
         case .fetching: 0.7
-        case .idle, .spent, .asleep: 1
+        case .idle, .spent, .unavailable: 1
         }
     }
 
@@ -100,7 +100,7 @@ enum BotMarkMood: String, CaseIterable, Identifiable, Sendable {
         if isBusy { return .working }
         if isRefreshing { return .fetching }
         if isSpent { return .spent }
-        if !hasReading { return .asleep }
+        if !hasReading { return .unavailable }
         return .idle
     }
 }

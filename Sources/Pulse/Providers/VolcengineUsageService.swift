@@ -209,6 +209,7 @@ struct VolcengineUsageService: Sendable {
         let process = Process()
         process.executableURL = binary
         process.arguments = arguments
+        process.environment = NetworkSession.subprocessEnvironment()
         // Nothing to answer with, so a CLI that asks gets EOF rather than
         // blocking on a terminal that is not there.
         process.standardInput = FileHandle.nullDevice
@@ -411,7 +412,7 @@ struct VolcengineUsageService: Sendable {
             request.setValue(value, forHTTPHeaderField: field)
         }
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request) else {
+        guard let (data, response) = try? await NetworkSession.shared.data(for: request) else {
             return .failure(Refusal(reason: .unreachable))
         }
 

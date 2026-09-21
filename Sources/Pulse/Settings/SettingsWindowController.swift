@@ -37,6 +37,7 @@ final class SettingsWindowController {
     }
 
     func show(link: PulseLink? = nil) {
+        navigation.isWindowVisible = true
         if let link { navigation.open(link, accounts: settings.allAccounts) }
         let window = window ?? makeWindow()
         self.window = window
@@ -97,6 +98,7 @@ final class SettingsWindowController {
         // The documented "hairline once content is scrolled under it" setting.
         window.titlebarSeparatorStyle = .automatic
         window.isReleasedWhenClosed = false
+        window.onClose = { [weak navigation] in navigation?.isWindowVisible = false }
         window.contentView = NSHostingView(
             rootView: SettingsView(store: store, settings: settings, placement: placement, update: update, alerts: alerts, shortcuts: shortcuts, navigation: navigation)
         )
@@ -116,6 +118,13 @@ final class SettingsWindowController {
 /// edited, not a hit test: a hit test asks a hosted SwiftUI tree a question it
 /// answers unreliably, and this one only needs "was that inside the box".
 final class SettingsWindow: NSWindow {
+    var onClose: (() -> Void)?
+
+    override func close() {
+        onClose?()
+        super.close()
+    }
+
     override func sendEvent(_ event: NSEvent) {
         if event.type == .leftMouseDown, let field = fieldBeingEdited() {
             let box = field.convert(field.bounds, to: nil)

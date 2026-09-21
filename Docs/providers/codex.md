@@ -34,13 +34,19 @@ The plan comes back as an internal tier name, not the name on the plan — `prol
 
 **Historical evidence:** reproduced both ways against a process that had already exited — unguarded the probe was killed before it could print a line; guarded it reported “Broken pipe” and carried on.
 
+**The reader has to come off the pipe at EOF, and it has to come off synchronously.** `availableData` returning empty means the far end closed. A descriptor in that state is readable for ever, so a `readabilityHandler` that merely returns is called again straight away — a core at 100% for as long as the app runs, over a helper that has already exited. Shipped in 1.2.0 and reported as [#25](https://github.com/qunqin24/Pulse/issues/25): three spinning threads, 290% CPU, eleven hours, no child process left to blame. The handler clears **itself**, on the queue it is called on; hopping to the actor first leaves exactly the window the loop needs.
+
+Two layers made it worse than one stuck handler. `ensureRunning` returns early while the process lives and starts a replacement when it does not — but it left the dead one's pipe wired up, so every restart added another spinning thread. It now tears the old reader down first, `shutDown` does the same, and EOF fails whatever was still pending instead of making it wait out the twenty-second timeout. A restart installing a new reader while the old one is still closing is fenced by handle identity, so a stale EOF cannot tear down its replacement.
+
+`VolcengineUsageService` has cleared its handler at EOF since it was written; this path simply never learned it. `CodexAppServerTests` drives the reader against a plain `Pipe`, so it needs no `codex` on the machine.
+
 Locating the executable cannot rely on `PATH`: a GUI app inherits almost none of it. `CodexAppServer.locateCodex` checks usual install locations, including versioned Node directories.
 
 ## Proxies
 
-`URLSession` follows system proxy settings. On a machine behind a VPN that is what you want (the endpoint may only be reachable through it). A tunnel that stumbles surfaces as a Pulse error, typically `-1005 networkConnectionLost`; transient `URLError`s are retried a couple of times.
+The HTTP endpoint uses Pulse's Network setting: macOS system proxy by default, or the manual HTTP/SOCKS5 proxy. On a machine behind a VPN, following the system is usually what you want (the endpoint may only be reachable through it). A tunnel that stumbles surfaces as a Pulse error, typically `-1005 networkConnectionLost`; transient `URLError`s are retried a couple of times.
 
-`URLSessionConfiguration.connectionProxyDictionary` is empty even when a proxy is in use — it means “use the system defaults”, not “no proxy”. Do not read an empty dictionary as evidence of a direct connection.
+`codex app-server` is different: it is a child process rather than a `URLSession`. Manual HTTP starts it with `HTTP_PROXY` / `HTTPS_PROXY`, manual SOCKS5 with `ALL_PROXY`, and both with loopback in `NO_PROXY`. Changing the proxy shuts down a running helper; the next request starts it with the new environment. Follow System injects nothing and preserves the environment Pulse itself inherited. Full boundary: [../networking.md](../networking.md).
 
 ## Added accounts
 

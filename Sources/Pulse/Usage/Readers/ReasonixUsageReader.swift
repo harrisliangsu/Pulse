@@ -30,11 +30,11 @@ enum ReasonixUsageReader {
         var records: [AgentUsageRecord] = []
 
         for file in AgentLogIO.files(in: roots, extensions: ["jsonl"]) {
-            guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else { continue }
+            guard !Task.isCancelled else { return [] }
             let path = StructuredLogSupport.path(file)
 
             var lineIndex = 0
-            for raw in data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true) {
+            for raw in LogLines(at: file) {
                 lineIndex += 1
                 guard
                     let value = try? JSONSerialization.jsonObject(with: Data(raw)),

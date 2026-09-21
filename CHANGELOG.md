@@ -10,6 +10,19 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.3.0
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Synced from upstream qunqin24/Pulse 1.3.0** (includes their 1.2.1 work that this fork had not yet taken).
+- **First-run provider picker.** Pulse reads no credentials and starts no monitoring until you choose what it may watch. Later upgrades only suggest newly detected local services; they never enable one on their own.
+- **Proxy settings.** Keep following macOS, or set HTTP / HTTPS / SOCKS5. Provider requests, sign-in flows, and helpers such as Codex and arkcli share the same choice.
+- **Token spend is opt-in.** Off on new installs; scans local sessions only while its Settings pane is open. Leaving the pane cancels an unfinished read. Large JSONL logs stream instead of loading whole.
+- **Xiaomi Coding Plan** as a new provider (browser session on the MiMo console — not an API key). No plan says so instead of drawing 0%.
+- **Updates checked every two hours** (was once a day). Still offered, never auto-installed.
+- **Codex no longer spins the CPU** after `codex app-server` exits (closed-pipe read loop).
+- **Rail / ring polish from upstream:** optional alert colour when docked, optional CLI-activity / refresh ring animation, rail ends that follow the ring’s own curve (softened by default), bot gaze into the screen with eyes kept inside the face, fuller bot choreography, lighter Kimi bot blue, rewritten Chinese bot settings copy.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons (incl. optional hourly), ring colour schemes (Red alert / Gradient / Quiet), bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.2.4
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.

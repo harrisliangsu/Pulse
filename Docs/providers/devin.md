@@ -179,7 +179,7 @@ All three are `.neutral` to `UsageAlerts`: true until somebody does something, a
 
 ## First-run evidence
 
-The app's own store, not the bundle: the plan is read from global state, so a Mac that has the app but has never run it has nothing to report, and one that ran it before the app was moved or renamed still does. Same rule in `borrowsAnExistingLogin`, so a machine that has never run Devin is never given a permanently empty ring.
+Presence of `User/globalStorage/state.vscdb` under the `Devin` or `Windsurf` Application Support directory marks the chooser row as detected. The database and browser storage are not opened during discovery. A detected hint is not evidence of a login, and Devin stays disabled until selected; only then may its fetch search Chromium browsers for the web session.
 
 ## Fixtures
 
