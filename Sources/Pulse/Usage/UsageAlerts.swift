@@ -492,7 +492,7 @@ struct AlertMemory: Codable, Sendable, Equatable {
              // for the life of the record and the *next* real outage said
              // nothing — the exact failure the three-way split exists to
              // prevent.
-             .zaiNoCodingPlan:
+             .zaiNoCodingPlan, .xiaomiNoCodingPlan:
             .answered
 
         // Never set up, never signed in, or an app that simply is not

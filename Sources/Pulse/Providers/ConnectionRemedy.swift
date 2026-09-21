@@ -40,7 +40,7 @@ enum ConnectionRemedy: Equatable {
         case .claudeDesktopKeyRefused, .unreachable, .rateLimited, .serverError,
              .codexServerFailed: return .retry
         case .codexNotInstalled, .volcengineCLIMissing, .noLimitsReported,
-             .grokBotNotIncluded, .zaiNoCodingPlan, .ollamaPageChanged, .unreadableReply:
+             .grokBotNotIncluded, .zaiNoCodingPlan, .xiaomiNoCodingPlan, .ollamaPageChanged, .unreadableReply:
             return .help
         }
     }
