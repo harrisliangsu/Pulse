@@ -161,3 +161,6 @@ extension Provider {
         case .antigravity, .cursor, .openCodeGo, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine, .qoder,
              .commandCode, .deepSeek, .devin, .xiaomiMiMo: false
+        }
+    }
+}

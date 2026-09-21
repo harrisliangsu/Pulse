@@ -102,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func startMonitoring() {
         guard !settings.needsProviderSelection, panelController == nil else { return }
         alerts.start { [weak self] in self?.showSettings() }
-        let controller = FloatingPanelController(store: store, settings: settings, placement: placement)
+        let controller = FloatingPanelController(store: store, settings: settings, placement: placement, openSettings: { [weak self] in self?.showSettings() })
         panelController = controller
         controller.contextMenu = { [weak self] in self?.panelMenu() ?? NSMenu() }
         if settings.isPanelVisible { controller.show() }

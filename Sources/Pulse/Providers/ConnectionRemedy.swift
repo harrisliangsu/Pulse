@@ -37,3 +37,49 @@ enum ConnectionRemedy: Equatable {
         case .ollamaSessionMissing, .ollamaSessionExpired,
              .qoderSessionMissing, .qoderSessionExpired,
              .xiaomiSessionMissing, .xiaomiSessionExpired: return .readBrowser
+        case .claudeDesktopKeyRefused, .unreachable, .rateLimited, .serverError,
+             .codexServerFailed: return .retry
+        case .codexNotInstalled, .volcengineCLIMissing, .noLimitsReported,
+             .grokBotNotIncluded, .zaiNoCodingPlan, .ollamaPageChanged, .unreadableReply:
+            return .help
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .signIn: .localized("Sign in again…")
+        case .editCredential: .localized("Edit credential")
+        case .readBrowser: .localized("Read from browser")
+        case .connectStatusLine: .localized("Connect status line")
+        case .openApp(let name): .localized("Open \(name)")
+        case .copyCommand: .localized("Copy login command")
+        case .retry: .localized("Retry")
+        case .help: .localized("Setup help")
+        }
+    }
+
+    static func helpURL(for provider: Provider) -> URL {
+        let page: String = switch provider {
+        case .claudeCode: "claude-code"
+        case .codex: "codex"
+        case .antigravity: "antigravity"
+        case .cursor: "cursor"
+        case .openCodeGo: "opencode-go"
+        case .kimiCode: "kimi-code"
+        case .ollamaCloud: "ollama-cloud"
+        case .zai, .glmCoding: "zai"
+        case .minimax, .minimaxCN: "minimax"
+        case .copilot: "copilot"
+        case .grok: "grok"
+        case .grokBot: "grok-bot"
+        case .volcengine: "volcengine"
+        case .commandCode: "command-code"
+        case .deepSeek: "deepseek"
+        case .qoder: "qoder"
+        case .devin: "devin"
+        case .xiaomiMiMo: "xiaomi-coding-plan"
+        }
+        // Fork docs live here; upstream help links would send people to the wrong repo.
+        return URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/\(page).md")!
+    }
+}
