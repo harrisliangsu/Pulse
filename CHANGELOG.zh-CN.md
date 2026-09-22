@@ -6,6 +6,17 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.3.1
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **同步上游 qunqin24/Pulse**（相对其 1.3.0 线共九个提交）。
+- **新增 Kiro 服务商**——通过 CLI 自带的 ACP 读取订阅用量，不触碰其凭据。
+- **仅在正在监控的服务商上扫描 CLI 活动**，空闲代理不会唤醒浮动栏。
+- **刘海栏：** 顶部贴边时贴合刘海本身；刘海表面扫入屏幕边缘，不再在下方留白。
+- **图标：** 国内智谱行改用 BigModel 标记；两个 GLM 行共用同一标记（不再用产品名区分其一）；服务商标记加载后却画不出内容时改为明确失败。
+- **文档：** 增加 PR 贡献指南；README 改为展示本仓库数字（徽章与链接指向本 fork）。
+- **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带（含可选小时额度）、环颜色方案（红色告警 / 渐变 / 低调）、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.3.0
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
