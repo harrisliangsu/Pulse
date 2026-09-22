@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.3.1</title>
+            <pubDate>Tue, 22 Sep 2026 01:56:12 -0000</pubDate>
+            <sparkle:version>1.3.1</sparkle:version>
+            <sparkle:shortVersionString>1.3.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.3.1</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.3.1</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>同步上游 qunqin24/Pulse</strong>（相对其 1.3.0 线共九个提交）。</li><li><strong>新增 Kiro 服务商</strong>——通过 CLI 自带的 ACP 读取订阅用量，不触碰其凭据。</li><li><strong>仅在正在监控的服务商上扫描 CLI 活动</strong>，空闲代理不会唤醒浮动栏。</li><li><strong>刘海栏：</strong> 顶部贴边时贴合刘海本身；刘海表面扫入屏幕边缘，不再在下方留白。</li><li><strong>图标：</strong> 国内智谱行改用 BigModel 标记；两个 GLM 行共用同一标记（不再用产品名区分其一）；服务商标记加载后却画不出内容时改为明确失败。</li><li><strong>文档：</strong> 增加 PR 贡献指南；README 改为展示本仓库数字（徽章与链接指向本 fork）。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带（含可选小时额度）、环颜色方案（红色告警 / 渐变 / 低调）、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.3.1">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.3.1/Pulse-1.3.1.zip"
+                       length="8478412"
+                       type="application/octet-stream"
+                       sparkle:edSignature="788edKaG1j+MTtaFm3m+uPJ9pMIGKms/Ntj4SNWeU2vc8mmNYtIRGNUiDM7xjV12WWo6gku+aK4Oq9kHe1TrCA==" />
+        </item>
+        <item>
             <title>1.3.0</title>
             <pubDate>Mon, 21 Sep 2026 01:51:34 -0000</pubDate>
             <sparkle:version>1.3.0</sparkle:version>
