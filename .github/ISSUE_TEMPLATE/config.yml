@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a security problem · 报告安全问题
-    url: https://github.com/qunqin24/Pulse/security/advisories/new
+    url: https://github.com/harrisliangsu/Pulse/security/advisories/new
     about: Privately, not as an issue. 请私下提交，不要开公开 issue。

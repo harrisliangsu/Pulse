@@ -1257,7 +1257,7 @@ struct SettingsView: View {
                 // Primary host; CN / www variants are tried by Qoder's own import if needed.
                 host = "qoder.com"
                 keep = { try? QoderSessionCookie.normalize($0) }
-            case .claudeCode, .codex, .antigravity, .cursor, .openCodeGo,
+            case .claudeCode, .codex, .kiro, .antigravity, .cursor, .openCodeGo,
                  .kimiCode, .zai, .glmCoding, .minimax, .minimaxCN, .copilot,
                  .grok, .grokBot, .volcengine, .commandCode, .deepSeek, .devin:
                 // Not session-based: `readSession` sends those to

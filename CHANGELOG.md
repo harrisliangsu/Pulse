@@ -10,6 +10,17 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.3.1
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Synced from upstream qunqin24/Pulse** (nine commits on top of their 1.3.0 line).
+- **Kiro** as a new provider — reads subscription usage over the CLI’s own ACP, without touching its credentials.
+- **CLI activity scan only where a provider is being watched**, so idle agents do not wake the rail.
+- **Notch rail:** top-docked rail attaches to the notch itself; the notch surface sweeps into the screen edge without padding under it.
+- **Marks:** mainland Zhipu row uses the BigModel mark; both GLM rows share one mark instead of naming one after a product; a provider mark that loads but draws nothing fails loudly.
+- **Docs:** pull-request contribution guidelines; repository numbers in the READMEs (this fork’s badges and links).
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons (incl. optional hourly), ring colour schemes (Red alert / Gradient / Quiet), bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.3.0
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.

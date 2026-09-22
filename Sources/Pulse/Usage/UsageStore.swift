@@ -34,6 +34,7 @@ final class UsageStore {
     private let alerts: UsageAlerts?
     private let appServer = CodexAppServer()
     private let codex: CodexUsageService
+    private let kiro = KiroUsageService()
     private let claudeCode = ClaudeCodeUsageService()
     private let antigravity = AntigravityUsageService()
     private let grok = GrokUsageService()
@@ -86,13 +87,14 @@ final class UsageStore {
 
     /// Whether either CLI is working right now. Its own clock — see
     /// `AgentActivityMonitor`.
-    let activity = AgentActivityMonitor()
+    let activity: AgentActivityMonitor
     /// Watches live readings for a limit turning over, so the rail's mark can
     /// celebrate one. Independent of the alert rules; see `ResetWatch`.
     private let resetWatch = ResetWatch()
 
-    init(settings: AppSettings, alerts: UsageAlerts? = nil) {
+    init(settings: AppSettings, alerts: UsageAlerts? = nil, activity: AgentActivityMonitor = AgentActivityMonitor()) {
         self.settings = settings
+        self.activity = activity
         networkProxy = settings.networkProxy
         self.alerts = alerts
         codex = CodexUsageService(server: appServer)
@@ -227,7 +229,7 @@ final class UsageStore {
 
         // Only relevant when the app server is being used as a fallback; it
         // pushes when limits change, which saves waiting for the next tick.
-        Task { [appServer] in
+        Task { [appServer, self] in
             await appServer.setRateLimitsChangedHandler { [weak self] in
                 Task { @MainActor in self?.refresh() }
             }
@@ -349,9 +351,10 @@ final class UsageStore {
 
     /// Nothing shows the spinner while the panel is off screen or the display
     /// is asleep, so nothing needs watching either.
-    private func updateActivityMonitor() {
+    /// Internal so tests can check selection without starting provider requests.
+    func updateActivityMonitor() {
         if !settings.needsProviderSelection && settings.isPanelVisible && !screensAsleep {
-            activity.start()
+            activity.start(providers: Set(settings.shownAccounts.map(\.provider)))
         } else {
             activity.stop()
         }
@@ -454,12 +457,15 @@ final class UsageStore {
         // blind to any of them.
         let extras = settings.shownAccounts.filter { !$0.isPrimary }
 
-        Task { [codex, claudeCode, antigravity, cursor, grok, grokBot] in
+        Task { [codex, kiro, claudeCode, antigravity, cursor, grok, grokBot] in
             // Independent, so they run side by side rather than one waiting on
             // another's round trip.
             async let codexUsage = wanted.contains(.codex)
                 ? await codex.fetch(source: codexSource)
                 : ProviderUsage.unavailable(.codex, reason: .loading)
+            async let kiroUsage = wanted.contains(.kiro)
+                ? await kiro.fetch()
+                : ProviderUsage.unavailable(.kiro, reason: .loading)
             async let claudeUsage = wanted.contains(.claudeCode)
                 ? await claudeCode.fetch(source: claudeSource)
                 : ProviderUsage.unavailable(.claudeCode, reason: .loading)
@@ -518,8 +524,8 @@ final class UsageStore {
                 ? await devin.fetch(source: devinSource)
                 : ProviderUsage.unavailable(.devin, reason: .loading)
 
-            let (rawCodex, rawClaude, rawAntigravity, rawOpenCode) =
-                await (codexUsage, claudeUsage, antigravityUsage, openCodeUsage)
+            let (rawCodex, rawKiro, rawClaude, rawAntigravity, rawOpenCode) =
+                await (codexUsage, kiroUsage, claudeUsage, antigravityUsage, openCodeUsage)
             let (rawKimi, rawCursor, rawOllama) = await (kimiUsage, cursorUsage, ollamaUsage)
             let rawQoder = await qoderUsage
             let (rawZai, rawGLM) = await (zaiUsage, glmUsage)
@@ -550,6 +556,7 @@ final class UsageStore {
             var results: [BatchResult] = []
             for (provider, raw) in [
                 (Provider.codex, rawCodex),
+                (.kiro, rawKiro),
                 (.claudeCode, rawClaude),
                 (.antigravity, rawAntigravity),
                 (.openCodeGo, rawOpenCode),
@@ -688,6 +695,8 @@ final class UsageStore {
             switch provider {
             case .codex:
                 raw = await codex.fetch(source: source)
+            case .kiro:
+                raw = await kiro.fetch()
             case .claudeCode:
                 raw = await claudeCode.fetch(source: source)
             case .antigravity:
@@ -794,7 +803,7 @@ final class UsageStore {
         case .grokBot: await grokBot.fetch(account: account, token: credentials.accessToken)
         case .kimiCode: await kimi.fetch(account: account, token: credentials.accessToken)
         // Nothing else can be signed in to, so nothing else gets here.
-        case .antigravity, .cursor, .openCodeGo, .ollamaCloud,
+        case .kiro, .antigravity, .cursor, .openCodeGo, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine, .qoder,
              .commandCode, .deepSeek, .devin, .xiaomiMiMo:
             .unavailable(account, reason: .loading)
