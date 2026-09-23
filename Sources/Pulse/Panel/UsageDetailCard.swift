@@ -81,8 +81,8 @@ enum DetailCardLayout {
     /// the type line, and the credits may each take two lines. The budget is
     /// that tall case — a watch, a latest announcement, and reset cards
     /// together — even when a given card draws fewer of them. The relative
-    /// time stays on one line; the banked explanation is a tooltip, not
-    /// another row.
+    /// time stays on one line. The type's explanation is a tooltip on those
+    /// words, not another row and not an icon.
     static var codexIntelHeight: CGFloat {
         contentSpacing
             + rowTextLineHeight * 2
@@ -361,14 +361,12 @@ struct UsageDetailCard: View {
         CodexResetCardLines.make(resolvedCodexReset)
     }
 
-    /// Relative time, then type and local clock. A banked credit explains
-    /// itself through the system tooltip and VoiceOver, the same `.help`
-    /// the header buttons already use — this panel has no popover.
+    /// Relative time, then type and local clock. Hovering the type — not an
+    /// icon, and not the clock — shows the explanation, the same `.help` the
+    /// header buttons already use. This panel has no popover. VoiceOver hears
+    /// that explanation as the row's hint when there is one.
     private func latestAnnouncement(_ latest: CodexResetCardLines.Latest) -> some View {
-        let relative = latest.relative
-        let detail = latest.detail
-        let help = latest.help
-        return VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
+        VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(localized: "Last reset")
                     .foregroundStyle(.primary)
@@ -376,32 +374,53 @@ struct UsageDetailCard: View {
 
                 Spacer(minLength: 8)
 
-                Text(relative)
+                Text(latest.relative)
                     .foregroundStyle(.primary.opacity(0.9))
                     .multilineTextAlignment(.trailing)
                     .lineLimit(1)
             }
 
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: detail)
-                    .foregroundStyle(.primary.opacity(0.55))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .lineLimit(2)
-
-                if let help {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular))
-                        .foregroundStyle(.primary.opacity(0.45))
-                        .help(help)
-                        .accessibilityHidden(true)
-                }
-            }
+            latestTypeLine(latest)
+                .foregroundStyle(.primary.opacity(0.55))
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(String.localized("Last reset"))
         .accessibilityValue(latest.spoken)
-        .codexResetHelp(help)
+        .codexResetHint(latest.help)
         .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Type, then the local clock. The tooltip sits on the type. Every
+    /// translation of the joined line uses the same separator, so the type
+    /// can be its own view and the clock stays beside it. When the pair does
+    /// not fit, the clock drops to the next line — still inside the two-line
+    /// budget — rather than the type being clipped to make room for an icon.
+    @ViewBuilder
+    private func latestTypeLine(_ latest: CodexResetCardLines.Latest) -> some View {
+        let type = Text(verbatim: latest.typeLabel)
+            .lineLimit(1)
+            .codexResetTooltip(latest.help)
+        if latest.typeLabel.isEmpty {
+            Text(verbatim: latest.absolute)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .codexResetTooltip(latest.help)
+        } else if latest.absolute.isEmpty {
+            type
+        } else {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    type
+                    Text(verbatim: " · \(latest.absolute)")
+                        .lineLimit(1)
+                }
+                VStack(alignment: .leading, spacing: 0) {
+                    type
+                    Text(verbatim: latest.absolute)
+                        .lineLimit(1)
+                }
+            }
+        }
     }
 
     private var predictionValue: String {
@@ -522,12 +541,23 @@ struct UsageDetailCard: View {
 }
 
 private extension View {
-    /// Tooltip and VoiceOver hint for a banked announcement. Absent text
-    /// adds neither, because an empty `.help` is still a tooltip.
+    /// System tooltip on the reset type. Absent text adds nothing, because
+    /// an empty `.help` is still a tooltip.
     @ViewBuilder
-    func codexResetHelp(_ text: String?) -> some View {
+    func codexResetTooltip(_ text: String?) -> some View {
         if let text, !text.isEmpty {
-            self.help(text).accessibilityHint(text)
+            self.help(text)
+        } else {
+            self
+        }
+    }
+
+    /// The same explanation, for VoiceOver, on the last-reset block. The
+    /// type's tooltip is not in that block's accessibility tree.
+    @ViewBuilder
+    func codexResetHint(_ text: String?) -> some View {
+        if let text, !text.isEmpty {
+            self.accessibilityHint(text)
         } else {
             self
         }

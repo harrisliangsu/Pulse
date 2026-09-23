@@ -127,6 +127,7 @@ struct CodexResetForecastTests {
         #expect(latest.id == "2102463847714247142")
         #expect(latest.resetType == "banked")
         #expect(latest.announcedAt == when)
+        #expect(latest.text == "We are loading a banked reset.")
         #expect(status.card == .empty)
         #expect(status.explicitReset == nil)
         #expect(status.explicitReset != when)
@@ -154,6 +155,7 @@ struct CodexResetForecastTests {
         """)))
         #expect(status.latest?.id == "post-regular")
         #expect(status.latest?.resetType == "regular")
+        #expect(status.latest?.text == "Reset.")
         #expect(status.card == .empty)
 
         let broken = try #require(CodexResetStatus.parse(json("""
@@ -200,6 +202,7 @@ struct CodexResetForecastTests {
         """)))
         let when = try #require(CodexResetDates.parse(scheduledFor))
         #expect(status.latest?.resetType == "surprise")
+        #expect(status.latest?.text == nil)
         #expect(status.card == .scheduled(when))
         #expect(status.explicitReset == when)
         #expect(status.explicitReset != status.latest?.announcedAt)
@@ -241,9 +244,66 @@ struct CodexResetForecastTests {
         #expect(CodexResetPresentation.detail(resetType: "surprise", absolute: "STAMP").contains("surprise"))
         #expect(CodexResetPresentation.detail(resetType: "surprise", absolute: "STAMP").contains("STAMP"))
         #expect(CodexResetPresentation.typeLabel(resetType: "banked") != CodexResetPresentation.typeLabel(resetType: "regular"))
-        #expect(CodexResetPresentation.help(resetType: "banked")?.isEmpty == false)
-        #expect(CodexResetPresentation.help(resetType: "regular") == nil)
-        #expect(CodexResetPresentation.help(resetType: "surprise") == nil)
+        #expect(CodexResetPresentation.help(resetType: "banked", announcement: nil)?.isEmpty == false)
+        #expect(CodexResetPresentation.help(resetType: "regular", announcement: nil) == nil)
+        #expect(CodexResetPresentation.help(resetType: "surprise", announcement: nil) == nil)
+    }
+
+    @Test("The type tooltip follows the reset type and does not invent copy")
+    func typeTooltip() throws {
+        let announced = try #require(CodexResetDates.parse("2026-09-22T18:23:37.000Z"))
+        func row(type: String, text: String?) -> CodexResetCardLines.Latest? {
+            CodexResetCardLines.make(CodexResetStatus(
+                scheduled: nil,
+                watch: nil,
+                latest: .init(id: "id", resetType: type, announcedAt: announced, text: text)
+            )).latest
+        }
+
+        let bankedHelp = try #require(CodexResetPresentation.help(resetType: "banked", announcement: nil))
+        let banked = try #require(row(type: "banked", text: "We are loading a banked reset."))
+        #expect(banked.help == bankedHelp)
+        #expect(banked.help != "We are loading a banked reset.")
+        #expect(banked.typeLabel == CodexResetPresentation.typeLabel(resetType: "banked"))
+        #expect(banked.detail.contains(banked.typeLabel))
+        #expect(banked.detail.contains(banked.absolute))
+
+        #expect(row(type: "regular", text: "  Reset.  ")?.help == "Reset.")
+        #expect(row(type: "regular", text: nil)?.help == nil)
+        #expect(row(type: "regular", text: " \n ")?.help == nil)
+        #expect(row(type: "regular", text: "Reset.")?.typeLabel == CodexResetPresentation.typeLabel(resetType: "regular"))
+
+        let other = try #require(row(type: "surprise", text: "Something new."))
+        #expect(other.help == "Something new.")
+        #expect(other.typeLabel == "surprise")
+        #expect(row(type: "surprise", text: nil)?.help == nil)
+
+        let blank = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": {
+              "id": "blank",
+              "reset_type": "regular",
+              "announced_at": "2026-09-22T18:23:37.000Z",
+              "text": "  "
+            },
+            "scheduled_reset": null,
+            "active_watch": null
+          }
+        }
+        """)))
+        #expect(blank.latest?.text == nil)
+        #expect(CodexResetCardLines.make(blank).latest?.help == nil)
+
+        let withBody = CodexResetStatus(
+            scheduled: nil, watch: nil,
+            latest: .init(id: "id", resetType: "regular", announcedAt: announced, text: "Reset.")
+        )
+        let withoutBody = CodexResetStatus(
+            scheduled: nil, watch: nil,
+            latest: .init(id: "id", resetType: "regular", announcedAt: announced, text: nil)
+        )
+        #expect(CodexResetCardLines.identity(withBody) != CodexResetCardLines.identity(withoutBody))
     }
 
     @Test("A cached status from before latest_reset still decodes")
@@ -252,6 +312,11 @@ struct CodexResetForecastTests {
         let status = try JSONDecoder().decode(CodexResetStatus.self, from: data)
         #expect(status.latest == nil)
         #expect(status.card == .empty)
+
+        let bareLatest = Data(#"{"id":"post","resetType":"regular","announcedAt":700000000}"#.utf8)
+        let bareAnnouncement = try JSONDecoder().decode(CodexResetStatus.Latest.self, from: bareLatest)
+        #expect(bareAnnouncement.text == nil)
+        #expect(bareAnnouncement.resetType == "regular")
 
         let announced = try #require(CodexResetDates.parse("2026-09-22T18:23:37.000Z"))
         let round = CodexResetStatus(
