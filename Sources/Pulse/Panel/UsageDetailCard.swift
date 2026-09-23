@@ -133,7 +133,13 @@ struct UsageDetailCard: View {
     /// Codex Resets' public status. Nil until a fetch or the disk cache lands.
     /// The prediction row still says there is no prediction rather than
     /// leaving a hole. A latest announcement is a separate row under that.
+    ///
+    /// A snapshot. The open card does not keep this: see `codexResets`.
     var codexReset: CodexResetStatus? = nil
+    /// The store the open card reads, so a `latest` that arrives after the
+    /// card is up still draws the row. Nil in previews, which pass
+    /// `codexReset` instead.
+    var codexResets: UsageStore? = nil
     /// Banked credits for the primary Codex login. Nil when the app server
     /// has not answered; the line is omitted.
     var codexCredits: CodexCreditSummary? = nil
@@ -193,7 +199,13 @@ struct UsageDetailCard: View {
             }
 
             if usage.provider == .codex {
+                // Identity follows the announcement. The row is a branch that
+                // is absent until `latest` exists, and this card is inserted
+                // under the rail's reveal spring — a later value has to
+                // replace the block, not hope the spring diffs it in.
                 codexIntel
+                    .id(CodexResetCardLines.identity(resolvedCodexReset))
+                    .animation(nil, value: CodexResetCardLines.identity(resolvedCodexReset))
             }
 
             if let footnote {
@@ -314,7 +326,7 @@ struct UsageDetailCard: View {
                     .lineLimit(2)
             }
 
-            if let latest = codexReset?.latest {
+            if let latest = codexLines.latest {
                 latestAnnouncement(latest)
             }
 
@@ -335,14 +347,27 @@ struct UsageDetailCard: View {
         .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
     }
 
+    /// The status this card draws. The store wins while the panel is
+    /// showing it, because that read is what invalidates an open card.
+    private var resolvedCodexReset: CodexResetStatus? {
+        if usage.provider == .codex, let codexResets {
+            codexResets.codexResetStatus
+        } else {
+            codexReset
+        }
+    }
+
+    private var codexLines: CodexResetCardLines {
+        CodexResetCardLines.make(resolvedCodexReset)
+    }
+
     /// Relative time, then type and local clock. A banked credit explains
     /// itself through the system tooltip and VoiceOver, the same `.help`
     /// the header buttons already use — this panel has no popover.
-    private func latestAnnouncement(_ latest: CodexResetStatus.Latest) -> some View {
-        let relative = CodexResetPresentation.relative(announcedAt: latest.announcedAt)
-        let absolute = CodexResetPresentation.absolute(announcedAt: latest.announcedAt)
-        let detail = CodexResetPresentation.detail(resetType: latest.resetType, absolute: absolute)
-        let help = CodexResetPresentation.help(resetType: latest.resetType)
+    private func latestAnnouncement(_ latest: CodexResetCardLines.Latest) -> some View {
+        let relative = latest.relative
+        let detail = latest.detail
+        let help = latest.help
         return VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(localized: "Last reset")
@@ -374,12 +399,13 @@ struct UsageDetailCard: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(String.localized("Last reset"))
-        .accessibilityValue(CodexResetPresentation.spoken(relative: relative, detail: detail))
+        .accessibilityValue(latest.spoken)
         .codexResetHelp(help)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var predictionValue: String {
-        switch codexReset?.card {
+        switch resolvedCodexReset?.card {
         case .scheduled(let date):
             Self.clock(date)
         case .watch(let watch):
@@ -392,7 +418,7 @@ struct UsageDetailCard: View {
     /// The API's own forecast phrase. Absent for an explicit time and for the
     /// empty state — `expires_at` is never rendered.
     private var predictionDetail: String? {
-        guard case .watch(let watch) = codexReset?.card else { return nil }
+        guard case .watch(let watch) = resolvedCodexReset?.card else { return nil }
         return watch.forecastWindow
     }
 

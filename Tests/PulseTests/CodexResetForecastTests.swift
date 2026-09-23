@@ -265,6 +265,76 @@ struct CodexResetForecastTests {
         #expect(decoded.card == .watch(.init(level: "elevated", chancePercent: nil, forecastWindow: "soon")))
     }
 
+    @Test("Last reset is an extra row beside an empty prediction")
+    func lastResetBesideEmptyPrediction() throws {
+        let announced = try #require(CodexResetDates.parse("2026-09-22T18:23:37.000Z"))
+        let status = CodexResetStatus(
+            scheduled: nil,
+            watch: nil,
+            latest: .init(id: "2102463847714247142", resetType: "banked", announcedAt: announced)
+        )
+        #expect(status.card == .empty)
+        #expect(status.explicitReset == nil)
+
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+        let lines = CodexResetCardLines.make(
+            status,
+            now: announced.addingTimeInterval(18 * 3600),
+            locale: Locale(identifier: "en_US"),
+            calendar: utc
+        )
+        let latest = try #require(lines.latest)
+        #expect(latest.relative == "18 hours ago")
+        #expect(latest.help?.isEmpty == false)
+        #expect(latest.detail.isEmpty == false)
+        #expect(latest.spoken.contains(latest.relative))
+        #expect(CodexResetCardLines.identity(status) != CodexResetCardLines.identity(nil))
+        #expect(CodexResetCardLines.identity(status).contains("2102463847714247142"))
+
+        #expect(CodexResetCardLines.make(nil).latest == nil)
+        let empty = CodexResetStatus(scheduled: nil, watch: nil)
+        #expect(empty.card == .empty)
+        #expect(CodexResetCardLines.make(empty).latest == nil)
+        #expect(CodexResetCardLines.identity(empty).isEmpty)
+    }
+
+    @Test("The on-disk cache delivers latest to the card, including a file from before the field existed")
+    @MainActor
+    func cacheDeliversLatest() throws {
+        let announced = try #require(CodexResetDates.parse("2026-09-22T18:23:37.000Z"))
+        let status = CodexResetStatus(
+            scheduled: nil,
+            watch: nil,
+            latest: .init(id: "2102463847714247142", resetType: "banked", announcedAt: announced)
+        )
+        let record = CodexResetDisk(status: status, etag: "abc", fetchedAt: Date(), maxAge: 600)
+        let data = try #require(CodexResetDisk.encode(record))
+        let decoded = try #require(CodexResetDisk.decode(data))
+        #expect(decoded.status == status)
+        #expect(decoded.status.card == .empty)
+        #expect(decoded.status.latest?.resetType == "banked")
+
+        let url = FileManager.default.temporaryDirectory
+            .appending(path: "pulse-codex-resets-\(UUID().uuidString).json")
+        try data.write(to: url, options: .atomic)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        var delivered: CodexResetStatus?
+        let monitor = CodexResetMonitor(settings: AppSettings(), file: url) { delivered = $0 }
+        let loaded = monitor.restoreCache()
+        #expect(loaded?.latest == status.latest)
+        #expect(loaded?.card == .empty)
+        #expect(loaded?.explicitReset == nil)
+        #expect(delivered == loaded)
+
+        let stale = Data(#"{"status":{"scheduled":null,"watch":null},"etag":"old","fetchedAt":700000000,"maxAge":600}"#.utf8)
+        let legacy = try #require(CodexResetDisk.decode(stale))
+        #expect(legacy.status.latest == nil)
+        #expect(legacy.status.card == .empty)
+        #expect(legacy.etag == "old")
+    }
+
     @Test("A body that is not a status document is a failure, not an empty card")
     func malformed() {
         #expect(CodexResetStatus.parse(Data("[]".utf8)) == nil)

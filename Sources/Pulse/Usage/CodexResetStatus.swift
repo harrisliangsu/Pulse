@@ -176,6 +176,53 @@ enum CodexResetPresentation {
     }
 }
 
+/// The Last reset row, or nothing.
+///
+/// Separate from the prediction. An empty prediction (`scheduled` and `watch`
+/// both absent) still produces a row when `latest` is set — that is the
+/// banked announcement the site leads with. The card draws this value; it
+/// does not decide the rule again inline.
+struct CodexResetCardLines: Equatable, Sendable {
+    struct Latest: Equatable, Sendable {
+        var relative: String
+        var detail: String
+        var help: String?
+        var spoken: String
+    }
+
+    var latest: Latest?
+
+    static func make(
+        _ status: CodexResetStatus?,
+        now: Date = Date(),
+        locale: Locale = LocalizationSource.locale,
+        calendar: Calendar = .current
+    ) -> CodexResetCardLines {
+        guard let announcement = status?.latest else { return CodexResetCardLines(latest: nil) }
+        let relative = CodexResetPresentation.relative(
+            announcedAt: announcement.announcedAt, now: now, locale: locale
+        )
+        let absolute = CodexResetPresentation.absolute(
+            announcedAt: announcement.announcedAt, locale: locale, calendar: calendar
+        )
+        let detail = CodexResetPresentation.detail(resetType: announcement.resetType, absolute: absolute)
+        let help = CodexResetPresentation.help(resetType: announcement.resetType)
+        return CodexResetCardLines(latest: Latest(
+            relative: relative,
+            detail: detail,
+            help: help,
+            spoken: CodexResetPresentation.spoken(relative: relative, detail: detail)
+        ))
+    }
+
+    /// Identity of the latest row. Empty when there is nothing to draw, so an
+    /// open card can rebuild the branch when an announcement arrives.
+    static func identity(_ status: CodexResetStatus?) -> String {
+        guard let latest = status?.latest else { return "" }
+        return "\(latest.id)|\(latest.resetType)|\(latest.announcedAt.timeIntervalSinceReferenceDate)"
+    }
+}
+
 enum CodexResetDates {
     static func parse(_ text: String?) -> Date? {
         guard let text, !text.isEmpty else { return nil }
