@@ -26,7 +26,7 @@ Two switches, both off by default, in the **Reset reminders** group. Each has it
 
 | Reminder | Fires when | Does not fire when |
 |---|---|---|
-| Predicted reset | Codex Resets has `scheduled_reset.scheduled_for`, at lead before that instant (or immediately, if the lead has already started and the instant is still ahead) | `active_watch` alone, a null `scheduled_for`, or an instant already in the past. `expires_at` is never the countdown |
+| Predicted reset | Codex Resets has `scheduled_reset.scheduled_for`, at lead before that instant (or immediately, if the lead has already started and the instant is still ahead) | `active_watch` alone, a null `scheduled_for`, an instant already in the past, or `latest_reset`. `expires_at` and `announced_at` are never the countdown |
 | Regular resets | A shown account's window has a stated length at least as long as the lead, at lead before that window's `resetsAt` | The window is shorter than the lead (a 5-hour window with a 12-hour lead), the length was not stated, or `resetsAt` has passed |
 
 Deduped per announcement id plus `scheduled_for`, and per account plus window plus `resetsAt`. Changing the lead moves a notification that has not fired yet. One that already fired is not posted again. Switching a reminder off removes its pending notifications. The book is `advance-reminders.json`, next to `alerts.json`. Codex Resets itself is polled on its cache lifetime (never under two minutes, never over thirty) while a Codex account is shown or the predicted reminder is on; a failure keeps the last status. See [providers/codex.md](providers/codex.md).

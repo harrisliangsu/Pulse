@@ -75,12 +75,19 @@ enum DetailCardLayout {
     /// opening one does not resize the window.
     static var maximumHeight: CGFloat { height(forWindows: 5, footnote: true) + codexIntelHeight }
 
-    /// Prediction line, a wrapped forecast phrase, banked credits, and the
-    /// source credit. Each of the first three may take two lines; the budget
-    /// is the tall case, even when a given card draws fewer of them.
+    /// Prediction line, a wrapped forecast phrase, the latest announcement
+    /// (one line of relative time, then a type-and-clock line that may wrap),
+    /// banked credits, and the source credit. The prediction, the forecast,
+    /// the type line, and the credits may each take two lines. The budget is
+    /// that tall case — a watch, a latest announcement, and reset cards
+    /// together — even when a given card draws fewer of them. The relative
+    /// time stays on one line; the banked explanation is a tooltip, not
+    /// another row.
     static var codexIntelHeight: CGFloat {
         contentSpacing
             + rowTextLineHeight * 2
+            + rowInternalSpacing + rowTextLineHeight * 2
+            + rowInternalSpacing + rowTextLineHeight
             + rowInternalSpacing + rowTextLineHeight * 2
             + rowInternalSpacing + rowTextLineHeight * 2
             + rowInternalSpacing + footnoteHeight
@@ -123,8 +130,9 @@ struct UsageDetailCard: View {
     /// The panel is never key, so Settings and Quit on the menu bar extras
     /// are a hunt. These ride the card header: they take no extra height.
     var openSettings: (() -> Void)? = nil
-    /// Codex Resets' public status. Nil until a fetch or the disk cache lands;
-    /// the card still says there is no prediction rather than leaving a hole.
+    /// Codex Resets' public status. Nil until a fetch or the disk cache lands.
+    /// The prediction row still says there is no prediction rather than
+    /// leaving a hole. A latest announcement is a separate row under that.
     var codexReset: CodexResetStatus? = nil
     /// Banked credits for the primary Codex login. Nil when the app server
     /// has not answered; the line is omitted.
@@ -278,6 +286,12 @@ struct UsageDetailCard: View {
 
     /// Irregular Codex reset intel, plus banked credits when the app server
     /// has them. Not the 5-hour or weekly `resetsAt` rows above.
+    ///
+    /// The prediction row is unchanged: an explicit time, a watch, or
+    /// "No prediction yet". A latest announcement is an extra row under
+    /// that, including when the prediction is empty. Account reset cards,
+    /// when the app server has them, stay underneath: they are this login's
+    /// inventory, not the public announcement.
     private var codexIntel: some View {
         VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -300,6 +314,10 @@ struct UsageDetailCard: View {
                     .lineLimit(2)
             }
 
+            if let latest = codexReset?.latest {
+                latestAnnouncement(latest)
+            }
+
             if let codexCredits, codexCredits.showsOnCard, usage.account.isPrimary {
                 creditLine(codexCredits)
             }
@@ -315,6 +333,49 @@ struct UsageDetailCard: View {
                 .accessibilityAddTraits(.isLink)
         }
         .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+    }
+
+    /// Relative time, then type and local clock. A banked credit explains
+    /// itself through the system tooltip and VoiceOver, the same `.help`
+    /// the header buttons already use — this panel has no popover.
+    private func latestAnnouncement(_ latest: CodexResetStatus.Latest) -> some View {
+        let relative = CodexResetPresentation.relative(announcedAt: latest.announcedAt)
+        let absolute = CodexResetPresentation.absolute(announcedAt: latest.announcedAt)
+        let detail = CodexResetPresentation.detail(resetType: latest.resetType, absolute: absolute)
+        let help = CodexResetPresentation.help(resetType: latest.resetType)
+        return VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(localized: "Last reset")
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 8)
+
+                Text(relative)
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(1)
+            }
+
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(verbatim: detail)
+                    .foregroundStyle(.primary.opacity(0.55))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+
+                if let help {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular))
+                        .foregroundStyle(.primary.opacity(0.45))
+                        .help(help)
+                        .accessibilityHidden(true)
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String.localized("Last reset"))
+        .accessibilityValue(CodexResetPresentation.spoken(relative: relative, detail: detail))
+        .codexResetHelp(help)
     }
 
     private var predictionValue: String {
@@ -430,6 +491,19 @@ struct UsageDetailCard: View {
                     NSApplication.shared.terminate(nil)
                 }
             }
+        }
+    }
+}
+
+private extension View {
+    /// Tooltip and VoiceOver hint for a banked announcement. Absent text
+    /// adds neither, because an empty `.help` is still a tooltip.
+    @ViewBuilder
+    func codexResetHelp(_ text: String?) -> some View {
+        if let text, !text.isEmpty {
+            self.help(text).accessibilityHint(text)
+        } else {
+            self
         }
     }
 }
