@@ -6,6 +6,8 @@ Owns: what `swift test` covers, what it deliberately does not, and the two conve
 swift test
 ```
 
+The Sparkle feed writer is not in that suite. `python3 Scripts/appcast_test.py` checks it without a private key and without writing `appcast.xml`: a version already in the feed has its enclosure replaced, and every other version is left alone. [releasing.md](releasing.md)
+
 There was no test target until 2026-09-07. What prompted one was not a policy: two real faults were found by reading code in a single afternoon — Antigravity taking the first matching helper and giving up when the one that answers was second, and `.stale` being treated as a failed fetch when a *successful* one produces it too — and the notification rules had shipped with nothing proving them at all.
 
 ## What is covered

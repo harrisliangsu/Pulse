@@ -19,6 +19,19 @@ on:
 permissions:
   contents: write
 
+# One Release at a time. A second run waits; it is not cancelled mid-upload.
+#
+# Two pushes of the same tag (a lightweight tag, then the annotated one) used
+# to overlap. The first signed its zip into appcast.xml. The second replaced
+# that zip with `gh release upload --clobber` and the feed writer then left
+# the existing item alone, so Sparkle verified the new archive with the old
+# signature. Waiting lets the second run finish and re-sign the zip it
+# actually published. Cancelling the in-progress run would drop a release
+# halfway through Publish.
+concurrency:
+  group: release-${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: macos-26
@@ -156,6 +169,11 @@ jobs:
           git fetch origin main
           git checkout -B main origin/main
 
+          # When this version is already in the feed, appcast.py rewrites that
+          # item's enclosure from the zip this run just published (Publish
+          # uses --clobber) and leaves every older version alone. A second
+          # run for the same tag therefore commits a signature for the asset
+          # that is actually on the release.
           Scripts/appcast.py "$VERSION" "build.noindex/Pulse-$VERSION.zip" "$URL"
 
           git config user.name "github-actions[bot]"

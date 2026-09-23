@@ -32,11 +32,14 @@ Release needs `SPARKLE_PRIVATE_KEY`. It fails without it rather than publishing 
 ## Workflow file updates
 
 Pushing changes under `.github/workflows/` needs a token with the `workflow` scope.
-The OAuth token used for routine fork pushes does not have it. The bilingual Release
-notes job lives in [patches/release.yml.bilingual](patches/release.yml.bilingual)
-(diff: [patches/release-yml-bilingual.patch](patches/release-yml-bilingual.patch)):
-apply that onto `.github/workflows/release.yml` with a `workflow`-scoped token (or
-the GitHub UI) before the next tagged release.
+The OAuth token used for routine fork pushes does not have it.
+
+The bilingual Release notes are already in `.github/workflows/release.yml`.
+[patches/release.yml.bilingual](patches/release.yml.bilingual) and
+[patches/release-yml-bilingual.patch](patches/release-yml-bilingual.patch) record
+how that landed. Applying the snapshot again would overwrite later edits,
+including the concurrency group that keeps two runs for one tag from signing
+different zips.
 
 ## Bundle (`Scripts/bundle.sh`)
 
@@ -70,7 +73,8 @@ Sparkle updates from the **zip**, not the DMG. The image is for people.
 - Notes live in the feed `<description>`, **not** `sparkle:releaseNotesLink` (that loads the whole GitHub page in a WebView). If both are present, the link wins — the link must be absent.
 - Description: spacing only, no colours or fonts. Sparkle injects `ReleaseNotesColorStyle.css`.
 - Public key: `Scripts/sparkle-public-key.txt` (committed). Private key: `SPARKLE_PRIVATE_KEY` only.
-- `Scripts/appcast.py` signs the zip and appends to `appcast.xml`. The workflow commits the feed **after** publishing (the feed points at the release asset).
+- `Scripts/appcast.py` signs the zip and writes `appcast.xml`. A version the feed does not yet carry is inserted at the top. A version already there has **that item's enclosure** rewritten (`url`, `length`, `sparkle:edSignature`) from the zip just signed; the notes stay. Older other versions are not re-signed. The workflow commits the feed **after** publishing (the feed points at the release asset).
+- Release runs are serialized (`concurrency` on `release.yml`, `cancel-in-progress: false`). Two runs for one tag — a lightweight tag and then an annotated one — otherwise overlap: the first signs its zip into the feed, the second replaces the GitHub asset with `--clobber`, and a feed that refuses to change leaves Sparkle checking the new zip with the old signature. The waiting run signs the zip it actually published. [decisions/appcast-same-version.md](decisions/appcast-same-version.md)
 
 `Scripts/changelog.py` reads one version entry from `CHANGELOG.md` or (with `--zh`) from `CHANGELOG.zh-CN.md`, as markdown or `--html` for the Sparkle feed. Grammar: bullets, `**bold**`, `` `code` ``, links.
 
