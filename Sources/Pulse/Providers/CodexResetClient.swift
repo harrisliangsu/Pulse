@@ -6,6 +6,9 @@ import Foundation
 /// does not have to run an MCP client. Rate limits, challenges and outages
 /// come back as a failed reply; the caller keeps whatever it last showed.
 enum CodexResetClient {
+    /// The public site. The card's link opens this. `endpoint` is the status
+    /// document, and is not a page.
+    static let site = URL(string: "https://codex-resets.com")!
     static let endpoint = URL(string: "https://codex-resets.com/api/v1/status")!
 
     static func fetch(etag: String?, session: URLSession = NetworkSession.shared) async -> CodexResetReply {

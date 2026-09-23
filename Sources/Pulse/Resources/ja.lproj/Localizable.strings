@@ -681,7 +681,6 @@
 "Strong" = "高い";
 "%@ · %@ chance" = "%@ · %@ の見込み";
 "Reset cards" = "リセットカード";
-"Data from Codex Resets" = "データ出典：Codex Resets";
 "Reset reminders" = "リセットの事前通知";
 "Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "Codex Resets が時刻を示しているときだけ、その前に知らせます。見通しだけで時刻がなければ通知しません。";
 "How early" = "どれだけ前に";

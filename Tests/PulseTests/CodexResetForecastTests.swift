@@ -400,6 +400,12 @@ struct CodexResetForecastTests {
         #expect(legacy.etag == "old")
     }
 
+    @Test("The card link opens the site, not the status document")
+    func siteLink() {
+        #expect(CodexResetClient.site.absoluteString == "https://codex-resets.com")
+        #expect(CodexResetClient.endpoint.absoluteString == "https://codex-resets.com/api/v1/status")
+    }
+
     @Test("A body that is not a status document is a failure, not an empty card")
     func malformed() {
         #expect(CodexResetStatus.parse(Data("[]".utf8)) == nil)

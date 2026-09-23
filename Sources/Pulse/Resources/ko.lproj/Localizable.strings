@@ -681,7 +681,6 @@
 "Strong" = "높음";
 "%@ · %@ chance" = "%@ · %@ 가능성";
 "Reset cards" = "리셋 카드";
-"Data from Codex Resets" = "데이터: Codex Resets";
 "Reset reminders" = "리셋 미리 알림";
 "Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "Codex Resets가 시각을 밝힌 경우에만 미리 알립니다. 시각 없는 예측만으로는 알리지 않습니다.";
 "How early" = "얼마나 전에";

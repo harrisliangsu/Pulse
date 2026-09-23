@@ -77,12 +77,13 @@ enum DetailCardLayout {
 
     /// Prediction line, a wrapped forecast phrase, the latest announcement
     /// (one line of relative time, then a type-and-clock line that may wrap),
-    /// banked credits, and the source credit. The prediction, the forecast,
-    /// the type line, and the credits may each take two lines. The budget is
-    /// that tall case — a watch, a latest announcement, and reset cards
-    /// together — even when a given card draws fewer of them. The relative
-    /// time stays on one line. The type's explanation is a tooltip on those
-    /// words, not another row and not an icon.
+    /// and banked credits. The prediction, the forecast, the type line, and
+    /// the credits may each take two lines. The budget is that tall case — a
+    /// watch, a latest announcement, and reset cards together — even when a
+    /// given card draws fewer of them. The relative time stays on one line.
+    /// The type's explanation is a tooltip on those words, not another row
+    /// and not an icon. The link to the site sits on the prediction line, so
+    /// it adds no row of its own.
     static var codexIntelHeight: CGFloat {
         contentSpacing
             + rowTextLineHeight * 2
@@ -90,7 +91,6 @@ enum DetailCardLayout {
             + rowInternalSpacing + rowTextLineHeight
             + rowInternalSpacing + rowTextLineHeight * 2
             + rowInternalSpacing + rowTextLineHeight * 2
-            + rowInternalSpacing + footnoteHeight
     }
 
     static func height(forWindows count: Int, footnote: Bool = false) -> CGFloat {
@@ -311,6 +311,8 @@ struct UsageDetailCard: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
+                CodexResetsLink()
+
                 Spacer(minLength: 8)
 
                 Text(predictionValue)
@@ -333,16 +335,6 @@ struct UsageDetailCard: View {
             if let codexCredits, codexCredits.showsOnCard, usage.account.isPrimary {
                 creditLine(codexCredits)
             }
-
-            Text(localized: "Data from Codex Resets")
-                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
-                .foregroundStyle(.primary.opacity(0.4))
-                .overlay {
-                    PointerHand {
-                        NSWorkspace.shared.open(URL(string: "https://codex-resets.com")!)
-                    }
-                }
-                .accessibilityAddTraits(.isLink)
         }
         .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
     }
@@ -561,6 +553,39 @@ private extension View {
         } else {
             self
         }
+    }
+}
+
+/// Opens codex-resets.com. It lives on the prediction row, which is always
+/// drawn, so a card with no latest announcement still has a way to the site.
+/// The old credit sentence is not what this says: the arrow is the control,
+/// and VoiceOver hears it as a link that opens Codex Resets.
+private struct CodexResetsLink: View {
+    @State private var hovering = false
+
+    private static let name = "Codex Resets"
+
+    private var label: String { String.localized("Open \(Self.name)") }
+
+    var body: some View {
+        let side = DetailCardLayout.rowTextLineHeight
+        Image(systemName: "arrow.up.right")
+            .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .semibold))
+            .foregroundStyle(.primary.opacity(hovering ? 1 : 0.75))
+            .frame(width: side, height: side)
+            .contentShape(Rectangle())
+            .overlay {
+                PointerHand(onHover: { hovering = $0 }) {
+                    NSWorkspace.shared.open(CodexResetClient.site)
+                }
+            }
+            .help(label)
+            .accessibilityElement()
+            .accessibilityLabel(label)
+            .accessibilityAddTraits(.isLink)
+            .accessibilityAction(.default) {
+                NSWorkspace.shared.open(CodexResetClient.site)
+            }
     }
 }
 

@@ -72,6 +72,8 @@ The card's own windows are the account's 5-hour and weekly clocks (`resetsAt`). 
 
 The open card reads that status from the store, in the same body that draws the rings, and again inside the card. A copy taken when the card appeared is not enough: 「暂无预测」 is what both a missing status and an empty prediction say, so a `latest` that arrives while the pointer is still on the ring does not change any text already on screen, and the row — a branch that was not in the tree — never appears. The window is already tall enough for the row; it does not resize when the row shows up.
 
+The prediction row carries the link to the site (`CodexResetClient.site`), an arrow rather than a credit line. It is on that row because the row is always drawn, including when there is no latest announcement. VoiceOver hears it as a link that opens Codex Resets.
+
 A 304, a 429 (`Retry-After`), or any other failure keeps the last status; the panel does not blank or crash. Polling follows `Cache-Control` / `ETag`, and never faster than two minutes or slower than thirty.
 
 Banked reset credits (`rateLimitResetCredits`: `availableCount`, soonest `expiresAt`) come from `codex app-server`, the same read settings already uses. The card asks only for rate limits, and only when the primary Codex card is opened, so a panel refresh does not also pull `account/usage/read`. If the app server is missing or the field is absent, the card omits the line — missing is not zero. A known zero is also omitted. Extra Codex accounts do not show credits; the app server is the local login. That line is this login's own cards. It is not the public `latest_reset`, which can also be a banked announcement.
