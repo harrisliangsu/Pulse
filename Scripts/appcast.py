@@ -10,10 +10,17 @@ touches the repository: it lives in the SPARKLE_PRIVATE_KEY secret and reaches
 Usage:
     Scripts/appcast.py <version> <path-to-zip> <download-url>
 
-The feed is committed rather than generated from scratch each time. Re-signing
-older releases would mean downloading every archive ever published just to say
-the same thing about them again, and an entry that has been served once should
-not change afterwards.
+The feed is committed rather than generated from scratch each time. Older
+*other* versions are left as they were published: re-signing them would mean
+downloading every archive ever published just to say the same thing about
+them again.
+
+The version being offered is the exception. A tag can be built more than once,
+and a later run can replace the zip after this feed already names that
+version. Sparkle checks the enclosure signature against the bytes it
+downloads, so an item that already carries this version has its enclosure
+rewritten — url, length and edSignature — from the zip passed in. The notes
+stay; they come from the changelog, not from the archive.
 """
 
 from __future__ import annotations
@@ -188,6 +195,109 @@ def description(version: str, previous: str | None) -> str:
     return inner.replace("]]>", "]]&gt;")
 
 
+def enclosure(url: str, length: str, signature: str) -> str:
+    """The four-line enclosure this feed has always written.
+
+    Kept in one place so a rewrite of an existing item is byte-for-byte the
+    same shape as a newly inserted one. Sparkle reads the attributes; the
+    whitespace is for the diff of a release that changed nothing else.
+    """
+    return (
+        f'            <enclosure url="{url}"\n'
+        f'                       length="{length}"\n'
+        f'                       type="application/octet-stream"\n'
+        f'                       sparkle:edSignature="{signature}" />'
+    )
+
+
+def render_item(version: str, url: str, signature: str, length: str, notes: str) -> str:
+    """A new item. `enclosure()` is spliced in whole so its indent is not doubled."""
+    published = email.utils.formatdate(localtime=False, usegmt=False)
+    return (
+        "        <item>\n"
+        f"            <title>{version}</title>\n"
+        f"            <pubDate>{published}</pubDate>\n"
+        f"            <sparkle:version>{version}</sparkle:version>\n"
+        f"            <sparkle:shortVersionString>{version}</sparkle:shortVersionString>\n"
+        "            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>\n"
+        f"            <link>{REPO}/releases/tag/v{version}</link>\n"
+        f"            <description><![CDATA[{notes}]]></description>\n"
+        f"{enclosure(url, length, signature)}\n"
+        "        </item>\n"
+    )
+
+
+# One item, in the indentation `render_item` writes and every entry in the
+# committed feed uses. Non-greedy: a description does not contain `</item>`.
+_ITEM = re.compile(r"        <item>\n.*?\n        </item>\n", re.DOTALL)
+
+# The enclosure as `enclosure()` writes it. A looser match would still update
+# the signature and could also reflow an entry nobody meant to touch.
+_ENCLOSURE = re.compile(
+    r'            <enclosure url="[^"]*"\n'
+    r'                       length="[^"]*"\n'
+    r'                       type="application/octet-stream"\n'
+    r'                       sparkle:edSignature="[^"]*" />'
+)
+
+
+def version_marker(version: str) -> str:
+    return f"<sparkle:version>{version}</sparkle:version>"
+
+
+def replace_enclosure(feed: str, version: str, url: str, signature: str, length: str) -> str:
+    """Rewrite the enclosure of `version` and copy every other item through.
+
+    Notes, the publication date and the release-page link stay. The download
+    url is the one passed in, which is the asset this run just published.
+    Failing closed if the item is missing or oddly shaped: a silent no-op is
+    how a rebuilt zip kept a signature for the zip it replaced.
+    """
+    marker = version_marker(version)
+    found = False
+
+    def rewrite(match: re.Match[str]) -> str:
+        nonlocal found
+        block = match.group(0)
+        if marker not in block:
+            return block
+        if found:
+            sys.exit(f"appcast.xml offers {version} more than once — check it by hand.")
+        found = True
+        updated, count = _ENCLOSURE.subn(enclosure(url, length, signature), block, count=1)
+        if count != 1:
+            sys.exit(
+                f"appcast.xml offers {version} but its enclosure is not in the shape this expects — check it by hand."
+            )
+        return updated
+
+    updated = _ITEM.sub(rewrite, feed)
+    if not found:
+        sys.exit(
+            f"appcast.xml mentions {version} but not as an item this can rewrite — check it by hand."
+        )
+    return updated
+
+
+def offer(feed: str, version: str, url: str, signature: str, length: str, notes: str) -> str:
+    """The feed with `version` offered.
+
+    Inserted at the top when the feed has no such item. When it does, only
+    that item's enclosure changes — `notes` is ignored, so a second offer
+    cannot wipe release notes that were already served. No other version is
+    re-signed.
+    """
+    if version_marker(version) in feed:
+        return replace_enclosure(feed, version, url, signature, length)
+
+    # Newest first, which is the order Sparkle and every feed reader expect.
+    anchor = "        <language>zh-CN</language>\n"
+    if anchor not in feed:
+        sys.exit("appcast.xml is not in the shape this expects — check it by hand.")
+    item = render_item(version, url, signature, length, notes)
+    return feed.replace(anchor, anchor + item, 1)
+
+
 def main() -> None:
     if len(sys.argv) != 4:
         sys.exit(__doc__)
@@ -202,34 +312,18 @@ def main() -> None:
         feed,
         count=1,
     )
-    notes = description(version, previous_version(feed))
 
-    item = f"""        <item>
-            <title>{version}</title>
-            <pubDate>{email.utils.formatdate(localtime=False, usegmt=False)}</pubDate>
-            <sparkle:version>{version}</sparkle:version>
-            <sparkle:shortVersionString>{version}</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>{REPO}/releases/tag/v{version}</link>
-            <description><![CDATA[{notes}]]></description>
-            <enclosure url="{url}"
-                       length="{length}"
-                       type="application/octet-stream"
-                       sparkle:edSignature="{signature}" />
-        </item>
-"""
+    # Notes are computed only for a version the feed does not yet carry.
+    # Re-offering the same version keeps the notes already there.
+    if version_marker(version) in feed:
+        feed = offer(feed, version, url, signature, length, "")
+        print(f"appcast.xml replaces the {version} enclosure ({length} bytes)")
+    else:
+        notes = description(version, previous_version(feed))
+        feed = offer(feed, version, url, signature, length, notes)
+        print(f"appcast.xml now offers {version} ({length} bytes)")
 
-    if f"<sparkle:version>{version}</sparkle:version>" in feed:
-        print(f"appcast.xml already carries {version} — leaving it alone.")
-        return
-
-    # Newest first, which is the order Sparkle and every feed reader expect.
-    anchor = "        <language>zh-CN</language>\n"
-    if anchor not in feed:
-        sys.exit("appcast.xml is not in the shape this expects — check it by hand.")
-
-    FEED.write_text(feed.replace(anchor, anchor + item, 1))
-    print(f"appcast.xml now offers {version} ({length} bytes)")
+    FEED.write_text(feed)
 
 
 if __name__ == "__main__":

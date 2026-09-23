@@ -38,6 +38,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The Sparkle feed writer. No private key and no sign_update: it checks
+      # that a version already in the feed has its enclosure replaced, and
+      # that every other version is left alone.
+      - name: Appcast feed
+        run: python3 Scripts/appcast_test.py
+
       - name: Toolchain
         run: |
           swift --version
