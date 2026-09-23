@@ -151,6 +151,18 @@ struct ProviderSelectionTests {
         #expect(settings.needsProviderSelection)
     }
 
+    @Test("A disabled provider cannot be fetched from its settings pane")
+    @MainActor
+    func disabledProviderStaysIdle() {
+        let settings = AppSettings(enabledAccounts: [Provider.codex.rawValue])
+        let store = UsageStore(settings: settings)
+
+        store.refresh(AccountKey(.kiro))
+
+        #expect(!store.isRefreshing)
+        #expect(store.diagnostics.isEmpty)
+    }
+
     @Test("A chosen ring cannot be switched off into an empty rail")
     func lastRingStays() {
         let settings = AppSettings(enabledAccounts: [Provider.codex.rawValue])

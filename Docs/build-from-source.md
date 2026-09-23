@@ -34,7 +34,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift build
 A clean `swift build` is not the check Xcode runs. Actor-isolation mistakes can be warnings here and hard errors in Xcode, where every `View` is `@MainActor` and one isolation slip produces a wall of “cannot find type X in scope.” Before claiming a change builds:
 
 ```bash
-swift build -Xswiftc -swift-version -Xswiftc 6
+swift build
 ```
 
 Treat remaining warnings as failures.

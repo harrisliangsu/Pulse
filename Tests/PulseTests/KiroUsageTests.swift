@@ -28,6 +28,7 @@ struct KiroUsageTests {
         #expect(result.success)
         #expect(payload.planName == "KIRO PRO+")
         #expect(windows.count == 2)
+        #expect(windows.map(\.id) == ["credit", "bonus_credit"])
         #expect(windows.map(\.scope) == ["Credits", "Bonus credits"])
         #expect(abs(windows[0].usedFraction - 0.061725) < 0.000_001)
         #expect(windows[1].usedFraction == 0.25)
@@ -53,6 +54,29 @@ struct KiroUsageTests {
         #expect(windows.count == 1)
         #expect(windows[0].usedFraction == 0.125)
         #expect(windows[0].resetsAt == nil)
+    }
+
+    @Test("Credit pool identities survive an ACP array reorder")
+    func stableWindowIDs() throws {
+        let result = try JSONDecoder().decode(KiroUsageService.Result.self, from: Self.fixture())
+        let payload = try #require(result.data)
+        let reversed = KiroUsageService.Payload(
+            planName: payload.planName,
+            billingCycleReset: payload.billingCycleReset,
+            usageBreakdowns: Array(payload.usageBreakdowns.reversed())
+        )
+
+        let original = Dictionary(uniqueKeysWithValues:
+            KiroUsageService.windows(from: payload).compactMap { window in
+                window.scope.map { ($0, window.id) }
+            }
+        )
+        let reordered = Dictionary(uniqueKeysWithValues:
+            KiroUsageService.windows(from: reversed).compactMap { window in
+                window.scope.map { ($0, window.id) }
+            }
+        )
+        #expect(reordered == original)
     }
 
     @Test("ACP failures have provider-specific remedies")

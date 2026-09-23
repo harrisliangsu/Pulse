@@ -6,6 +6,15 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.3.2
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **同步上游 qunqin24/Pulse**（相对其 1.3.0 之后、本仓库尚未合入的五个提交）。
+- **可隐藏菜单栏图标**（默认关闭）。仍可通过浮动栏菜单或全局快捷键进入 Pulse；设置会保证始终至少留有一个可用入口。
+- **Agent 指引入口**——仓库根目录新增 `AGENTS.md`，方便编码代理在本仓库中工作。
+- **修复辅助进程重启后的错误超时。** Codex 和 Kiro 的旧请求计时器不会再结束新一轮同编号请求，也不会让已经完成的请求留下延迟报错。
+- **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带（含可选小时额度）、环颜色方案（红色告警 / 渐变 / 低调）、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.3.1
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
