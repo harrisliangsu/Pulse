@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.3.2</title>
+            <pubDate>Wed, 23 Sep 2026 01:54:38 -0000</pubDate>
+            <sparkle:version>1.3.2</sparkle:version>
+            <sparkle:shortVersionString>1.3.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.3.2</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.3.2</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>同步上游 qunqin24/Pulse</strong>（相对其 1.3.0 之后、本仓库尚未合入的五个提交）。</li><li><strong>可隐藏菜单栏图标</strong>（默认关闭）。仍可通过浮动栏菜单或全局快捷键进入 Pulse；设置会保证始终至少留有一个可用入口。</li><li><strong>Agent 指引入口</strong>——仓库根目录新增 <code>AGENTS.md</code>，方便编码代理在本仓库中工作。</li><li><strong>修复辅助进程重启后的错误超时。</strong> Codex 和 Kiro 的旧请求计时器不会再结束新一轮同编号请求，也不会让已经完成的请求留下延迟报错。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带（含可选小时额度）、环颜色方案（红色告警 / 渐变 / 低调）、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.3.2">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.3.2/Pulse-1.3.2.zip"
+                       length="8510398"
+                       type="application/octet-stream"
+                       sparkle:edSignature="vIlxNR27vEiYjpGqBDH4M79C1I7UNf4mP9MRIH5O8dUAg2iUDWfSPVBRuc6h6VfzCP5Ydj6gos+h80lUN8w/BA==" />
+        </item>
+        <item>
             <title>1.3.1</title>
             <pubDate>Tue, 22 Sep 2026 01:56:12 -0000</pubDate>
             <sparkle:version>1.3.1</sparkle:version>
