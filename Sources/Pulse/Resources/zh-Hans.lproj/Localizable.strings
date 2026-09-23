@@ -458,7 +458,7 @@
 "Turned off for Pulse in System Settings › Notifications." = "已在「系统设置 › 通知」里关闭了 Pulse 的通知。";
 "Notifications need the bundled app." = "通知需要打包后的 App 才能发出。";
 "When a limit comes back" = "限额恢复时";
-"Only for one you were warned about." = "仅提醒此前已预警过的限额。";
+"After it turns over, and only for one you were warned about." = "限额转过之后才提醒，且仅限此前预警过的。";
 "When a reading stops arriving" = "读不到用量时";
 "After several failed checks in a row, once per outage." = "连续多次读取失败后提醒，同一次故障只提醒一次。";
 "Can't be read" = "读不到";
@@ -469,7 +469,7 @@
 "This limit has reset." = "这条限额已经重置。";
 "Celebrations" = "庆祝";
 "Celebrate a reset" = "限额重置时播放彩带";
-"Full-screen ribbons and a sound, named for the provider." = "全屏彩带和一声提示，并标出是哪一家。";
+"After a limit turns over: ribbons and a sound, named for the provider." = "限额转过之后：全屏彩带和一声提示，并标出是哪一家。";
 "Also celebrate hourly quota resets" = "也庆祝小时额度重置";
 "Five-hour windows, not only the week or month." = "5 小时额度也会播放彩带，不只是周或月。";
 
@@ -663,3 +663,23 @@
 "Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "使用你在设置里导入的浏览器登录会话。导入时可能请求浏览器的钥匙串授权。";
 "Uses the GitHub login you connect in Settings. No Keychain prompt." = "使用你在设置里连接的 GitHub 登录。不弹钥匙串。";
 "Uses only the API key you enter in Settings. No Keychain prompt." = "只使用你在设置里填入的 API key。不弹钥匙串。";
+
+/* Codex 重置预测与提前提醒 */
+"Predicted reset" = "预测重置";
+"No prediction yet" = "暂无预测";
+"Elevated" = "偏高";
+"Strong" = "较强";
+"%@ · %@ chance" = "%@ · %@ 的可能";
+"Reset cards" = "重置卡";
+"Data from Codex Resets" = "数据来自 Codex Resets";
+"Reset reminders" = "重置提醒";
+"Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "在 Codex Resets 给出明确时间时提前提醒；只有预测、没有具体时间则不通知。";
+"How early" = "提前多久";
+"12 hours before" = "提前 12 小时";
+"24 hours before" = "提前 24 小时";
+"48 hours before" = "提前 48 小时";
+"Hours before the predicted time." = "相对预测时间提前这么久。";
+"Regular resets" = "规律性重置";
+"Before each window's own reset, skipping any window shorter than the lead." = "在各窗口自己的重置时间前提醒；窗口比提前量更短则不通知。";
+"Hours before that reset." = "相对该重置时间提前这么久。";
+"An announced Codex reset is set for %@." = "已公布的 Codex 重置时间是 %@。";

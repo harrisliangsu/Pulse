@@ -62,6 +62,16 @@ Settings can also show the account’s real lifetime total from `account/usage/r
 
 Codex’s `input_tokens` **includes** cached tokens; `cached_input_tokens` is the subset. Session usage is a **running total** — difference it, do not sum per-turn `last_token_usage` (measured 6% high on one long session). Shared ledger rules: [`../refresh-and-data.md`](../refresh-and-data.md).
 
+## Irregular reset forecast
+
+The card's own windows are the account's 5-hour and weekly clocks (`resetsAt`). Separately, the Codex card shows what [Codex Resets](https://codex-resets.com) publishes about an irregular, account-wide reset.
+
+`CodexResetClient` calls `GET https://codex-resets.com/api/v1/status` — the same document as that site's MCP server, without running an MCP process. `scheduled_reset.scheduled_for` is an explicit time and is what the card prints. If that field is null and `active_watch` is present, the card shows the watch's level (`elevated` / `strong`), chance, and `forecast_window` text. `expires_at` is when the forecast goes stale, and is not shown as a reset time. Neither field means the card says there is no prediction. A 304, a 429 (`Retry-After`), or any other failure keeps the last status; the panel does not blank or crash. Polling follows `Cache-Control` / `ETag`, and never faster than two minutes or slower than thirty.
+
+Banked reset credits (`rateLimitResetCredits`: `availableCount`, soonest `expiresAt`) come from `codex app-server`, the same read settings already uses. The card asks only for rate limits, and only when the primary Codex card is opened, so a panel refresh does not also pull `account/usage/read`. If the app server is missing or the field is absent, the card omits the line — missing is not zero. A known zero is also omitted. Extra Codex accounts do not show credits; the app server is the local login.
+
+Advance notice of an explicit `scheduled_for`, and of each account's own `resetsAt`, is the Reset reminders group. See [../notifications.md](../notifications.md).
+
 ## First run
 
 Presence of `~/.codex`, never its contents.

@@ -6,7 +6,7 @@ Source: [`Sources/Pulse/Usage/UsageAlerts.swift`](../Sources/Pulse/Usage/UsageAl
 
 ## What can be said
 
-Five things, and nothing else. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card.
+Five things about a reading, and nothing else in that list. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card. Advance reminders are a separate list, below: they are scheduled before a time, not spoken after a reading.
 
 | Alert | Fires when | Gated by |
 |---|---|---|
@@ -17,6 +17,19 @@ Five things, and nothing else. Each is something you would want to know *while l
 | `lowBalance(remaining:)` | A prepaid balance falls under the figure set for that account | `lowBalanceAlerts[account]` |
 
 All off by default. All ask for the **default sound**; the mute switch is macOS's own per-app "Play sound for notifications".
+
+## Advance reminders
+
+These fire **before** a time, and they are not the five above. `alertsOnReset` still speaks only after a warned window has turned over. `celebratesReset` still plays ribbons after that same evidence. Neither is an advance reminder, and the settings copy says so.
+
+Two switches, both off by default, in the **Reset reminders** group. Each has its own lead: 12, 24 or 48 hours. Both ask for the same notification grant. A `swift run` build disables them (`UsageAlerts.isSupported`).
+
+| Reminder | Fires when | Does not fire when |
+|---|---|---|
+| Predicted reset | Codex Resets has `scheduled_reset.scheduled_for`, at lead before that instant (or immediately, if the lead has already started and the instant is still ahead) | `active_watch` alone, a null `scheduled_for`, or an instant already in the past. `expires_at` is never the countdown |
+| Regular resets | A shown account's window has a stated length at least as long as the lead, at lead before that window's `resetsAt` | The window is shorter than the lead (a 5-hour window with a 12-hour lead), the length was not stated, or `resetsAt` has passed |
+
+Deduped per announcement id plus `scheduled_for`, and per account plus window plus `resetsAt`. Changing the lead moves a notification that has not fired yet. One that already fired is not posted again. Switching a reminder off removes its pending notifications. The book is `advance-reminders.json`, next to `alerts.json`. Codex Resets itself is polled on its cache lifetime (never under two minutes, never over thirty) while a Codex account is shown or the predicted reminder is on; a failure keeps the last status. See [providers/codex.md](providers/codex.md).
 
 This was silent first, with a changelog note saying to add a sound in System Settings if you wanted one. **That note was wrong.** A notification with no `sound` is delivered silently, and the system switch cannot put one back — it only takes away one the app asked for. The choice was never quiet versus loud, it was a working off switch in the place people look for it versus no switch at all. `requestAuthorization` therefore asks for `[.alert, .sound]`: without `.sound` in the grant, `soundSetting` is disabled outright and every `content.sound` is dropped whatever the user does with the switch.
 

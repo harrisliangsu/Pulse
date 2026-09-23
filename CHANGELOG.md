@@ -10,6 +10,12 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.0
+
+- **Codex reset forecast on the card.** The Codex card shows the public [Codex Resets](https://codex-resets.com) status: an explicit `scheduled_for` when there is one, otherwise the watch's level, chance and window — never the watch's expiry as a reset time. No prediction stays an empty line. Banked reset cards from `codex app-server` appear on that card when the read succeeds.
+- **Reset reminders, before the reset.** Two switches, both off: predicted (only an explicit Codex Resets time; 12 / 24 / 48 hours ahead) and regular (each account's own reset, skipped when the window is shorter than the lead). These are not the after-the-fact "limit came back" notice and not the celebration ribbons.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons (incl. optional hourly), ring colour schemes (Red alert / Gradient / Quiet), bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.3.2
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.

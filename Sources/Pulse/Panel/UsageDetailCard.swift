@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Layout constants for the detail bubble. Shared with
@@ -69,8 +70,21 @@ enum DetailCardLayout {
     /// square against the window's edge — which looks like a rendering bug,
     /// not like a card that didn't fit. Providers report a variable number of
     /// limits (Codex adds one group per model with its own limits), so this
-    /// budgets for more than are on screen today.
-    static var maximumHeight: CGFloat { height(forWindows: 5, footnote: true) }
+    /// budgets for more than are on screen today. Codex also adds the reset
+    /// intel block; that height is in the budget before any card opens, so
+    /// opening one does not resize the window.
+    static var maximumHeight: CGFloat { height(forWindows: 5, footnote: true) + codexIntelHeight }
+
+    /// Prediction line, a wrapped forecast phrase, banked credits, and the
+    /// source credit. Each of the first three may take two lines; the budget
+    /// is the tall case, even when a given card draws fewer of them.
+    static var codexIntelHeight: CGFloat {
+        contentSpacing
+            + rowTextLineHeight * 2
+            + rowInternalSpacing + rowTextLineHeight * 2
+            + rowInternalSpacing + rowTextLineHeight * 2
+            + rowInternalSpacing + footnoteHeight
+    }
 
     static func height(forWindows count: Int, footnote: Bool = false) -> CGFloat {
         padding * 2
@@ -109,6 +123,12 @@ struct UsageDetailCard: View {
     /// The panel is never key, so Settings and Quit on the menu bar extras
     /// are a hunt. These ride the card header: they take no extra height.
     var openSettings: (() -> Void)? = nil
+    /// Codex Resets' public status. Nil until a fetch or the disk cache lands;
+    /// the card still says there is no prediction rather than leaving a hole.
+    var codexReset: CodexResetStatus? = nil
+    /// Banked credits for the primary Codex login. Nil when the app server
+    /// has not answered; the line is omitted.
+    var codexCredits: CodexCreditSummary? = nil
 
     /// Where Red alert turns red, so the card's bars agree with the rail's rings.
     @Environment(\.usageWarningThreshold) private var warningThreshold
@@ -162,6 +182,10 @@ struct UsageDetailCard: View {
                     .font(.system(size: DetailCardLayout.messageFontSize, weight: .regular, design: .rounded))
                     .foregroundStyle(.primary.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if usage.provider == .codex {
+                codexIntel
             }
 
             if let footnote {
@@ -250,6 +274,131 @@ struct UsageDetailCard: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         return formatter.localizedString(for: date, relativeTo: Date())
+    }
+
+    /// Irregular Codex reset intel, plus banked credits when the app server
+    /// has them. Not the 5-hour or weekly `resetsAt` rows above.
+    private var codexIntel: some View {
+        VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(localized: "Predicted reset")
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 8)
+
+                Text(predictionValue)
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(2)
+            }
+
+            if let detail = predictionDetail {
+                Text(verbatim: detail)
+                    .foregroundStyle(.primary.opacity(0.55))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+            }
+
+            if let codexCredits, codexCredits.showsOnCard, usage.account.isPrimary {
+                creditLine(codexCredits)
+            }
+
+            Text(localized: "Data from Codex Resets")
+                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.4))
+                .overlay {
+                    PointerHand {
+                        NSWorkspace.shared.open(URL(string: "https://codex-resets.com")!)
+                    }
+                }
+                .accessibilityAddTraits(.isLink)
+        }
+        .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+    }
+
+    private var predictionValue: String {
+        switch codexReset?.card {
+        case .scheduled(let date):
+            Self.clock(date)
+        case .watch(let watch):
+            Self.watchHeadline(watch)
+        case .empty, nil:
+            .localized("No prediction yet")
+        }
+    }
+
+    /// The API's own forecast phrase. Absent for an explicit time and for the
+    /// empty state — `expires_at` is never rendered.
+    private var predictionDetail: String? {
+        guard case .watch(let watch) = codexReset?.card else { return nil }
+        return watch.forecastWindow
+    }
+
+    private static func watchHeadline(_ watch: CodexResetStatus.Watch) -> String {
+        let level = switch watch.level {
+        case "elevated": String.localized("Elevated")
+        case "strong": String.localized("Strong")
+        default: watch.level
+        }
+        guard let chance = watch.chancePercent else { return level }
+        let figure = "\(chance)%"
+        return .localized("\(level) · \(figure) chance")
+    }
+
+    private func creditLine(_ credits: CodexCreditSummary) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(localized: "Reset cards")
+                    .foregroundStyle(.primary)
+                Spacer(minLength: 8)
+                Text(creditCount(credits.available))
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .lineLimit(1)
+            }
+            if let expiry = creditExpiry(credits) {
+                Text(expiry)
+                    .foregroundStyle(.primary.opacity(0.55))
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private func creditCount(_ available: Int) -> String {
+        available == 1
+            ? .localized("1 available")
+            : .localized("\("\(available)") available")
+    }
+
+    private func creditExpiry(_ credits: CodexCreditSummary) -> String? {
+        guard
+            let expires = credits.nextExpiresAt,
+            expires > Date(),
+            let remaining = Self.remainingFormatter.string(from: Date(), to: expires)
+        else { return nil }
+        return .localized("Next expires in \(remaining)")
+    }
+
+    private static func clock(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = LocalizationSource.locale
+        formatter.setLocalizedDateFormatFromTemplate(
+            Calendar.current.isDateInToday(date) ? "jmm" : "MMMdjmm"
+        )
+        return formatter.string(from: date)
+    }
+
+    private static var remainingFormatter: DateComponentsFormatter {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.day, .hour]
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 2
+        formatter.calendar = {
+            var calendar = Calendar.current
+            calendar.locale = LocalizationSource.locale
+            return calendar
+        }()
+        return formatter
     }
 
     private var header: some View {

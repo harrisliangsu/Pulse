@@ -263,6 +263,7 @@ final class FloatingPanelController {
         panel.orderFrontRegardless()
         placePanel()
         applyDisplayFollowing()
+        store.refreshCodexResetForecast()
     }
 
     func toggle() {

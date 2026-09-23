@@ -435,7 +435,7 @@
 "Turned off for Pulse in System Settings › Notifications." = "시스템 설정 › 알림에서 Pulse의 알림이 꺼져 있습니다.";
 "Notifications need the bundled app." = "알림을 보내려면 번들로 묶은 앱이 필요합니다.";
 "When a limit comes back" = "한도가 회복되었을 때";
-"Only for one you were warned about." = "이전에 경고한 한도만 해당합니다.";
+"After it turns over, and only for one you were warned about." = "한도가 돌아간 뒤에 알립니다. 이전에 경고한 것만 해당합니다.";
 "When a reading stops arriving" = "사용량을 읽지 못할 때";
 "After several failed checks in a row, once per outage." = "연달아 몇 번 실패하면 알리며, 한 번의 장애당 한 번만 알립니다.";
 "Can't be read" = "읽을 수 없음";
@@ -596,7 +596,7 @@
 "Dark, light, match the Mac, or glass." = "다크, 라이트, Mac에 맞추기, 또는 유리.";
 "From the Kimi Code console. Optional if you sign in. Stored encrypted on this Mac." = "Kimi Code 콘솔에서 가져옵니다. 로그인한 경우 비워 둬도 됩니다. 이 Mac에 암호화해 저장합니다.";
 "Five-hour windows, not only the week or month." = "주·월뿐만 아니라 5시간 한도가 회복될 때도 리본을 켭니다.";
-"Full-screen ribbons and a sound, named for the provider." = "전체 화면 리본과 소리, 어느 서비스인지도 표시합니다.";
+"After a limit turns over: ribbons and a sound, named for the provider." = "한도가 돌아간 뒤: 전체 화면 리본과 소리, 어느 서비스인지도 표시합니다.";
 "Glass" = "유리";
 "Kimi Code account" = "Kimi Code 계정";
 "Kimi Code's saved login expired. Sign in again in Settings." = "저장된 Kimi Code 로그인이 만료되었습니다. 설정에서 다시 로그인하세요.";
@@ -665,3 +665,23 @@
 "Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "설정에서 가져온 브라우저 로그인 세션을 사용합니다. 가져올 때 브라우저의 키체인 접근 권한을 요청할 수 있습니다.";
 "Uses the GitHub login you connect in Settings. No Keychain prompt." = "설정에서 연결한 GitHub 로그인을 사용합니다. 키체인 확인 창은 표시되지 않습니다.";
 "Uses only the API key you enter in Settings. No Keychain prompt." = "설정에 입력한 API 키만 사용합니다. 키체인 확인 창은 표시되지 않습니다.";
+
+/* Codex 리셋 예측과 사전 알림 */
+"Predicted reset" = "예측 리셋";
+"No prediction yet" = "아직 예측 없음";
+"Elevated" = "다소 높음";
+"Strong" = "높음";
+"%@ · %@ chance" = "%@ · %@ 가능성";
+"Reset cards" = "리셋 카드";
+"Data from Codex Resets" = "데이터: Codex Resets";
+"Reset reminders" = "리셋 미리 알림";
+"Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "Codex Resets가 시각을 밝힌 경우에만 미리 알립니다. 시각 없는 예측만으로는 알리지 않습니다.";
+"How early" = "얼마나 전에";
+"12 hours before" = "12시간 전";
+"24 hours before" = "24시간 전";
+"48 hours before" = "48시간 전";
+"Hours before the predicted time." = "예측 시각보다 얼마나 전에 알릴지.";
+"Regular resets" = "정기 리셋";
+"Before each window's own reset, skipping any window shorter than the lead." = "각 창의 리셋 시각 전에 알립니다. 창이 그 시간보다 짧으면 알리지 않습니다.";
+"Hours before that reset." = "그 리셋보다 얼마나 전에 알릴지.";
+"An announced Codex reset is set for %@." = "공지된 Codex 리셋 시각은 %@입니다.";

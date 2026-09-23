@@ -138,12 +138,112 @@ final class UsageStore {
         return .unavailable(account, reason: reason)
     }
 
-    /// Codex's reset credits and account totals, which only its app server
-    /// reports. Fetched when the settings pane asks rather than on the refresh
-    /// loop: nothing on the rail shows them, and the call starts a process.
+    /// Codex's account totals and reset credits, which only its app server
+    /// reports. The history is fetched when settings asks. The card's credit
+    /// line uses `refreshCodexCreditsIfStale`, which does not read that history.
     func codexAccountUsage() async -> CodexAccountUsage? {
         guard settings.isEnabled(AccountKey(.codex)) else { return nil }
         return await CodexAccountUsageService(server: appServer).fetch()
+    }
+
+    /// The public Codex Resets status, when a fetch or the disk cache has one.
+    private(set) var codexResetStatus: CodexResetStatus?
+    /// Banked reset credits for the primary Codex login, when the app server
+    /// has answered. Nil means unknown — the card omits the line.
+    private(set) var codexCredits: CodexCreditSummary?
+    private var codexResets: CodexResetMonitor?
+    private var codexCreditsFetchedAt: Date?
+    private var codexCreditsTask: Task<Void, Never>?
+    /// Opening the card more often than this must not start another app-server read.
+    private static let creditRefreshInterval: TimeInterval = 300
+
+    func refreshCodexResetForecast() {
+        ensureCodexResets()
+        codexResets?.poke()
+    }
+
+    /// The primary Codex card was opened, or settings just read the account.
+    /// A failure leaves the previous summary in place.
+    func refreshCodexCreditsIfStale(force: Bool = false) {
+        guard settings.isEnabled(AccountKey(.codex)) else { return }
+        if !force, let codexCreditsFetchedAt,
+           Date().timeIntervalSince(codexCreditsFetchedAt) < Self.creditRefreshInterval {
+            return
+        }
+        guard codexCreditsTask == nil else { return }
+        codexCreditsTask = Task { [appServer] in
+            let summary = await CodexAccountUsageService(server: appServer).fetchCredits()
+            self.codexCreditsTask = nil
+            self.codexCreditsFetchedAt = Date()
+            if let summary { self.codexCredits = summary }
+        }
+    }
+
+    /// Settings already parsed credits out of a full account read.
+    func noteCodexCredits(_ usage: CodexAccountUsage) {
+        guard usage.creditsKnown else { return }
+        codexCredits = CodexCreditSummary(
+            available: usage.availableResetCredits,
+            nextExpiresAt: usage.nextExpiringCredit?.expiresAt,
+            next: usage.nextExpiringCredit
+        )
+        codexCreditsFetchedAt = Date()
+    }
+
+    /// Schedules or withdraws advance reminders from the readings and the
+    /// Codex Resets status currently in hand.
+    func syncAdvanceReminders() {
+        guard let alerts else { return }
+        let posting = settings.wantsAdvanceReminders
+        var desired: [AdvanceReminder] = []
+        let now = Date()
+        if settings.remindsBeforePredictedReset, let status = codexResetStatus {
+            if let reminder = AdvanceReminderPlanner.predicted(
+                status: status,
+                lead: settings.predictedResetLead.interval,
+                now: now
+            ) {
+                desired.append(reminder)
+            }
+        }
+        if settings.remindsBeforeRegularReset {
+            desired += AdvanceReminderPlanner.regular(
+                windows: regularReminderWindows(),
+                lead: settings.regularResetLead.interval,
+                now: now
+            )
+        }
+        alerts.syncAdvanceReminders(desired, posting: posting)
+    }
+
+    private func regularReminderWindows() -> [AdvanceReminderPlanner.Window] {
+        settings.shownAccounts.flatMap { account in
+            let label = settings.label(for: account)
+            return usage(for: account).windows.compactMap { window -> AdvanceReminderPlanner.Window? in
+                guard let resetsAt = window.resetsAt else { return nil }
+                let length: TimeInterval? = window.reportsLength && window.windowSeconds > 0
+                    ? TimeInterval(window.windowSeconds) : nil
+                return AdvanceReminderPlanner.Window(
+                    accountID: account.id,
+                    accountLabel: label,
+                    windowID: window.id,
+                    windowName: window.name,
+                    resetsAt: resetsAt,
+                    length: length
+                )
+            }
+        }
+    }
+
+    private func ensureCodexResets() {
+        guard codexResets == nil else { return }
+        let monitor = CodexResetMonitor(settings: settings) { [weak self] status in
+            guard let self else { return }
+            self.codexResetStatus = status
+            self.syncAdvanceReminders()
+        }
+        codexResets = monitor
+        monitor.start()
     }
 
     /// Picks up a key that was just entered, or one that changed.
@@ -234,6 +334,7 @@ final class UsageStore {
                 Task { @MainActor in self?.refresh() }
             }
         }
+        ensureCodexResets()
     }
 
     /// The user hovered the rail to read a card, which is the clearest sign
@@ -261,6 +362,7 @@ final class UsageStore {
         } else {
             scheduleNext()
         }
+        refreshCodexResetForecast()
     }
 
     /// How long this provider may be left between asks.
@@ -331,6 +433,7 @@ final class UsageStore {
     /// Re-reads settings that affect the loop itself, then refreshes.
     func settingsChanged() {
         guard !settings.needsProviderSelection else { return }
+        refreshCodexResetForecast()
         let proxyChanged = networkProxy != settings.networkProxy
         networkProxy = settings.networkProxy
         loadAPIKeys()
@@ -878,6 +981,7 @@ final class UsageStore {
         // need the answer the service actually gave — `reconciled` swaps a
         // failure for cached figures, which loses the reason with it.
         alerts.observe(fetched, raw: raw, as: account)
+        syncAdvanceReminders()
     }
 
     /// Runs the alert rules over the readings already in hand.
