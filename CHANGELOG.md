@@ -12,7 +12,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.4.1
 
-- **Codex card shows the latest reset.** When [Codex Resets](https://codex-resets.com) has announced one, the Codex card says how long ago and what kind it was, with the local time — a banked credit explains that you apply it yourself and that it does not refill usage immediately. An explicit time or a watch still has its prediction row; with neither, the last reset is the line you see. Reminders still count down only to `scheduled_for`.
+- **Codex card shows the latest reset.** When [Codex Resets](https://codex-resets.com) has announced one, the Codex card adds how long ago and what kind it was, with the local time — a banked credit explains that you apply it yourself and that it does not refill usage immediately. The prediction row is unchanged, including "No prediction yet" when there is no time and no watch. Reminders still count down only to `scheduled_for`.
 - **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons (incl. optional hourly), ring colour schemes (Red alert / Gradient / Quiet), bilingual release notes, and this repo’s Sparkle feed / signing key.
 
 ## 1.4.0

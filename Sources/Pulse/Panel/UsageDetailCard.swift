@@ -131,9 +131,8 @@ struct UsageDetailCard: View {
     /// are a hunt. These ride the card header: they take no extra height.
     var openSettings: (() -> Void)? = nil
     /// Codex Resets' public status. Nil until a fetch or the disk cache lands.
-    /// With nothing announced and nothing predicted, the card says there is
-    /// no prediction rather than leaving a hole. A latest announcement
-    /// replaces that empty line.
+    /// The prediction row still says there is no prediction rather than
+    /// leaving a hole. A latest announcement is a separate row under that.
     var codexReset: CodexResetStatus? = nil
     /// Banked credits for the primary Codex login. Nil when the app server
     /// has not answered; the line is omitted.
@@ -288,34 +287,31 @@ struct UsageDetailCard: View {
     /// Irregular Codex reset intel, plus banked credits when the app server
     /// has them. Not the 5-hour or weekly `resetsAt` rows above.
     ///
-    /// Predicted reset stays for an explicit time or a watch. A latest
-    /// announcement is its own row under that. When the prediction is empty
-    /// and a latest announcement exists, the empty line is left off — the
-    /// announcement is the thing to read. Account reset cards, when the app
-    /// server has them, stay underneath: they are this login's inventory,
-    /// not the public announcement.
+    /// The prediction row is unchanged: an explicit time, a watch, or
+    /// "No prediction yet". A latest announcement is an extra row under
+    /// that, including when the prediction is empty. Account reset cards,
+    /// when the app server has them, stay underneath: they are this login's
+    /// inventory, not the public announcement.
     private var codexIntel: some View {
         VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
-            if codexReset?.showsPredictionRow ?? true {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(localized: "Predicted reset")
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(localized: "Predicted reset")
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
 
-                    Spacer(minLength: 8)
+                Spacer(minLength: 8)
 
-                    Text(predictionValue)
-                        .foregroundStyle(.primary.opacity(0.9))
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(2)
-                }
+                Text(predictionValue)
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(2)
+            }
 
-                if let detail = predictionDetail {
-                    Text(verbatim: detail)
-                        .foregroundStyle(.primary.opacity(0.55))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .lineLimit(2)
-                }
+            if let detail = predictionDetail {
+                Text(verbatim: detail)
+                    .foregroundStyle(.primary.opacity(0.55))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
             }
 
             if let latest = codexReset?.latest {

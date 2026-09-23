@@ -128,7 +128,6 @@ struct CodexResetForecastTests {
         #expect(latest.resetType == "banked")
         #expect(latest.announcedAt == when)
         #expect(status.card == .empty)
-        #expect(status.showsPredictionRow == false)
         #expect(status.explicitReset == nil)
         #expect(status.explicitReset != when)
     }
@@ -155,7 +154,7 @@ struct CodexResetForecastTests {
         """)))
         #expect(status.latest?.id == "post-regular")
         #expect(status.latest?.resetType == "regular")
-        #expect(status.showsPredictionRow == false)
+        #expect(status.card == .empty)
 
         let broken = try #require(CodexResetStatus.parse(json("""
         {
@@ -170,7 +169,6 @@ struct CodexResetForecastTests {
         """)))
         #expect(broken.latest == nil)
         #expect(broken.card == .empty)
-        #expect(broken.showsPredictionRow == true)
         #expect(broken.explicitReset == nil)
     }
 
@@ -203,7 +201,6 @@ struct CodexResetForecastTests {
         let when = try #require(CodexResetDates.parse(scheduledFor))
         #expect(status.latest?.resetType == "surprise")
         #expect(status.card == .scheduled(when))
-        #expect(status.showsPredictionRow == true)
         #expect(status.explicitReset == when)
         #expect(status.explicitReset != status.latest?.announcedAt)
     }
@@ -255,7 +252,6 @@ struct CodexResetForecastTests {
         let status = try JSONDecoder().decode(CodexResetStatus.self, from: data)
         #expect(status.latest == nil)
         #expect(status.card == .empty)
-        #expect(status.showsPredictionRow == true)
 
         let announced = try #require(CodexResetDates.parse("2026-09-22T18:23:37.000Z"))
         let round = CodexResetStatus(
@@ -266,7 +262,7 @@ struct CodexResetForecastTests {
         let encoded = try JSONEncoder().encode(round)
         let decoded = try JSONDecoder().decode(CodexResetStatus.self, from: encoded)
         #expect(decoded == round)
-        #expect(decoded.showsPredictionRow == true)
+        #expect(decoded.card == .watch(.init(level: "elevated", chancePercent: nil, forecastWindow: "soon")))
     }
 
     @Test("A body that is not a status document is a failure, not an empty card")

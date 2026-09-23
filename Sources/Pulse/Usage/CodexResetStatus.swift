@@ -55,17 +55,6 @@ struct CodexResetStatus: Equatable, Sendable, Codable {
         return .empty
     }
 
-    /// Whether the prediction row is worth showing.
-    ///
-    /// An empty prediction next to a latest announcement leaves the reader
-    /// with the useful line. A scheduled time or a watch still leads.
-    var showsPredictionRow: Bool {
-        switch card {
-        case .scheduled, .watch: true
-        case .empty: latest == nil
-        }
-    }
-
     /// The only instant an advance reminder may count down to.
     /// A watch never contributes one, and neither does `latest`.
     var explicitReset: Date? { scheduled?.scheduledFor }
