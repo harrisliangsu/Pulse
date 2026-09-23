@@ -679,7 +679,6 @@
 "Strong" = "较强";
 "%@ · %@ chance" = "%@ · %@ 的可能";
 "Reset cards" = "重置卡";
-"Data from Codex Resets" = "数据来自 Codex Resets";
 "Reset reminders" = "重置提醒";
 "Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "在 Codex Resets 给出明确时间时提前提醒；只有预测、没有具体时间则不通知。";
 "How early" = "提前多久";

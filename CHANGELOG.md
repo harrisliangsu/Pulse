@@ -10,6 +10,13 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.2
+
+- **Codex card shows the latest reset while it is open.** 1.4.1 added the row, then left it off when the announcement arrived after the card was already up — the usual case, because 「暂无预测」 / "No prediction yet" does not change when the row should appear under it. The prediction row is unchanged. Reminders still count down only to `scheduled_for`.
+- **Hover the reset type.** The info icon is gone. Hovering 「备用重置额度」 / "Banked reset credit" still explains that you apply it yourself and that usage does not refill immediately. Hovering 「常规重置」 / "Regular reset", or a type the feed adds later, shows that announcement's own text. An announcement with no text has no tooltip.
+- **The Codex Resets credit line is gone.** The card no longer prints "Data from Codex Resets". An arrow on the prediction row still opens [codex-resets.com](https://codex-resets.com), including when there is no latest announcement.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons (incl. optional hourly), ring colour schemes (Red alert / Gradient / Quiet), bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.4.1
 
 - **Codex card shows the latest reset.** When [Codex Resets](https://codex-resets.com) has announced one, the Codex card adds how long ago and what kind it was, with the local time — a banked credit explains that you apply it yourself and that it does not refill usage immediately. The prediction row is unchanged, including "No prediction yet" when there is no time and no watch. Reminders still count down only to `scheduled_for`.

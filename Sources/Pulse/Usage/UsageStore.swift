@@ -243,7 +243,14 @@ final class UsageStore {
             self.syncAdvanceReminders()
         }
         codexResets = monitor
-        monitor.start()
+        // `start` loads the cache before it returns. Keep that value here
+        // even if the callback did not land: the file can already hold
+        // `latest` while this property is still nil, and the card then has
+        // nothing to draw under the prediction.
+        if let status = monitor.start() {
+            codexResetStatus = status
+            syncAdvanceReminders()
+        }
     }
 
     /// Picks up a key that was just entered, or one that changed.

@@ -77,12 +77,13 @@ enum DetailCardLayout {
 
     /// Prediction line, a wrapped forecast phrase, the latest announcement
     /// (one line of relative time, then a type-and-clock line that may wrap),
-    /// banked credits, and the source credit. The prediction, the forecast,
-    /// the type line, and the credits may each take two lines. The budget is
-    /// that tall case — a watch, a latest announcement, and reset cards
-    /// together — even when a given card draws fewer of them. The relative
-    /// time stays on one line; the banked explanation is a tooltip, not
-    /// another row.
+    /// and banked credits. The prediction, the forecast, the type line, and
+    /// the credits may each take two lines. The budget is that tall case — a
+    /// watch, a latest announcement, and reset cards together — even when a
+    /// given card draws fewer of them. The relative time stays on one line.
+    /// The type's explanation is a tooltip on those words, not another row
+    /// and not an icon. The link to the site sits on the prediction line, so
+    /// it adds no row of its own.
     static var codexIntelHeight: CGFloat {
         contentSpacing
             + rowTextLineHeight * 2
@@ -90,7 +91,6 @@ enum DetailCardLayout {
             + rowInternalSpacing + rowTextLineHeight
             + rowInternalSpacing + rowTextLineHeight * 2
             + rowInternalSpacing + rowTextLineHeight * 2
-            + rowInternalSpacing + footnoteHeight
     }
 
     static func height(forWindows count: Int, footnote: Bool = false) -> CGFloat {
@@ -133,7 +133,13 @@ struct UsageDetailCard: View {
     /// Codex Resets' public status. Nil until a fetch or the disk cache lands.
     /// The prediction row still says there is no prediction rather than
     /// leaving a hole. A latest announcement is a separate row under that.
+    ///
+    /// A snapshot. The open card does not keep this: see `codexResets`.
     var codexReset: CodexResetStatus? = nil
+    /// The store the open card reads, so a `latest` that arrives after the
+    /// card is up still draws the row. Nil in previews, which pass
+    /// `codexReset` instead.
+    var codexResets: UsageStore? = nil
     /// Banked credits for the primary Codex login. Nil when the app server
     /// has not answered; the line is omitted.
     var codexCredits: CodexCreditSummary? = nil
@@ -193,7 +199,13 @@ struct UsageDetailCard: View {
             }
 
             if usage.provider == .codex {
+                // Identity follows the announcement. The row is a branch that
+                // is absent until `latest` exists, and this card is inserted
+                // under the rail's reveal spring — a later value has to
+                // replace the block, not hope the spring diffs it in.
                 codexIntel
+                    .id(CodexResetCardLines.identity(resolvedCodexReset))
+                    .animation(nil, value: CodexResetCardLines.identity(resolvedCodexReset))
             }
 
             if let footnote {
@@ -299,6 +311,8 @@ struct UsageDetailCard: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
+                CodexResetsLink()
+
                 Spacer(minLength: 8)
 
                 Text(predictionValue)
@@ -314,36 +328,37 @@ struct UsageDetailCard: View {
                     .lineLimit(2)
             }
 
-            if let latest = codexReset?.latest {
+            if let latest = codexLines.latest {
                 latestAnnouncement(latest)
             }
 
             if let codexCredits, codexCredits.showsOnCard, usage.account.isPrimary {
                 creditLine(codexCredits)
             }
-
-            Text(localized: "Data from Codex Resets")
-                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
-                .foregroundStyle(.primary.opacity(0.4))
-                .overlay {
-                    PointerHand {
-                        NSWorkspace.shared.open(URL(string: "https://codex-resets.com")!)
-                    }
-                }
-                .accessibilityAddTraits(.isLink)
         }
         .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
     }
 
-    /// Relative time, then type and local clock. A banked credit explains
-    /// itself through the system tooltip and VoiceOver, the same `.help`
-    /// the header buttons already use — this panel has no popover.
-    private func latestAnnouncement(_ latest: CodexResetStatus.Latest) -> some View {
-        let relative = CodexResetPresentation.relative(announcedAt: latest.announcedAt)
-        let absolute = CodexResetPresentation.absolute(announcedAt: latest.announcedAt)
-        let detail = CodexResetPresentation.detail(resetType: latest.resetType, absolute: absolute)
-        let help = CodexResetPresentation.help(resetType: latest.resetType)
-        return VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
+    /// The status this card draws. The store wins while the panel is
+    /// showing it, because that read is what invalidates an open card.
+    private var resolvedCodexReset: CodexResetStatus? {
+        if usage.provider == .codex, let codexResets {
+            codexResets.codexResetStatus
+        } else {
+            codexReset
+        }
+    }
+
+    private var codexLines: CodexResetCardLines {
+        CodexResetCardLines.make(resolvedCodexReset)
+    }
+
+    /// Relative time, then type and local clock. Hovering the type — not an
+    /// icon, and not the clock — shows the explanation, the same `.help` the
+    /// header buttons already use. This panel has no popover. VoiceOver hears
+    /// that explanation as the row's hint when there is one.
+    private func latestAnnouncement(_ latest: CodexResetCardLines.Latest) -> some View {
+        VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(localized: "Last reset")
                     .foregroundStyle(.primary)
@@ -351,35 +366,57 @@ struct UsageDetailCard: View {
 
                 Spacer(minLength: 8)
 
-                Text(relative)
+                Text(latest.relative)
                     .foregroundStyle(.primary.opacity(0.9))
                     .multilineTextAlignment(.trailing)
                     .lineLimit(1)
             }
 
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: detail)
-                    .foregroundStyle(.primary.opacity(0.55))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .lineLimit(2)
-
-                if let help {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular))
-                        .foregroundStyle(.primary.opacity(0.45))
-                        .help(help)
-                        .accessibilityHidden(true)
-                }
-            }
+            latestTypeLine(latest)
+                .foregroundStyle(.primary.opacity(0.55))
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(String.localized("Last reset"))
-        .accessibilityValue(CodexResetPresentation.spoken(relative: relative, detail: detail))
-        .codexResetHelp(help)
+        .accessibilityValue(latest.spoken)
+        .codexResetHint(latest.help)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Type, then the local clock. The tooltip sits on the type. Every
+    /// translation of the joined line uses the same separator, so the type
+    /// can be its own view and the clock stays beside it. When the pair does
+    /// not fit, the clock drops to the next line — still inside the two-line
+    /// budget — rather than the type being clipped to make room for an icon.
+    @ViewBuilder
+    private func latestTypeLine(_ latest: CodexResetCardLines.Latest) -> some View {
+        let type = Text(verbatim: latest.typeLabel)
+            .lineLimit(1)
+            .codexResetTooltip(latest.help)
+        if latest.typeLabel.isEmpty {
+            Text(verbatim: latest.absolute)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .codexResetTooltip(latest.help)
+        } else if latest.absolute.isEmpty {
+            type
+        } else {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    type
+                    Text(verbatim: " · \(latest.absolute)")
+                        .lineLimit(1)
+                }
+                VStack(alignment: .leading, spacing: 0) {
+                    type
+                    Text(verbatim: latest.absolute)
+                        .lineLimit(1)
+                }
+            }
+        }
     }
 
     private var predictionValue: String {
-        switch codexReset?.card {
+        switch resolvedCodexReset?.card {
         case .scheduled(let date):
             Self.clock(date)
         case .watch(let watch):
@@ -392,7 +429,7 @@ struct UsageDetailCard: View {
     /// The API's own forecast phrase. Absent for an explicit time and for the
     /// empty state — `expires_at` is never rendered.
     private var predictionDetail: String? {
-        guard case .watch(let watch) = codexReset?.card else { return nil }
+        guard case .watch(let watch) = resolvedCodexReset?.card else { return nil }
         return watch.forecastWindow
     }
 
@@ -496,15 +533,59 @@ struct UsageDetailCard: View {
 }
 
 private extension View {
-    /// Tooltip and VoiceOver hint for a banked announcement. Absent text
-    /// adds neither, because an empty `.help` is still a tooltip.
+    /// System tooltip on the reset type. Absent text adds nothing, because
+    /// an empty `.help` is still a tooltip.
     @ViewBuilder
-    func codexResetHelp(_ text: String?) -> some View {
+    func codexResetTooltip(_ text: String?) -> some View {
         if let text, !text.isEmpty {
-            self.help(text).accessibilityHint(text)
+            self.help(text)
         } else {
             self
         }
+    }
+
+    /// The same explanation, for VoiceOver, on the last-reset block. The
+    /// type's tooltip is not in that block's accessibility tree.
+    @ViewBuilder
+    func codexResetHint(_ text: String?) -> some View {
+        if let text, !text.isEmpty {
+            self.accessibilityHint(text)
+        } else {
+            self
+        }
+    }
+}
+
+/// Opens codex-resets.com. It lives on the prediction row, which is always
+/// drawn, so a card with no latest announcement still has a way to the site.
+/// The old credit sentence is not what this says: the arrow is the control,
+/// and VoiceOver hears it as a link that opens Codex Resets.
+private struct CodexResetsLink: View {
+    @State private var hovering = false
+
+    private static let name = "Codex Resets"
+
+    private var label: String { String.localized("Open \(Self.name)") }
+
+    var body: some View {
+        let side = DetailCardLayout.rowTextLineHeight
+        Image(systemName: "arrow.up.right")
+            .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .semibold))
+            .foregroundStyle(.primary.opacity(hovering ? 1 : 0.75))
+            .frame(width: side, height: side)
+            .contentShape(Rectangle())
+            .overlay {
+                PointerHand(onHover: { hovering = $0 }) {
+                    NSWorkspace.shared.open(CodexResetClient.site)
+                }
+            }
+            .help(label)
+            .accessibilityElement()
+            .accessibilityLabel(label)
+            .accessibilityAddTraits(.isLink)
+            .accessibilityAction(.default) {
+                NSWorkspace.shared.open(CodexResetClient.site)
+            }
     }
 }
 

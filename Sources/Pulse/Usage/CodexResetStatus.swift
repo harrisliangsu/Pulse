@@ -33,6 +33,11 @@ struct CodexResetStatus: Equatable, Sendable, Codable {
         /// the field was absent.
         var resetType: String
         var announcedAt: Date
+        /// The announcement body, as published. Missing and blank are the
+        /// same. A banked credit does not show this; a regular reset, and
+        /// any type added later, uses it as the tooltip and shows nothing
+        /// when it is absent.
+        var text: String? = nil
     }
 
     var scheduled: Scheduled?
@@ -111,7 +116,9 @@ struct CodexResetStatus: Equatable, Sendable, Codable {
         guard let announced = CodexResetDates.parse(object["announced_at"] as? String) else { return nil }
         let id = (object["id"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let type = (object["reset_type"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return Latest(id: id, resetType: type, announcedAt: announced)
+        let text = (object["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let body = (text?.isEmpty == false) ? text : nil
+        return Latest(id: id, resetType: type, announcedAt: announced, text: body)
     }
 }
 
@@ -164,15 +171,81 @@ enum CodexResetPresentation {
         return String.localized("\(label) · \(absolute)")
     }
 
-    /// The site's explanation of a banked credit. Other types have none.
-    static func help(resetType: String) -> String? {
-        guard resetType == "banked" else { return nil }
-        return String.localized("A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit.")
+    /// What hovering the type says.
+    ///
+    /// A banked credit keeps the site's own explanation: you apply it, and
+    /// usage does not refill immediately. Every other type, including
+    /// `regular` and a kind the API adds later, shows `latest_reset.text`
+    /// verbatim. Blank text is no tooltip — the card does not invent one.
+    static func help(resetType: String, announcement: String?) -> String? {
+        if resetType == "banked" {
+            return String.localized("A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit.")
+        }
+        guard let announcement else { return nil }
+        let body = announcement.trimmingCharacters(in: .whitespacesAndNewlines)
+        return body.isEmpty ? nil : body
     }
 
     /// What VoiceOver reads for the row: relative time, then type and clock.
     static func spoken(relative: String, detail: String) -> String {
         String.localized("\(relative), \(detail)")
+    }
+}
+
+/// The Last reset row, or nothing.
+///
+/// Separate from the prediction. An empty prediction (`scheduled` and `watch`
+/// both absent) still produces a row when `latest` is set — that is the
+/// banked announcement the site leads with. The card draws this value; it
+/// does not decide the rule again inline.
+struct CodexResetCardLines: Equatable, Sendable {
+    struct Latest: Equatable, Sendable {
+        var relative: String
+        /// The words the tooltip is attached to. Empty when the API named no type.
+        var typeLabel: String
+        var absolute: String
+        var detail: String
+        var help: String?
+        var spoken: String
+    }
+
+    var latest: Latest?
+
+    static func make(
+        _ status: CodexResetStatus?,
+        now: Date = Date(),
+        locale: Locale = LocalizationSource.locale,
+        calendar: Calendar = .current
+    ) -> CodexResetCardLines {
+        guard let announcement = status?.latest else { return CodexResetCardLines(latest: nil) }
+        let relative = CodexResetPresentation.relative(
+            announcedAt: announcement.announcedAt, now: now, locale: locale
+        )
+        let absolute = CodexResetPresentation.absolute(
+            announcedAt: announcement.announcedAt, locale: locale, calendar: calendar
+        )
+        let typeLabel = CodexResetPresentation.typeLabel(resetType: announcement.resetType)
+        let detail = CodexResetPresentation.detail(resetType: announcement.resetType, absolute: absolute)
+        let help = CodexResetPresentation.help(
+            resetType: announcement.resetType, announcement: announcement.text
+        )
+        return CodexResetCardLines(latest: Latest(
+            relative: relative,
+            typeLabel: typeLabel,
+            absolute: absolute,
+            detail: detail,
+            help: help,
+            spoken: CodexResetPresentation.spoken(relative: relative, detail: detail)
+        ))
+    }
+
+    /// Identity of the latest row. Empty when there is nothing to draw, so an
+    /// open card can rebuild the branch when an announcement arrives. The
+    /// body is part of it: a tooltip that was absent and then is not has to
+    /// replace the row, the same way a missing `latest` does.
+    static func identity(_ status: CodexResetStatus?) -> String {
+        guard let latest = status?.latest else { return "" }
+        return "\(latest.id)|\(latest.resetType)|\(latest.announcedAt.timeIntervalSinceReferenceDate)|\(latest.text ?? "")"
     }
 }
 

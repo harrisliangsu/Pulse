@@ -32,12 +32,25 @@ final class CodexResetMonitor {
         self.onUpdate = onUpdate
     }
 
-    func start() {
-        guard loop == nil else { return }
+    /// Restores the cache, then polls. The returned status is the one just
+    /// loaded — the caller stores it itself, because the `onUpdate` closure
+    /// is the only other path and a miss there leaves the file ahead of the
+    /// card.
+    @discardableResult
+    func start() -> CodexResetStatus? {
+        guard loop == nil else { return status }
         load()
         loop = Task { [weak self] in
             await self?.run()
         }
+        return status
+    }
+
+    /// The on-disk status, without starting the poll. Tests use this so a
+    /// cache round trip does not open the network loop.
+    func restoreCache() -> CodexResetStatus? {
+        load()
+        return status
     }
 
     /// The panel was opened or the reminder was switched on. No-op while the
@@ -99,17 +112,10 @@ final class CodexResetMonitor {
         freshUntil = Date().addingTimeInterval(wait)
     }
 
-    private struct Disk: Codable {
-        var status: CodexResetStatus
-        var etag: String?
-        var fetchedAt: Date
-        var maxAge: TimeInterval?
-    }
-
     private func load() {
         guard
             let data = try? Data(contentsOf: file),
-            let disk = try? JSONDecoder().decode(Disk.self, from: data)
+            let disk = CodexResetDisk.decode(data)
         else { return }
 
         status = disk.status
@@ -126,13 +132,29 @@ final class CodexResetMonitor {
 
     private func save() {
         guard let status else { return }
-        let disk = Disk(status: status, etag: etag, fetchedAt: Date(), maxAge: maxAge)
+        let disk = CodexResetDisk(status: status, etag: etag, fetchedAt: Date(), maxAge: maxAge)
         let destination = file
-        let data = try? JSONEncoder().encode(disk)
+        let data = CodexResetDisk.encode(disk)
         DispatchQueue.global(qos: .utility).async {
             PulseStorage.prepare()
             guard let data else { return }
             try? data.write(to: destination, options: .atomic)
         }
+    }
+}
+
+/// The `codex-resets.json` document: the parsed status, not the raw API body.
+struct CodexResetDisk: Equatable, Codable, Sendable {
+    var status: CodexResetStatus
+    var etag: String?
+    var fetchedAt: Date
+    var maxAge: TimeInterval?
+
+    static func decode(_ data: Data) -> CodexResetDisk? {
+        try? JSONDecoder().decode(CodexResetDisk.self, from: data)
+    }
+
+    static func encode(_ disk: CodexResetDisk) -> Data? {
+        try? JSONEncoder().encode(disk)
     }
 }

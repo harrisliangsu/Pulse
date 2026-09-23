@@ -38,6 +38,14 @@ struct FloatingUsagePanelView: View {
 
 
     var body: some View {
+        // Read with the rings, not only inside the card overlay. The overlay
+        // is where this used to be read, and only while a card was open, under
+        // the reveal spring. A status that landed after that — the disk cache,
+        // or the poll — changed nothing on screen: 「暂无预测」 is what a nil
+        // status and an empty prediction both say, so the Last reset branch
+        // stayed out of the tree. The footer under it never moved.
+        let codexResetStatus = store.codexResetStatus
+        let codexCredits = store.codexCredits
         // The rail is pinned to the trailing edge of a spacer that fills the
         // panel, as an overlay rather than a stack child: overlays keep their
         // ideal size instead of being squeezed by the space available, so the
@@ -126,9 +134,10 @@ struct FloatingUsagePanelView: View {
                             showsForecast: settings.showsForecast,
                             pointerCenter: pointerCentre(for: index),
                             openSettings: openSettings,
-                            codexReset: selected.provider == .codex ? store.codexResetStatus : nil,
+                            codexReset: selected.provider == .codex ? codexResetStatus : nil,
+                            codexResets: selected.provider == .codex ? store : nil,
                             codexCredits: selected.provider == .codex && selected.account.isPrimary
-                                ? store.codexCredits : nil
+                                ? codexCredits : nil
                         )
                         .fixedSize()
                         .background(
