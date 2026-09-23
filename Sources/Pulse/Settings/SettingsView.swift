@@ -1025,6 +1025,35 @@ struct SettingsView: View {
                     .labelsHidden()
                     .toggleStyle(.switch)
                 }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Hide menu bar icon"),
+                    subtitle: String.localized("Remove Pulse from the menu bar; use the panel menu or shortcut to open settings.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.hidesMenuBarIcon },
+                        set: { hidden in
+                            // Honour the request without taking away the last
+                            // visible route back to Settings. Registration,
+                            // not merely a stored combination, is what counts.
+                            if hidden,
+                               AppDelegate.menuBarIconMustRemainVisible(
+                                   panelVisible: !settings.needsProviderSelection && settings.isPanelVisible,
+                                   hasRegisteredShortcut: shortcuts.hasRegisteredEntryPoint
+                               ) {
+                                // No chosen provider means no panel exists to
+                                // show, even when its preference reads true.
+                                guard !settings.needsProviderSelection else { return }
+                                settings.isPanelVisible = true
+                            }
+                            settings.hidesMenuBarIcon = hidden
+                        }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
             }
 
             SettingsGroup(String.localized("Shortcuts")) {
@@ -2749,77 +2778,86 @@ struct SettingsView: View {
         let usage = store.usage(for: account)
 
         return SettingsGroup(String.localized("Current usage")) {
-            // Says how current these figures are, and offers to make them
-            // current. The rail has the same on a ring click, but nobody
-            // reading a settings pane should have to go and find it there.
-            SettingsRow(String.localized("Last read")) {
-                HStack(spacing: 10) {
-                    // `Text`'s relative style keeps counting on its own. A
-                    // string worked out once said "just now" for the whole
-                    // half hour until something else redrew the view.
-                    if let observed = usage.observedAt {
-                        Text(observed, style: .relative)
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                            // Every other date in the app is pinned to the
-                            // language chosen in Settings; this one formats
-                            // with the environment's locale, which follows the
-                            // system. Without this, an English Pulse on a
-                            // Chinese Mac prints "4分钟" beside "Refresh".
-                            .environment(\.locale, LocalizationSource.locale)
-                    } else {
-                        Text(localized: "Not yet")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Button(String.localized("Refresh")) { store.refresh(account) }
-                        // Any pass, not just this account.provider's: during a
-                        // background one the press would only queue, with
-                        // nothing on screen to say so.
-                        .disabled(store.isRefreshing)
-                }
-            }
-
-            SettingsRowDivider()
-
-            if usage.windows.isEmpty {
+            if !settings.isEnabled(account) {
                 SettingsRow(
-                    String.localized("No reading"),
-                    subtitle: {
-                        if case .unavailable(let reason) = usage.state { return reason.message }
-                        return nil
-                    }()
+                    String.localized("Not shown"),
+                    subtitle: String.localized("Enable a service in its settings to start monitoring.")
                 ) {
                     EmptyView()
                 }
             } else {
-                ForEach(Array(usage.windows.enumerated()), id: \.element.id) { index, window in
-                    if index > 0 { SettingsRowDivider() }
+                // Says how current these figures are, and offers to make them
+                // current. The rail has the same on a ring click, but nobody
+                // reading a settings pane should have to go and find it there.
+                SettingsRow(String.localized("Last read")) {
+                    HStack(spacing: 10) {
+                        // `Text`'s relative style keeps counting on its own. A
+                        // string worked out once said "just now" for the whole
+                        // half hour until something else redrew the view.
+                        if let observed = usage.observedAt {
+                            Text(observed, style: .relative)
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                                // Every other date in the app is pinned to the
+                                // language chosen in Settings; this one formats
+                                // with the environment's locale, which follows the
+                                // system. Without this, an English Pulse on a
+                                // Chinese Mac prints "4分钟" beside "Refresh".
+                                .environment(\.locale, LocalizationSource.locale)
+                        } else {
+                            Text(localized: "Not yet")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                        }
 
-                    SettingsRow(window.name, subtitle: resetText(window)) {
-                        Text(window.percentText(remaining: settings.showsRemaining))
-                            .font(.system(size: 13, weight: .medium))
-                            .monospacedDigit()
+                        Button(String.localized("Refresh")) { store.refresh(account) }
+                            // Any pass, not just this account.provider's: during a
+                            // background one the press would only queue, with
+                            // nothing on screen to say so.
+                            .disabled(store.isRefreshing)
                     }
                 }
-            }
 
-            if let plan = usage.plan {
                 SettingsRowDivider()
-                SettingsRow(String.localized("Plan")) {
-                    Text(plan)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
+
+                if usage.windows.isEmpty {
+                    SettingsRow(
+                        String.localized("No reading"),
+                        subtitle: {
+                            if case .unavailable(let reason) = usage.state { return reason.message }
+                            return nil
+                        }()
+                    ) {
+                        EmptyView()
+                    }
+                } else {
+                    ForEach(Array(usage.windows.enumerated()), id: \.element.id) { index, window in
+                        if index > 0 { SettingsRowDivider() }
+
+                        SettingsRow(window.name, subtitle: resetText(window)) {
+                            Text(window.percentText(remaining: settings.showsRemaining))
+                                .font(.system(size: 13, weight: .medium))
+                                .monospacedDigit()
+                        }
+                    }
                 }
-            }
 
-            if let credit = usage.creditBalance {
-                SettingsRowDivider()
-                SettingsRow(String.localized("Credit balance")) {
-                    Text(credit)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
+                if let plan = usage.plan {
+                    SettingsRowDivider()
+                    SettingsRow(String.localized("Plan")) {
+                        Text(plan)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                if let credit = usage.creditBalance {
+                    SettingsRowDivider()
+                    SettingsRow(String.localized("Credit balance")) {
+                        Text(credit)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         }

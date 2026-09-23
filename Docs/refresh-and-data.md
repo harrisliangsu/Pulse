@@ -50,7 +50,7 @@ Guards:
 
 Releasing a stalled pass is not ending it. Abandoned work still writes when it answers. Every pass is stamped (`generation` / `currentPass`) and must still be current before writing `usage` or clearing flags.
 
-Disabled providers are not fetched by the loop or by opening their Settings pane. After initial setup, a deliberate refresh can still ask that account by name. Automatic history loading is restricted to enabled primary accounts, and Codex's account-history method checks the primary account is enabled before starting its helper.
+Disabled providers are not fetched by the loop, by opening their Settings pane, or by a per-account refresh call. The pane replaces its live rows with **Not shown** and disables diagnostics Retry until the account is enabled. Automatic history loading is restricted to enabled primary accounts, and Codex's account-history method checks the primary account is enabled before starting its helper.
 
 `windowSeconds` is not evidence that a length was reported. `UsageWindow.reportsLength` distinguishes a real duration from a sort key. The window-clock arc and burn-rate divide only when the length was actually stated.
 

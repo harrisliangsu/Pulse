@@ -449,6 +449,17 @@ struct UsageDockView: View {
                 shape: NotchBerthShape(notchSize: notchSize, openness: isExpanded ? 1 : 0),
                 usesGlass: usesGlass
             )
+            .overlay {
+                // The hardware housing replaces the ordinary collapsed
+                // sliver. Keep its one useful signal as a thin line directly
+                // under the housing; expanded rings already carry the colour.
+                if !isExpanded, let alert {
+                    NotchAlertShape(notchSize: notchSize)
+                        .fill(alert)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
             // Wider than the surface by the room the fillets sweep into at
             // the screen edge; the shape insets that back off for the body.
             .frame(width: surface.width + DockLayout.flareWidth * 2, height: surface.height)

@@ -154,7 +154,7 @@ WorkBuddy/CodeBuddy exclude the root-level `binaries/` subtree in **both** enume
 About **90% lower peak RSS** on this fixture. This measures whole-test-process RSS, not the reporter's physical-footprint sample, a universal memory ceiling, or a reproduction of their entire 5 GB Codex/1.7 GB WorkBuddy installation. Run the opt-in probe by itself for a comparable high-water mark:
 
 ```bash
-PULSE_SPEND_BENCHMARK=1 swift test -Xswiftc -swift-version -Xswiftc 6 --filter SpendReadPerformanceTests
+PULSE_SPEND_BENCHMARK=1 swift test --filter SpendReadPerformanceTests
 ```
 
 ## What the page will not say

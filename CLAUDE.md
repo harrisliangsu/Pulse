@@ -25,7 +25,7 @@ swift test
 A clean `swift build` is not the Xcode check. Actor-isolation mistakes can be warnings here and hard errors there (every `View` is `@MainActor`). Before claiming a change builds:
 
 ```bash
-swift build -Xswiftc -swift-version -Xswiftc 6
+swift build
 ```
 
 Treat remaining warnings as failures. macOS 14+, Swift tools 6.0, no linter. **`swift test` exists** — rules, cache reconciliation and provider fixtures; run it, and add to it when you change a rule. [Docs/testing.md](Docs/testing.md). CI and release need the macOS 26 SDK (`glassEffect`). **The SDK version stamped into the binary decides which control design macOS draws** — `Package.swift` sets it in `linkerSettings` because SwiftPM stamps the deployment target instead, and `bundle.sh` reads it back off every slice. Below 26 the app is silently drawn the old way. [Docs/decisions/sdk-stamp-and-appearance.md](Docs/decisions/sdk-stamp-and-appearance.md)

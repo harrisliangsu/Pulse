@@ -62,7 +62,7 @@ jobs:
       - name: Build
         run: |
           set -o pipefail
-          swift build -Xswiftc -swift-version -Xswiftc 6 2>&1 | tee build.log
+          swift build 2>&1 | tee build.log
 
       # Actor-isolation mistakes surface here as warnings and in Xcode as hard
       # errors that take the whole module down. Treating them as failures is
@@ -81,7 +81,7 @@ jobs:
       # thing that could catch a regression in them ran only when somebody
       # remembered to run it.
       - name: Tests
-        run: swift test -Xswiftc -swift-version -Xswiftc 6
+        run: swift test
 
       # Proves the thing that actually ships can be assembled, not just that
       # the sources compile.

@@ -67,7 +67,8 @@ struct KiroUsageService: Sendable {
 
     static func windows(from payload: Payload) -> [UsageWindow] {
         let reset = payload.billingCycleReset.flatMap(date(from:))
-        return payload.usageBreakdowns.enumerated().compactMap { index, item in
+        var occurrences: [String: Int] = [:]
+        return payload.usageBreakdowns.compactMap { item in
             guard item.hasLimit != false, let limit = item.limit, limit.isFinite, limit > 0 else { return nil }
             let used: Double
             if let reported = item.used, reported.isFinite {
@@ -77,9 +78,14 @@ struct KiroUsageService: Sendable {
             } else {
                 return nil
             }
-            let resource = item.resourceType?.lowercased() ?? "usage"
+            let resource = stableIDComponent(item.resourceType)
+                ?? stableIDComponent(item.displayName)
+                ?? "usage"
+            let occurrence = occurrences[resource, default: 0]
+            occurrences[resource] = occurrence + 1
+            let id = occurrence == 0 ? resource : "\(resource).\(occurrence + 1)"
             return UsageWindow(
-                id: "\(resource).\(index)",
+                id: id,
                 kind: .monthly,
                 scope: item.displayName ?? item.resourceType,
                 usedFraction: min(max(used / limit, 0), 1),
@@ -89,6 +95,16 @@ struct KiroUsageService: Sendable {
                 isExhausted: used >= limit
             )
         }
+    }
+
+    /// Kiro's resource type is the pool's provider-owned identity. Array
+    /// position is not: the CLI may reorder pools or insert a new one without
+    /// changing the allowance a saved pin or alert record refers to.
+    private static func stableIDComponent(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return trimmed.lowercased()
     }
 
     static func date(from text: String) -> Date? {

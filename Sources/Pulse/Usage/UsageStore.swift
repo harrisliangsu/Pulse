@@ -640,7 +640,9 @@ final class UsageStore {
     /// narrower: it should not start the other provider's helper or spend a
     /// second endpoint request when the user asked about one ring.
     func refresh(_ account: AccountKey) {
-        guard !settings.needsProviderSelection else { return }
+        // Provider panes stay reachable while their rail slot is switched
+        // off. Their controls must not turn that into an unadvertised fetch.
+        guard !settings.needsProviderSelection, settings.isEnabled(account) else { return }
         // The same ceiling as the full pass, and for the same reason: this
         // path sets the flag too, so a ring click that never came back would
         // block every refresh after it.

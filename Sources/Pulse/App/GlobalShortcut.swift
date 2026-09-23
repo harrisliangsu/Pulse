@@ -165,6 +165,19 @@ final class GlobalShortcutMonitor {
     private var registered: [Action: (shortcut: GlobalShortcut, reference: EventHotKeyRef)] = [:]
     private var eventHandler: EventHandlerRef?
 
+    /// Called after a complete pair of registrations has been applied. The
+    /// app shell uses this to keep one visible way back into Pulse: a shortcut
+    /// stored in Settings is not an entry point if the window server refused
+    /// it.
+    var onRegistrationChange: (() -> Void)?
+
+    /// Whether either action can currently bring a hidden interface back.
+    /// Stored combinations are deliberately not enough; `registered` is the
+    /// window server's answer, including conflicts with another app.
+    var hasRegisteredEntryPoint: Bool {
+        registered[.openSettings] != nil || registered[.togglePanel] != nil
+    }
+
     /// Four characters the window server uses to tell one app's hot keys from
     /// another's: 'PULS'.
     private static let signature: OSType = 0x5055_4C53
@@ -179,6 +192,7 @@ final class GlobalShortcutMonitor {
     func apply(_ settings: AppSettings) {
         update(.openSettings, to: settings.openSettingsShortcut)
         update(.togglePanel, to: settings.togglePanelShortcut)
+        onRegistrationChange?()
     }
 
     private func update(_ action: Action, to shortcut: GlobalShortcut?) {

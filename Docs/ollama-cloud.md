@@ -118,7 +118,7 @@ finding the files and reading them on a real machine.
 
 ```sh
 ./Scripts/check-localization.sh
-swift build -Xswiftc -swift-version -Xswiftc 6
+swift build
 ./Scripts/bundle.sh
 ```
 

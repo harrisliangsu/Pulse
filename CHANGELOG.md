@@ -10,6 +10,15 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.3.2
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Synced from upstream qunqin24/Pulse** (five commits on top of their post-1.3.0 line that this fork had not yet taken).
+- **Hide the menu bar icon** (off by default). Reach Pulse through the floating panel menu or global shortcuts alone; Settings always keeps at least one working entry point.
+- **Agent guidance entry point** — `AGENTS.md` for coding agents working in this repo.
+- **Fixed stale RPC timeouts after helper restarts.** Old Codex and Kiro request timers can no longer finish a newer request that reused the same identifier, or report a late failure after a request already completed.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons (incl. optional hourly), ring colour schemes (Red alert / Gradient / Quiet), bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.3.1
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
@@ -20,6 +29,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 - **Marks:** mainland Zhipu row uses the BigModel mark; both GLM rows share one mark instead of naming one after a product; a provider mark that loads but draws nothing fails loudly.
 - **Docs:** pull-request contribution guidelines; repository numbers in the READMEs (this fork’s badges and links).
 - **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons (incl. optional hourly), ring colour schemes (Red alert / Gradient / Quiet), bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 
 ## 1.3.0
 

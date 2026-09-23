@@ -74,7 +74,7 @@ jobs:
       - name: Build
         run: |
           set -o pipefail
-          swift build -Xswiftc -swift-version -Xswiftc 6 2>&1 | tee build.log
+          swift build 2>&1 | tee build.log
           if grep -q "warning:" build.log; then
             echo "::error::The build produced warnings, which this project treats as failures."
             grep "warning:" build.log | head -40
@@ -85,7 +85,7 @@ jobs:
       # the last thing standing between a regression in the rules and a
       # Sparkle update, so they run here too rather than only on push.
       - name: Tests
-        run: swift test -Xswiftc -swift-version -Xswiftc 6
+        run: swift test
 
       # The disk image carries the install instructions on its window, so it is
       # the download people should get; the zip is there for anything that

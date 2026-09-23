@@ -126,6 +126,18 @@ struct NotchGeometryTests {
         }
     }
 
+    @Test("A collapsed alert cue sits directly below and inside the physical notch")
+    func collapsedAlertCue() {
+        let rail = DockLayout.size(for: 6, on: .horizontal)
+        let rect = drawn(rail)
+        let bounds = NotchAlertShape(notchSize: notch.size).path(in: rect).boundingRect
+
+        #expect(abs(bounds.minY - (rect.minY + notch.height)) < 0.01)
+        #expect(bounds.maxY <= rect.maxY + 0.01)
+        #expect(bounds.width < notch.width)
+        #expect(abs(bounds.midX - rect.midX) < 0.01)
+    }
+
     /// The fillet into the screen edge, which a rail that is not on a notch
     /// has always had. Losing it leaves two square corners against the top of
     /// the screen — nothing fails, the rail just stops looking like the rail.
