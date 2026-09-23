@@ -567,6 +567,9 @@ final class UsageAlerts {
     private var tapHandler: NotificationTapHandler?
     private var authorizationRequest: Task<Bool, Never>?
     private let memoryFile: URL
+    private let advanceFile: URL
+    private var advance = AdvanceReminderBook()
+    private var advanceRetry: Task<Void, Never>?
 
     private static var file: URL {
         PulseStorage.directory.appending(path: "alerts.json")
@@ -575,8 +578,13 @@ final class UsageAlerts {
     init(settings: AppSettings, file: URL = UsageAlerts.file) {
         self.settings = settings
         memoryFile = file
+        advanceFile = file.deletingLastPathComponent().appending(path: "advance-reminders.json")
         memory = (try? Data(contentsOf: file))
             .flatMap { try? JSONDecoder().decode(AlertMemory.self, from: $0) } ?? AlertMemory()
+        if let data = try? Data(contentsOf: advanceFile),
+           let stored = try? JSONDecoder().decode(AdvanceReminderBook.Memory.self, from: data) {
+            advance.memory = stored
+        }
     }
 
     /// Wires up what happens when one is clicked, and reads the current grant.
@@ -620,15 +628,15 @@ final class UsageAlerts {
 
     /// Injectable authorization operation: tests never contact the system centre.
     func requestAuthorizationIfNeeded(using request: @escaping @MainActor () async -> Bool) async -> Bool {
-        guard settings.wantsAlerts else { return false }
+        guard settings.wantsNotificationPermission else { return false }
         if let authorizationRequest {
-            return await authorizationRequest.value && settings.wantsAlerts
+            return await authorizationRequest.value && settings.wantsNotificationPermission
         }
         let pending = Task { await request() }
         authorizationRequest = pending
         let granted = await pending.value
         authorizationRequest = nil
-        return granted && settings.wantsAlerts
+        return granted && settings.wantsNotificationPermission
     }
 
     /// Whether a `.stale` reading should count against this account.
@@ -699,6 +707,89 @@ final class UsageAlerts {
         for alert in alerts where alert.kind != .celebration {
             post(alert)
         }
+    }
+
+    /// Hands advance reminders to the notification centre, or takes back the
+    /// ones that are no longer wanted.
+    ///
+    /// Separate from `observe`. Those rules speak after a reading; these are
+    /// scheduled before a time the provider — or Codex Resets — already named.
+    /// An unbundled build returns before the book changes, so a later bundled
+    /// launch can still deliver them. A grant that has not been given yet does
+    /// the same: nothing is marked delivered for a notification that was not
+    /// posted. Switching both reminders off still cancels whatever is pending.
+    func syncAdvanceReminders(_ desired: [AdvanceReminder], posting: Bool) {
+        guard Self.isSupported else { return }
+        // `start` reads the grant asynchronously. A launch sync that lands in
+        // that gap must not treat "not asked yet" as a refusal, or a reminder
+        // that became due while Pulse was quit would wait for the next poll.
+        if authorization == .notDetermined {
+            advanceRetry?.cancel()
+            advanceRetry = nil
+            if posting {
+                let desired = desired
+                advanceRetry = Task { [weak self] in
+                    try? await Task.sleep(for: .milliseconds(500))
+                    guard let self, !Task.isCancelled else { return }
+                    self.advanceRetry = nil
+                    guard self.authorization != .notDetermined else { return }
+                    let stillPosting = self.settings.wantsAdvanceReminders
+                    self.syncAdvanceReminders(stillPosting ? desired : [], posting: stillPosting)
+                }
+                return
+            }
+        }
+        let allowed = !posting || authorization == .authorized || authorization == .provisional
+        guard allowed else { return }
+
+        let before = advance.memory
+        let step = advance.reconcile(desired: desired, enabled: posting, now: Date())
+        if advance.memory != before { saveAdvance() }
+
+        guard !step.cancel.isEmpty || !step.schedule.isEmpty else { return }
+        let center = UNUserNotificationCenter.current()
+        // Adding a request with the same identifier replaces a pending one.
+        // Removing it in the same turn can drop the replacement.
+        let replacing = Set(step.schedule.map(\.identifier))
+        let cancel = step.cancel.filter { !replacing.contains($0) }
+        if !cancel.isEmpty {
+            center.removePendingNotificationRequests(withIdentifiers: cancel)
+        }
+        for reminder in step.schedule {
+            postAdvance(reminder)
+        }
+    }
+
+    private func postAdvance(_ reminder: AdvanceReminder) {
+        let content = UNMutableNotificationContent()
+        switch reminder.kind {
+        case .predicted(let when):
+            content.title = .localized("Predicted reset")
+            content.body = .localized("An announced Codex reset is set for \(Self.clock(when)).")
+        case .regular(let account, let window, let when):
+            content.title = account
+            content.subtitle = window
+            content.body = .localized("Resets \(Self.clock(when))")
+        }
+        content.sound = .default
+
+        let trigger: UNNotificationTrigger?
+        if let fire = reminder.fireAt, fire.timeIntervalSinceNow > 1 {
+            trigger = UNTimeIntervalNotificationTrigger(timeInterval: fire.timeIntervalSinceNow, repeats: false)
+        } else {
+            trigger = nil
+        }
+        let request = UNNotificationRequest(identifier: reminder.identifier, content: content, trigger: trigger)
+        Task { try? await UNUserNotificationCenter.current().add(request) }
+    }
+
+    private static func clock(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = LocalizationSource.locale
+        formatter.setLocalizedDateFormatFromTemplate(
+            Calendar.current.isDateInToday(date) ? "jmm" : "MMMdjmm"
+        )
+        return formatter.string(from: date)
     }
 
     /// One overlay per account per pass. Two of Qoder's bars turning over
@@ -808,6 +899,16 @@ final class UsageAlerts {
     /// encode plus an atomic write (temp file, rename) on the UI thread
     /// several times a refresh. Small file, wrong thread.
     private static let disk = DispatchQueue(label: "Pulse.alerts", qos: .utility)
+
+    private func saveAdvance() {
+        let snapshot = advance.memory
+        let destination = advanceFile
+        Self.disk.async {
+            PulseStorage.prepare()
+            guard let data = try? JSONEncoder().encode(snapshot) else { return }
+            try? data.write(to: destination, options: .atomic)
+        }
+    }
 
     private func save() {
         // Snapshot on the actor, write off it: `AlertMemory` is a value type,

@@ -435,7 +435,7 @@
 "Turned off for Pulse in System Settings › Notifications." = "「システム設定 › 通知」で Pulse の通知がオフになっています。";
 "Notifications need the bundled app." = "通知にはバンドル済みの App が必要です。";
 "When a limit comes back" = "上限が戻ったとき";
-"Only for one you were warned about." = "以前に警告した上限だけが対象です。";
+"After it turns over, and only for one you were warned about." = "上限が戻ったあとに知らせます。以前に警告したものだけです。";
 "When a reading stops arriving" = "使用量が読めなくなったとき";
 "After several failed checks in a row, once per outage." = "連続して何度か失敗したときに、1 回の障害につき 1 度だけ通知します。";
 "Can't be read" = "読み取れません";
@@ -596,7 +596,7 @@
 "Dark, light, match the Mac, or glass." = "ダーク、ライト、Mac に合わせる、またはガラス。";
 "From the Kimi Code console. Optional if you sign in. Stored encrypted on this Mac." = "Kimi Code コンソールから取得。サインイン済みなら省略可。この Mac に暗号化して保存します。";
 "Five-hour windows, not only the week or month." = "週や月だけでなく、5時間の枠でもリボンを出します。";
-"Full-screen ribbons and a sound, named for the provider." = "全画面のリボンと効果音。どのサービスかも表示します。";
+"After a limit turns over: ribbons and a sound, named for the provider." = "上限が戻ったあと：全画面のリボンと効果音。どのサービスかも表示します。";
 "Glass" = "ガラス";
 "Kimi Code account" = "Kimi Code アカウント";
 "Kimi Code's saved login expired. Sign in again in Settings." = "Kimi Code の保存済みログインが期限切れです。設定でもう一度サインインしてください。";
@@ -665,3 +665,23 @@
 "Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "設定で読み込んだブラウザのログインセッションを使います。読み込み時にブラウザのキーチェーンへのアクセスを求めることがあります。";
 "Uses the GitHub login you connect in Settings. No Keychain prompt." = "設定で連携した GitHub のログインを使います。キーチェーンの確認はありません。";
 "Uses only the API key you enter in Settings. No Keychain prompt." = "設定で入力した API キーだけを使います。キーチェーンの確認はありません。";
+
+/* Codex のリセット予測と事前通知 */
+"Predicted reset" = "予測リセット";
+"No prediction yet" = "予測はまだありません";
+"Elevated" = "やや高い";
+"Strong" = "高い";
+"%@ · %@ chance" = "%@ · %@ の見込み";
+"Reset cards" = "リセットカード";
+"Data from Codex Resets" = "データ出典：Codex Resets";
+"Reset reminders" = "リセットの事前通知";
+"Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "Codex Resets が時刻を示しているときだけ、その前に知らせます。見通しだけで時刻がなければ通知しません。";
+"How early" = "どれだけ前に";
+"12 hours before" = "12時間前";
+"24 hours before" = "24時間前";
+"48 hours before" = "48時間前";
+"Hours before the predicted time." = "予測時刻のどれだけ前に知らせるか。";
+"Regular resets" = "定期的なリセット";
+"Before each window's own reset, skipping any window shorter than the lead." = "各ウィンドウ自身のリセット時刻の前に知らせます。ウィンドウがその時間より短いときは通知しません。";
+"Hours before that reset." = "そのリセットのどれだけ前に知らせるか。";
+"An announced Codex reset is set for %@." = "告知された Codex のリセットは %@ です。";

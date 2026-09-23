@@ -3,8 +3,9 @@ import Foundation
 /// Codex's account-level history: how many tokens went through, day by day,
 /// plus the one-off credits that reset a rate limit early.
 ///
-/// This is background rather than at-a-glance, so it lives in settings and is
-/// fetched when that pane is opened — not on the panel's refresh loop.
+/// The history stays in settings. The reset-credit summary is also shown on
+/// the Codex card, from `rateLimits` alone, so opening that card does not
+/// wait on `account/usage/read`.
 ///
 /// Codex reports tokens here and never money, so the cost shown alongside it
 /// in settings comes from `UsageLedger` instead — the local transcripts, which
@@ -33,6 +34,9 @@ struct CodexAccountUsage: Equatable, Sendable {
     let availableResetCredits: Int
     /// The credit expiring soonest, which is the one worth spending first.
     let nextExpiringCredit: ResetCredit?
+    /// False when the rate-limit payload omitted `rateLimitResetCredits`.
+    /// That is "unknown", not a count of zero.
+    let creditsKnown: Bool
 
     var todayTokens: Int { days.last?.tokens ?? 0 }
 
@@ -42,6 +46,18 @@ struct CodexAccountUsage: Equatable, Sendable {
 
     /// The tail of the history, for the chart.
     func recent(_ count: Int) -> [Day] { Array(days.suffix(count)) }
+}
+
+/// Banked reset credits, without the token history they travel with.
+struct CodexCreditSummary: Equatable, Sendable {
+    var available: Int
+    var nextExpiresAt: Date?
+    /// Kept for the settings history card, which names the credit.
+    var next: CodexAccountUsage.ResetCredit?
+
+    /// A known zero is still an answer, and the card stays quiet about it.
+    /// An unknown read is not a summary at all.
+    var showsOnCard: Bool { available > 0 || nextExpiresAt != nil }
 }
 
 /// Reads `account/usage/read` and the reset credits from `codex app-server`.
@@ -67,6 +83,17 @@ struct CodexAccountUsageService: Sendable {
         return parse(usage: usageRoot, limits: limitsRoot)
     }
 
+    /// Credits alone. Nil when the app server cannot be asked, or when the
+    /// payload does not carry `rateLimitResetCredits` — missing is unknown,
+    /// not zero.
+    func fetchCredits() async -> CodexCreditSummary? {
+        guard
+            let data = try? await server.rateLimits(),
+            let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return nil }
+        return Self.credits(from: root)
+    }
+
     private func parse(usage: [String: Any], limits: [String: Any]) -> CodexAccountUsage {
         let summary = usage["summary"] as? [String: Any] ?? [:]
 
@@ -79,7 +106,24 @@ struct CodexAccountUsageService: Sendable {
             return CodexAccountUsage.Day(date: date, tokens: Int(tokens))
         }
 
-        let credits = limits["rateLimitResetCredits"] as? [String: Any] ?? [:]
+        let summaryCredits = Self.credits(from: limits)
+
+        return CodexAccountUsage(
+            days: days,
+            lifetimeTokens: Int(Self.number(summary["lifetimeTokens"]) ?? 0),
+            peakDailyTokens: Int(Self.number(summary["peakDailyTokens"]) ?? 0),
+            currentStreakDays: Int(Self.number(summary["currentStreakDays"]) ?? 0),
+            longestStreakDays: Int(Self.number(summary["longestStreakDays"]) ?? 0),
+            availableResetCredits: summaryCredits?.available ?? 0,
+            nextExpiringCredit: summaryCredits?.next,
+            creditsKnown: summaryCredits != nil
+        )
+    }
+
+    /// Nil when the field is absent. A present count of zero is a summary.
+    static func credits(from limits: [String: Any]) -> CodexCreditSummary? {
+        guard let credits = limits["rateLimitResetCredits"] as? [String: Any] else { return nil }
+
         let available = (credits["credits"] as? [[String: Any]] ?? [])
             .filter { ($0["status"] as? String) == "available" }
 
@@ -89,21 +133,17 @@ struct CodexAccountUsageService: Sendable {
                 guard let title = credit["title"] as? String else { return nil }
                 return CodexAccountUsage.ResetCredit(
                     title: title,
-                    expiresAt: Self.number(credit["expiresAt"]).map { Date(timeIntervalSince1970: $0) }
+                    expiresAt: number(credit["expiresAt"]).map { Date(timeIntervalSince1970: $0) }
                 )
             }
             .min { lhs, rhs in
                 (lhs.expiresAt ?? .distantFuture) < (rhs.expiresAt ?? .distantFuture)
             }
 
-        return CodexAccountUsage(
-            days: days,
-            lifetimeTokens: Int(Self.number(summary["lifetimeTokens"]) ?? 0),
-            peakDailyTokens: Int(Self.number(summary["peakDailyTokens"]) ?? 0),
-            currentStreakDays: Int(Self.number(summary["currentStreakDays"]) ?? 0),
-            longestStreakDays: Int(Self.number(summary["longestStreakDays"]) ?? 0),
-            availableResetCredits: Int(Self.number(credits["availableCount"]) ?? Double(available.count)),
-            nextExpiringCredit: soonest
+        return CodexCreditSummary(
+            available: Int(number(credits["availableCount"]) ?? Double(available.count)),
+            nextExpiresAt: soonest?.expiresAt,
+            next: soonest
         )
     }
 

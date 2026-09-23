@@ -125,7 +125,10 @@ struct FloatingUsagePanelView: View {
                             showsRemaining: settings.showsRemaining,
                             showsForecast: settings.showsForecast,
                             pointerCenter: pointerCentre(for: index),
-                            openSettings: openSettings
+                            openSettings: openSettings,
+                            codexReset: selected.provider == .codex ? store.codexResetStatus : nil,
+                            codexCredits: selected.provider == .codex && selected.account.isPrimary
+                                ? store.codexCredits : nil
                         )
                         .fixedSize()
                         .background(
@@ -520,6 +523,9 @@ struct FloatingUsagePanelView: View {
         // Opening a card is the clearest sign these numbers are being read,
         // which is what the automatic refresh interval paces itself against.
         store.noteLooked()
+        if entry.usage.provider == .codex, entry.usage.account.isPrimary {
+            store.refreshCodexCreditsIfStale()
+        }
     }
 
     /// Draws the rail out. Only ever called from a tracking area's *enter*,

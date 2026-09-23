@@ -458,7 +458,7 @@
 "Turned off for Pulse in System Settings › Notifications." = "Turned off for Pulse in System Settings › Notifications.";
 "Notifications need the bundled app." = "Notifications need the bundled app.";
 "When a limit comes back" = "When a limit comes back";
-"Only for one you were warned about." = "Only for one you were warned about.";
+"After it turns over, and only for one you were warned about." = "After it turns over, and only for one you were warned about.";
 "When a reading stops arriving" = "When a reading stops arriving";
 "After several failed checks in a row, once per outage." = "After several failed checks in a row, once per outage.";
 "Can't be read" = "Can't be read";
@@ -469,7 +469,7 @@
 "This limit has reset." = "This limit has reset.";
 "Celebrations" = "Celebrations";
 "Celebrate a reset" = "Celebrate a reset";
-"Full-screen ribbons and a sound, named for the provider." = "Full-screen ribbons and a sound, named for the provider.";
+"After a limit turns over: ribbons and a sound, named for the provider." = "After a limit turns over: ribbons and a sound, named for the provider.";
 "Also celebrate hourly quota resets" = "Also celebrate hourly quota resets";
 "Five-hour windows, not only the week or month." = "Five-hour windows, not only the week or month.";
 
@@ -663,3 +663,23 @@
 "Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "Uses a browser session you import in Settings. Importing may ask for browser Keychain access.";
 "Uses the GitHub login you connect in Settings. No Keychain prompt." = "Uses the GitHub login you connect in Settings. No Keychain prompt.";
 "Uses only the API key you enter in Settings. No Keychain prompt." = "Uses only the API key you enter in Settings. No Keychain prompt.";
+
+/* Codex reset forecast and advance reminders */
+"Predicted reset" = "Predicted reset";
+"No prediction yet" = "No prediction yet";
+"Elevated" = "Elevated";
+"Strong" = "Strong";
+"%@ · %@ chance" = "%@ · %@ chance";
+"Reset cards" = "Reset cards";
+"Data from Codex Resets" = "Data from Codex Resets";
+"Reset reminders" = "Reset reminders";
+"Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "Before an explicit time from Codex Resets; a forecast with no time stays quiet.";
+"How early" = "How early";
+"12 hours before" = "12 hours before";
+"24 hours before" = "24 hours before";
+"48 hours before" = "48 hours before";
+"Hours before the predicted time." = "Hours before the predicted time.";
+"Regular resets" = "Regular resets";
+"Before each window's own reset, skipping any window shorter than the lead." = "Before each window's own reset, skipping any window shorter than the lead.";
+"Hours before that reset." = "Hours before that reset.";
+"An announced Codex reset is set for %@." = "An announced Codex reset is set for %@.";

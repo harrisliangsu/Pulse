@@ -744,7 +744,7 @@ struct SettingsView: View {
 
                 SettingsRow(
                     String.localized("When a limit comes back"),
-                    subtitle: String.localized("Only for one you were warned about.")
+                    subtitle: String.localized("After it turns over, and only for one you were warned about.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { settings.alertsOnReset },
@@ -787,10 +787,90 @@ struct SettingsView: View {
                 }
             }
 
+            SettingsGroup(String.localized("Reset reminders")) {
+                SettingsRow(
+                    String.localized("Predicted reset"),
+                    subtitle: predictedReminderSubtitle
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.remindsBeforePredictedReset },
+                        set: { enabled in
+                            settings.remindsBeforePredictedReset = enabled
+                            commitAdvanceReminders()
+                        }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!UsageAlerts.isSupported)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("How early"),
+                    subtitle: String.localized("Hours before the predicted time.")
+                ) {
+                    Picker("", selection: Binding(
+                        get: { settings.predictedResetLead },
+                        set: { lead in
+                            settings.predictedResetLead = lead
+                            commitAdvanceReminders()
+                        }
+                    )) {
+                        ForEach(ResetLead.allCases) { lead in
+                            Text(lead.title).tag(lead)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+                    .disabled(!UsageAlerts.isSupported || !settings.remindsBeforePredictedReset)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Regular resets"),
+                    subtitle: String.localized("Before each window's own reset, skipping any window shorter than the lead.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.remindsBeforeRegularReset },
+                        set: { enabled in
+                            settings.remindsBeforeRegularReset = enabled
+                            commitAdvanceReminders()
+                        }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!UsageAlerts.isSupported)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("How early"),
+                    subtitle: String.localized("Hours before that reset.")
+                ) {
+                    Picker("", selection: Binding(
+                        get: { settings.regularResetLead },
+                        set: { lead in
+                            settings.regularResetLead = lead
+                            commitAdvanceReminders()
+                        }
+                    )) {
+                        ForEach(ResetLead.allCases) { lead in
+                            Text(lead.title).tag(lead)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+                    .disabled(!UsageAlerts.isSupported || !settings.remindsBeforeRegularReset)
+                }
+            }
+
             SettingsGroup(String.localized("Celebrations")) {
                 SettingsRow(
                     String.localized("Celebrate a reset"),
-                    subtitle: String.localized("Full-screen ribbons and a sound, named for the provider.")
+                    subtitle: String.localized("After a limit turns over: ribbons and a sound, named for the provider.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { settings.celebratesReset },
@@ -1175,6 +1255,29 @@ struct SettingsView: View {
             return .localized("Turned off for Pulse in System Settings › Notifications.")
         }
         return .localized("Notify when a limit passes this, and again when it is spent.")
+    }
+
+    /// Advance reminders are notifications, so they share the grant the other
+    /// switches ask for. The sentence stays about *before*, which is what
+    /// separates them from "when a limit comes back" and from the ribbons.
+    private var predictedReminderSubtitle: String {
+        guard UsageAlerts.isSupported else {
+            return .localized("Notifications need the bundled app.")
+        }
+        if settings.wantsAdvanceReminders, alerts.authorization == .denied {
+            return .localized("Turned off for Pulse in System Settings › Notifications.")
+        }
+        return .localized("Before an explicit time from Codex Resets; a forecast with no time stays quiet.")
+    }
+
+    private func commitAdvanceReminders() {
+        Task {
+            if settings.wantsNotificationPermission {
+                _ = await alerts.requestAuthorizationIfNeeded()
+            }
+            store.syncAdvanceReminders()
+            store.refreshCodexResetForecast()
+        }
     }
 
     /// Glass is one of the appearance cases, not a second switch. The drag
@@ -1890,6 +1993,7 @@ struct SettingsView: View {
 
         if provider == .codex {
             codexAccount = await store.codexAccountUsage()
+            if let codexAccount { store.noteCodexCredits(codexAccount) }
         }
     }
 

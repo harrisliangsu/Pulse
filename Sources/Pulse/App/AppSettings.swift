@@ -872,10 +872,58 @@ final class AppSettings {
         }
     }
 
-    /// Whether anything at all would be posted. What decides if permission is
-    /// worth asking for. Ribbons are not in here: they are not a notification.
+    /// A system notification before an explicit Codex Resets time.
+    ///
+    /// Off by default. A forecast with no `scheduled_for` does not schedule
+    /// one — see `AdvanceReminderPlanner`. Separate from `alertsOnReset`,
+    /// which speaks only after a limit has turned over.
+    var remindsBeforePredictedReset: Bool {
+        didSet {
+            guard remindsBeforePredictedReset != oldValue else { return }
+            UserDefaults.standard.set(remindsBeforePredictedReset, forKey: Key.remindsBeforePredictedReset)
+        }
+    }
+
+    var predictedResetLead: ResetLead {
+        didSet {
+            guard predictedResetLead != oldValue else { return }
+            UserDefaults.standard.set(predictedResetLead.rawValue, forKey: Key.predictedResetLead)
+        }
+    }
+
+    /// A system notification before each eligible window's own `resetsAt`.
+    ///
+    /// Off by default. Windows shorter than `regularResetLead` are skipped.
+    /// This is not the after-the-fact reset notice and not the ribbon.
+    var remindsBeforeRegularReset: Bool {
+        didSet {
+            guard remindsBeforeRegularReset != oldValue else { return }
+            UserDefaults.standard.set(remindsBeforeRegularReset, forKey: Key.remindsBeforeRegularReset)
+        }
+    }
+
+    var regularResetLead: ResetLead {
+        didSet {
+            guard regularResetLead != oldValue else { return }
+            UserDefaults.standard.set(regularResetLead.rawValue, forKey: Key.regularResetLead)
+        }
+    }
+
+    /// Whether anything at all would be posted about a reading. What the
+    /// after-the-fact rules consult. Ribbons are not in here, and neither are
+    /// the advance reminders — those have their own switches.
     var wantsAlerts: Bool {
         alertThreshold != .off || alertsOnReset || alertsOnFailure || !lowBalanceAlerts.isEmpty
+    }
+
+    /// Advance reminders, which ask for notification permission on their own.
+    var wantsAdvanceReminders: Bool {
+        remindsBeforePredictedReset || remindsBeforeRegularReset
+    }
+
+    /// Whether a notification grant is worth asking for.
+    var wantsNotificationPermission: Bool {
+        wantsAlerts || wantsAdvanceReminders
     }
 
     /// A second, smaller ring inside the first, for the next-fullest limit.
@@ -1012,7 +1060,11 @@ final class AppSettings {
         alertsOnReset: Bool = false,
         alertsOnFailure: Bool = false,
         celebratesReset: Bool = false,
-        celebratesHourlyReset: Bool = false
+        celebratesHourlyReset: Bool = false,
+        remindsBeforePredictedReset: Bool = false,
+        predictedResetLead: ResetLead = .default,
+        remindsBeforeRegularReset: Bool = false,
+        regularResetLead: ResetLead = .default
     ) {
         self.isPanelVisible = isPanelVisible
         self.hidesMenuBarIcon = hidesMenuBarIcon
@@ -1062,6 +1114,10 @@ final class AppSettings {
         self.alertsOnFailure = alertsOnFailure
         self.celebratesReset = celebratesReset
         self.celebratesHourlyReset = celebratesHourlyReset
+        self.remindsBeforePredictedReset = remindsBeforePredictedReset
+        self.predictedResetLead = predictedResetLead
+        self.remindsBeforeRegularReset = remindsBeforeRegularReset
+        self.regularResetLead = regularResetLead
     }
 
     /// A stored route the provider doesn't offer resolves to `.automatic`
@@ -1331,7 +1387,13 @@ final class AppSettings {
             alertsOnReset: defaults.object(forKey: Key.alertsOnReset) as? Bool ?? false,
             alertsOnFailure: defaults.object(forKey: Key.alertsOnFailure) as? Bool ?? false,
             celebratesReset: defaults.object(forKey: Key.celebratesReset) as? Bool ?? false,
-            celebratesHourlyReset: defaults.object(forKey: Key.celebratesHourlyReset) as? Bool ?? false
+            celebratesHourlyReset: defaults.object(forKey: Key.celebratesHourlyReset) as? Bool ?? false,
+            remindsBeforePredictedReset: defaults.object(forKey: Key.remindsBeforePredictedReset) as? Bool ?? false,
+            predictedResetLead: (defaults.object(forKey: Key.predictedResetLead) as? Int)
+                .flatMap(ResetLead.init(rawValue:)) ?? .default,
+            remindsBeforeRegularReset: defaults.object(forKey: Key.remindsBeforeRegularReset) as? Bool ?? false,
+            regularResetLead: (defaults.object(forKey: Key.regularResetLead) as? Int)
+                .flatMap(ResetLead.init(rawValue:)) ?? .default
         )
         settings.detectedProviders = detected
         settings.suggestedProviders = selection.suggestedProviders
@@ -1469,6 +1531,10 @@ final class AppSettings {
         static let alertsOnFailure = "settings.alertsOnFailure"
         static let celebratesReset = "settings.celebratesReset"
         static let celebratesHourlyReset = "settings.celebratesHourlyReset"
+        static let remindsBeforePredictedReset = "settings.remindsBeforePredictedReset"
+        static let predictedResetLead = "settings.predictedResetLead"
+        static let remindsBeforeRegularReset = "settings.remindsBeforeRegularReset"
+        static let regularResetLead = "settings.regularResetLead"
         static let offeredProviders = "settings.offeredProviders"
         static let providerOrder = "settings.providerOrder"
     }
