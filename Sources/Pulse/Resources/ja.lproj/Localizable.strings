@@ -669,6 +669,14 @@
 /* Codex のリセット予測と事前通知 */
 "Predicted reset" = "予測リセット";
 "No prediction yet" = "予測はまだありません";
+"Last reset" = "前回のリセット";
+"Regular reset" = "通常のリセット";
+"Banked reset credit" = "予備のリセット枠";
+/* 種類、そのあとに現地の日時。 */
+"%@ · %@" = "%@ · %@";
+/* 直近の告知の読み上げ。相対時刻、それから種類と時刻。 */
+"%@, %@" = "%@、%@";
+"A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit." = "必要なときに自分で使うリセット枠です。用量はすぐには戻りません。Codex アプリのサイドバーでプロフィールを開き、「使用量」から残っている枠を適用できます。";
 "Elevated" = "やや高い";
 "Strong" = "高い";
 "%@ · %@ chance" = "%@ · %@ の見込み";

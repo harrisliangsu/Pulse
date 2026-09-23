@@ -100,6 +100,175 @@ struct CodexResetForecastTests {
         #expect(status.explicitReset == nil)
     }
 
+    @Test("A banked latest announcement is history, not a prediction")
+    func bankedLatest() throws {
+        let announced = "2026-09-22T18:23:37.000Z"
+        let status = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": {
+              "id": "2102463847714247142",
+              "reset_type": "banked",
+              "announced_at": "\(announced)",
+              "scheduled_for": "2026-09-25T00:00:00Z",
+              "text": "We are loading a banked reset.",
+              "source": { "type": "x_post", "author": "thsottiaux", "url": "https://x.com/thsottiaux/status/1" }
+            },
+            "scheduled_reset": null,
+            "active_watch": null,
+            "stats": { "total": 54, "last_reset_at": "\(announced)", "days_since_last": 0.8, "avg_interval_days": 7 }
+          },
+          "meta": { "api_version": "v1", "generated_at": "2026-09-23T12:42:24.788Z" }
+        }
+        """)))
+
+        let when = try #require(CodexResetDates.parse(announced))
+        let latest = try #require(status.latest)
+        #expect(latest.id == "2102463847714247142")
+        #expect(latest.resetType == "banked")
+        #expect(latest.announcedAt == when)
+        #expect(status.card == .empty)
+        #expect(status.showsPredictionRow == false)
+        #expect(status.explicitReset == nil)
+        #expect(status.explicitReset != when)
+    }
+
+    @Test("A regular latest announcement keeps its type, and a bad instant is dropped")
+    func regularLatestAndABrokenOne() throws {
+        let announced = "2026-09-20T01:00:00Z"
+        let status = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": {
+              "id": " post-regular ",
+              "reset_type": " regular ",
+              "announced_at": "\(announced)",
+              "text": "Reset.",
+              "source": { "type": "x_post" }
+            },
+            "scheduled_reset": null,
+            "active_watch": null,
+            "stats": { "total": 1, "last_reset_at": "\(announced)", "days_since_last": 1, "avg_interval_days": null }
+          },
+          "meta": { "api_version": "v1", "generated_at": "2026-09-23T08:00:00Z" }
+        }
+        """)))
+        #expect(status.latest?.id == "post-regular")
+        #expect(status.latest?.resetType == "regular")
+        #expect(status.showsPredictionRow == false)
+
+        let broken = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": { "id": "nope", "reset_type": "banked", "announced_at": "not-a-date" },
+            "scheduled_reset": null,
+            "active_watch": null,
+            "stats": { "total": 0, "last_reset_at": null, "days_since_last": null, "avg_interval_days": null }
+          },
+          "meta": { "api_version": "v1", "generated_at": "2026-09-23T08:00:00Z" }
+        }
+        """)))
+        #expect(broken.latest == nil)
+        #expect(broken.card == .empty)
+        #expect(broken.showsPredictionRow == true)
+        #expect(broken.explicitReset == nil)
+    }
+
+    @Test("An unknown type is kept, and an empty prediction still yields when a time is scheduled")
+    func unknownTypeAndScheduledStillWins() throws {
+        let announced = "2026-09-22T18:23:37.000Z"
+        let status = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": {
+              "id": "later-kind",
+              "reset_type": "surprise",
+              "announced_at": "\(announced)"
+            },
+            "scheduled_reset": {
+              "id": "post-1",
+              "status": "scheduled",
+              "reset_type": "regular",
+              "announced_at": "2026-09-23T08:00:00Z",
+              "scheduled_for": "\(scheduledFor)",
+              "text": "Resetting tomorrow.",
+              "source": { "type": "x_post" }
+            },
+            "active_watch": null,
+            "stats": { "total": 1, "last_reset_at": "\(announced)", "days_since_last": 1, "avg_interval_days": null }
+          },
+          "meta": { "api_version": "v1", "generated_at": "2026-09-23T08:00:00Z" }
+        }
+        """)))
+        let when = try #require(CodexResetDates.parse(scheduledFor))
+        #expect(status.latest?.resetType == "surprise")
+        #expect(status.card == .scheduled(when))
+        #expect(status.showsPredictionRow == true)
+        #expect(status.explicitReset == when)
+        #expect(status.explicitReset != status.latest?.announcedAt)
+    }
+
+    @Test("The latest row is a local clock and a relative interval")
+    func presentation() throws {
+        let announced = try #require(CodexResetDates.parse("2026-09-22T18:23:37.000Z"))
+        var shanghai = Calendar(identifier: .gregorian)
+        shanghai.timeZone = try #require(TimeZone(identifier: "Asia/Shanghai"))
+        let local = CodexResetPresentation.absolute(
+            announcedAt: announced,
+            locale: Locale(identifier: "zh_CN"),
+            calendar: shanghai
+        )
+        #expect(local.contains("2:23"))
+        #expect(local.contains("月"))
+        #expect(!local.contains("22"))
+        #expect(!local.contains("18"))
+
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+        let utcText = CodexResetPresentation.absolute(
+            announcedAt: announced,
+            locale: Locale(identifier: "zh_CN"),
+            calendar: utc
+        )
+        #expect(utcText.contains("22"))
+        #expect(utcText.contains("18") || utcText.contains("6:23"))
+
+        let relative = CodexResetPresentation.relative(
+            announcedAt: announced,
+            now: announced.addingTimeInterval(18 * 3600),
+            locale: Locale(identifier: "en_US")
+        )
+        #expect(relative == "18 hours ago")
+
+        #expect(CodexResetPresentation.detail(resetType: "", absolute: "STAMP") == "STAMP")
+        #expect(CodexResetPresentation.detail(resetType: "surprise", absolute: "STAMP").contains("surprise"))
+        #expect(CodexResetPresentation.detail(resetType: "surprise", absolute: "STAMP").contains("STAMP"))
+        #expect(CodexResetPresentation.typeLabel(resetType: "banked") != CodexResetPresentation.typeLabel(resetType: "regular"))
+        #expect(CodexResetPresentation.help(resetType: "banked")?.isEmpty == false)
+        #expect(CodexResetPresentation.help(resetType: "regular") == nil)
+        #expect(CodexResetPresentation.help(resetType: "surprise") == nil)
+    }
+
+    @Test("A cached status from before latest_reset still decodes")
+    func decodesWithoutLatest() throws {
+        let data = Data(#"{"scheduled":null,"watch":null}"#.utf8)
+        let status = try JSONDecoder().decode(CodexResetStatus.self, from: data)
+        #expect(status.latest == nil)
+        #expect(status.card == .empty)
+        #expect(status.showsPredictionRow == true)
+
+        let announced = try #require(CodexResetDates.parse("2026-09-22T18:23:37.000Z"))
+        let round = CodexResetStatus(
+            scheduled: nil,
+            watch: .init(level: "elevated", chancePercent: nil, forecastWindow: "soon"),
+            latest: .init(id: "post", resetType: "banked", announcedAt: announced)
+        )
+        let encoded = try JSONEncoder().encode(round)
+        let decoded = try JSONDecoder().decode(CodexResetStatus.self, from: encoded)
+        #expect(decoded == round)
+        #expect(decoded.showsPredictionRow == true)
+    }
+
     @Test("A body that is not a status document is a failure, not an empty card")
     func malformed() {
         #expect(CodexResetStatus.parse(Data("[]".utf8)) == nil)
@@ -185,6 +354,26 @@ struct AdvanceResetReminderTests {
             lead: lead12,
             now: now
         ) == nil)
+
+        let ahead = now.addingTimeInterval(6 * 3600)
+        let onlyLatest = CodexResetStatus(
+            scheduled: nil,
+            watch: nil,
+            latest: .init(id: "banked-1", resetType: "banked", announcedAt: ahead)
+        )
+        #expect(onlyLatest.explicitReset == nil)
+        #expect(AdvanceReminderPlanner.predicted(status: onlyLatest, lead: lead12, now: now) == nil)
+
+        let whenLatest = now.addingTimeInterval(36 * 3600)
+        let both = CodexResetStatus(
+            scheduled: .init(id: "post-future", scheduledFor: whenLatest),
+            watch: nil,
+            latest: .init(id: "banked-1", resetType: "banked", announcedAt: now.addingTimeInterval(-3600))
+        )
+        let alongside = try #require(AdvanceReminderPlanner.predicted(status: both, lead: lead12, now: now))
+        #expect(alongside.fireAt == whenLatest.addingTimeInterval(-lead12))
+        #expect(alongside.identifier.contains("post-future"))
+        #expect(!alongside.identifier.contains("banked-1"))
     }
 
     @Test("Inside the lead, the predicted reminder is due now and is not repeated")

@@ -7,6 +7,8 @@ import Foundation
 /// `scheduled.scheduledFor` is an explicit instant. A watch is a forecast:
 /// its `expiresAt` is when the forecast itself goes stale, and is not a reset
 /// time. The parser drops that field so nothing downstream can print it.
+/// `latest.announcedAt` is when the last announcement went out. It is history,
+/// not a countdown, and the parser does not read a `scheduled_for` off it.
 struct CodexResetStatus: Equatable, Sendable, Codable {
     struct Scheduled: Equatable, Sendable, Codable {
         /// Announcement id. Advance reminders dedupe on this plus `scheduledFor`.
@@ -23,11 +25,24 @@ struct CodexResetStatus: Equatable, Sendable, Codable {
         var forecastWindow: String
     }
 
+    /// The most recent public announcement. Not an account's banked cards,
+    /// and not a time a reminder may count down to.
+    struct Latest: Equatable, Sendable, Codable {
+        var id: String
+        /// `regular`, `banked`, a type the API added later, or empty when
+        /// the field was absent.
+        var resetType: String
+        var announcedAt: Date
+    }
+
     var scheduled: Scheduled?
     var watch: Watch?
+    var latest: Latest? = nil
 
-    /// What the Codex card says. An explicit `scheduledFor` wins over a watch.
-    /// Neither, or a schedule that names no instant, is `.empty`.
+    /// What the prediction row says. An explicit `scheduledFor` wins over a
+    /// watch. Neither, or a schedule that names no instant, is `.empty`.
+    /// A latest announcement does not change this: the card prints it on
+    /// its own row.
     enum Card: Equatable, Sendable {
         case scheduled(Date)
         case watch(Watch)
@@ -40,15 +55,27 @@ struct CodexResetStatus: Equatable, Sendable, Codable {
         return .empty
     }
 
+    /// Whether the prediction row is worth showing.
+    ///
+    /// An empty prediction next to a latest announcement leaves the reader
+    /// with the useful line. A scheduled time or a watch still leads.
+    var showsPredictionRow: Bool {
+        switch card {
+        case .scheduled, .watch: true
+        case .empty: latest == nil
+        }
+    }
+
     /// The only instant an advance reminder may count down to.
-    /// A watch never contributes one.
+    /// A watch never contributes one, and neither does `latest`.
     var explicitReset: Date? { scheduled?.scheduledFor }
 
     /// The status document, or nil when the body is not one.
     ///
     /// A document whose schedule and watch are both null is a real answer
     /// (`.empty`), not a parse failure — the caller keeps its previous copy
-    /// only when this returns nil.
+    /// only when this returns nil. `latest_reset` may still be present on
+    /// that empty prediction.
     static func parse(_ data: Data) -> CodexResetStatus? {
         guard
             let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -57,7 +84,8 @@ struct CodexResetStatus: Equatable, Sendable, Codable {
 
         return CodexResetStatus(
             scheduled: scheduled(body["scheduled_reset"]),
-            watch: watch(body["active_watch"])
+            watch: watch(body["active_watch"]),
+            latest: latest(body["latest_reset"])
         )
     }
 
@@ -84,6 +112,78 @@ struct CodexResetStatus: Equatable, Sendable, Codable {
             ?? (object["reset_chance_percent"] as? NSNumber)?.intValue
         // `expires_at` is deliberately unread.
         return Watch(level: level, chancePercent: chance, forecastWindow: window)
+    }
+
+    private static func latest(_ value: Any?) -> Latest? {
+        guard let object = value as? [String: Any] else { return nil }
+        // When the post went out. A missing or unreadable instant cannot be
+        // shown, so the announcement is dropped rather than failing the
+        // document. `scheduled_for` on this object is deliberately unread.
+        guard let announced = CodexResetDates.parse(object["announced_at"] as? String) else { return nil }
+        let id = (object["id"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let type = (object["reset_type"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return Latest(id: id, resetType: type, announcedAt: announced)
+    }
+}
+
+/// How the Codex card says a latest announcement.
+///
+/// Relative time follows `RelativeDateTimeFormatter` (the same full style as
+/// the card's "as of" line). The absolute clock uses the same local template
+/// as the card's other reset lines (`MMMdjmm`), and it keeps the date even
+/// when the announcement was earlier today — the site's hero does, and the
+/// date is which announcement this was. It is not pinned to UTC.
+enum CodexResetPresentation {
+    static func relative(
+        announcedAt: Date,
+        now: Date = Date(),
+        locale: Locale = LocalizationSource.locale
+    ) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = locale
+        formatter.unitsStyle = .full
+        return formatter.localizedString(for: announcedAt, relativeTo: now)
+    }
+
+    static func absolute(
+        announcedAt: Date,
+        locale: Locale = LocalizationSource.locale,
+        calendar: Calendar = .current
+    ) -> String {
+        var calendar = calendar
+        calendar.locale = locale
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.setLocalizedDateFormatFromTemplate("MMMdjmm")
+        return formatter.string(from: announcedAt)
+    }
+
+    static func typeLabel(resetType: String) -> String {
+        switch resetType {
+        case "regular": String.localized("Regular reset")
+        case "banked": String.localized("Banked reset credit")
+        default: resetType
+        }
+    }
+
+    /// `{type} · {local absolute}`, or just the clock when the API named no type.
+    static func detail(resetType: String, absolute: String) -> String {
+        let label = typeLabel(resetType: resetType)
+        guard !label.isEmpty else { return absolute }
+        return String.localized("\(label) · \(absolute)")
+    }
+
+    /// The site's explanation of a banked credit. Other types have none.
+    static func help(resetType: String) -> String? {
+        guard resetType == "banked" else { return nil }
+        return String.localized("A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit.")
+    }
+
+    /// What VoiceOver reads for the row: relative time, then type and clock.
+    static func spoken(relative: String, detail: String) -> String {
+        String.localized("\(relative), \(detail)")
     }
 }
 

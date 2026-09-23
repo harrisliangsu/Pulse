@@ -10,6 +10,11 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.1
+
+- **Codex card shows the latest reset.** When [Codex Resets](https://codex-resets.com) has announced one, the Codex card says how long ago and what kind it was, with the local time — a banked credit explains that you apply it yourself and that it does not refill usage immediately. An explicit time or a watch still has its prediction row; with neither, the last reset is the line you see. Reminders still count down only to `scheduled_for`.
+- **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons (incl. optional hourly), ring colour schemes (Red alert / Gradient / Quiet), bilingual release notes, and this repo’s Sparkle feed / signing key.
+
 ## 1.4.0
 
 - **Codex reset forecast on the card.** The Codex card shows the public [Codex Resets](https://codex-resets.com) status: an explicit `scheduled_for` when there is one, otherwise the watch's level, chance and window — never the watch's expiry as a reset time. No prediction stays an empty line. Banked reset cards from `codex app-server` appear on that card when the read succeeds.

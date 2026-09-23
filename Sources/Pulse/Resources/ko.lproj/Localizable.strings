@@ -669,6 +669,14 @@
 /* Codex 리셋 예측과 사전 알림 */
 "Predicted reset" = "예측 리셋";
 "No prediction yet" = "아직 예측 없음";
+"Last reset" = "최근 리셋";
+"Regular reset" = "일반 리셋";
+"Banked reset credit" = "예비 리셋 크레딧";
+/* 종류, 그다음 현지 날짜와 시각. */
+"%@ · %@" = "%@ · %@";
+/* 최근 공지를 읽어 주는 문장. 상대 시각, 그다음 종류와 시각. */
+"%@, %@" = "%@, %@";
+"A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit." = "필요할 때 직접 쓰는 리셋 크레딧입니다. 사용량이 바로 회복되지는 않습니다. Codex 앱 사이드바에서 프로필을 열고 「사용량」에서 남은 리셋 크레딧을 적용할 수 있습니다.";
 "Elevated" = "다소 높음";
 "Strong" = "높음";
 "%@ · %@ chance" = "%@ · %@ 가능성";

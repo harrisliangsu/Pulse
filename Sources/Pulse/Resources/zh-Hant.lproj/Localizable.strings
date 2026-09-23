@@ -669,6 +669,14 @@
 /* Codex 重置預測與提前提醒 */
 "Predicted reset" = "預測重置";
 "No prediction yet" = "暫無預測";
+"Last reset" = "最近重置";
+"Regular reset" = "常規重置";
+"Banked reset credit" = "備用重置額度";
+/* 類型，然後是本地日期和時間。 */
+"%@ · %@" = "%@ · %@";
+/* 最近一次公告的朗讀：相對時間，然後是類型和鐘點。 */
+"%@, %@" = "%@，%@";
+"A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit." = "可在需要時手動使用的重置額度，不會立即恢復用量。在 Codex 應用程式側邊欄打開個人資料，進入「用量」，即可使用可用的重置額度。";
 "Elevated" = "偏高";
 "Strong" = "較強";
 "%@ · %@ chance" = "%@ · %@ 的可能";

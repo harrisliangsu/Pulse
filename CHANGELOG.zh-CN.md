@@ -6,6 +6,11 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.1
+
+- **Codex 卡片显示最近一次重置。** [Codex Resets](https://codex-resets.com) 公布过重置时，卡片会写距今多久，以及类型和本地时间。备用额度会说明需要自己去用，不会立即恢复用量。有明确时间或观察预测时仍保留预测行；两者都没有时，最近一次重置就是要看的那一行。提醒仍然只对 `scheduled_for` 倒计时。
+- **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带（含可选小时额度）、环颜色方案（红色告警 / 渐变 / 低调）、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.4.0
 
 - **Codex 卡片显示重置预测。** 浮动栏的 Codex 卡片展示 [Codex Resets](https://codex-resets.com) 的公开状态：有明确 `scheduled_for` 时显示该时间；否则显示观察的级别、概率和窗口，不会把观察的过期时间当成重置时间。两者都没有时显示「暂无预测」。`codex app-server` 能读到已有的重置卡时，卡片上会有一行摘要。

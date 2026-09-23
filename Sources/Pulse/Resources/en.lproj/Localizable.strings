@@ -667,6 +667,14 @@
 /* Codex reset forecast and advance reminders */
 "Predicted reset" = "Predicted reset";
 "No prediction yet" = "No prediction yet";
+"Last reset" = "Last reset";
+"Regular reset" = "Regular reset";
+"Banked reset credit" = "Banked reset credit";
+/* Type label, then the local date and time. */
+"%@ · %@" = "%@ · %@";
+/* Spoken form of the last announcement: relative time, then type and clock. */
+"%@, %@" = "%@, %@";
+"A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit." = "A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit.";
 "Elevated" = "Elevated";
 "Strong" = "Strong";
 "%@ · %@ chance" = "%@ · %@ chance";
