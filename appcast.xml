@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.1</title>
+            <pubDate>Wed, 23 Sep 2026 13:31:14 -0000</pubDate>
+            <sparkle:version>1.4.1</sparkle:version>
+            <sparkle:shortVersionString>1.4.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.1</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.1</h2><ul><li><strong>Codex 卡片另显示最近一次重置。</strong> <a href="https://codex-resets.com">Codex Resets</a> 公布过重置时，卡片在预测行下面另写距今多久，以及类型和本地时间。备用额度会说明需要自己去用，不会立即恢复用量。预测行保持原样，没有明确时间、也没有观察时仍显示「暂无预测」。提醒仍然只对 <code>scheduled_for</code> 倒计时。</li><li><strong>保留本仓库特有能力：</strong> Qoder、Kimi 设备码/多账号、限额恢复彩带（含可选小时额度）、环颜色方案（红色告警 / 渐变 / 低调）、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.1">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.1/Pulse-1.4.1.zip"
+                       length="8771109"
+                       type="application/octet-stream"
+                       sparkle:edSignature="DTexbRDKs35ibJBrcLVw307EDZ3AY2i5i2wI7rVdFOoJrLXiHvRNJ8ZNbKewMWyPyQ4BmxSmj7Vz9LwlaUgnDw==" />
+        </item>
+        <item>
             <title>1.4.0</title>
             <pubDate>Wed, 23 Sep 2026 11:43:13 -0000</pubDate>
             <sparkle:version>1.4.0</sparkle:version>
