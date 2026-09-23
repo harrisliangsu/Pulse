@@ -61,7 +61,8 @@ final class CodexResetMonitor {
             }
             let wait = sleepFor
             let sleep = Task {
-                try? await Task.sleep(for: .seconds(wait))
+                do { try await Task.sleep(for: .seconds(wait)) }
+                catch { return }
             }
             sleeper = sleep
             await sleep.value
