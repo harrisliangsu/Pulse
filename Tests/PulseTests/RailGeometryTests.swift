@@ -31,7 +31,9 @@ struct PanelChromeTests {
         #expect(PanelAppearance.light.resolved(matching: .dark) == .light)
         #expect(PanelAppearance.system.resolved(matching: .light) == .light)
         #expect(PanelAppearance.system.resolved(matching: .dark) == .dark)
-        #expect(PanelAppearance.glass.resolved(matching: .light) == .light)
+        // Glass pins dark. Clear Liquid Glass is dimmed and the content is
+        // white; following the Mac left dark text on a dark window.
+        #expect(PanelAppearance.glass.resolved(matching: .light) == .dark)
         #expect(PanelAppearance.glass.resolved(matching: .dark) == .dark)
     }
 
