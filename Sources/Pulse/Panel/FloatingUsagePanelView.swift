@@ -32,6 +32,9 @@ struct FloatingUsagePanelView: View {
     /// the arc a tenth of the way round at a time. A minute is far finer than
     /// anything visible on a 48pt circle and costs one view invalidation.
     @State private var minute = Date()
+    /// The Mac's scheme, so Auto can follow it. Glass does not: clear Liquid
+    /// Glass stays dark, which is what `resolved` returns for that appearance.
+    @Environment(\.colorScheme) private var colorScheme
 
 
     var body: some View {

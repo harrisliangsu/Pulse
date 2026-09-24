@@ -107,9 +107,10 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
             switch self {
             case .weekly, .monthly: true
             case .fiveHour: includingFiveHour
-            // Daily rolls over every day; message allowances have no reset —
-            // neither is something a ribbon should celebrate.
-            case .spend, .balance, .daily, .messages, .other: false
+            // Daily rolls over every day, and a message allowance has no
+            // reset. A top-up pack never expires. Credit rows are not a week
+            // or a month. None of those is a ribbon.
+            case .spend, .balance, .daily, .messages, .topUp, .credits, .sharedCredits, .other: false
             }
         }
 
