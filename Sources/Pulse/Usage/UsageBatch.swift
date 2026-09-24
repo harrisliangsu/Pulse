@@ -7,8 +7,8 @@ import Foundation
 /// upstream each added Qoder in a different part of `UsageStore.refresh`,
 /// and git kept both. A second `case .qoder` in `read` does not compile.
 /// A second `async let qoderUsage` pasted back into `UsageStore` is what
-/// `Scripts/fork-compat-check.sh` rejects. Add a provider here. Do not add
-/// an `async let` block beside the call.
+/// `Scripts/fork-compat-check.sh` rejects. Add a `load` line in `collect`
+/// and a case in `read`. Do not add an `async let` block beside the call.
 struct UsageBatch: Sendable {
     var wanted: Set<Provider>
     var codex: CodexUsageService
@@ -41,33 +41,68 @@ struct UsageBatch: Sendable {
     var newAPI: NewAPIUsageService
     var v2ex: V2EXUsageService
 
-    private struct Reading: Sendable {
-        var provider: Provider
-        var usage: ProviderUsage
-    }
-
-    /// Side by side, same as the `async let` list this replaced: each child
-    /// is on the main actor, so a fetch that touches the keychain or a
-    /// browser store still runs where it did. Only `wanted` providers are
-    /// started. Anything else keeps the reading it already has.
+    /// Side by side, on this function's main actor. That is where the old
+    /// `async let` list in `UsageStore.refresh` ran, so a fetch that touches
+    /// the keychain or a browser store stays there. A task group does not
+    /// inherit that actor: `addTask { @MainActor in }` is rejected by Swift 6
+    /// (`pattern that the region-based isolation checker does not understand
+    /// how to check`).
+    ///
+    /// `load` calls `read` only when the provider is due. Anything else keeps
+    /// the reading it already has. The names here are the only `async let`
+    /// list; `Scripts/fork-compat-check.sh` requires one `load` per provider.
+    @MainActor
     func collect() async -> [Provider: ProviderUsage] {
-        await withTaskGroup(of: Reading.self) { group in
-            for provider in wanted {
-                // A fresh binding per child. The loop variable itself is what
-                // a concurrent capture warning is about.
-                let provider = provider
-                group.addTask { @MainActor in
-                    Reading(provider: provider, usage: await self.read(provider))
-                }
-            }
-            var readings: [Provider: ProviderUsage] = [:]
-            for await reading in group {
-                readings[reading.provider] = reading.usage
-            }
-            return readings
+        async let claudeUsage = load(.claudeCode)
+        async let codexUsage = load(.codex)
+        async let kiroUsage = load(.kiro)
+        async let antigravityUsage = load(.antigravity)
+        async let cursorUsage = load(.cursor)
+        async let openCodeUsage = load(.openCodeGo)
+        async let kimiUsage = load(.kimiCode)
+        async let ollamaUsage = load(.ollamaCloud)
+        async let zaiUsage = load(.zai)
+        async let glmUsage = load(.glmCoding)
+        async let minimaxUsage = load(.minimax)
+        async let minimaxCNUsage = load(.minimaxCN)
+        async let copilotUsage = load(.copilot)
+        async let grokUsage = load(.grok)
+        async let grokBotUsage = load(.grokBot)
+        async let volcengineUsage = load(.volcengine)
+        async let qoderUsage = load(.qoder)
+        async let commandCodeUsage = load(.commandCode)
+        async let deepSeekUsage = load(.deepSeek)
+        async let devinUsage = load(.devin)
+        async let xiaomiUsage = load(.xiaomiMiMo)
+        async let sub2apiUsage = load(.sub2api)
+        async let newAPIUsage = load(.newAPI)
+        async let v2exUsage = load(.v2ex)
+
+        var readings: [Provider: ProviderUsage] = [:]
+        for row in [
+            await claudeUsage, await codexUsage, await kiroUsage, await antigravityUsage,
+            await cursorUsage, await openCodeUsage, await kimiUsage, await ollamaUsage,
+            await zaiUsage, await glmUsage, await minimaxUsage, await minimaxCNUsage,
+            await copilotUsage, await grokUsage, await grokBotUsage, await volcengineUsage,
+            await qoderUsage, await commandCodeUsage, await deepSeekUsage, await devinUsage,
+            await xiaomiUsage, await sub2apiUsage, await newAPIUsage, await v2exUsage,
+        ] {
+            guard let (provider, usage) = row else { continue }
+            readings[provider] = usage
         }
+        return readings
     }
 
+    /// `nil` when this pass did not ask. The child still starts, and it
+    /// finishes without calling the service, so a provider that is off or
+    /// not yet due does not spend a request.
+    @MainActor
+    private func load(_ provider: Provider) async -> (Provider, ProviderUsage)? {
+        guard wanted.contains(provider) else { return nil }
+        return (provider, await read(provider))
+    }
+
+    @MainActor
     private func read(_ provider: Provider) async -> ProviderUsage {
         switch provider {
         case .codex:

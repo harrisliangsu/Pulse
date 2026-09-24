@@ -67,6 +67,7 @@ def main() -> int:
     problems.extend(conflict_markers())
     problems.extend(brace_balance())
     problems.extend(duplicate_fetches())
+    problems.extend(batch_covers_providers())
     problems.extend(exhaustiveness())
     if problems:
         print("Fork compatibility check failed:", file=sys.stderr)
@@ -366,6 +367,43 @@ def duplicate_fetches() -> list[str]:
                 "Keep the fetch in UsageBatch only."
             )
     return found
+
+
+def batch_covers_providers() -> list[str]:
+    """`collect` starts one `load` per provider, or loops `wanted` into `read`.
+
+    The `read` switch is exhaustive, so a new case fails `swift build`. The
+    `async let` list is not: a provider added only to `read` would compile
+    and never be fetched on a full pass. A loop over `wanted` that calls
+    `read` covers every case the switch does.
+    """
+    provider_cases: set[str] = set()
+    for path in swift_files(SOURCES):
+        if path.name != "UsageProvider.swift":
+            continue
+        for name, cases, _line in enum_declarations(path.read_text(encoding="utf-8")):
+            if name == "Provider":
+                provider_cases = cases
+    batch = SOURCES / "Pulse" / "Usage" / "UsageBatch.swift"
+    if not provider_cases or not batch.exists():
+        return ["UsageBatch.collect: could not find Provider cases or UsageBatch.swift."]
+    text = code_only(batch.read_text(encoding="utf-8"))
+    # A loop that asks `read` for each wanted provider covers the enum.
+    if re.search(r"\bfor\s+provider\s+in\s+wanted\b", text) and re.search(
+        r"\b(?:read|load)\s*\(\s*provider\s*\)", text
+    ):
+        return []
+    loaded = set(re.findall(r"\b(?:load|read)\s*\(\s*\.([A-Za-z_][A-Za-z0-9_]*)", text))
+    missing = sorted(provider_cases - loaded)
+    if not missing:
+        return []
+    shown = ", ".join(f".{name}" for name in missing)
+    return [
+        "Sources/Pulse/Usage/UsageBatch.swift: collect never loads "
+        f"{shown}. Add `async let … = load(.{missing[0]})` and a case in "
+        "`read`, or loop `wanted` and call `read(provider)`. A provider "
+        "missing here compiles and is never fetched on a full pass."
+    ]
 
 
 # --- exhaustiveness ---------------------------------------------------------

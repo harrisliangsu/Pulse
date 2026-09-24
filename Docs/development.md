@@ -63,7 +63,7 @@ When checking the key by hand, `plutil -extract … -o -`. Without `-o -` `pluti
 
 ## Upstream sync
 
-The weekday sync agent should run `./Scripts/fork-compat-check.sh` **after merging upstream and before pushing** the sync pull request. CI runs the same script before the Mac build. It is a heuristic: conflict markers, brace balance on the files a merge rewrites, duplicate provider fetch bindings (`async let qoderUsage`, `rawQoder`, and any `async let` put back in `UsageStore.swift`), and switches that drop a fork case without a `default`. It then runs `./Scripts/check-localization.sh`.
+The weekday sync agent should run `./Scripts/fork-compat-check.sh` **after merging upstream and before pushing** the sync pull request. CI runs the same script before the Mac build. It is a heuristic: conflict markers, brace balance on the files a merge rewrites, duplicate provider fetch bindings (`async let qoderUsage`, `rawQoder`, and any `async let` put back in `UsageStore.swift`), a `Provider` case that `UsageBatch.collect` never `load`s, and switches that drop a fork case without a `default`. It then runs `./Scripts/check-localization.sh`.
 
 ```bash
 ./Scripts/fork-compat-check.sh
