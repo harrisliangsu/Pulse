@@ -10,6 +10,15 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.4
+
+- **Weekday upstream syncs fail less often on the first CI run.** `Scripts/fork-compat-check.sh` runs in CI before the build. The sync agent should run it after merging upstream, before pushing. It rejects conflict markers, unbalanced braces in the files a merge rewrites, a second `async let` for the same provider (the duplicate Qoder fetch), and a switch that drops a fork case — Qoder, a Kimi session, a credit window — without a `default`.
+- **Reset ribbons stay on weeks and months.** Five-hour windows still follow the optional switch. A top-up, credits, a daily or message allowance, a balance, and any window kind added later stay quiet: they do not fail the build, and they do not throw a ribbon.
+- **A new provider does not have to edit the bot-mark colour switch.** Brands live in one map. Qoder keeps its green. Anyone else, including a provider upstream just added, is dealt a colour.
+- **One place fetches each provider on a pass.** Upstream inserting another `async let qoderUsage` is a second binding the check rejects, rather than two declarations the compiler meets only on the Mac.
+- **Tests that had been failing a sync for the wrong reason.** The bot mark's slide budget no longer sits on one tight sample. Glass is pinned dark in the appearance test, which is what this fork draws. Colour dealing counts `Provider.allCases` rather than a hardcoded provider total.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder; Zen's cookie store; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.3
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.

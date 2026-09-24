@@ -79,7 +79,13 @@ struct BotMarkChoreographyTests {
                 }
                 #expect(Array(seen.prefix(programme.states.count)) == programme.states,
                         "\(persona)/\(mood) omitted an authored beat")
-                #expect(maximumSlide < 13, "\(persona)/\(mood) moved its head out of the rail budget")
+                // Settled translation is clamped to 12. A 10 Hz sample has
+                // still measured 18.7 for sleepy/idle on CI while a carry was
+                // finishing (the 1.4.3 sync, before that carry was clamped,
+                // and the same bound has been tight enough to flake after).
+                // A head that leaves the canvas moves by a bounce (~48) or an
+                // interrupted turn (~108). 24 fails those and keeps the sample.
+                #expect(maximumSlide < 24, "\(persona)/\(mood) moved its head out of the rail budget")
             }
         }
     }

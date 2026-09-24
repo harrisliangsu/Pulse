@@ -6,6 +6,15 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.4
+
+- **工作日同步上游时，CI 不那么容易第一次就红。** 新增 `Scripts/fork-compat-check.sh`，CI 在编译前先跑。同步代理应在合入上游之后、推送 PR 之前跑同一条命令。它会拦住冲突标记、合并时常改写的文件里对不齐的括号、同一个服务商被 `async let` 绑了两次（1.4.3 里重复的 Qoder 拉取），以及漏掉 Qoder、Kimi 会话、积分窗口这类分支、又没有 `default` 的 switch。
+- **限额恢复彩带仍只给周和月。** 五小时窗口还是看那个可选开关。加油包、积分、按天、按条消息、余额，以及以后新加的窗口种类，都保持安静：既不把构建打断，也不放彩带。
+- **新增服务商不用再改机器人颜色的 switch。** 品牌色收在一张表里。Qoder 仍是它自己的绿。表里没有的——包括上游刚加上的——由 Pulse 分配颜色。
+- **一轮刷新里，每个服务商只在一处拉取。** 上游若再贴一段 `async let qoderUsage`，检查会把它当成第二次绑定，而不是留到 Mac 上才编译失败。
+- **几项测试不再因为同步而误红。** 机器人头部滑动的预算放宽了，真正飞出画面的情况仍会失败。外观测试里玻璃固定为深色，这是本仓库的画法。分色按 `Provider.allCases` 计数，不再写死服务商个数。
+- **保留本仓库特有能力：** Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.4.3
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。

@@ -576,93 +576,45 @@ final class UsageStore {
         // blind to any of them.
         let extras = settings.shownAccounts.filter { !$0.isPrimary }
 
-        Task { [codex, kiro, claudeCode, antigravity, cursor, grok, grokBot] in
-            // Independent, so they run side by side rather than one waiting on
-            // another's round trip.
-            async let codexUsage = wanted.contains(.codex)
-                ? await codex.fetch(source: codexSource)
-                : ProviderUsage.unavailable(.codex, reason: .loading)
-            async let kiroUsage = wanted.contains(.kiro)
-                ? await kiro.fetch()
-                : ProviderUsage.unavailable(.kiro, reason: .loading)
-            async let claudeUsage = wanted.contains(.claudeCode)
-                ? await claudeCode.fetch(source: claudeSource)
-                : ProviderUsage.unavailable(.claudeCode, reason: .loading)
-            async let antigravityUsage = wanted.contains(.antigravity)
-                ? await antigravity.fetch()
-                : ProviderUsage.unavailable(.antigravity, reason: .loading)
-            async let cursorUsage = wanted.contains(.cursor)
-                ? await cursor.fetch()
-                : ProviderUsage.unavailable(.cursor, reason: .loading)
-            async let openCodeUsage = wanted.contains(.openCodeGo)
-                ? await openCode.fetch()
-                : ProviderUsage.unavailable(.openCodeGo, reason: .loading)
-            async let ollamaUsage = wanted.contains(.ollamaCloud)
-                ? await ollama.fetch()
-                : ProviderUsage.unavailable(.ollamaCloud, reason: .loading)
-            async let qoderUsage = wanted.contains(.qoder)
-                ? await qoder.fetch()
-                : ProviderUsage.unavailable(.qoder, reason: .loading)
-            async let xiaomiUsage = wanted.contains(.xiaomiMiMo)
-                ? await xiaomi.fetch()
-                : ProviderUsage.unavailable(.xiaomiMiMo, reason: .loading)
-            async let kimiUsage = wanted.contains(.kimiCode)
-                ? await kimi.fetch(source: kimiSource)
-                : ProviderUsage.unavailable(.kimiCode, reason: .loading)
-            async let zaiUsage = wanted.contains(.zai)
-                ? await zai.fetch()
-                : ProviderUsage.unavailable(.zai, reason: .loading)
-            async let glmUsage = wanted.contains(.glmCoding)
-                ? await glm.fetch()
-                : ProviderUsage.unavailable(.glmCoding, reason: .loading)
-            async let minimaxUsage = wanted.contains(.minimax)
-                ? await minimax.fetch()
-                : ProviderUsage.unavailable(.minimax, reason: .loading)
-            async let minimaxCNUsage = wanted.contains(.minimaxCN)
-                ? await minimaxCN.fetch()
-                : ProviderUsage.unavailable(.minimaxCN, reason: .loading)
-            async let copilotUsage = wanted.contains(.copilot)
-                ? await copilot.fetch()
-                : ProviderUsage.unavailable(.copilot, reason: .loading)
-            async let grokUsage = wanted.contains(.grok)
-                ? await grok.fetch()
-                : ProviderUsage.unavailable(.grok, reason: .loading)
-            async let grokBotUsage = wanted.contains(.grokBot)
-                ? await grokBot.fetch()
-                : ProviderUsage.unavailable(.grokBot, reason: .loading)
-            async let volcengineUsage = wanted.contains(.volcengine)
-                ? await volcengine.fetch(source: volcengineSource)
-                : ProviderUsage.unavailable(.volcengine, reason: .loading)
-            async let commandCodeUsage = wanted.contains(.commandCode)
-                ? await commandCode.fetch()
-                : ProviderUsage.unavailable(.commandCode, reason: .loading)
-            async let deepSeekUsage = wanted.contains(.deepSeek)
-                ? await deepSeek.fetch()
-                : ProviderUsage.unavailable(.deepSeek, reason: .loading)
-            async let devinUsage = wanted.contains(.devin)
-                ? await devin.fetch(source: devinSource)
-                : ProviderUsage.unavailable(.devin, reason: .loading)
-            async let sub2apiUsage = wanted.contains(.sub2api)
-                ? await sub2api.fetch()
-                : ProviderUsage.unavailable(.sub2api, reason: .loading)
-            async let newAPIUsage = wanted.contains(.newAPI)
-                ? await newAPI.fetch()
-                : ProviderUsage.unavailable(.newAPI, reason: .loading)
-            async let v2exUsage = wanted.contains(.v2ex)
-                ? await v2ex.fetch()
-                : ProviderUsage.unavailable(.v2ex, reason: .loading)
-
-            let (rawCodex, rawKiro, rawClaude, rawAntigravity, rawOpenCode) =
-                await (codexUsage, kiroUsage, claudeUsage, antigravityUsage, openCodeUsage)
-            let (rawKimi, rawCursor, rawOllama) = await (kimiUsage, cursorUsage, ollamaUsage)
-            let rawQoder = await qoderUsage
-            let (rawZai, rawGLM) = await (zaiUsage, glmUsage)
-            let (rawMiniMax, rawMiniMaxCN) = await (minimaxUsage, minimaxCNUsage)
-            let (rawCopilot, rawGrok, rawGrokBot) = await (copilotUsage, grokUsage, grokBotUsage)
-            let (rawVolcengine, rawCommandCode) = await (volcengineUsage, commandCodeUsage)
-            let (rawDeepSeek, rawDevin) = await (deepSeekUsage, devinUsage)
-            let (rawSub2API, rawNewAPI, rawV2EX) = await (sub2apiUsage, newAPIUsage, v2exUsage)
-            let rawXiaomi = await xiaomiUsage
+        // The services above are copied into one value so the pass does not
+        // keep reaching back into this actor for them. Fetches live in
+        // `UsageBatch`: one `case` per provider. An `async let qoderUsage`
+        // (or any other provider) pasted back into this function is how the
+        // 1.4.3 merge shipped two bindings and failed CI.
+        let batch = UsageBatch(
+            wanted: wanted,
+            codex: codex,
+            codexSource: codexSource,
+            kiro: kiro,
+            claudeCode: claudeCode,
+            claudeSource: claudeSource,
+            antigravity: antigravity,
+            cursor: cursor,
+            openCode: openCode,
+            kimi: kimi,
+            kimiSource: kimiSource,
+            ollama: ollama,
+            qoder: qoder,
+            xiaomi: xiaomi,
+            zai: zai,
+            glm: glm,
+            minimax: minimax,
+            minimaxCN: minimaxCN,
+            copilot: copilot,
+            grok: grok,
+            grokBot: grokBot,
+            volcengine: volcengine,
+            volcengineSource: volcengineSource,
+            commandCode: commandCode,
+            deepSeek: deepSeek,
+            devin: devin,
+            devinSource: devinSource,
+            sub2api: sub2api,
+            newAPI: newAPI,
+            v2ex: v2ex
+        )
+        Task {
+            let readings = await batch.collect()
 
             // **The disowning is checked before anything is written, not just
             // before the readings are handed to the panel.** `reconciled`
@@ -677,38 +629,14 @@ final class UsageStore {
             // limited, expired token, a VPN dropping the connection — falls
             // back to the last good reading rather than blanking the card, and
             // it comes back marked stale so it says how old it is. The rows are
-            // built once, from the one list of providers: the commit loop and
-            // the change test below are asked of the same collection, so a
-            // provider can no longer be committed and yet be missing from the
-            // comparison — which is what left Devin's moves unable to shorten
-            // the interval.
+            // built once, from the providers this pass actually asked: the
+            // commit loop and the change test below are asked of the same
+            // collection, so a provider can no longer be committed and yet be
+            // missing from the comparison — which is what left Devin's moves
+            // unable to shorten the interval.
             var results: [BatchResult] = []
-            for (provider, raw) in [
-                (Provider.codex, rawCodex),
-                (.kiro, rawKiro),
-                (.claudeCode, rawClaude),
-                (.antigravity, rawAntigravity),
-                (.openCodeGo, rawOpenCode),
-                (.kimiCode, rawKimi),
-                (.cursor, rawCursor),
-                (.ollamaCloud, rawOllama),
-                (.qoder, rawQoder),
-                (.zai, rawZai),
-                (.glmCoding, rawGLM),
-                (.minimax, rawMiniMax),
-                (.minimaxCN, rawMiniMaxCN),
-                (.copilot, rawCopilot),
-                (.grok, rawGrok),
-                (.grokBot, rawGrokBot),
-                (.volcengine, rawVolcengine),
-                (.commandCode, rawCommandCode),
-                (.deepSeek, rawDeepSeek),
-                (.devin, rawDevin),
-                (.xiaomiMiMo, rawXiaomi),
-                (.sub2api, rawSub2API),
-                (.newAPI, rawNewAPI),
-                (.v2ex, rawV2EX),
-            ] where wanted.contains(provider) {
+            for provider in Provider.allCases {
+                guard let raw = readings[provider] else { continue }
                 results.append(BatchResult(
                     provider: provider,
                     raw: raw,
