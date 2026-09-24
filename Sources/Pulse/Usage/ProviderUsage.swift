@@ -103,14 +103,20 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         /// session clock used to throw ribbons when nothing the user would
         /// call a reset had happened. Detection still refuses a clock that
         /// only slides; this gate is the product default.
+        ///
+        /// Everything else is quiet, including a kind added later. Spend,
+        /// balance, a daily roll, a message allowance, a top-up pack and a
+        /// credit row are not ribbons. `default` is how a new case stays
+        /// that way without a red build: `Kind` is declared in this module,
+        /// so `@unknown default` warns, and this project treats a warning as
+        /// a failure. The 1.4.3 sync failed here because the switch still
+        /// named only the periods and upstream had added `.topUp`,
+        /// `.credits` and `.sharedCredits`.
         func celebratesReset(includingFiveHour: Bool) -> Bool {
             switch self {
             case .weekly, .monthly: true
             case .fiveHour: includingFiveHour
-            // Daily rolls over every day, and a message allowance has no
-            // reset. A top-up pack never expires. Credit rows are not a week
-            // or a month. None of those is a ribbon.
-            case .spend, .balance, .daily, .messages, .topUp, .credits, .sharedCredits, .other: false
+            default: false
             }
         }
 

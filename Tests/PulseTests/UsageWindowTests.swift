@@ -19,6 +19,22 @@ struct UsageWindowTests {
         )
     }
 
+    @Test("Ribbons are a week or a month, five-hour only when asked, and nothing else")
+    func celebrationFollowsThePeriod() {
+        #expect(UsageWindow.Kind.weekly.celebratesReset(includingFiveHour: false))
+        #expect(UsageWindow.Kind.monthly.celebratesReset(includingFiveHour: false))
+        #expect(UsageWindow.Kind.weekly.celebratesReset(includingFiveHour: true))
+        #expect(!UsageWindow.Kind.fiveHour.celebratesReset(includingFiveHour: false))
+        #expect(UsageWindow.Kind.fiveHour.celebratesReset(includingFiveHour: true))
+        let quiet: [UsageWindow.Kind] = [
+            .spend, .balance, .daily, .messages, .topUp, .credits, .sharedCredits, .other(seconds: 60),
+        ]
+        for kind in quiet {
+            #expect(!kind.celebratesReset(includingFiveHour: false))
+            #expect(!kind.celebratesReset(includingFiveHour: true))
+        }
+    }
+
     @Test("Nothing used reads 0%; anything used reads at least 1%")
     func smallestNonZeroReadingShows() {
         #expect(window(used: 0).percentText == "0%")

@@ -59,8 +59,12 @@ jobs:
             exit 1
           fi
 
-      - name: Localization keys
-        run: ./Scripts/check-localization.sh
+      # Conflict markers, duplicate fetches, exhaustiveness holes, then
+      # localization. The weekday sync agent runs the same script after
+      # merging upstream. It is Linux-runnable, so a red tree fails here
+      # instead of ten minutes into the Mac build.
+      - name: Fork compatibility and localization
+        run: ./Scripts/fork-compat-check.sh
 
       # `#Preview` is expanded by a plugin that ships with Xcode, so the
       # previews are compiled here too — which is the point. Stripping them

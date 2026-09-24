@@ -61,11 +61,22 @@ Measured on 1.0.7's bundle: identical apps differing only by that key gave `pref
 
 When checking the key by hand, `plutil -extract … -o -`. Without `-o -` `plutil` **overwrites the plist it was reading**.
 
+## Upstream sync
+
+The weekday sync agent should run `./Scripts/fork-compat-check.sh` **after merging upstream and before pushing** the sync pull request. CI runs the same script before the Mac build. It is a heuristic: conflict markers, brace balance on the files a merge rewrites, duplicate provider fetch bindings (`async let qoderUsage`, `rawQoder`, and any `async let` put back in `UsageStore.swift`), a `Provider` case that `UsageBatch.collect` never `load`s, and switches that drop a fork case without a `default`. It then runs `./Scripts/check-localization.sh`.
+
+```bash
+./Scripts/fork-compat-check.sh
+./Scripts/fork-compat-check.sh --fill-placeholders   # ja/ko/zh-Hant only, English text
+```
+
+A placeholder is not a translation. zh-Hans is written, not filled. The script does not replace `swift build` or `swift test` on a Mac.
+
 ## Adding UI or a provider
 
 - New panel chrome: take size from `PanelMetrics`; keep the card an overlay; do not resize the window while a card opens ([ui/panel-geometry.md](ui/panel-geometry.md)).
 - New pointer behaviour: not `.onHover`; not exit events ([ui/input.md](ui/input.md)).
 - New settings copy: one-line subtitles. Reasoning belongs in docs, not on screen, except the money card’s provenance ([ui/settings.md](ui/settings.md)).
-- New `Provider` case: SVG, service returning `ProviderUsage`, branches in `UsageStore.refresh` / `refresh(_:)`, answers to `keepsLocalTranscripts` / `supportsLocalActivity` / `hasSourceChoice` / `supportsMultipleAccounts`, presence-only discovery and a five-language `monitoringAccessDescription`. `AgentActivity.root(for:)` and `UsageLedger.logFiles(for:)` return optional roots. Routes and auth: [providers/README.md](providers/README.md).
+- New `Provider` case: SVG, service returning `ProviderUsage`, a case in `UsageBatch.read` (the full pass) and in `UsageStore.refresh(_:)`, answers to `keepsLocalTranscripts` / `supportsLocalActivity` / `hasSourceChoice` / `supportsMultipleAccounts`, presence-only discovery and a five-language `monitoringAccessDescription`. Do not add an `async let` binding in `UsageStore`. `AgentActivity.root(for:)` and `UsageLedger.logFiles(for:)` return optional roots. Routes and auth: [providers/README.md](providers/README.md).
 
 `ImageRenderer` cannot draw `NavigationSplitView` or AppKit-backed controls — check Settings by running the app.

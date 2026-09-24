@@ -31,8 +31,12 @@ struct PanelChromeTests {
         #expect(PanelAppearance.light.resolved(matching: .dark) == .light)
         #expect(PanelAppearance.system.resolved(matching: .light) == .light)
         #expect(PanelAppearance.system.resolved(matching: .dark) == .dark)
-        // Glass pins dark. Clear Liquid Glass is dimmed and the content is
-        // white; following the Mac left dark text on a dark window.
+        // CI expectation: glass is pinned dark on both system schemes.
+        // Clear Liquid Glass is dimmed and the content is white; following
+        // the Mac left dark text on a dark window. Upstream has resolved
+        // glass against the Mac (light content when the appearance is
+        // light). This fork does not. Do not put the light case back to
+        // `.light` when merging — that is the failure the 1.4.3 sync hit.
         #expect(PanelAppearance.glass.resolved(matching: .light) == .dark)
         #expect(PanelAppearance.glass.resolved(matching: .dark) == .dark)
     }

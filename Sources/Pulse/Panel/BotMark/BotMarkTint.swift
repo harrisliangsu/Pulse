@@ -17,44 +17,46 @@ import SwiftUI
 enum BotMarkTint {
     /// Brand colours, for the providers that have one.
     ///
-    /// Nil is not "unknown", it is **monochrome by design** — OpenAI, Cursor,
-    /// GitHub, xAI, Ollama, OpenCode and the rest draw a black-or-white glyph
-    /// and nothing else. Those get a colour of Pulse's own, see `assigned`.
+    /// Nil is **not in this map**. That is monochrome by design for OpenAI,
+    /// Cursor, GitHub, xAI, Ollama, OpenCode, V2EX, New API and the rest —
+    /// a black-or-white glyph and nothing else — and it is also what a
+    /// provider gets when upstream adds a case this table has not met.
+    /// Either way `deal(over:)` assigns a colour of Pulse's own. A `switch`
+    /// on `Provider` here failed the build for `.qoder` and again for every
+    /// new case; a missing key does not.
     ///
     /// Marked below are the values taken from a product's palette with less
     /// certainty than the others; they are one line each to correct. Kimi's
     /// blue, Z.ai having no colour of its own, and MiniMax's red are what the
     /// person maintaining this app says they are.
     static func brand(for provider: Provider) -> Color? {
-        switch provider {
-        case .claudeCode: BotMarkPalette.rgb(0xD97757)
-        case .deepSeek: BotMarkPalette.rgb(0x4D6BFE)
-        case .volcengine: BotMarkPalette.rgb(0x1664FF)
+        brands[provider]
+    }
+
+    /// Only the providers that carry a colour. Qoder's green stays here: it
+    /// is the one colour in its mark, and dropping it would deal Qoder a
+    /// colour of Pulse's own. Green is also what a healthy ring is drawn in,
+    /// which is the hazard named above; if a Qoder body inside a green ring
+    /// reads as one blob, this is the line to change.
+    private static let brands: [Provider: Color] = [
+        .claudeCode: BotMarkPalette.rgb(0xD97757),
+        .deepSeek: BotMarkPalette.rgb(0x4D6BFE),
+        .volcengine: BotMarkPalette.rgb(0x1664FF),
         // Best-guess brand colours: right family, exact value unconfirmed.
-        case .minimax, .minimaxCN: BotMarkPalette.rgb(0xE8483F)
+        .minimax: BotMarkPalette.rgb(0xE8483F),
+        .minimaxCN: BotMarkPalette.rgb(0xE8483F),
         // Best-guess brand colours: right family, exact value unconfirmed.
-        case .antigravity: BotMarkPalette.rgb(0x4285F4)
-        case .glmCoding: BotMarkPalette.rgb(0x3A7BF7)
-        case .kimiCode: BotMarkPalette.rgb(0x7AA5FF)
+        .antigravity: BotMarkPalette.rgb(0x4285F4),
+        .glmCoding: BotMarkPalette.rgb(0x3A7BF7),
+        .kimiCode: BotMarkPalette.rgb(0x7AA5FF),
         // Xiaomi's orange. The MiMo console is black-on-white, but the parent
         // brand's colour is the one a reader recognises on a rail.
-        case .xiaomiMiMo: BotMarkPalette.rgb(0xFF6900)
+        .xiaomiMiMo: BotMarkPalette.rgb(0xFF6900),
         // sub2api's own mark is a green-to-blue gradient; the blue end is
         // what a single flat colour of it reads as.
-        case .sub2api: BotMarkPalette.rgb(0x3875F6)
-        // Qoder's green, the one colour in its mark. Green is also what a
-        // healthy ring is drawn in, which is the hazard named above; if a
-        // Qoder body inside a green ring reads as one blob, this is the line
-        // to change.
-        case .qoder: BotMarkPalette.rgb(0x2ADB5C)
-        // V2EX draws a light arrow on near-black and has no other colour.
-        // New API's own mark is a cyan-to-pink pair; neither end is the
-        // colour, so it takes one of Pulse's own rather than half a gradient.
-        case .codex, .kiro, .cursor, .openCodeGo, .ollamaCloud, .zai,
-             .copilot, .grok, .grokBot, .commandCode, .devin, .newAPI, .v2ex:
-            nil
-        }
-    }
+        .sub2api: BotMarkPalette.rgb(0x3875F6),
+        .qoder: BotMarkPalette.rgb(0x2ADB5C),
+    ]
 
     /// Colours for a rail, in the order its rings are drawn.
     ///
@@ -159,7 +161,8 @@ enum BotMarkTint {
     /// It has overflowed once already: eleven was exactly the count when it
     /// was written, and V2EX made it twelve. Sizing it to the count again
     /// would only queue up the same bug, so this is deliberately **ahead** of
-    /// it — thirteen colourless providers today, four slots spare.
+    /// the colourless set. The test counts `Provider.allCases`, not a
+    /// literal — a hardcoded "thirteen" has already gone stale once.
     ///
     /// **Prime on purpose.** `deal(over:)` walks the wheel with a stride
     /// coprime to its size so every colour is visited once, and a prime size
