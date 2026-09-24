@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.3</title>
+            <pubDate>Thu, 24 Sep 2026 02:40:12 -0000</pubDate>
+            <sparkle:version>1.4.3</sparkle:version>
+            <sparkle:shortVersionString>1.4.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.3</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.3</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>同步上游 qunqin24/Pulse 1.4.0</strong>（本仓库尚未合入的十七个提交）。</li><li><strong>新增 sub2api、New API 与 V2EX。</strong> 两个自建网关填入服务器地址和密钥即可读取余额或额度；V2EX 使用个人访问令牌读取 AI Chat 额度。</li><li><strong>Qoder 改用上游的账户页读取。</strong> 积分额度与团队共享积分分成两个圆环。买来的加油包不再被当成一次重置。站点（<code>qoder.com</code> 或 <code>qoder.com.cn</code>）是一项设置，切换后会清掉已保存的登录。个人令牌（<code>pt-</code> / <code>jt-</code>）仍然可用，发现逻辑仍会注意 Qoder IDE 与 <code>~/.qoder</code>。</li><li><strong>真正的液态玻璃</strong>，并带有「透明度」滑块。外观仍是深色、浅色、跟随 Mac，或玻璃；玻璃开启时，内容固定为浅色，铺在一层可调明暗的透明材质上。</li><li><strong>时间圆环可以倒数。</strong> 「距离重置的时间」的外圈可选「已过去」或「剩余」。</li><li><strong>Kiro 与 ZCode 也会显示工作动画。</strong> Pulse 读取它们在本机写下的会话记录。ZCode 只在配置的接口属于智谱或 z.ai 时才驱动对应圆环。</li><li><strong>设置按主题拆成多页</strong>（外观、圆环与数字、位置与行为、通用、通知、网络与刷新）。Codex 重置提醒和限额恢复彩带跟到了通知页。环颜色方案留在「圆环与数字」。</li><li><strong>配置帮助</strong>打开的是本仓库里写给用户的配置页。</li><li><strong>切换卡片更顺，贴着屏幕边缘不再误判离开，小机器人被打断时不再瞬移。</strong> Token 消耗里，同名项目分开统计，无法定价的用量不再显示成 $0.00。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.3">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.3/Pulse-1.4.3.zip"
+                       length="9113060"
+                       type="application/octet-stream"
+                       sparkle:edSignature="c8NfFCRiGmBJOgvBSy4OuKbqkfZl2p09/jaLGzKGNlg+RgpZRerp1WeXLu4PP23mKhLxPyOdZJGrTsHPcterCg==" />
+        </item>
+        <item>
             <title>1.4.2</title>
             <pubDate>Wed, 23 Sep 2026 15:37:51 -0000</pubDate>
             <sparkle:version>1.4.2</sparkle:version>
