@@ -36,13 +36,22 @@ enum BotMarkTint {
         case .antigravity: BotMarkPalette.rgb(0x4285F4)
         case .glmCoding: BotMarkPalette.rgb(0x3A7BF7)
         case .kimiCode: BotMarkPalette.rgb(0x7AA5FF)
-        // Fork-only provider: teal from Qoder's product palette (approx.).
-        case .qoder: BotMarkPalette.rgb(0x0D9488)
         // Xiaomi's orange. The MiMo console is black-on-white, but the parent
         // brand's colour is the one a reader recognises on a rail.
         case .xiaomiMiMo: BotMarkPalette.rgb(0xFF6900)
+        // sub2api's own mark is a green-to-blue gradient; the blue end is
+        // what a single flat colour of it reads as.
+        case .sub2api: BotMarkPalette.rgb(0x3875F6)
+        // Qoder's green, the one colour in its mark. Green is also what a
+        // healthy ring is drawn in, which is the hazard named above; if a
+        // Qoder body inside a green ring reads as one blob, this is the line
+        // to change.
+        case .qoder: BotMarkPalette.rgb(0x2ADB5C)
+        // V2EX draws a light arrow on near-black and has no other colour.
+        // New API's own mark is a cyan-to-pink pair; neither end is the
+        // colour, so it takes one of Pulse's own rather than half a gradient.
         case .codex, .kiro, .cursor, .openCodeGo, .ollamaCloud, .zai,
-             .copilot, .grok, .grokBot, .commandCode, .devin:
+             .copilot, .grok, .grokBot, .commandCode, .devin, .newAPI, .v2ex:
             nil
         }
     }
@@ -143,7 +152,19 @@ enum BotMarkTint {
         brand(for: provider) == nil
     }
 
-    private static let paletteSize = 11
+    /// **At least as many slots as there are colourless providers**, or two of
+    /// them are dealt the same colour and the rail has two rings that look
+    /// alike — the one failure this whole file exists to avoid.
+    ///
+    /// It has overflowed once already: eleven was exactly the count when it
+    /// was written, and V2EX made it twelve. Sizing it to the count again
+    /// would only queue up the same bug, so this is deliberately **ahead** of
+    /// it — thirteen colourless providers today, four slots spare.
+    ///
+    /// **Prime on purpose.** `deal(over:)` walks the wheel with a stride
+    /// coprime to its size so every colour is visited once, and a prime size
+    /// means every stride qualifies rather than a handful.
+    private static let paletteSize = 17
 
     /// The wheel, solved once: evenly spaced hues, each at the same
     /// luminance. `dealt(at:)` is a bisection, and a rail is dealt on every
@@ -195,7 +216,7 @@ enum BotMarkTint {
     /// The lightness that puts this hue at `target` luminance, by bisection.
     ///
     /// Twenty steps is far more than the eye needs and costs nothing: the
-    /// wheel above is a `static let`, so this runs ten times per process.
+    /// wheel above is a `static let`, so this runs once per slot per process.
     private static func levelled(hue: Double, saturation: Double, target: Double) -> Color {
         var low = 0.0
         var high = 1.0

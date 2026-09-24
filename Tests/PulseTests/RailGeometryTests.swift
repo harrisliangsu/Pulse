@@ -237,6 +237,27 @@ struct RailGeometryTests {
             }
         }
     }
+
+    /// The window's size is whole points at every scale and edge.
+    ///
+    /// AppKit rounds the frame it is given; SwiftUI draws the rail against the
+    /// rounded one while hit tests use this. A fractional width left the last
+    /// half point at the screen edge drawn but dead, and a pointer pushed
+    /// against a docked rail closed it.
+    @Test("The panel's size is whole points", arguments: edges)
+    func panelSizeIsIntegral(edge: PanelEdge) {
+        let original = PanelSize.allCases.first { $0.scale == PanelMetrics.scale } ?? .default
+        defer { PanelMetrics.use(original) }
+
+        underEachEndStyle { style in
+            for size in PanelSize.allCases {
+                PanelMetrics.use(size)
+                let panel = FloatingPanelController.Layout.size(for: edge)
+                #expect(panel.width == panel.width.rounded(), "\(edge) \(size) \(style): width \(panel.width)")
+                #expect(panel.height == panel.height.rounded(), "\(edge) \(size) \(style): height \(panel.height)")
+            }
+        }
+    }
 }
 
 /// Nothing may move the panel while it is under a held mouse button.

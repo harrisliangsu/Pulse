@@ -35,12 +35,16 @@ This was silent first, with a changelog note saying to add a sound in System Set
 
 One rule for all of them rather than sound only for the consequential ones. macOS offers one switch per app, so a distinction drawn here would be one nobody could turn off and nobody could discover. And a silent banner on a second display, or behind a full-screen window, is a message that was never delivered — which is the opposite of the test these four had to pass to be here.
 
-### A `balance` window is not a limit
+### A `balance` window is not a limit, and neither is a `topUp` one
 
 `Kind.balance` is prepaid credit, and two rules here assumed things that are only true of limits. Both are now guarded on the kind, and `AlertMemoryTests` pins them:
 
 - **It never resets** — `resetsAt` is nil, so `movedOn` can never be true and the reset test fell back to "the fraction dropped forty points". That fraction is a setting on DeepSeek, not a reading.
 - **Only `isExhausted` may call it spent** — the step rule otherwise reaches 100 from a clamp against a denominator that is Pulse's own observation or the reader's own typed figure.
+
+**`Kind.topUp` is guarded by both, for the same reasons in a different currency.** V2EX's 加油包 is an allowance bought on top of the window's, with no expiry and no clock ([providers/v2ex.md](providers/v2ex.md)). Buying a second pack drops the fraction by well over forty points with nothing having turned over, and "this limit has reset" about a purchase is a notification for something that did not happen. And only V2EX's own `remaining_tokens` may say the pack is gone.
+
+**`Kind.credits` and `Kind.sharedCredits` reset only when the reset date moves.** Qoder's allowance is the plan plus any pack bought on top ([providers/qoder.md](providers/qoder.md)), so a purchase raises the limit and drops the fraction forty points with nothing turned over — the top-up case inside a figure that does also reset. The forty-point fall is not evidence for these kinds; a `nextResetAt` that moved forward is. A team pool, which states no reset, is therefore never announced as reset.
 
 ### Low balance is about money, not a share of anything
 

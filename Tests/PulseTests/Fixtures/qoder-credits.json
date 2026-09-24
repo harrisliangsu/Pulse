@@ -1,20 +1,16 @@
 {
-  "userType": "pro",
+  "userId": "redacted",
+  "quotaKey": "big_model_credits",
+  "nextResetAt": "2024-09-01T00:00:00Z",
+  "status": "active",
   "totalQuota": {
     "quotaSummary": {
-      "usedValue": 400,
-      "limitValue": 2000,
-      "remainingValue": 1600,
-      "unit": "credits"
-    }
-  },
-  "sharedQuota": {
-    "quotaSummary": {
-      "usedValue": 50,
+      "usedValue": 125,
       "limitValue": 500,
-      "remainingValue": 450,
-      "unit": "credits"
-    }
-  },
-  "nextResetAt": "2026-10-01T00:00:00Z"
+      "remainingValue": 375,
+      "usagePercentage": 25,
+      "unit": "credit"
+    },
+    "quotaDetail": []
+  }
 }

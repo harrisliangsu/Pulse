@@ -139,6 +139,16 @@ final class BotMarkEngine {
 
     private var directTurn = 0.0
     private var directRotation = 0.0
+    /// What was last drawn, and in which state — so a change of state is
+    /// caught up with rather than jumped to. See `render`.
+    private var drawn: (x: Double, y: Double, degrees: Double, turn: Double)?
+    private var drawnState = ""
+    /// What is left of the difference between the last frame of one state and
+    /// the first of the next, eased away over about a third of a second.
+    private var carryX = BotMarkSpring(0)
+    private var carryY = BotMarkSpring(0)
+    private var carryDegrees = BotMarkSpring(0)
+    private var carryTurn = BotMarkSpring(0)
     private var directX = 0.0
     private var directY = 0.0
     private var directGazeX = 0.0
@@ -428,6 +438,10 @@ final class BotMarkEngine {
             notify.step(frequency: 9, damping: 0.55, delta: step)
             humming.step(frequency: 6, damping: 1, delta: step)
             if spinSpring != nil { spinSpring!.step(frequency: 6.2, damping: 1, delta: step) }
+            carryX.step(frequency: 12, damping: 1, delta: step)
+            carryY.step(frequency: 12, damping: 1, delta: step)
+            carryDegrees.step(frequency: 12, damping: 1, delta: step)
+            carryTurn.step(frequency: 12, damping: 1, delta: step)
         }
     }
 
@@ -1077,6 +1091,22 @@ final class BotMarkEngine {
                 : shape.beltRadius)
     }
 
+    /// A spring standing at `value` and heading for nothing. **Not**
+    /// `BotMarkSpring(value)`, which makes `value` its target too: the carry
+    /// then never decayed, every switch added to it, and within a few the
+    /// body had been pushed off the canvas.
+    private static func carry(_ value: Double) -> BotMarkSpring {
+        var spring = BotMarkSpring(0)
+        spring.value = value
+        return spring
+    }
+
+    /// `value` brought into the half-period either side of zero, so a carried
+    /// angle unwinds the short way rather than back through every turn.
+    private static func wrapped(_ value: Double, period: Double) -> Double {
+        value - period * (value / period).rounded()
+    }
+
     // MARK: - Render
 
     private func render(now: Double, config: BotMarkConfig) -> BotMarkFrame {
@@ -1096,7 +1126,24 @@ final class BotMarkEngine {
         // A morph turns the character half a revolution as it arrives, so the
         // turn spring counts as part of the yaw while it is moving.
         let morphIsTurning = morph.value > 0.001 || abs(turn.target - turn.value) > 0.01
-        let turnAngle = (morphIsTurning ? turn.value : 0) + (spinSpring?.value ?? 0) + directTurn
+        let rawTurn = (morphIsTurning ? turn.value : 0) + (spinSpring?.value ?? 0) + directTurn
+        // **A change of state never teleports the body.** Several things are
+        // drawn straight rather than through a spring: celebrate's nine turns
+        // (`directRotation`, `directTurn`, hundreds of degrees by the end), a
+        // gesture's shake, and a morph's pose — the pencil's sweep, the ball's
+        // drop. Each is recomputed from the *new* state on the first frame
+        // after a switch, so a scene beat, a mood, a one-shot or the pointer
+        // interrupting one of them moved the body up to 144° or 108 units in
+        // a single frame, then carried on as if nothing had happened: a
+        // one-frame glitch, easy to glimpse and impossible to catch again.
+        // Measured over ten simulated minutes per persona with realistic
+        // switching. The difference at the switch is handed to springs that
+        // ease it away; angles take the short way round.
+        let handingOff = drawn != nil && state != drawnState
+        if handingOff, let drawn {
+            carryTurn = Self.carry(Self.wrapped(drawn.turn - rawTurn, period: 2 * .pi))
+        }
+        let turnAngle = rawTurn + carryTurn.value
         let shapeRing = abs(turnAngle) > 0.001 && !geometry.transitioning
             ? BotMarkGeometry.turnedShapeRing(shape, identifier: geometry.identifier,
                                           angle: turnAngle, headCentre: headCentre)
@@ -1151,10 +1198,21 @@ final class BotMarkEngine {
         let room = 12.0
         let travelX = BotMath.clamp((headX.value + directX) * normal, -room, room)
         let travelY = BotMath.clamp((headY.value + directY) * normal, -room, room)
-        let translateX = travelX + pose.x
-        let translateY = travelY + pose.y
-        let degrees = rotation.value * 180 / .pi * geometry.tiltScale * normal
+        let rawX = travelX + pose.x
+        let rawY = travelY + pose.y
+        let rawDegrees = rotation.value * 180 / .pi * geometry.tiltScale * normal
             + directRotation * normal + pose.rotation
+        if handingOff, let drawn {
+            carryX = Self.carry(drawn.x - rawX)
+            carryY = Self.carry(drawn.y - rawY)
+            carryDegrees = Self.carry(Self.wrapped(drawn.degrees - rawDegrees, period: 360))
+        }
+        let translateX = rawX + carryX.value
+        let translateY = rawY + carryY.value
+        let degrees = rawDegrees + carryDegrees.value
+        drawn = (translateX, translateY, degrees, turnAngle)
+        drawnState = state
+
 
         var transform = CGAffineTransform(translationX: headCentre + translateX,
                                           y: headCentre + translateY)

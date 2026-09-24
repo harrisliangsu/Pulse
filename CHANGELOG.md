@@ -10,6 +10,20 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.3
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Synced from upstream qunqin24/Pulse 1.4.0** (the seventeen commits this fork had not yet taken).
+- **sub2api, New API, and V2EX.** Two self-hosted gateways read a balance or allowance from a server address and key you enter. V2EX reads its AI Chat allowance with a Personal Access Token.
+- **Qoder follows upstream’s account-page read.** Credits and a team plan’s shared pool are two rings. Buying a pack is not treated as a reset. The site (`qoder.com` or `qoder.com.cn`) is a setting, and changing it clears the saved session. A personal token (`pt-` / `jt-`) still works, and discovery still notices Qoder IDE and `~/.qoder`.
+- **Real Liquid Glass**, with a Transparency slider. Appearance stays dark, light, match the Mac, or glass; glass pins white content over a dimmed clear material.
+- **The window clock can count down.** The outer arc of Time until reset can show time elapsed or time remaining.
+- **Kiro and ZCode show activity.** Pulse reads the session records they leave on this Mac. ZCode drives a ring only when its endpoint belongs to Zhipu or z.ai.
+- **Settings are split by subject** (Appearance, Rings and figures, Position and behavior, General, Notifications, Network and refresh). Codex reset reminders and reset celebrations moved with the notification rows. Ring colour schemes stayed on Rings and figures.
+- **Setup help** opens the user setup pages in this repository.
+- **Smoother cards, a panel that stays put at the screen edge, and an animated mark that no longer jumps** when a motion is interrupted. Token spend keeps same-name projects apart, and unpriced use is no longer shown as $0.00.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.2
 
 - **Codex card shows the latest reset while it is open.** 1.4.1 added the row, then left it off when the announcement arrived after the card was already up — the usual case, because 「暂无预测」 / "No prediction yet" does not change when the row should appear under it. The prediction row is unchanged. Reminders still count down only to `scheduled_for`.

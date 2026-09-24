@@ -30,7 +30,7 @@ so the address is real and the bearer check is real. Nothing here claims a readi
 Two places, in this order — the same arrangement as [opencode-go.md](opencode-go.md), and for the same reason:
 
 1. **A key pasted into Settings**, kept encrypted on this Mac. It wins: somebody who typed a key meant that one, and a stale login left behind by the CLI must not quietly override a deliberate choice.
-2. **`~/.commandcode/auth.json`**, written by `cmd auth login`. Plain JSON, owner-only (`0600`):
+2. **`~/.commandcode/auth.json`**, written by `cmd login`. Plain JSON, owner-only (`0600`):
 
 ```json
 {"apiKey": "…", "userId": "…", "userName": "…",

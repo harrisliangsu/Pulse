@@ -7,6 +7,12 @@
 "Panel" = "패널";
 "Application" = "응용 프로그램";
 "General" = "일반";
+"Appearance" = "모양";
+"Rings and figures" = "링과 숫자";
+"Position and behavior" = "위치 및 동작";
+"Network and refresh" = "네트워크 및 새로 고침";
+"Figures" = "숫자";
+"Rings" = "링";
 "Providers" = "제공업체";
 "About" = "정보";
 
@@ -92,6 +98,11 @@
 "Percentages at the side" = "옆에 백분율 표시";
 "The figure under each ring, docked left or right." = "좌우에 붙였을 때 각 링 아래에 수치를 표시합니다.";
 "Time until reset" = "초기화까지 남은 시간";
+"A second arc outside each ring, showing progress through the current window." = "각 링 바깥쪽에 현재 한도 주기의 시간 진행률을 표시합니다.";
+"Time ring direction" = "시간 링 방향";
+"Choose whether the outer arc fills with elapsed time or empties with time remaining." = "바깥쪽 링을 경과 시간에 따라 채울지, 남은 시간에 따라 줄일지 선택합니다.";
+"Elapsed" = "경과";
+"Remaining" = "남음";
 "Animated mark" = "애니메이션 마크";
 "Bot personality" = "봇 성격";
 "Bot shape" = "봇 모양";
@@ -128,7 +139,6 @@
 "Stoic" = "무표정";
 "Proud" = "당당함";
 "Draw a bot that reacts to this account instead of the provider's logo." = "제공자 로고 대신 이 계정의 상태에 반응하는 봇을 표시합니다.";
-"A second arc outside each ring, for how much of the window has passed." = "링 바깥에 호를 하나 더 그려, 이번 주기가 얼마나 지났는지 보여 줍니다.";
 "Figure above the ring" = "수치를 링 위에";
 "Show what's left" = "남은 양 표시";
 "Forecast" = "소진 예측";
@@ -293,6 +303,9 @@
 /* Liquid Glass */
 "Liquid Glass" = "리퀴드 글래스";
 "Frosted glass instead of a solid rail." = "단단한 레일 대신 반투명 유리 재질을 씁니다.";
+"Clear glass that shows what is behind the panel, instead of solid black." = "완전한 검정 대신, 뒤에 있는 내용이 비쳐 보이는 유리를 씁니다.";
+"Transparency" = "투명도";
+"Clearer to the right. Darker reads better over bright pages." = "오른쪽으로 갈수록 투명해집니다. 어둡게 하면 밝은 페이지 위에서도 잘 읽힙니다.";
 "Drag it by a ring while this is on." = "켜져 있는 동안에는 링을 잡고 끌어야 합니다.";
 "Open Antigravity to see its usage." = "사용량을 읽으려면 Antigravity를 여십시오.";
 "Asks the language server Antigravity runs while it is open." = "Antigravity가 열려 있을 때 실행하는 언어 서버에 물어봅니다.";
@@ -436,6 +449,7 @@
 "Notifications need the bundled app." = "알림을 보내려면 번들로 묶은 앱이 필요합니다.";
 "When a limit comes back" = "한도가 회복되었을 때";
 "After it turns over, and only for one you were warned about." = "한도가 돌아간 뒤에 알립니다. 이전에 경고한 것만 해당합니다.";
+"Only for one you were warned about." = "이전에 경고한 한도만 해당합니다.";
 "When a reading stops arriving" = "사용량을 읽지 못할 때";
 "After several failed checks in a row, once per outage." = "연달아 몇 번 실패하면 알리며, 한 번의 장애당 한 번만 알립니다.";
 "Can't be read" = "읽을 수 없음";
@@ -587,7 +601,6 @@
 /* Fork-only: Qoder, Kimi, appearance, celebrations */
 "A Qoder personal token lasts. A browser session expires. Stored encrypted on this Mac." = "Qoder 개인 토큰은 오래가고, 브라우저 세션은 만료됩니다. 이 Mac에 암호화해 저장합니다.";
 "Add a Qoder session in Settings." = "설정에서 Qoder 세션을 추가하세요.";
-"Appearance" = "모양";
 "Auto" = "자동";
 "Also celebrate hourly quota resets" = "시간 한도 회복도 축하";
 "Celebrate a reset" = "한도 회복 축하";
@@ -692,3 +705,22 @@
 "Before each window's own reset, skipping any window shorter than the lead." = "각 창의 리셋 시각 전에 알립니다. 창이 그 시간보다 짧으면 알리지 않습니다.";
 "Hours before that reset." = "그 리셋보다 얼마나 전에 알릴지.";
 "An announced Codex reset is set for %@." = "공지된 Codex 리셋 시각은 %@입니다.";
+"Top-up pack" = "추가 팩";
+"Server address" = "서버 주소";
+"Edit address" = "주소 편집";
+"Add the server address in Settings." = "설정에서 서버 주소를 입력하십시오.";
+"That address can't be used. It needs https://, unless the server is on your own network." = "이 주소는 사용할 수 없습니다. 서버가 내 네트워크 안에 있는 경우가 아니면 https:// 가 필요합니다.";
+"Sends the key you enter only to the server address you enter. No Keychain prompt." = "입력한 키를 입력한 서버 주소로만 보냅니다. 키체인 확인 창은 표시되지 않습니다.";
+"A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac." = "사용 중인 sub2api의 그룹 API 키입니다. 위에 입력한 주소로만 전송됩니다. 이 Mac에 암호화되어 저장됩니다.";
+"A Personal Access Token from v2ex.com. Stored encrypted on this Mac." = "v2ex.com에서 발급한 개인 액세스 토큰입니다. 이 Mac에 암호화되어 저장됩니다.";
+"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "직접 운영하는 게이트웨이의 주소입니다. 예: https://gateway.example.com. Pulse는 사용량만 조회하고 그 밖에는 아무것도 보내지 않습니다.";
+"The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "AI 클라이언트가 이 게이트웨이에 사용하는 것과 같은 키입니다. 위에 입력한 주소로만 전송됩니다. 이 Mac에 암호화되어 저장됩니다.";
+"Credit allowance" = "크레딧 한도";
+"Team credits" = "팀 공유 크레딧";
+"Sign in to Qoder in a browser to see usage." = "브라우저에서 Qoder에 로그인하면 사용량이 표시됩니다.";
+"Qoder's saved session expired. Sign in again in your browser." = "Qoder의 저장된 세션이 만료되었습니다. 브라우저에서 다시 로그인하세요.";
+"This Qoder account has no credits." = "이 Qoder 계정에는 크레딧이 없습니다.";
+"Reads your credits with your signed-in browser session." = "로그인된 브라우저 세션으로 크레딧을 읽습니다.";
+"No Qoder session found. Sign in at %@ first." = "Qoder 세션을 찾지 못했습니다. 먼저 %@에 로그인하세요.";
+"Site" = "사이트";
+"Where you signed in. Changing it clears the saved session." = "로그인한 사이트입니다. 바꾸면 저장된 세션이 지워집니다.";

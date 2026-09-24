@@ -22,7 +22,7 @@ Because the wait changes each pass, `scheduleNext` sets `Timer.scheduledTimer(..
 
 Signals (every one is a reason to wait **longer**, never shorter):
 
-- CLI transcript metadata (`AgentActivity.lastWrite`) — not a second file scan
+- CLI transcript metadata (`AgentActivity.lastWrite`) — not a second file scan. For ZCode it is the newest turn/model/tool event's own stamp, not the file's date: ZCode writes idle heartbeats into the same log, which held every provider at the floor while it was merely open
 - Whether reported `windows` actually moved (`observedAt` is ignored for this comparison or every fetch looks like a change)
 - Whether the rail was hovered (`noteLooked`)
 - Whether the panel is on screen
@@ -32,7 +32,7 @@ Signals (every one is a reason to wait **longer**, never shorter):
 
 Every signal above is local, which is the module's whole advantage — Pulse can see an agent working without asking anyone's server. It also means a provider billed entirely on **its own** servers is invisible to all three activity signals and lands on the ceiling every time. That is circular: it waits half an hour because nothing changed, and nothing appears to have changed because it waited half an hour. For prepaid credit draining towards zero — DeepSeek, Command Code — being half an hour late is the one case where it costs something.
 
-So `AdaptiveRefresh.interval(for:isWatched:)` caps those at `unwatchedCeiling` (300s). `Provider.spendingIsWatchedLocally` is the flag, and it is the inverse of `reportsSpendableBalance`.
+So `AdaptiveRefresh.interval(for:isWatched:)` caps those at `unwatchedCeiling` (300s). `Provider.spendingIsWatchedLocally` is the flag. It is the inverse of `reportsSpendableBalance` **plus V2EX**, which the money test cannot see: its allowance is counted in tokens rather than currency, it is spent in a browser on somebody else's site, and its five-hour window does not turn over on a clock — V2EX starts one when a message arrives there ([providers/v2ex.md](providers/v2ex.md)). Inheriting `true` from a test about currency would leave it half an hour behind a window it never saw start.
 
 The cap **only ever lowers** a wait the ladder already decided, which keeps the module's rule intact: no signal here may make anything wait longer. And it is beaten by the two short-circuits above it — a constrained Mac and a hidden panel — because those are statements about *this machine*, not about the provider.
 
@@ -60,10 +60,10 @@ Disabled providers are not fetched by the loop, by opening their Settings pane, 
 
 - A window whose **reset time has passed is dropped**, not aged. If every window has reset, report the error.
 - 24h cap for windows that never say when they reset.
-- Missing credentials are **not** papered over (`.apiKeyMissing`, `.ollamaSessionMissing`, `.qoderSessionMissing`, `.signedOut`, `.claudeDesktopNotSignedIn`, `.claudeDesktopKeyRefused`, `.kimiSignInRequired`, `.kimiLoginExpired`).
+- Missing credentials are **not** papered over (`.apiKeyMissing`, `.ollamaSessionMissing`, `.qoderSessionMissing`, `.xiaomiSessionMissing`, `.signedOut`, `.claudeDesktopNotSignedIn`, `.claudeDesktopKeyRefused`, `.kimiSignInRequired`, `.kimiLoginExpired`), and neither is a gateway with no usable address (`.serverAddressMissing`, `.serverAddressRefused`).
 - **The age rules are not only the read-back path's.** A `.live` reading can still be old: `observedAt` is when the *provider's* figures were taken, not when Pulse asked. `reconciled` now filters a **directly fetched** reading the same way it filters a restored one — a window whose reset has passed is dropped, and a reading past the 24h cap is refused — before it is banked or drawn. Devin is why: its figures come out of a row its own app writes at launch, so a fresh fetch every few minutes keeps returning the same morning-old stamp ([providers/devin.md](providers/devin.md)).
 - **A saved plan is banked even when it is stale.** Devin's comes out of the app's own persistent store rather than a request that can be repeated, so `reconciled` keeps it; it is date-stamped, and `--json` — which never fetches — reads only what is banked. Without that the panel would lose the last plan the app wrote once the fresh window passed.
-- **Routes that need not be one account — or one organization — do not share a fallback.** Devin's endpoint is organization-scoped while the row its app saved is keyed by a user id only, so even the same user can be two organizations' allowances. `ProviderUsage.requiresScopeMatch` is computed from the provider, and every fallback, every "newer reading wins" and every save agrees on a `UsageScope` of **route, organization and identity**; a missing organization or identity is never a wildcard. There is no hand-set flag for a return path to forget.
+- **Routes that need not be one account — or one organization — do not share a fallback.** Devin's endpoint is organization-scoped while the row its app saved is keyed by a user id only, so even the same user can be two organizations' allowances. `ProviderUsage.requiresScopeMatch` is computed from the provider, and every fallback, every "newer reading wins" and every save agrees on a `UsageScope` of **route, organization and identity**; a missing organization or identity is never a wildcard. There is no hand-set flag for a return path to forget. **sub2api and New API too**: every reading carries `GatewayAddress.scope(of:key:)` — the deployment's root as organization, the key's SHA-256 as identity — so pointing the account at another server, or another key on the same one, never leaves the old figures standing in for a failure there.
 - `.live` is not the same as “newest.” A route can mark a capture live for a few minutes while an earlier endpoint reading has a later `observedAt`. `reconciled` prefers the later stamp.
 - `UsageStore.start` paints the cache before the first request so the rail is not blank on a cold start. Cache never undoes a fetch that has already landed.
 
@@ -81,11 +81,11 @@ The copied diagnostic report is a fixed allowlist: app version, provider, primar
 
 A white arc inside the ring while that provider’s CLI is working (`AgentActivity`), polled every 2s on its **own** clock. Usage moves in percent; a turn starts and finishes in seconds.
 
-The scanner receives the providers represented by enabled accounts and reads only those with local transcripts (Claude Code and Codex). With neither selected, no activity timer or scan runs. Activity remains per provider, including when only an added account is enabled: the local transcripts do not identify the Pulse account. This is independent of the Token Spend setting.
+The scanner receives the providers represented by enabled accounts and reads only those with a supported local lifecycle source: Claude Code and Codex transcripts, Kiro Desktop/CLI/ACP sessions, or ZCode telemetry when its configured endpoint identifies the enabled Zhipu or z.ai storefront. With none selected, no activity timer or scan runs. Activity remains per provider, including when only an added account is enabled: the local records do not identify the Pulse account. This is independent of the Token Spend setting.
 
 Changing the monitored providers cancels the previous scan and starts a new observation. Directory walks and tail reads check cancellation between files; a read already in progress may finish, but its result cannot restore activity or overwrite the new scan. Stopping clears `running`, `lastWrite` and `finishedAt` without treating deselection or hiding the panel as a finished turn.
 
-“Working” is not “written to recently.” Both CLIs state the answer in the **tail** of live transcripts. Rules of thumb (detail and historical measurements: [providers/README.md](providers/README.md) and [decisions/reported-figures.md](decisions/reported-figures.md)):
+“Working” is not “written to recently.” The supported agents state the answer in the **tail** of their local lifecycle records. ZCode Desktop, its native TUI and `zcode-acp` app-server use the same turn events; overlapping turn ids are reconciled independently. Kiro's v1 Prompt/ToolResults/AssistantMessage records and v2 Desktop/ACP turn events distinguish model work, tool work, a user interaction wait and a finished reply. Rules of thumb (detail and historical measurements: [providers/README.md](providers/README.md) and [decisions/reported-figures.md](decisions/reported-figures.md)):
 
 - Skip bookkeeping records; an interrupt record ends the turn.
 - Grace depends on what the turn is waiting for (model vs tool), from the **record timestamp**, not the file’s mtime.
@@ -95,7 +95,7 @@ Changing the monitored providers cancels the previous scan and starts a new obse
 
 The arc rides the **empty ring** between icon and usage stroke, Core Animation, not `TimelineView`. Reset `spinning` on disappear.
 
-Providers without local transcripts (`keepsLocalTranscripts == false`) omit the mark rather than showing a permanent idle.
+Providers without a supported local activity source (`supportsLocalActivity == false`) omit the mark rather than showing a permanent idle. This capability is separate from `keepsLocalTranscripts`: lifecycle records can drive an honest activity mark without containing the token buckets needed for a local cost estimate.
 
 **`AppSettings.animatesRingActivity`, on by default, gates both this arc and the coloured mark a refresh draws over the usage arc** (`UsageRingView.isRefreshing`, same idea, the provider's own colour instead of white). Off, `isBusy`/`isRefreshing` are still tracked — nothing about what Pulse knows changes — but the ring draws neither turning mark and stops dimming the usage arc while a reading is fetched. One switch for both, since they are the same kind of cue (something is happening right now) drawn two ways.
 
@@ -122,7 +122,7 @@ Two sources, and `UsageLedger.Origin` says which. **Local transcripts** (Claude 
 
 Neither money nor per-day history is reported by providers. Both are reconstructed from CLI transcripts (`UsageLedger`) at published API prices (`ModelPrices`, `models.dev`, cached a day). A model with no published price is left out, never given a plausible rate.
 
-`keepsLocalTranscripts` (Claude Code and Codex today) gates the labelled estimate and the “working right now” mark — both need what only a transcript carries. **History is the wider `providesHistory`**, which Z.ai and Zhipu also answer from their own statistics. Everyone else **omits** those rather than showing zeroes. OpenCode keeps sessions in its own store, not the JSONL the ledger reads, so it stays false for now.
+`keepsLocalTranscripts` (Claude Code and Codex today) gates the labelled estimate. The “working right now” mark has its own `supportsLocalActivity` capability because Kiro and ZCode lifecycle records do not carry the token buckets the estimate needs. **History is the wider `providesHistory`**, which Z.ai and Zhipu also answer from their own statistics. Everyone else **omits** those rather than showing zeroes. OpenCode keeps sessions in its own store, not the JSONL the ledger reads, so it stays false for now.
 
 Ledger notes (verify again after changing the counting; historical independent check agreed to the cent on one machine):
 

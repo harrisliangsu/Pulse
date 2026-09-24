@@ -122,15 +122,23 @@ struct RefreshPacingTests {
         #expect(Self.toAsk(dueOnly: true, askedAt: Self.asked(justShort)).contains(.deepSeek))
     }
 
-    /// The list is short on purpose: it is the providers whose money moves
+    /// The list is short on purpose: it is the providers whose spending moves
     /// where this Mac cannot see it.
-    @Test("Only the balance providers are unwatched")
-    func onlyBalanceProvidersAreUnwatched() {
+    ///
+    /// **Named rather than derived**, because the derivation is a test about
+    /// *money* and the question is about visibility. V2EX is the case that
+    /// pulled them apart: its allowance is counted in tokens, so
+    /// `reportsSpendableBalance` says nothing about it, while it is spent in a
+    /// browser on somebody else's site and its window does not even start on a
+    /// clock. Checking the two properties against each other would have let it
+    /// inherit `true` in silence.
+    @Test("Only the providers this Mac cannot watch are unwatched")
+    func onlyUnwatchableProvidersAreUnwatched() {
+        let unwatched: Set<Provider> = [.deepSeek, .commandCode, .sub2api, .newAPI, .v2ex]
         for provider in Provider.allCases {
-            #expect(provider.spendingIsWatchedLocally == !provider.reportsSpendableBalance,
+            #expect(provider.spendingIsWatchedLocally == !unwatched.contains(provider),
                     "\(provider.rawValue)")
         }
-        #expect(Provider.deepSeek.spendingIsWatchedLocally == false)
         #expect(Provider.claudeCode.spendingIsWatchedLocally)
     }
 

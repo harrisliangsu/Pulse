@@ -7,6 +7,12 @@
 "Panel" = "面板";
 "Application" = "应用";
 "General" = "通用";
+"Appearance" = "外观";
+"Rings and figures" = "圆环与数字";
+"Position and behavior" = "位置与行为";
+"Network and refresh" = "网络与刷新";
+"Figures" = "数字";
+"Rings" = "圆环";
 "Providers" = "供应商";
 "About" = "关于";
 
@@ -92,6 +98,11 @@
 "Percentages at the side" = "侧边显示百分比";
 "The figure under each ring, docked left or right." = "吸附在左右两侧时，在圆环下方显示百分比。";
 "Time until reset" = "距离重置的时间";
+"A second arc outside each ring, showing progress through the current window." = "在圆环外侧显示一圈进度，指示当前额度周期的时间进程。";
+"Time ring direction" = "时间圆环方向";
+"Choose whether the outer arc fills with elapsed time or empties with time remaining." = "选择外圈按已过去时间逐渐填满，或按剩余时间逐渐缩短。";
+"Elapsed" = "已过去";
+"Remaining" = "剩余";
 "Animated mark" = "小机器人";
 "Bot personality" = "小机器人性格";
 "Bot shape" = "小机器人形状";
@@ -128,7 +139,6 @@
 "Stoic" = "冷面";
 "Proud" = "得意";
 "Draw a bot that reacts to this account instead of the provider's logo." = "代替供应商图标，跟着这个账号的状态做动作。";
-"A second arc outside each ring, for how much of the window has passed." = "在圆环外侧显示一圈进度，指示当前额度周期已过去多少。";
 "Figure above the ring" = "数字显示在圆环上方";
 "Show what's left" = "显示剩余额度";
 "Forecast" = "用尽预测";
@@ -281,12 +291,11 @@
 "Small" = "小";
 "Standard" = "标准";
 "Large" = "大";
-"Appearance" = "外观";
 "Dark, light, match the Mac, or glass." = "深色、浅色、跟随系统，或毛玻璃。";
 "Dark" = "深色";
 "Light" = "浅色";
 "Auto" = "自动";
-"Glass" = "毛玻璃";
+"Glass" = "液态玻璃";
 
 /* Launch at login */
 "Open at login" = "开机自启";
@@ -298,8 +307,11 @@
 "Remove Pulse from the menu bar; use the panel menu or shortcut to open settings." = "从菜单栏移除 Pulse；需要设置时可用面板菜单或快捷键打开。";
 
 /* Liquid Glass */
-"Liquid Glass" = "毛玻璃";
 "Frosted glass instead of a solid rail." = "用半透明材质，替代实心轨道。";
+"Liquid Glass" = "液态玻璃";
+"Clear glass that shows what is behind the panel, instead of solid black." = "透出面板后面的内容，替代纯黑背景。";
+"Transparency" = "透明度";
+"Clearer to the right. Darker reads better over bright pages." = "越往右越透。偏暗一些，在浅色页面上更容易看清。";
 "Drag it by a ring while this is on." = "开启后只能按住圆环拖动。";
 "Open Antigravity to see its usage." = "打开 Antigravity 才能读到它的用量。";
 "Asks the language server Antigravity runs while it is open." = "向 Antigravity 打开时运行的语言服务器读取。";
@@ -459,6 +471,7 @@
 "Notifications need the bundled app." = "通知需要打包后的 App 才能发出。";
 "When a limit comes back" = "限额恢复时";
 "After it turns over, and only for one you were warned about." = "限额转过之后才提醒，且仅限此前预警过的。";
+"Only for one you were warned about." = "仅提醒此前已预警过的限额。";
 "When a reading stops arriving" = "读不到用量时";
 "After several failed checks in a row, once per outage." = "连续多次读取失败后提醒，同一次故障只提醒一次。";
 "Can't be read" = "读不到";
@@ -690,3 +703,22 @@
 "Before each window's own reset, skipping any window shorter than the lead." = "在各窗口自己的重置时间前提醒；窗口比提前量更短则不通知。";
 "Hours before that reset." = "相对该重置时间提前这么久。";
 "An announced Codex reset is set for %@." = "已公布的 Codex 重置时间是 %@。";
+"Top-up pack" = "加油包";
+"Server address" = "服务器地址";
+"Edit address" = "编辑地址";
+"Add the server address in Settings." = "在设置里填入服务器地址。";
+"That address can't be used. It needs https://, unless the server is on your own network." = "这个地址不能用。除非服务器在你自己的网络里，否则要用 https://。";
+"Sends the key you enter only to the server address you enter. No Keychain prompt." = "只把你填的 key 发到你填的那个服务器地址。不弹钥匙串。";
+"A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac." = "你那台 sub2api 上的分组 API key。只发到上面那个地址。加密保存在本机。";
+"A Personal Access Token from v2ex.com. Stored encrypted on this Mac." = "在 v2ex.com 生成的个人访问令牌。加密保存在本机。";
+"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "你自己那台网关的地址，例如 https://gateway.example.com。Pulse 只向它查用量，别的什么都不发。";
+"The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "你的 AI 客户端连这台网关用的那个 key。只发到上面那个地址。加密保存在本机。";
+"Credit allowance" = "积分额度";
+"Team credits" = "团队共享积分";
+"Sign in to Qoder in a browser to see usage." = "在浏览器里登录 Qoder 后才能看到用量。";
+"Qoder's saved session expired. Sign in again in your browser." = "Qoder 的登录信息已过期，请在浏览器里重新登录。";
+"This Qoder account has no credits." = "这个 Qoder 账号上没有积分。";
+"Reads your credits with your signed-in browser session." = "用你已登录的浏览器会话读取积分。";
+"No Qoder session found. Sign in at %@ first." = "没找到 Qoder 的登录信息。请先在 %@ 登录。";
+"Site" = "站点";
+"Where you signed in. Changing it clears the saved session." = "你在哪个站登录的。切换后会清掉已保存的登录信息。";

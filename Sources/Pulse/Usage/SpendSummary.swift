@@ -74,20 +74,34 @@ struct SpendSummary: Equatable, Sendable {
         var id: String { session.id }
     }
 
-    /// One working directory, across every session in it.
-    ///
-    /// **Claude Code only, for now.** It keeps a directory per project; Codex
-    /// files sit under a date and say nothing about where the work happened.
-    /// Sessions with no project are not put in an "other" row — a bucket that
-    /// large says nothing and would outrank every real project on the list.
+    /// One identified project, across every session in the selected span.
     struct Project: Identifiable, Equatable, Sendable {
+        struct ID: Hashable, Sendable {
+            let identity: UsageProject.Identity
+            // A label alone cannot prove that two agents mean the same project.
+            let agent: SpendAgent?
+
+            init(_ project: UsageProject, agent: SpendAgent) {
+                identity = project.identity
+                if case .label = project.identity { self.agent = agent }
+                else { self.agent = nil }
+            }
+        }
+
+        let id: ID
         let name: String
         let tokens: Int
         let cost: Double
+        var unpricedTokens: Int = 0
+        var estimatedCost: Double? { tokens > 0 && unpricedTokens == tokens ? nil : cost }
         let sessions: Int
         let lastUsed: Date
+    }
 
-        var id: String { name }
+    func projectName(for row: Session) -> String? {
+        guard let project = row.session.project else { return nil }
+        let id = Project.ID(project, agent: row.agent)
+        return projects.first { $0.id == id }?.name ?? project.name
     }
 
     var tokens = 0
@@ -213,29 +227,31 @@ struct SpendSummary: Equatable, Sendable {
     private static func window(
         _ session: UsageLedger.Session,
         cutoff: Date?
-    ) -> (tokens: Int, cost: Double, last: Date)? {
-        guard let cutoff else { return (session.tokens, session.cost, session.end) }
+    ) -> (tokens: Int, cost: Double, unpriced: Int, last: Date)? {
+        guard let cutoff else { return (session.tokens, session.cost, session.unpricedTokens, session.end) }
 
         guard !session.slots.isEmpty else {
             if !session.days.isEmpty {
                 let days = session.days.filter { $0.date >= cutoff }
                 guard let last = days.map(\.date).max() else { return nil }
-                return (days.reduce(0) { $0 + $1.tokens }, days.reduce(0.0) { $0 + $1.cost }, last)
+                return (days.reduce(0) { $0 + $1.tokens }, days.reduce(0.0) { $0 + $1.cost }, days.reduce(0) { $0 + $1.unpricedTokens }, last)
             }
-            return session.end >= cutoff ? (session.tokens, session.cost, session.end) : nil
+            return session.end >= cutoff ? (session.tokens, session.cost, session.unpricedTokens, session.end) : nil
         }
 
         var tokens = 0
         var cost = 0.0
+        var unpriced = 0
         var last = cutoff
         var found = false
         for slot in session.slots where slot.start >= cutoff {
             found = true
             tokens += slot.tokens
             cost += slot.cost
+            unpriced += slot.unpricedTokens
             last = max(last, slot.start)
         }
-        return found ? (tokens, cost, last) : nil
+        return found ? (tokens, cost, unpriced, last) : nil
     }
 
     /// Adds the ledgers up over the last `span` days, or over everything when
@@ -271,10 +287,12 @@ struct SpendSummary: Equatable, Sendable {
         var modelTokens: [String: Int] = [:]
         var modelAgents: [String: Set<SpendAgent>] = [:]
         var unpriced: Set<String> = []
-        var projectTokens: [String: Int] = [:]
-        var projectCost: [String: Double] = [:]
-        var projectSessions: [String: Int] = [:]
-        var projectLastUsed: [String: Date] = [:]
+        var projectTokens: [Project.ID: Int] = [:]
+        var projectCost: [Project.ID: Double] = [:]
+        var projectUnpriced: [Project.ID: Int] = [:]
+        var projectSessions: [Project.ID: Int] = [:]
+        var projectLastUsed: [Project.ID: Date] = [:]
+        var projectMetadata: [Project.ID: UsageProject] = [:]
         var hasAggregate = false
         var hasPartial = false
 
@@ -336,14 +354,17 @@ struct SpendSummary: Equatable, Sendable {
                         session: UsageLedger.Session(
                             id: session.id, name: session.name, title: session.title,
                             project: session.project, start: session.start, end: session.end,
-                            tokens: windowed.tokens, cost: windowed.cost, slots: session.slots, days: session.days
+                            tokens: windowed.tokens, cost: windowed.cost, unpricedTokens: windowed.unpriced, slots: session.slots, days: session.days
                         )
                     )
                 )
 
-                guard let project = session.project else { continue }
+                guard let metadata = session.project else { continue }
+                let project = Project.ID(metadata, agent: agent)
+                projectMetadata[project] = metadata
                 projectTokens[project, default: 0] += windowed.tokens
                 projectCost[project, default: 0] += windowed.cost
+                projectUnpriced[project, default: 0] += windowed.unpriced
                 projectSessions[project, default: 0] += 1
                 projectLastUsed[project] = max(projectLastUsed[project] ?? windowed.last, windowed.last)
             }
@@ -424,14 +445,21 @@ struct SpendSummary: Equatable, Sendable {
             .sorted { $0.date < $1.date }
 
         summary.sessions.sort { $0.session.end > $1.session.end }
+        let knownProjects = Set(projectMetadata.values)
         summary.projects = projectTokens
-            .map { name, tokens in
-                Project(
-                    name: name,
+            .map { id, tokens in
+                let metadata = projectMetadata[id]!
+                var name = UsageProject.displayName(for: metadata, among: knownProjects)
+                if let agent = id.agent, projectMetadata.keys.contains(where: { $0 != id && projectMetadata[$0]?.name == name }) {
+                    name += " · " + agent.displayName
+                }
+                return Project(
+                    id: id, name: name,
                     tokens: tokens,
-                    cost: projectCost[name] ?? 0,
-                    sessions: projectSessions[name] ?? 0,
-                    lastUsed: projectLastUsed[name] ?? .distantPast
+                    cost: projectCost[id] ?? 0,
+                    unpricedTokens: projectUnpriced[id] ?? 0,
+                    sessions: projectSessions[id] ?? 0,
+                    lastUsed: projectLastUsed[id] ?? .distantPast
                 )
             }
             .sorted { $0.tokens > $1.tokens }

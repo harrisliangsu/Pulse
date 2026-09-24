@@ -444,10 +444,14 @@ struct AlertMemory: Codable, Sendable, Equatable {
         // is spent, which is what the provider's own doc promises, and this is
         // where that promise is kept: a ¥100 full-tank with the balance at zero
         // announced "This limit is spent" while the account could still pay.
+        // A top-up pack joins the balance here for the same reason: it is
+        // prepaid rather than granted, its fraction moves when a pack is
+        // bought, and nothing but the provider's own word may call it spent.
         let reached = window.isExhausted
             ? 100
-            : (window.kind == .balance ? min(99, Int((window.usedFraction * 100).rounded(.down)))
-                                       : Int((window.usedFraction * 100).rounded(.down)))
+            : (window.kind == .balance || window.kind == .topUp
+                ? min(99, Int((window.usedFraction * 100).rounded(.down)))
+                : Int((window.usedFraction * 100).rounded(.down)))
         if reached >= 100 { return 100 }
         if let percent = threshold.percent, reached >= percent { return percent }
         return nil
@@ -492,7 +496,13 @@ struct AlertMemory: Codable, Sendable, Equatable {
              // for the life of the record and the *next* real outage said
              // nothing — the exact failure the three-way split exists to
              // prevent.
-             .zaiNoCodingPlan, .xiaomiNoCodingPlan:
+             .zaiNoCodingPlan,
+             // And the same again for Xiaomi: the session worked and the
+             // account simply has no plan on it.
+             .xiaomiNoCodingPlan,
+             // And for Qoder: the session worked and the account holds no
+             // credits. An answer, not an outage.
+             .qoderNoCredits:
             .answered
 
         // Never set up, never signed in, or an app that simply is not
@@ -508,7 +518,12 @@ struct AlertMemory: Codable, Sendable, Equatable {
              // An app that was never installed or never signed in, which is
              // the same standing as a CLI that is not there: true until
              // somebody does something, and not an outage to announce.
-             .devinAppMissing, .devinPlanUnread, .devinOrganizationMissing:
+             .devinAppMissing, .devinPlanUnread, .devinOrganizationMissing,
+             // A self-hosted service with no address yet, or one whose address
+             // Pulse will not send a key to. Both are setup steps nobody has
+             // finished, and neither is evidence about whether anything can be
+             // reached — nothing was ever asked.
+             .serverAddressMissing, .serverAddressRefused:
             .neutral
         }
     }
@@ -878,7 +893,7 @@ final class UsageAlerts {
 
     /// Two sentences, with a space only where one is wanted. A Chinese full
     /// stop is full-width and carries its own trailing space; adding another
-    /// leaves a visible gap mid-line. Same rule as `glassSubtitle`.
+    /// leaves a visible gap mid-line. Same rule as `appearanceSubtitle`.
     private static func joined(_ first: String, _ second: String) -> String {
         guard !second.isEmpty else { return first }
         guard !first.isEmpty else { return second }
