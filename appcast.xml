@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.4</title>
+            <pubDate>Thu, 24 Sep 2026 03:19:06 -0000</pubDate>
+            <sparkle:version>1.4.4</sparkle:version>
+            <sparkle:shortVersionString>1.4.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.4</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.4</h2><ul><li><strong>工作日同步上游时，CI 不那么容易第一次就红。</strong> 新增 <code>Scripts/fork-compat-check.sh</code>，CI 在编译前先跑。同步代理应在合入上游之后、推送 PR 之前跑同一条命令。它会拦住冲突标记、合并时常改写的文件里对不齐的括号、同一个服务商被 <code>async let</code> 绑了两次（1.4.3 里重复的 Qoder 拉取），以及漏掉 Qoder、Kimi 会话、积分窗口这类分支、又没有 <code>default</code> 的 switch。</li><li><strong>限额恢复彩带仍只给周和月。</strong> 五小时窗口还是看那个可选开关。加油包、积分、按天、按条消息、余额，以及以后新加的窗口种类，都保持安静：既不把构建打断，也不放彩带。</li><li><strong>新增服务商不用再改机器人颜色的 switch。</strong> 品牌色收在一张表里。Qoder 仍是它自己的绿。表里没有的——包括上游刚加上的——由 Pulse 分配颜色。</li><li><strong>一轮刷新里，每个服务商只在一处拉取。</strong> 上游若再贴一段 <code>async let qoderUsage</code>，检查会把它当成第二次绑定，而不是留到 Mac 上才编译失败。</li><li><strong>几项测试不再因为同步而误红。</strong> 机器人头部滑动的预算放宽了，真正飞出画面的情况仍会失败。外观测试里玻璃固定为深色，这是本仓库的画法。分色按 <code>Provider.allCases</code> 计数，不再写死服务商个数。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.4">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.4/Pulse-1.4.4.zip"
+                       length="9118024"
+                       type="application/octet-stream"
+                       sparkle:edSignature="oltZOgjp1eCpw9OnrIvko182N8f4LhWjknjfGYfQgCW4DPeD/WW5zhBbsV7cLkPhtQgyow7eJ8MlHEgjrxc1Cw==" />
+        </item>
+        <item>
             <title>1.4.3</title>
             <pubDate>Thu, 24 Sep 2026 02:40:12 -0000</pubDate>
             <sparkle:version>1.4.3</sparkle:version>
