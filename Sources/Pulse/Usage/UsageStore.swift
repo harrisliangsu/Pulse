@@ -651,9 +651,6 @@ final class UsageStore {
             async let v2exUsage = wanted.contains(.v2ex)
                 ? await v2ex.fetch()
                 : ProviderUsage.unavailable(.v2ex, reason: .loading)
-            async let qoderUsage = wanted.contains(.qoder)
-                ? await qoder.fetch()
-                : ProviderUsage.unavailable(.qoder, reason: .loading)
 
             let (rawCodex, rawKiro, rawClaude, rawAntigravity, rawOpenCode) =
                 await (codexUsage, kiroUsage, claudeUsage, antigravityUsage, openCodeUsage)
@@ -665,7 +662,7 @@ final class UsageStore {
             let (rawVolcengine, rawCommandCode) = await (volcengineUsage, commandCodeUsage)
             let (rawDeepSeek, rawDevin) = await (deepSeekUsage, devinUsage)
             let (rawSub2API, rawNewAPI, rawV2EX) = await (sub2apiUsage, newAPIUsage, v2exUsage)
-            let (rawXiaomi, rawQoder) = await (xiaomiUsage, qoderUsage)
+            let rawXiaomi = await xiaomiUsage
 
             // **The disowning is checked before anything is written, not just
             // before the readings are handed to the panel.** `reconciled`
@@ -711,7 +708,6 @@ final class UsageStore {
                 (.sub2api, rawSub2API),
                 (.newAPI, rawNewAPI),
                 (.v2ex, rawV2EX),
-                (.qoder, rawQoder),
             ] where wanted.contains(provider) {
                 results.append(BatchResult(
                     provider: provider,
