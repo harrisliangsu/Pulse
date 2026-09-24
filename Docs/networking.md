@@ -4,7 +4,7 @@ Owns the proxy boundary for traffic Pulse starts. Per-provider routes and authen
 
 ## Setting
 
-Settings → General → Network offers two modes:
+Settings → Network and refresh offers two modes:
 
 - **Follow System** is the default and preserves the behaviour from before this setting existed. `URLSession` uses macOS's proxy configuration, and helper processes inherit Pulse's environment unchanged.
 - **Manual** accepts an HTTP CONNECT or SOCKS5 proxy without authentication. Host and port are one commit: Return or leaving either field attempts to save both, and an empty host or a port outside 1–65535 does not replace any saved endpoint. There is deliberately no direct/no-proxy mode and no per-provider override.

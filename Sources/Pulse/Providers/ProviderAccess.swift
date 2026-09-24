@@ -31,8 +31,12 @@ extension Provider {
             .localized("Uses a browser session you import in Settings. Importing may ask for browser Keychain access.")
         case .copilot:
             .localized("Uses the GitHub login you connect in Settings. No Keychain prompt.")
-        case .kimiCode, .zai, .minimax, .minimaxCN, .deepSeek:
+        case .kimiCode, .zai, .minimax, .minimaxCN, .deepSeek, .v2ex:
             .localized("Uses only the API key you enter in Settings. No Keychain prompt.")
+        // The one provider whose address is the reader's own, so the sentence
+        // says where the key goes: nowhere but the server they named.
+        case .sub2api, .newAPI:
+            .localized("Sends the key you enter only to the server address you enter. No Keychain prompt.")
         }
     }
 }

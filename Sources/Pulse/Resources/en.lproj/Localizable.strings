@@ -7,6 +7,12 @@
 "Panel" = "Panel";
 "Application" = "Application";
 "General" = "General";
+"Appearance" = "Appearance";
+"Rings and figures" = "Rings and figures";
+"Position and behavior" = "Position and behavior";
+"Network and refresh" = "Network and refresh";
+"Figures" = "Figures";
+"Rings" = "Rings";
 "Providers" = "Providers";
 "About" = "About";
 
@@ -92,6 +98,11 @@
 "Percentages at the side" = "Percentages at the side";
 "The figure under each ring, docked left or right." = "The figure under each ring, docked left or right.";
 "Time until reset" = "Time until reset";
+"A second arc outside each ring, showing progress through the current window." = "A second arc outside each ring, showing progress through the current window.";
+"Time ring direction" = "Time ring direction";
+"Choose whether the outer arc fills with elapsed time or empties with time remaining." = "Choose whether the outer arc fills with elapsed time or empties with time remaining.";
+"Elapsed" = "Elapsed";
+"Remaining" = "Remaining";
 "Animated mark" = "Animated mark";
 "Bot personality" = "Bot personality";
 "Bot shape" = "Bot shape";
@@ -128,7 +139,6 @@
 "Stoic" = "Stoic";
 "Proud" = "Proud";
 "Draw a bot that reacts to this account instead of the provider's logo." = "Draw a bot that reacts to this account instead of the provider's logo.";
-"A second arc outside each ring, for how much of the window has passed." = "A second arc outside each ring, for how much of the window has passed.";
 "Figure above the ring" = "Figure above the ring";
 "Show what's left" = "Show what's left";
 "Forecast" = "Forecast";
@@ -281,7 +291,6 @@
 "Small" = "Small";
 "Standard" = "Standard";
 "Large" = "Large";
-"Appearance" = "Appearance";
 "Dark, light, match the Mac, or glass." = "Dark, light, match the Mac, or glass.";
 "Dark" = "Dark";
 "Light" = "Light";
@@ -300,6 +309,9 @@
 /* Liquid Glass */
 "Liquid Glass" = "Liquid Glass";
 "Frosted glass instead of a solid rail." = "Frosted glass instead of a solid rail.";
+"Clear glass that shows what is behind the panel, instead of solid black." = "Clear glass that shows what is behind the panel, instead of solid black.";
+"Transparency" = "Transparency";
+"Clearer to the right. Darker reads better over bright pages." = "Clearer to the right. Darker reads better over bright pages.";
 "Drag it by a ring while this is on." = "Drag it by a ring while this is on.";
 "Open Antigravity to see its usage." = "Open Antigravity to see its usage.";
 "Asks the language server Antigravity runs while it is open." = "Asks the language server Antigravity runs while it is open.";
@@ -459,6 +471,7 @@
 "Notifications need the bundled app." = "Notifications need the bundled app.";
 "When a limit comes back" = "When a limit comes back";
 "After it turns over, and only for one you were warned about." = "After it turns over, and only for one you were warned about.";
+"Only for one you were warned about." = "Only for one you were warned about.";
 "When a reading stops arriving" = "When a reading stops arriving";
 "After several failed checks in a row, once per outage." = "After several failed checks in a row, once per outage.";
 "Can't be read" = "Can't be read";
@@ -690,3 +703,22 @@
 "Before each window's own reset, skipping any window shorter than the lead." = "Before each window's own reset, skipping any window shorter than the lead.";
 "Hours before that reset." = "Hours before that reset.";
 "An announced Codex reset is set for %@." = "An announced Codex reset is set for %@.";
+"Top-up pack" = "Top-up pack";
+"Server address" = "Server address";
+"Edit address" = "Edit address";
+"Add the server address in Settings." = "Add the server address in Settings.";
+"That address can't be used. It needs https://, unless the server is on your own network." = "That address can't be used. It needs https://, unless the server is on your own network.";
+"Sends the key you enter only to the server address you enter. No Keychain prompt." = "Sends the key you enter only to the server address you enter. No Keychain prompt.";
+"A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac." = "A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac.";
+"A Personal Access Token from v2ex.com. Stored encrypted on this Mac." = "A Personal Access Token from v2ex.com. Stored encrypted on this Mac.";
+"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else.";
+"The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac.";
+"Credit allowance" = "Credit allowance";
+"Team credits" = "Team credits";
+"Sign in to Qoder in a browser to see usage." = "Sign in to Qoder in a browser to see usage.";
+"Qoder's saved session expired. Sign in again in your browser." = "Qoder's saved session expired. Sign in again in your browser.";
+"This Qoder account has no credits." = "This Qoder account has no credits.";
+"Reads your credits with your signed-in browser session." = "Reads your credits with your signed-in browser session.";
+"No Qoder session found. Sign in at %@ first." = "No Qoder session found. Sign in at %@ first.";
+"Site" = "Site";
+"Where you signed in. Changing it clears the saved session." = "Where you signed in. Changing it clears the saved session.";

@@ -10,13 +10,14 @@ import SwiftUI
 /// direction: a black bar parked on a page of work is a hole in the page.
 /// So both are offered rather than assumed.
 ///
-/// No scrim is laid over the glass, deliberately. Apple's guidance is that the
-/// material manages its own legibility — it shifts tint and dynamic range, and
-/// switches between light and dark, to suit what is behind it — so the way to
-/// keep content readable is to let it adapt too, which is why everything drawn
-/// on the panel uses the standard `.primary` colours rather than a hardcoded
-/// white. Darkening the glass by hand fights all of that and makes it look
-/// like a grey box.
+/// The glass is dimmed (`PanelGlass.dim`, by the reader's transparency) and
+/// the panel is drawn dark on it: white content over a light darkening. That
+/// is Apple's guidance for the clear variant, which unlike `.regular` does not
+/// manage its own legibility — it shows what is behind it almost untouched, so
+/// white text disappears over a white page without the dim, and dark text
+/// over a dark one without the white. Measured on 26.7: no dim, white on white
+/// was invisible; 0.3 black was readable over white and barely visible over
+/// black or a busy backdrop.
 struct PanelSurface<S: Shape>: View {
     let shape: S
     let usesGlass: Bool
@@ -24,6 +25,8 @@ struct PanelSurface<S: Shape>: View {
     /// neutral.
     var tint: Color?
     @Environment(\.colorScheme) private var colorScheme
+    /// The reader's setting, handed down from the panel's root.
+    @Environment(\.glassTransparency) private var transparency
 
     var body: some View {
         // Deliberately hit-testable, and the panel cannot be dragged without
@@ -78,11 +81,36 @@ struct PanelSurface<S: Shape>: View {
     @ViewBuilder
     private var glass: some View {
         if #available(macOS 26, *) {
-            Color.clear.glassEffect(.clear.tint(tint), in: shape)
+            Color.clear.glassEffect(.clear.tint(tint ?? PanelGlass.dim(transparency: transparency)), in: shape)
         } else {
             shape
                 .fill(.ultraThinMaterial)
                 .overlay { tint.map { shape.fill($0.opacity(0.28)) } }
         }
+    }
+}
+
+enum PanelGlass {
+    /// The darkest the dimming goes, at transparency 0. Measured on 26.7:
+    /// 0.3 was the least grey over a white page that still read, so the
+    /// default sits there, in the middle of the slider.
+    static let maximumDim = 0.6
+    static let defaultTransparency = 0.5
+
+    /// Laid under the panel's white content on clear glass. The alert tint
+    /// replaces it on the sliver.
+    static func dim(transparency: Double) -> Color {
+        .black.opacity((1 - min(max(transparency, 0), 1)) * maximumDim)
+    }
+}
+
+private struct GlassTransparencyKey: EnvironmentKey {
+    static let defaultValue = PanelGlass.defaultTransparency
+}
+
+extension EnvironmentValues {
+    var glassTransparency: Double {
+        get { self[GlassTransparencyKey.self] }
+        set { self[GlassTransparencyKey.self] = newValue }
     }
 }

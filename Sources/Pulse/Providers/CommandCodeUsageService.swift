@@ -14,7 +14,7 @@ import Foundation
 ///    the same reason it does for OpenCode Go: somebody who typed a key meant
 ///    that one, and a stale login left behind by the CLI should not quietly
 ///    override a deliberate choice.
-/// 2. **What `cmd auth login` saved**, in `~/.commandcode/auth.json` — a plain
+/// 2. **What `cmd login` saved**, in `~/.commandcode/auth.json` — a plain
 ///    JSON object carrying `apiKey` alongside `userId`, `userName`, `keyName`
 ///    and `authenticatedAt`, written owner-only.
 ///
@@ -129,7 +129,7 @@ struct CommandCodeUsageService: Sendable {
         )
     }
 
-    /// The key `cmd auth login` wrote.
+    /// The key `cmd login` wrote.
     ///
     /// Only the production file. The CLI writes `auth.staging.json` and
     /// `auth.local.json` when it is pointed at the vendor's own staging or a

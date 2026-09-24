@@ -21,17 +21,28 @@ extension UsageWindow {
     /// has moved forward is the provider saying so; a fraction that has
     /// dropped forty points has not slid, it has turned over.
     ///
-    /// **Never for a balance.** `Kind.balance` is prepaid credit and not a
-    /// limit: there is no window to turn over, `resetsAt` is always nil, and on
-    /// DeepSeek the fraction is a *setting* — so the test would fire when
-    /// somebody moved a picker.
+    /// **Never for a balance or a top-up pack.** `Kind.balance` is prepaid
+    /// credit and not a limit: there is no window to turn over, `resetsAt` is
+    /// always nil, and on DeepSeek the fraction is a *setting* — so the test
+    /// would fire when somebody moved a picker. `Kind.topUp` is the same
+    /// shape bought in tokens: buying a second pack drops the fraction by
+    /// forty points without any window having reset, and announcing that as a
+    /// reset is a notification about something that did not happen.
+    ///
+    /// **Credits turn over only when the provider says so.** Qoder's allowance
+    /// is the plan *plus* any pack bought on top, so buying one raises the
+    /// limit and drops the fraction forty points with nothing reset — the
+    /// top-up case again, inside a figure that does also reset. A fall is
+    /// therefore not evidence for `.credits` or `.sharedCredits`; only a reset
+    /// time that moved forward is.
     func hasTurnedOver(since fraction: Double, resetsAt previous: Date?) -> Bool {
-        guard kind != .balance else { return false }
+        guard kind != .balance, kind != .topUp else { return false }
         // A minute of slack: a reset time is often rounded, and a second of
         // jitter is not a new window.
         let movedOn = resetsAt.map { new in
             previous.map { new.timeIntervalSince($0) > 60 } ?? false
         } ?? false
+        if kind == .credits || kind == .sharedCredits { return movedOn }
         return movedOn || fraction - usedFraction >= 0.4
     }
 }
@@ -64,6 +75,27 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         /// OpenCode Go's billing period. The others' longest window is a
         /// week, so this one had nowhere to map.
         case monthly
+        /// An allowance bought on top of a window's, which is spent only once
+        /// that window's is gone and which **never expires**. V2EX's
+        /// `extra_usage` is the first: a pack of tokens with a stated size and
+        /// a stated amount used, no reset, no length, and no clock.
+        ///
+        /// Its own kind rather than `.balance`, which is money, and rather
+        /// than `.messages`, which is Devin's count of messages — the name
+        /// would be wrong on the card either way. And **not** a window: a pack
+        /// that is topped up has not turned over, which is why
+        /// `hasTurnedOver` excludes it alongside `.balance`.
+        case topUp
+        /// An allowance counted in the provider's own credits, with a reset it
+        /// states and no length it claims. Qoder's is the first: the plan's
+        /// credits and any pack bought on top, as one figure. Not `.monthly`,
+        /// because a trial's run a fortnight and nothing in the reply says how
+        /// long a period is — a name that states a length would be a claim.
+        case credits
+        /// A team's pool of those credits, shared by everyone on the plan and
+        /// reported beside the member's own. Its own kind so the two rows are
+        /// told apart on the card, and so they are never summed into one.
+        case sharedCredits
         case other(seconds: Int)
 
         /// Week and month always. Five-hour only when the reader switched
@@ -75,9 +107,10 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
             switch self {
             case .weekly, .monthly: true
             case .fiveHour: includingFiveHour
-            // Daily rolls over every day; message allowances have no reset —
-            // neither is something a ribbon should celebrate.
-            case .spend, .balance, .daily, .messages, .other: false
+            // Daily rolls over every day, and a message allowance has no
+            // reset. A top-up pack never expires. Credit rows are not a week
+            // or a month. None of those is a ribbon.
+            case .spend, .balance, .daily, .messages, .topUp, .credits, .sharedCredits, .other: false
             }
         }
 
@@ -269,6 +302,17 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         return min(max(1 - remaining / Double(windowSeconds), 0), 1)
     }
 
+    /// The fraction the outer window-clock arc should draw in the selected
+    /// direction. The evidence requirement stays in `elapsedFraction`: both
+    /// directions are nil unless the provider stated a reset and a duration.
+    func windowClockFraction(
+        direction: WindowClockDirection,
+        at now: Date = Date()
+    ) -> Double? {
+        guard let elapsed = elapsedFraction(at: now) else { return nil }
+        return direction == .remaining ? 1 - elapsed : elapsed
+    }
+
     var name: String {
         let base: String = switch kind {
         case .fiveHour: .localized("5-hour limit")
@@ -278,10 +322,18 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         case .daily: .localized("Daily limit")
         case .messages: .localized("Message allowance")
         case .monthly: .localized("Monthly limit")
+        case .topUp: .localized("Top-up pack")
+        // Not "Credits", which is already the About pane's acknowledgements
+        // and translates as 致谢 — one key cannot be both.
+        case .credits: .localized("Credit allowance")
+        case .sharedCredits: .localized("Team credits")
+        // Days only when it is a whole number of them: rounded, 36 hours read
+        // as a two-day limit. Never below an hour, which is the finest unit
+        // anything here states.
         case .other(let seconds):
-            seconds >= 86_400
-                ? .localized("\("\(Int((Double(seconds) / 86_400).rounded()))")-day limit")
-                : .localized("\("\(Int((Double(seconds) / 3_600).rounded()))")-hour limit")
+            seconds >= 86_400 && seconds % 86_400 == 0
+                ? .localized("\("\(seconds / 86_400)")-day limit")
+                : .localized("\("\(max(Int((Double(seconds) / 3_600).rounded()), 1))")-hour limit")
         }
         let scoped = scope.map { "\(base) · \($0)" } ?? base
         return estimate.map { "\(scoped) · \($0.title)" } ?? scoped
@@ -483,10 +535,6 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
         /// key, and the three ways that can fail are worth telling apart.
         case ollamaSessionMissing
         case ollamaSessionExpired
-        /// Qoder's Credits are read with a browser session, same as Ollama,
-        /// so a missing or refused session is a setup step rather than a key.
-        case qoderSessionMissing
-        case qoderSessionExpired
         /// The page was fetched and did not contain the two figures. Reported
         /// rather than shown as zero: reading a page is reading someone's
         /// layout, and a layout can change.
@@ -531,6 +579,28 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
         /// buys tokens by the yuan instead. A complete answer, not a fault,
         /// and the same distinction `zaiNoCodingPlan` exists for.
         case xiaomiNoCodingPlan
+        /// Qoder's account page answers only to a browser session; missing
+        /// and expired are the two ways that fails, named for the site the
+        /// remedy sends somebody to.
+        case qoderSessionMissing
+        case qoderSessionExpired
+        /// The session works and the account reports a credit limit of zero.
+        /// A complete answer — nothing has been granted — and not a ring at
+        /// 100%, which would say something was spent.
+        case qoderNoCredits
+        /// A provider whose address is the reader's own has not been given
+        /// one. Separate from a missing key because they are two fields and
+        /// two steps, and "add an API key" about the one that already has a
+        /// key sends people to re-paste what already works.
+        ///
+        /// **Names no provider**, so a second self-hosted service can share
+        /// it — the rule the rest of this enum was fixed for once already.
+        case serverAddressMissing
+        /// There is an address and Pulse will not send a key to it: not a URL,
+        /// or plain http to a host out on the internet. Refused rather than
+        /// quietly rewritten, because an address silently changed is a
+        /// credential going somewhere nobody looked.
+        case serverAddressRefused
         /// No key has been entered for a provider that needs one.
         case apiKeyMissing
         /// There is a key, and the service refused it.
@@ -571,10 +641,11 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             case .xiaomiSessionMissing: .localized("Sign in to Xiaomi's platform in a browser to see usage.")
             case .xiaomiSessionExpired: .localized("Xiaomi's saved session expired. Sign in again in your browser.")
             case .xiaomiNoCodingPlan: .localized("No Coding Plan on this Xiaomi account.")
+            case .qoderSessionMissing: .localized("Sign in to Qoder in a browser to see usage.")
+            case .qoderSessionExpired: .localized("Qoder's saved session expired. Sign in again in your browser.")
+            case .qoderNoCredits: .localized("This Qoder account has no credits.")
             case .ollamaSessionMissing: .localized("Add an Ollama session in Settings.")
             case .ollamaSessionExpired: .localized("The Ollama session expired. Sign in again and add it.")
-            case .qoderSessionMissing: .localized("Add a Qoder session in Settings.")
-            case .qoderSessionExpired: .localized("The Qoder session expired. Sign in again and add it.")
             case .ollamaPageChanged: .localized("Ollama's page has changed and can no longer be read.")
             case .volcengineCLIMissing: .localized("Install arkcli and run `arkcli auth login`, or add access keys in Settings.")
             case .volcengineSignInRequired: .localized("arkcli isn't signed in. Run `arkcli auth login`.")
@@ -582,6 +653,8 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             case .devinAppMissing: .localized("Devin isn't installed.")
             case .devinPlanUnread: .localized("Open Devin and sign in, so it can record your plan.")
             case .devinOrganizationMissing: .localized("Add your Devin organization after the token, separated by a space.")
+            case .serverAddressMissing: .localized("Add the server address in Settings.")
+            case .serverAddressRefused: .localized("That address can't be used. It needs https://, unless the server is on your own network.")
             case .apiKeyMissing: .localized("Add an API key in Settings.")
             case .apiKeyRefused: .localized("That key was refused. Check it in Settings.")
             case .unreachable: .localized("The service didn't respond.")
@@ -649,7 +722,16 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
     /// that would have set it, so Devin was silently treated as shareable on
     /// exactly the paths that mattered. Devin's two routes can name different
     /// accounts and different organizations; every other provider's cannot.
-    var requiresScopeMatch: Bool { account.provider == .devin }
+    ///
+    /// The two gateways too: each reading is only as good as the server it was
+    /// read from, and the reader can point the account at another one. Qoder
+    /// likewise: its two sites are two accounts, and the site is a setting.
+    var requiresScopeMatch: Bool {
+        switch account.provider {
+        case .devin, .sub2api, .newAPI, .qoder: true
+        default: false
+        }
+    }
 
     /// Money the provider says is left, and what it is denominated in.
     struct CreditAmount: Equatable, Sendable {

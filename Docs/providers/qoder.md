@@ -1,33 +1,66 @@
 # Qoder
 
-Service: [`QoderUsageService.swift`](../../Sources/Pulse/QoderUsageService.swift).
+Qoder's credits, read through the account page's own request.
 
-Extra accounts are not supported. `keepsLocalTranscripts` is false. First-run detection: `Qoder.app`, `Qoder IDE.app`, or `~/.qoder`. A session still has to be read in Settings — presence of the app is not a cookie.
+**Nothing here is a runtime test against a live account.** The route, the headers and the reply shape come from monitors that already read it — [CodexBar](https://github.com/steipete/CodexBar)'s `QoderUsageFetcher` and its fixtures (from CodexBar#1590), and the AIBalance notes attached to that issue — not from a capture made here. The parsing is pinned by fixtures written to that shape. Requested in issue #59, which pointed at cockpit-tools; that project carries no licence and guesses the shape by keyword, so nothing was taken from it.
 
-## Credential
+## Place in Pulse
 
-Two, same store (`keys.dat`):
+- `Provider.qoder`. Icon `qoder` (lobe-icons). Brand colour `#2ADB5C`. Extra accounts: no. Transcripts: no. Spending history: no.
+- First run: offered unchecked in the chooser. Detected hint when `~/Library/Application Support/Qoder` or `QoderCN`, `Qoder.app`, `Qoder IDE.app`, or `~/.qoder` exists — a hint only; nothing the app keeps is read.
+- `usesAPIKey` and `usesSessionCookie` are true, so Settings draws a **token or session** row and the "Read from browser" row, as for Ollama and Xiaomi. A string starting with `pt-` or `jt-` is a personal token and is sent as `Authorization: Bearer` to the chosen site; anything else is a cookie header.
+- Service: [`QoderUsageService.swift`](../../Sources/Pulse/Providers/QoderUsageService.swift). Tests: `QoderParsingTests`, and the site/session case in `UsageCacheTests`. Fixtures `Tests/PulseTests/Fixtures/qoder-*.json`.
 
-1. A **personal access token** (`pt-…`). It lasts for the expiry set in the Qoder console. Pulse sends it as `Authorization: Bearer`.
-2. A **browser session** for `qoder.com` or `qoder.com.cn`, filled by Settings → Read from browser. Cookies expire; that is why the token is preferred when the stored string is one.
+## Two sites, one row
 
-The CLI file under `~/.qoder/.auth` is encrypted and is **not** borrowed. Do not document how to copy the cookie by hand.
+`qoder.com` (international) and `qoder.com.cn` (mainland) are separate sign-ins on separate hosts. **One row with a site setting**, not two providers like MiniMax: it is one product sold under one name, and nobody subscribes to both. `AppSettings.qoderSite` (`QoderSite`) decides:
 
-## Route
+- which host the browser is asked for cookies (`BrowserCookies.session(forHost:)`: the host, its dot-form and its subdomains — never `qoder.com.cn` on behalf of `qoder.com`);
+- where the request goes.
 
-Tried per site (`qoder.com`, then `qoder.com.cn`):
+**Changing the site clears the saved session** (Settings does it), because a session kept across the switch would be sent to the host that did not issue it. The cache agrees: `qoderSessionMissing` is not papered over, and every reading carries a `UsageScope` of `.webSession`, the site's host, and the SHA-256 of the session (`requiresScopeMatch`), so one site's banked figures never stand in for the other's failure.
 
-- `GET /api/v2/me/usages/big_model_credits` — **Team Plan** only (`plan_quota`). Measured 2026-09-08: a Team card of 51 / 6,000 lives here; Add-on Credits do not.
-- `GET /api/v1/me/organization-shared-usages/big_model_credits` — **Add-on Credits**, the member cap on the org pool (`shared_quota.quota_summary`, e.g. 0 / 314,000). `organization_pool` is the org-wide barrel and is **not** drawn: the usage page shows the member cap.
+## The route
 
-Not a Pulse official-integration claim; the JSON can change.
+`GET https://{site}/api/v2/me/usages/big_model_credits`, with the session as `Cookie`, and the headers the page sends: `Origin` and `Referer` (`/account/usage`) for the site, `X-Requested-With: XMLHttpRequest`, `Bx-V: 2.5.35`, and a Chrome `User-Agent`. `Bx-V` belongs to the bot screening Alibaba puts in front of its sites; every known reader sends all of these, so this does too.
 
-## What is shown
+| Status | Reported as |
+|---|---|
+| 200 | parsed |
+| 3xx, 401, 403 | `qoderSessionExpired` |
+| 429 | `rateLimited` |
+| 5xx | `serverError` |
+| no response | `unreachable` |
+| anything else, or a body that is not the shape below | `unreadableReply` |
 
-- Team Plan — `plan_quota` / `total_quota` / `userQuota`. Monthly sort key, `reportsLength: false`.
-- Personal resource pack — `resource_package_quota` when its limit is above zero.
-- Add-on Credits — `shared_quota` from the organisation-shared endpoint. No cap means no ring. That JSON has no `nextResetAt`; Pulse copies Team Plan's reset onto it, because both bars turn over together (the usage page shows the same date on both).
-- `userType` is the plan name.
-- Remaining Credits are `creditBalance` when the remaining figure is above zero.
+## The cookies
 
-A limit of nothing is dropped rather than shown as 0%. Exhausted when remaining is 0 or used has reached the limit — Qoder then falls back to basic models; Pulse reports the Credits window as spent.
+**A deny list, where Ollama and Xiaomi keep an allow list.** Qoder's session cookie has no published name, and other readers forward everything the host set. `QoderCookie.normalize` keeps what the host set and drops third-party analytics prefixes (`_ga`, `_gcl`, `_fbp`, `Hm_`, …). **Alibaba's own (`cna`, `isg`, `tfstk`) are kept**: the same family carries the bot screening, and dropping one is how a session that works in the browser gets refused here. Control characters refuse the whole header; a single cookie Pulse cannot pass on unaltered is dropped rather than costing the session.
+
+## The reply
+
+```json
+{ "quotaKey": "big_model_credits", "nextResetAt": "2024-09-01T00:00:00Z",
+  "totalQuota":  { "quotaSummary": { "usedValue": 125, "limitValue": 500, "remainingValue": 375 } },
+  "sharedQuota": { "quotaSummary": { "usedValue": 200, "limitValue": 1000, "remainingValue": 800 } } }
+```
+
+camelCase today; the snake_case of an earlier build (`total_quota.quota_summary.used_value`, …) is accepted too. `nextResetAt` may be ISO 8601 or a Unix stamp in seconds or milliseconds; zero is no date. The earlier build also sent `plan_quota` and `resource_package_quota`; `total_quota` is already their sum, so they are not read.
+
+## What the rail is told
+
+- `qoder.credits`, `kind: .credits` ("Credit allowance"): `totalQuota`, the account's plan plus any pack bought on top. `resetsAt` is `nextResetAt`.
+- `qoder.shared`, `kind: .sharedCredits` ("Team credits"): `sharedQuota`, a team plan's pool. **A second ring, never summed** into the first — a spent personal allowance beside an untouched team pool reads as "plenty left" about the pool that is actually stopping you. No reset is claimed for it; the reply states the account's.
+
+Both: fraction is `usedValue / limitValue` (not the rounded `usagePercentage`); `windowSeconds` is thirty days as a **sort key**, `reportsLength` false — a trial runs a fortnight and a plan a billing month, and the reply says neither. `isExhausted` follows Qoder's `remainingValue` when stated, else `used >= limit`.
+
+**A purchase is not a reset.** Buying a pack raises `limitValue` and drops the fraction with nothing turned over, so for these kinds `hasTurnedOver` accepts only a `nextResetAt` that moved forward, never the forty-point fall ([../notifications.md](../notifications.md)).
+
+**A limit of zero is not drawn.** No ring at 100% for an allowance never granted: a zero shared pool is a placeholder and is dropped, and a zero personal allowance with nothing else is `qoderNoCredits` — an answer, not an outage (`UsageAlerts.standing` → `.answered`).
+
+## Unconfirmed
+
+- **Whether the route needs `Bx-V` or the browser `User-Agent`.** Sent because every reader sends them.
+- **The mainland site's shape.** Assumed identical to the international one, as CodexBar assumes.
+- **Which cookies authenticate.** If Qoder names its session cookie publicly, the deny list should become an allow list.
+- **`nextResetAt` on a trial.** Whether it is the trial's end or a monthly turnover is not known.

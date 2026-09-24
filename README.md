@@ -44,7 +44,7 @@ Pulse is an unobtrusive floating monitor that docks neatly along the edge of you
 ### At-a-Glance Status Rings
 - **Usage-Aware Colors**: Dynamic color gradients shift from green to amber, red, and deep red when exhausted — or set custom accent colors per account.
 - **Active Turn Indicator**: A subtle revolving dot indicates whether an agent is actively generating responses in real-time (Claude Code & Codex).
-- **Elapsed Window Arc**: An optional secondary outer arc visualizes how much time in the current rate-limit window has elapsed.
+- **Window Clock Arc**: An optional secondary outer arc can show how much of the current rate-limit window has elapsed or remains.
 - **Countdown Mode**: Toggle between showing spent quota (`75% used`) or remaining balance (`25% left`).
 
 ### Hover Details & Smart Forecasting
@@ -65,14 +65,14 @@ Pulse is an unobtrusive floating monitor that docks neatly along the edge of you
 
 ### Multi-Account & Local Ledger
 - **Multi-Account Support**: Monitor multiple subscriptions for the same provider (Claude Code, Codex, Grok, Grok Bot, Kimi Code) side-by-side with custom labels.
-- **Token Spend (Settings-only)**: Off by default. Enable it on the page to scan local records; switching it off stops the scan. Reads local logs, databases and exports from a catalogue of **54 client sources**, including Gemini CLI, Cline, Roo Code, OpenClaw and GitHub Copilot. Cursor, Trae and other export sources need a prior export or capture. These are distinct from the rail's 21 quota providers; support and live-client validation vary by source. [Sources and coverage](Docs/token-spend-sources.md).
+- **Token Spend (Settings-only)**: Off by default. Enable it on the page to scan local records; switching it off stops the scan. Reads local logs, databases and exports from a catalogue of **54 client sources**, including Gemini CLI, Cline, Roo Code, OpenClaw and GitHub Copilot. Cursor, Trae and other export sources need a prior export or capture. These are distinct from the rail's 24 quota providers; support and live-client validation vary by source. [Sources and coverage](Docs/token-spend-sources.md).
 - **Clear Usage Estimates**: Opens on the last 7 days and remembers your chosen span. Costs use published API prices, not subscription charges. Unknown prices stay unavailable, incomplete counts and coarse timing are labelled, and a source that reports no token counters says so.
 - **Model Details & Charts**: Open a model for input/output/cache counts and estimated costs, daily and hourly charts where the records support them, contributions by agent, and sortable, paged detail tables. Point at a chart to read the date or hour and its token count. Unavailable daily or hourly detail is shown as unavailable, not zero.
-- **Twenty-one Providers**: Claude Code, Codex, Kiro, Antigravity, Cursor, GitHub Copilot, Grok, Grok Bot, OpenCode Go, Kimi Code, Ollama Cloud, z.ai, Zhipu, MiniMax (intl. and mainland), Volcengine, Command Code, DeepSeek, Devin, Xiaomi Coding Plan, and Qoder (this fork).
+- **Twenty-four Providers**: Claude Code, Codex, Kiro, Antigravity, Cursor, GitHub Copilot, Grok, Grok Bot, OpenCode Go, Kimi Code, Ollama Cloud, z.ai, Zhipu, MiniMax (intl. and mainland), Volcengine, Command Code, DeepSeek, Devin, Xiaomi Coding Plan, sub2api, New API, V2EX, and Qoder.
 - **Scriptable**: `Pulse --json` prints the last readings — plan, every limit, reset times, and how old the figures are — for tmux, sketchybar, Raycast, or a shell prompt. It reads the cache, so polling costs nothing.
 - **Developer Integrations**: Export a Raycast extension and ready-to-configure tmux, sketchybar and shell scripts from Settings. Account links open the right pane directly. [Setup guide](Docs/integrations.md).
 - **Connection Diagnostics**: See the actual reading source, cache use, latest check and fallback outcomes. Contextual actions help reconnect, sign in again or fix credentials; copy a diagnostic report without account details or secrets.
-- **Privacy First**: Pulse runs on your Mac under your own provider logins. It makes three kinds of connection and they are all listed here: the providers you already use, [models.dev](https://models.dev) for public model prices in the token-spend pane, and GitHub/Sparkle for app updates. Provider requests, sign-in exchanges and models.dev use the proxy chosen under Settings › General › Network; supported helper processes receive the same manual proxy. Sparkle update checks always follow macOS system proxy settings.
+- **Privacy First**: Pulse runs on your Mac under your own provider logins. It makes three kinds of connection and they are all listed here: the providers you already use, [models.dev](https://models.dev) for public model prices in the token-spend pane, and GitHub/Sparkle for app updates. Provider requests, sign-in exchanges and models.dev use the proxy chosen under Settings › Network and refresh; supported helper processes receive the same manual proxy. Sparkle update checks always follow macOS system proxy settings.
 
 <p align="center">
   <img src="Docs/panel.webp" height="300" alt="Detailed usage card beside rail">
@@ -125,6 +125,10 @@ Pulse shows the figures each service reports, and every percentage comes from th
 | **DeepSeek** | Pasted key; documented `GET /user/balance` | Prepaid balance only — no allowance; you pick what the ring measures against |
 | **Devin** | Nothing to enter — reads your browser session, no keychain prompt | Daily and weekly quota reported by Devin. With no browser session or pasted credential, reads the app's dated saved plan. Endpoint failures use only matching endpoint cache, preserving account and organization boundaries ([Docs/providers/devin.md](Docs/providers/devin.md)) |
 | **Xiaomi Coding Plan** | Nothing to enter — reads your signed-in browser session, or paste a `Cookie:` header | The monthly token allowance from Xiaomi's MiMo console, with the period's end where it reports one. The prepaid balance rides along on the card. An account with no plan says so rather than drawing 0% ([Docs/providers/xiaomi-coding-plan.md](Docs/providers/xiaomi-coding-plan.md)) |
+| **sub2api** | Pasted group key; self-hosted gateway address you enter | A group's own accounting from a [sub2api](https://github.com/Wei-Shaw/sub2api) deployment — money, a quota, a subscription, or a rate-limit window, depending on how the group is set up ([Docs/providers/sub2api.md](Docs/providers/sub2api.md)) |
+| **New API** | Pasted `sk-` key; self-hosted gateway address you enter | Balance from a [New API](https://github.com/QuantumNous/new-api) deployment, in whatever currency it reports; no percentage, since the reply's fraction can mean two different things ([Docs/providers/newapi.md](Docs/providers/newapi.md)) |
+| **V2EX** | Pasted personal access token | AI Chat's rolling 5-hour token quota, plus a second ring for a bought top-up pack; a window that hasn't started yet shows no countdown ([Docs/providers/v2ex.md](Docs/providers/v2ex.md)) |
+| **Qoder** | Nothing to enter — reads your signed-in browser session for qoder.com or qoder.com.cn, or paste a `Cookie:` header or a personal token (`pt-` / `jt-`) | Credit allowance (plan plus packs) with Qoder's reported reset; a team plan's shared credits show as a second ring, never summed; zero credits says so instead of drawing a ring ([Docs/providers/qoder.md](Docs/providers/qoder.md)) |
 
 ---
 
@@ -150,7 +154,7 @@ Pulse shows the figures each service reports, and every percentage comes from th
 ## Privacy & Security
 
 Pulse is designed with strict local-first security principles:
-- **No Pulse backend**: Your Mac talks to the providers you already use, under your own logins. It also fetches public model prices from [models.dev](https://models.dev) for the token-spend pane and checks GitHub/Sparkle for app updates. Provider requests, sign-in exchanges and models.dev use the proxy chosen under Settings › General › Network; supported helper processes receive the same manual proxy. Sparkle update checks always follow macOS system proxy settings.
+- **No Pulse backend**: Your Mac talks to the providers you already use, under your own logins. It also fetches public model prices from [models.dev](https://models.dev) for the token-spend pane and checks GitHub/Sparkle for app updates. Provider requests, sign-in exchanges and models.dev use the proxy chosen under Settings › Network and refresh; supported helper processes receive the same manual proxy. Sparkle update checks always follow macOS system proxy settings.
 - **Local Credentials**: Reads credentials already stored locally by your development tools (`~/.claude`, `~/.codex`, Cursor storage, etc.) where that is how the product works; some providers need a key or sign-in you enter in Settings.
 - **Encrypted Local Storage**: Manually entered API keys and session tokens are encrypted and saved strictly in Pulse's local application directory with owner-only permissions.
 - **Local Usage Records**: Pulse reads transcripts, databases and exports to obtain token counts and session metadata such as titles and working directories. These records may contain conversation text; processing stays on your Mac and the records stay with it. Pulse reads those records and nothing else.

@@ -4,6 +4,11 @@ import Foundation
 enum ConnectionRemedy: Equatable {
     case signIn
     case editCredential
+    /// The server address, for a provider whose address is the reader's own.
+    /// Its own remedy rather than `editCredential`, which focuses the key
+    /// field — a button saying "Edit credential" under a message about an
+    /// address is a control pointing at the wrong row.
+    case editAddress
     case readBrowser
     case connectStatusLine
     case openApp(String)
@@ -35,6 +40,7 @@ enum ConnectionRemedy: Equatable {
         case .devinAppMissing, .devinPlanUnread: return .openApp("Devin")
         case .notSignedIn, .signedOut, .kimiSignInRequired, .kimiLoginExpired: return .signIn
         case .apiKeyMissing, .apiKeyRefused, .devinOrganizationMissing: return .editCredential
+        case .serverAddressMissing, .serverAddressRefused: return .editAddress
         case .ollamaSessionMissing, .ollamaSessionExpired,
              .qoderSessionMissing, .qoderSessionExpired,
              .xiaomiSessionMissing, .xiaomiSessionExpired: return .readBrowser
@@ -42,7 +48,7 @@ enum ConnectionRemedy: Equatable {
              .codexServerFailed: return .retry
         case .codexNotInstalled, .kiroNotInstalled, .kiroVersionUnsupported,
              .volcengineCLIMissing, .noLimitsReported,
-             .grokBotNotIncluded, .zaiNoCodingPlan, .xiaomiNoCodingPlan,
+             .grokBotNotIncluded, .zaiNoCodingPlan, .xiaomiNoCodingPlan, .qoderNoCredits,
              .ollamaPageChanged, .unreadableReply:
             return .help
         }
@@ -52,6 +58,7 @@ enum ConnectionRemedy: Equatable {
         switch self {
         case .signIn: .localized("Sign in again…")
         case .editCredential: .localized("Edit credential")
+        case .editAddress: .localized("Edit address")
         case .readBrowser: .localized("Read from browser")
         case .connectStatusLine: .localized("Connect status line")
         case .openApp(let name): .localized("Open \(name)")
@@ -61,6 +68,9 @@ enum ConnectionRemedy: Equatable {
         }
     }
 
+    /// The user's setup page, not the provider's developer doc: where the key
+    /// comes from and where it goes. One page per link — the two providers
+    /// that share a service share a page too.
     static func helpURL(for provider: Provider) -> URL {
         let page: String = switch provider {
         case .claudeCode: "claude-code"
@@ -82,8 +92,11 @@ enum ConnectionRemedy: Equatable {
         case .qoder: "qoder"
         case .devin: "devin"
         case .xiaomiMiMo: "xiaomi-coding-plan"
+        case .sub2api: "sub2api"
+        case .newAPI: "newapi"
+        case .v2ex: "v2ex"
         }
-        // Fork docs live here; upstream help links would send people to the wrong repo.
-        return URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/\(page).md")!
+        // Setup pages are the user-facing ones. They live in this fork.
+        return URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/setup/\(page).md")!
     }
 }

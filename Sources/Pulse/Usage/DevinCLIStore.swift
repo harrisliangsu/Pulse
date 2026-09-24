@@ -35,28 +35,32 @@ enum DevinCLIStore {
         }
 
         var buckets: [String: [String: TokenTally]] = [:]
-        var perSession: [String: (tokens: Int, cost: Double, start: Date, end: Date)] = [:]
-        var sessionSlots: [String: [String: (tokens: Int, cost: Double)]] = [:]
+        var perSession: [String: (tokens: Int, cost: Double, unpriced: Int, start: Date, end: Date)] = [:]
+        var sessionSlots: [String: [String: (tokens: Int, cost: Double, unpriced: Int)]] = [:]
 
         Self.eachUsage(handle) { session, model, at, tally in
             let key = UsageLedgerReader.slotKey(for: at)
             buckets[key, default: [:]][model] = (buckets[key]?[model] ?? TokenTally()) + tally
 
-            let cost = ModelPrices.price(for: model, in: prices).map { tally.cost(at: $0) } ?? 0
+            let price = ModelPrices.price(for: model, in: prices)
+            let cost = price.map { tally.cost(at: $0) } ?? 0
+            let unpriced = price == nil ? tally.total : 0
 
-            var slot = sessionSlots[session, default: [:]][key] ?? (tokens: 0, cost: 0)
+            var slot = sessionSlots[session, default: [:]][key] ?? (tokens: 0, cost: 0, unpriced: 0)
             slot.tokens += tally.total
             slot.cost += cost
+            slot.unpriced += unpriced
             sessionSlots[session, default: [:]][key] = slot
 
             if var running = perSession[session] {
                 running.tokens += tally.total
                 running.cost += cost
+                running.unpriced += unpriced
                 running.start = min(running.start, at)
                 running.end = max(running.end, at)
                 perSession[session] = running
             } else {
-                perSession[session] = (tally.total, cost, at, at)
+                perSession[session] = (tally.total, cost, unpriced, at, at)
             }
         }
 
@@ -69,11 +73,12 @@ enum DevinCLIStore {
                 id: "\(file.path)#\(id)",
                 name: id,
                 title: session?.title,
-                project: session?.directory.map { URL(fileURLWithPath: $0).lastPathComponent },
+                project: UsageProject(session?.directory),
                 start: totals.start,
                 end: totals.end,
                 tokens: totals.tokens,
                 cost: totals.cost,
+                unpricedTokens: totals.unpriced,
                 slots: UsageLedgerReader.sessionSlots(sessionSlots[id] ?? [:])
             )
         }

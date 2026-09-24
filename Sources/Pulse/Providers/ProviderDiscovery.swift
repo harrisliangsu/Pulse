@@ -35,10 +35,14 @@ extension Provider {
             return ["Devin", "Windsurf"].map {
                 local("Library/Application Support/\($0)/User/globalStorage/state.vscdb")
             }
+        // The editor, either edition, plus the paths this fork already watched.
+        // A hint only: what is read is the browser's session for the account
+        // page, not anything the app keeps.
         case .qoder:
-            return app("Qoder") + app("Qoder IDE") + [local(".qoder")]
+            return ["Qoder", "QoderCN"].map { local("Library/Application Support/\($0)") }
+                + app("Qoder") + app("Qoder IDE") + [local(".qoder")]
         case .kimiCode, .ollamaCloud, .zai, .minimax, .minimaxCN, .copilot,
-             .volcengine, .deepSeek, .xiaomiMiMo:
+             .volcengine, .deepSeek, .xiaomiMiMo, .sub2api, .newAPI, .v2ex:
             return []
         }
     }

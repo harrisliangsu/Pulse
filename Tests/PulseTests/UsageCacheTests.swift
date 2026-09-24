@@ -193,6 +193,80 @@ struct UsageCacheTests {
         }
     }
 
+    @Test("A gateway with no usable address is never papered over")
+    func missingGatewayAddressIsReported() async {
+        let cache = Self.cache()
+        let account = AccountKey(.sub2api)
+        var reading = ProviderUsage(
+            account: account, windows: [Self.window(used: 0.4, resetsAt: Self.soon)],
+            observedAt: Date(), state: .live, plan: nil, creditBalance: nil
+        )
+        reading.sourceScope = GatewayAddress.scope(of: "gateway-a.example.com", key: "sk-a")
+        _ = await cache.reconciled(reading)
+
+        for reason: ProviderUsage.Unavailability in [.serverAddressMissing, .serverAddressRefused] {
+            let out = await cache.reconciled(.unavailable(account, reason: reason))
+            #expect(out.state == .unavailable(reason), "\(reason) must not be hidden behind the cache")
+        }
+    }
+
+    /// Pointing a gateway account at another deployment must not leave the old
+    /// server's figures on the ring when the new one fails — but the same
+    /// server failing for a moment still falls back to them.
+    @Test("A gateway's banked reading stands in only for the same server and key", arguments: [Provider.sub2api, .newAPI])
+    func gatewayCacheIsScopedToItsServer(provider: Provider) async {
+        let cache = Self.cache()
+        let account = AccountKey(provider)
+        var reading = ProviderUsage(
+            account: account, windows: [Self.window(used: 0.4, resetsAt: Self.soon)],
+            observedAt: Date().addingTimeInterval(-300), state: .live, plan: nil, creditBalance: nil
+        )
+        reading.sourceScope = GatewayAddress.scope(of: "https://gateway-a.example.com/v1", key: "sk-a")
+        _ = await cache.reconciled(reading)
+
+        var sameServer = ProviderUsage.unavailable(account, reason: .unreachable)
+        sameServer.sourceScope = GatewayAddress.scope(of: "gateway-a.example.com/", key: "sk-a")
+        #expect(await cache.reconciled(sameServer).state == .stale)
+
+        var otherServer = ProviderUsage.unavailable(account, reason: .apiKeyRefused)
+        otherServer.sourceScope = GatewayAddress.scope(of: "gateway-b.example.com", key: "sk-a")
+        #expect(await cache.reconciled(otherServer).state == .unavailable(.apiKeyRefused))
+
+        var otherKey = ProviderUsage.unavailable(account, reason: .unreachable)
+        otherKey.sourceScope = GatewayAddress.scope(of: "gateway-a.example.com", key: "sk-b")
+        #expect(await cache.reconciled(otherKey).state == .unavailable(.unreachable))
+    }
+
+    /// Qoder's two sites are two accounts. A reading banked for one must not
+    /// stand in when the other fails, and a session discarded by switching
+    /// sites is reported as missing rather than hidden behind the old figures.
+    @Test("A Qoder reading stands in only for the same site and session")
+    func qoderCacheIsScopedToItsSite() async {
+        let cache = Self.cache()
+        let account = AccountKey(.qoder)
+        var reading = ProviderUsage(
+            account: account, windows: [Self.window(used: 0.4, resetsAt: Self.soon)],
+            observedAt: Date().addingTimeInterval(-300), state: .live, plan: nil, creditBalance: nil
+        )
+        reading.sourceScope = QoderUsageService.scope(site: .international, cookie: "sid=a")
+        _ = await cache.reconciled(reading)
+
+        var sameSite = ProviderUsage.unavailable(account, reason: .unreachable)
+        sameSite.sourceScope = QoderUsageService.scope(site: .international, cookie: "sid=a")
+        #expect(await cache.reconciled(sameSite).state == .stale)
+
+        var otherSite = ProviderUsage.unavailable(account, reason: .unreachable)
+        otherSite.sourceScope = QoderUsageService.scope(site: .china, cookie: "sid=a")
+        #expect(await cache.reconciled(otherSite).state == .unavailable(.unreachable))
+
+        var otherSession = ProviderUsage.unavailable(account, reason: .qoderSessionExpired)
+        otherSession.sourceScope = QoderUsageService.scope(site: .international, cookie: "sid=b")
+        #expect(await cache.reconciled(otherSession).state == .unavailable(.qoderSessionExpired))
+
+        let cleared = await cache.reconciled(.unavailable(account, reason: .qoderSessionMissing))
+        #expect(cleared.state == .unavailable(.qoderSessionMissing))
+    }
+
     @Test("A reading never goes backwards")
     func olderReadingDoesNotWin() async {
         let cache = Self.cache()

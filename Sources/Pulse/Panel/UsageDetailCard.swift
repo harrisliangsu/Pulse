@@ -170,6 +170,7 @@ struct UsageDetailCard: View {
                     // rather than being told in advance which they are.
                     burn: showsForecast ? BurnRate.reading(for: window) : nil
                 )
+                .transition(Self.rowTransition)
             }
 
             // **A card with only a title in it reads as a card that failed to
@@ -219,22 +220,53 @@ struct UsageDetailCard: View {
         // Room for the pointer on the side facing the rail. The shape below
         // covers the whole frame, body and pointer together.
         .padding(Self.pointerSide(for: edge), DetailCardLayout.pointerWidth)
+        // **Inside the card, never ahead of it.** Switching between two cards
+        // of different heights keeps this one view and swaps its rows: the
+        // outline grows on the panel's spring, but a row the new card adds is
+        // laid out at its final place at once, so it stood outside a card
+        // that had not reached it yet — the text arriving before the card.
+        // Masked to the same outline, the card uncovers it as it grows.
+        // The content only: the surface keeps its own edge, where glass
+        // draws a rim this would cut.
+        .mask { bubble }
         // The card follows the rail's surface: a glass capsule beside a solid
         // black card reads as two different components, not one panel.
-        .background(
-            {
-                let shape = UsageBubbleShape(
-                    edge: edge,
-                    pointerCenter: pointerCenter,
-                    cornerRadius: DetailCardLayout.cornerRadius,
-                    pointerWidth: DetailCardLayout.pointerWidth,
-                    pointerHeight: DetailCardLayout.pointerHeight
-                )
-                return PanelSurface(shape: shape, usesGlass: usesGlass)
-            }()
-        )
+        .background(PanelSurface(shape: bubble, usesGlass: usesGlass))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(String.localized("\(title ?? usage.provider.displayName) usage details"))
+    }
+
+    /// A limit the next card has and this one did not waits for the card to
+    /// grow, then settles in; one it loses leaves at once.
+    ///
+    /// Arriving with the outline instead — the default — put the row at its
+    /// final place on the first frame, so it either stood outside a card that
+    /// had not reached it yet or, masked, was wiped on by the card's edge. Both
+    /// read as a row popping in. A short wait lets the outline get ahead of
+    /// it, so it is a card that grew, and then filled.
+    ///
+    /// **Short, because the rail is swept.** Running the pointer down the
+    /// rings switches cards every tenth of a second, and every switch restarts
+    /// this. At 0.14s + 0.22s the card spent most of a sweep empty — a black
+    /// card with nothing in it. 0.06s + 0.14s still trails the outline and is
+    /// done before the next ring.
+    private static var rowTransition: AnyTransition {
+        .asymmetric(
+            insertion: .opacity
+                .combined(with: .offset(y: -6))
+                .animation(.easeOut(duration: 0.14).delay(0.06)),
+            removal: .opacity.animation(.easeOut(duration: 0.06))
+        )
+    }
+
+    private var bubble: UsageBubbleShape {
+        UsageBubbleShape(
+            edge: edge,
+            pointerCenter: pointerCenter,
+            cornerRadius: DetailCardLayout.cornerRadius,
+            pointerWidth: DetailCardLayout.pointerWidth,
+            pointerHeight: DetailCardLayout.pointerHeight
+        )
     }
 
     /// Which side of the card the tail leaves from: the one facing the rail.
@@ -500,35 +532,57 @@ struct UsageDetailCard: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
-            LobeIconView(provider: usage.provider, size: DetailCardLayout.headerIconSize)
-                .foregroundStyle(.primary)
+        // Another account's header replaces this one rather than cross-fading
+        // through it: two titles of different lengths drawn over each other
+        // for the length of the fade read as a smudge. Stacked so the outgoing
+        // one keeps no room in the row while it leaves.
+        ZStack(alignment: .leading) {
+            HStack(spacing: 8) {
+                LobeIconView(provider: usage.provider, size: DetailCardLayout.headerIconSize)
+                    .foregroundStyle(.primary)
 
-            Text(localized: "\(title ?? usage.provider.displayName) Usage")
-                // One line, always. The card's height is worked out from
-                // `DetailCardLayout` before SwiftUI lays anything out, so a
-                // header that wrapped would make the card taller than the
-                // window budgeted for it and get sliced off against the edge.
-                .lineLimit(1)
-                .font(.system(size: DetailCardLayout.titleFontSize, weight: .semibold, design: .rounded))
-                .foregroundStyle(.primary)
+                Text(localized: "\(title ?? usage.provider.displayName) Usage")
+                    // One line, always. The card's height is worked out from
+                    // `DetailCardLayout` before SwiftUI lays anything out, so a
+                    // header that wrapped would make the card taller than the
+                    // window budgeted for it and get sliced off against the edge.
+                    .lineLimit(1)
+                    .font(.system(size: DetailCardLayout.titleFontSize, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
 
-            Spacer(minLength: 0)
+                Spacer(minLength: 0)
 
-            if let openSettings {
-                HeaderIconButton(
-                    systemImage: "gearshape",
-                    label: String.localized("Settings…"),
-                    action: openSettings
-                )
-                HeaderIconButton(
-                    systemImage: "power",
-                    label: String.localized("Quit Pulse")
-                ) {
-                    NSApplication.shared.terminate(nil)
+                if let openSettings {
+                    HeaderIconButton(
+                        systemImage: "gearshape",
+                        label: String.localized("Settings…"),
+                        action: openSettings
+                    )
+                    HeaderIconButton(
+                        systemImage: "power",
+                        label: String.localized("Quit Pulse")
+                    ) {
+                        NSApplication.shared.terminate(nil)
+                    }
                 }
             }
+            .id("\(usage.id)|\(title ?? "")")
+            .transition(Self.headerTransition)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The old one gone almost at once, the new one in straight away.
+    ///
+    /// No wait before the new one: waiting left the header blank for most of a
+    /// sweep down the rail (see `rowTransition`). The overlap that remains is
+    /// a few hundredths of a second with the old title nearly gone — not the
+    /// two-titles smudge a plain cross-fade drew.
+    private static var headerTransition: AnyTransition {
+        .asymmetric(
+            insertion: .opacity.animation(.easeOut(duration: 0.1)),
+            removal: .opacity.animation(.easeOut(duration: 0.06))
+        )
     }
 }
 
@@ -703,6 +757,12 @@ private struct ProgressMetricRow: View {
                 Text(figureLabel)
                     .font(.system(size: DetailCardLayout.rowFontSize, weight: .medium, design: .rounded))
                     .foregroundStyle(accent)
+                    // Swapped outright. A cross-fade drew two figures over each
+                    // other; a numeric roll left the digits mid-turn — blank —
+                    // for most of a sweep down the rail, since every switch
+                    // restarts it. A figure that is simply the next one is
+                    // readable on every frame.
+                    .contentTransition(.identity)
 
                 Spacer(minLength: 0)
 

@@ -32,8 +32,8 @@ struct FloatingUsagePanelView: View {
     /// the arc a tenth of the way round at a time. A minute is far finer than
     /// anything visible on a 48pt circle and costs one view invalidation.
     @State private var minute = Date()
-    /// What the system is set to, so glass can follow it instead of being
-    /// pinned to the panel's own dark.
+    /// The Mac's scheme, so Auto can follow it. Glass does not: clear Liquid
+    /// Glass stays dark, which is what `resolved` returns for that appearance.
     @Environment(\.colorScheme) private var colorScheme
 
 
@@ -160,7 +160,7 @@ struct FloatingUsagePanelView: View {
                 // drag: the card closes, and the rail then chases the pointer
                 // on a spring instead of staying under it. The panel appears
                 // to slide away from the hand carrying it.
-                .animation(.spring(response: 0.34, dampingFraction: 0.82), value: selectedSlot)
+                .animation(.spring(response: 0.28, dampingFraction: 0.84), value: selectedSlot)
                 // The berth growing out of the sliver and back. **Here, on the
                 // thing that actually changes size** — not on the container
                 // outside, which is where it was and which also holds the
@@ -217,16 +217,13 @@ struct FloatingUsagePanelView: View {
                     try? await Task.sleep(for: .seconds(60))
                 }
             }
-            // Pinned through the *environment* rather than `preferredColorScheme`
-            // — the latter is a window-wide preference, not a view-level
-            // override, so it can't express "this subtree is dark" (or light).
-            //
-            // Liquid Glass switches between light and dark itself to stay
-            // legible against whatever is behind it, so under glass nothing is
-            // pinned: the standard `.primary` colours the panel is drawn in
-            // follow the appearance the material settled on. Forcing dark is
-            // exactly what leaves white text sitting on bright glass.
+            // Solid appearances follow the picker. Glass is pinned dark:
+            // clear Liquid Glass is dimmed and the content is white, which
+            // is what stays readable over a page or a terminal. Pinning goes
+            // through the environment — `preferredColorScheme` is window-wide
+            // and cannot say "this subtree".
             .environment(\.colorScheme, pinnedScheme)
+            .environment(\.glassTransparency, settings.glassTransparency)
             // The colour language, for every ring, bar and figure below here
             // at once. Read off `settings` in one place so they cannot disagree.
             .environment(\.usageWarningThreshold, settings.warningThreshold.fraction)
@@ -364,8 +361,11 @@ struct FloatingUsagePanelView: View {
             // apart by the one thing that differs between them.
             title: slot.group.map { "\(label) · \($0)" } ?? label,
             // Nil unless it is switched on *and* the window says enough to
-            // work it out — a reset time on its own is not enough.
-            elapsed: settings.showsWindowClock ? headline?.elapsedFraction(at: minute) : nil,
+            // work it out — a reset time on its own is not enough. Direction
+            // only chooses which end of that same evidenced window to show.
+            windowClock: settings.showsWindowClock
+                ? headline?.windowClockFraction(direction: settings.windowClockDirection, at: minute)
+                : nil,
             figure: figure,
             second: settings.showsSecondRing ? usage.secondWindow(preferring: pinned) : nil,
             showsRemaining: settings.showsRemaining

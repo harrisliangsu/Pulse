@@ -7,6 +7,12 @@
 "Panel" = "面板";
 "Application" = "應用程式";
 "General" = "一般";
+"Appearance" = "外觀";
+"Rings and figures" = "圓環與數字";
+"Position and behavior" = "位置與行為";
+"Network and refresh" = "網路與重新整理";
+"Figures" = "數字";
+"Rings" = "圓環";
 "Providers" = "服務商";
 "About" = "關於";
 
@@ -92,6 +98,11 @@
 "Percentages at the side" = "側邊顯示百分比";
 "The figure under each ring, docked left or right." = "貼在左右兩側時，在圓環下方顯示百分比。";
 "Time until reset" = "距離重設的時間";
+"A second arc outside each ring, showing progress through the current window." = "在圓環外側顯示一圈進度，指示目前額度週期的時間進程。";
+"Time ring direction" = "時間圓環方向";
+"Choose whether the outer arc fills with elapsed time or empties with time remaining." = "選擇外圈依已經過時間逐漸填滿，或依剩餘時間逐漸縮短。";
+"Elapsed" = "已經過";
+"Remaining" = "剩餘";
 "Animated mark" = "小機器人";
 "Bot personality" = "小機器人個性";
 "Bot shape" = "小機器人形狀";
@@ -128,7 +139,6 @@
 "Stoic" = "冷面";
 "Proud" = "得意";
 "Draw a bot that reacts to this account instead of the provider's logo." = "代替服務商圖示，跟著這個帳號的狀態做動作。";
-"A second arc outside each ring, for how much of the window has passed." = "在圓環外側加一圈弧線，顯示本輪已經過了多少。";
 "Figure above the ring" = "數字顯示在圓環上方";
 "Show what's left" = "顯示剩餘額度";
 "Forecast" = "用盡預測";
@@ -293,6 +303,9 @@
 /* Liquid Glass */
 "Liquid Glass" = "液態玻璃";
 "Frosted glass instead of a solid rail." = "用半透明材質，取代實心軌道。";
+"Clear glass that shows what is behind the panel, instead of solid black." = "透出面板後方的內容，取代純黑背景。";
+"Transparency" = "透明度";
+"Clearer to the right. Darker reads better over bright pages." = "越往右越透。偏暗一點，在淺色頁面上更容易看清。";
 "Drag it by a ring while this is on." = "開啟後只能按住圓環拖曳。";
 "Open Antigravity to see its usage." = "開啟 Antigravity 才讀得到它的用量。";
 "Asks the language server Antigravity runs while it is open." = "向 Antigravity 開啟時執行的語言伺服器讀取。";
@@ -436,6 +449,7 @@
 "Notifications need the bundled app." = "通知需要打包後的 App 才能發出。";
 "When a limit comes back" = "額度恢復時";
 "After it turns over, and only for one you were warned about." = "額度轉過之後才提醒，且僅限先前預警過的。";
+"Only for one you were warned about." = "只針對先前已經提醒過的額度。";
 "When a reading stops arriving" = "讀不到用量時";
 "After several failed checks in a row, once per outage." = "連續幾次讀取失敗後提醒，同一次故障只提醒一次。";
 "Can't be read" = "讀不到";
@@ -587,7 +601,6 @@
 /* Fork-only: Qoder, Kimi, appearance, celebrations */
 "A Qoder personal token lasts. A browser session expires. Stored encrypted on this Mac." = "Qoder 個人令牌較耐用，瀏覽器登入會過期。加密保存在本機。";
 "Add a Qoder session in Settings." = "請在設定中新增 Qoder 的登入資訊。";
-"Appearance" = "外觀";
 "Auto" = "自動";
 "Also celebrate hourly quota resets" = "也慶祝小時額度重置";
 "Celebrate a reset" = "限額重置時播放彩帶";
@@ -597,7 +610,7 @@
 "From the Kimi Code console. Optional if you sign in. Stored encrypted on this Mac." = "在 Kimi Code 控制台取得。已登入則可留空。加密保存在本機。";
 "Five-hour windows, not only the week or month." = "5 小時額度也會播放彩帶，不只是週或月。";
 "After a limit turns over: ribbons and a sound, named for the provider." = "額度轉過之後：全螢幕彩帶與一聲提示，並標出是哪一家。";
-"Glass" = "毛玻璃";
+"Glass" = "液態玻璃";
 "Kimi Code account" = "Kimi Code 帳號";
 "Kimi Code's saved login expired. Sign in again in Settings." = "Kimi Code 存的登入已過期。請在設定裡重新登入。";
 "Light" = "淺色";
@@ -692,3 +705,22 @@
 "Before each window's own reset, skipping any window shorter than the lead." = "在各窗口自己的重置時間前提醒；窗口比提前量更短則不通知。";
 "Hours before that reset." = "相對該重置時間提前這麼久。";
 "An announced Codex reset is set for %@." = "已公布的 Codex 重置時間是 %@。";
+"Top-up pack" = "加購包";
+"Server address" = "伺服器位址";
+"Edit address" = "編輯位址";
+"Add the server address in Settings." = "請在設定裡填入伺服器位址。";
+"That address can't be used. It needs https://, unless the server is on your own network." = "這個位址不能使用。除非伺服器在你自己的網路裡，否則要用 https://。";
+"Sends the key you enter only to the server address you enter. No Keychain prompt." = "只把你輸入的金鑰送到你輸入的那個伺服器位址。不會出現鑰匙圈提示。";
+"A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac." = "你那台 sub2api 上的群組 API 金鑰。只會送到上面那個位址。加密儲存在本機。";
+"A Personal Access Token from v2ex.com. Stored encrypted on this Mac." = "在 v2ex.com 產生的個人存取權杖。加密儲存在本機。";
+"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "你自己那台閘道的位址，例如 https://gateway.example.com。Pulse 只向它查用量，其他什麼都不會送出。";
+"The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "你的 AI 用戶端連這台閘道用的那個金鑰。只會送到上面那個位址。加密儲存在本機。";
+"Credit allowance" = "點數額度";
+"Team credits" = "團隊共享點數";
+"Sign in to Qoder in a browser to see usage." = "在瀏覽器登入 Qoder 後才能看到用量。";
+"Qoder's saved session expired. Sign in again in your browser." = "Qoder 的登入資訊已過期，請在瀏覽器重新登入。";
+"This Qoder account has no credits." = "這個 Qoder 帳號上沒有點數。";
+"Reads your credits with your signed-in browser session." = "用你已登入的瀏覽器工作階段讀取點數。";
+"No Qoder session found. Sign in at %@ first." = "找不到 Qoder 的登入資訊，請先在 %@ 登入。";
+"Site" = "網站";
+"Where you signed in. Changing it clears the saved session." = "你在哪個網站登入的。切換後會清除已儲存的登入資訊。";

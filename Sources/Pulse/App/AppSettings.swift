@@ -118,6 +118,43 @@ final class AppSettings {
         }
     }
 
+    /// Which Qoder site the saved session belongs to.
+    ///
+    /// `qoder.com` and `qoder.com.cn` are two sign-ins on two hosts, and a
+    /// session for one is refused by — and must never be sent to — the other.
+    /// So the site decides both where the browser is asked for cookies and
+    /// where the request goes, and changing it discards the session saved for
+    /// the old one (Settings does that). A scalar, like DeepSeek's settings
+    /// beside it, because Qoder has no second account.
+    var qoderSite: QoderSite {
+        didSet {
+            guard qoderSite != oldValue else { return }
+            UserDefaults.standard.set(qoderSite.rawValue, forKey: Key.qoderSite)
+            onChange?()
+        }
+    }
+
+    /// Where Pulse sends a self-hosted gateway's request, per account.
+    ///
+    /// sub2api and New API are somebody's own deployments, so unlike every
+    /// other provider here there is no address to ship: these are typed.
+    /// Stored as the reader wrote it and checked on the way out
+    /// (`GatewayAddress`), so a half-typed address never becomes a request and
+    /// is never quietly rewritten into one. Empty until they say.
+    ///
+    /// **Keyed by account id, like `sources` and `sessionBrowsers`**, rather
+    /// than a scalar per provider. It was a scalar while sub2api was the only
+    /// one; a second gateway turned "the address" into "*whose* address", and
+    /// a shape that cannot hold two is the shape that quietly gives one
+    /// provider the other's host.
+    var serverAddresses: [String: String] {
+        didSet {
+            guard serverAddresses != oldValue else { return }
+            UserDefaults.standard.set(serverAddresses, forKey: Key.serverAddresses)
+            onChange?()
+        }
+    }
+
     /// Warn when a prepaid balance falls below this much, per account.
     ///
     /// Empty is off, which is how it ships — the same rule every other alert
@@ -586,6 +623,30 @@ final class AppSettings {
         }
     }
 
+    /// Whether the outer clock arc fills with elapsed time or empties with the
+    /// time remaining. Elapsed is the persisted fallback so existing installs
+    /// keep the display they chose before this direction setting existed.
+    var windowClockDirection: WindowClockDirection {
+        didSet {
+            guard windowClockDirection != oldValue else { return }
+            Self.storeWindowClockDirection(windowClockDirection, in: .standard)
+        }
+    }
+
+    static func storedWindowClockDirection(in defaults: UserDefaults) -> WindowClockDirection {
+        defaults.string(forKey: Key.windowClockDirection)
+            .flatMap(WindowClockDirection.init(rawValue:)) ?? .default
+    }
+
+    static func storeWindowClockDirection(
+        _ direction: WindowClockDirection,
+        in defaults: UserDefaults
+    ) {
+        defaults.set(direction.rawValue, forKey: Key.windowClockDirection)
+    }
+
+    static var windowClockDirectionDefaultsKey: String { Key.windowClockDirection }
+
     /// Show what is **left** rather than what is gone.
     ///
     /// The same reading either way — 12% used and 88% left are one fact — but
@@ -790,6 +851,23 @@ final class AppSettings {
     /// Liquid Glass, now a case of `panelAppearance` rather than its own
     /// switch. Call sites that only care about the material keep this name.
     var usesGlass: Bool { panelAppearance == .glass }
+
+    /// How clear the glass is, 0 to 1: how little of `PanelGlass`'s dimming
+    /// sits under the panel's white content. The reader's to choose because
+    /// the right amount depends on what is usually behind the panel — a
+    /// white page wants more, a dark editor none.
+    ///
+    /// Deliberately no `onChange`: that refetches every provider, and a
+    /// slider sets this dozens of times a second. The panel is `@Observable`
+    /// and redraws on its own.
+    var glassTransparency: Double {
+        didSet {
+            let clamped = min(max(glassTransparency, 0), 1)
+            guard clamped == glassTransparency else { glassTransparency = clamped; return }
+            guard glassTransparency != oldValue else { return }
+            UserDefaults.standard.set(glassTransparency, forKey: Key.glassTransparency)
+        }
+    }
 
     /// Whether the rail hides down to a sliver when the pointer is elsewhere.
     ///
@@ -1021,6 +1099,8 @@ final class AppSettings {
         deepSeekBasis: DeepSeekBasis = .default,
         deepSeekBudget: Double? = nil,
         deepSeekCurrency: String? = nil,
+        qoderSite: QoderSite = .international,
+        serverAddresses: [String: String] = [:],
         lowBalanceAlerts: [String: Double] = [:],
         enabledAccounts: Set<String> = Set(Provider.allCases.map(\.rawValue)),
         extraAccounts: [ExtraAccount] = [],
@@ -1041,11 +1121,13 @@ final class AppSettings {
         railSpacing: RailSpacing = .default,
         usesGlass: Bool = false,
         panelAppearance: PanelAppearance = .default,
+        glassTransparency: Double = PanelGlass.defaultTransparency,
         topRailShowsPercentages: Bool = false,
         sideRailShowsPercentages: Bool = true,
         labelAboveRing: Bool = false,
         usesRoundEnds: Bool = false,
         showsWindowClock: Bool = false,
+        windowClockDirection: WindowClockDirection = .default,
         showsRemaining: Bool = false,
         warningThreshold: WarningThreshold = .default,
         ringColourScheme: RingColourScheme = .default,
@@ -1075,6 +1157,8 @@ final class AppSettings {
         self.deepSeekBasis = deepSeekBasis
         self.deepSeekBudget = deepSeekBudget
         self.deepSeekCurrency = deepSeekCurrency
+        self.qoderSite = qoderSite
+        self.serverAddresses = serverAddresses
         self.lowBalanceAlerts = lowBalanceAlerts
         self.enabledAccounts = enabledAccounts
         self.extraAccounts = extraAccounts
@@ -1094,11 +1178,13 @@ final class AppSettings {
         self.panelSize = panelSize
         self.railSpacing = railSpacing
         self.panelAppearance = usesGlass ? .glass : panelAppearance
+        self.glassTransparency = min(max(glassTransparency, 0), 1)
         self.topRailShowsPercentages = topRailShowsPercentages
         self.sideRailShowsPercentages = sideRailShowsPercentages
         self.labelAboveRing = labelAboveRing
         self.usesRoundEnds = usesRoundEnds
         self.showsWindowClock = showsWindowClock
+        self.windowClockDirection = windowClockDirection
         self.showsRemaining = showsRemaining
         self.warningThreshold = warningThreshold
         self.ringColourScheme = ringColourScheme
@@ -1245,6 +1331,20 @@ final class AppSettings {
         sessionBrowsers = updated
     }
 
+    /// The gateway address entered for an account, trimmed, or empty.
+    func serverAddress(for account: AccountKey) -> String {
+        (serverAddresses[account.id] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Blank removes the entry rather than storing an empty string, so the
+    /// stored dictionary carries only addresses somebody actually set.
+    func setServerAddress(_ address: String, for account: AccountKey) {
+        var updated = serverAddresses
+        let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        updated[account.id] = trimmed.isEmpty ? nil : trimmed
+        serverAddresses = updated
+    }
+
     /// The window pinned for an account, if any.
     func pinnedWindow(for account: AccountKey) -> String? {
         pinnedWindows[account.id]
@@ -1344,6 +1444,9 @@ final class AppSettings {
                 .flatMap(DeepSeekBasis.init(rawValue:)) ?? .default,
             deepSeekBudget: defaults.object(forKey: Key.deepSeekBudget) as? Double,
             deepSeekCurrency: defaults.string(forKey: Key.deepSeekCurrency),
+            qoderSite: defaults.string(forKey: Key.qoderSite)
+                .flatMap(QoderSite.init(rawValue:)) ?? .international,
+            serverAddresses: defaults.dictionary(forKey: Key.serverAddresses) as? [String: String] ?? [:],
             lowBalanceAlerts: defaults.dictionary(forKey: Key.lowBalanceAlerts) as? [String: Double] ?? [:],
             enabledAccounts: selection.enabledAccounts,
             extraAccounts: extras,
@@ -1366,11 +1469,13 @@ final class AppSettings {
             railSpacing: defaults.string(forKey: Key.railSpacing)
                 .flatMap(RailSpacing.init(rawValue:)) ?? .default,
             panelAppearance: Self.restoredAppearance(from: defaults),
+            glassTransparency: defaults.object(forKey: Key.glassTransparency) as? Double ?? PanelGlass.defaultTransparency,
             topRailShowsPercentages: defaults.object(forKey: Key.topRailShowsPercentages) as? Bool ?? false,
             sideRailShowsPercentages: defaults.object(forKey: Key.sideRailShowsPercentages) as? Bool ?? true,
             labelAboveRing: defaults.object(forKey: Key.labelAboveRing) as? Bool ?? false,
             usesRoundEnds: defaults.object(forKey: Key.usesRoundEnds) as? Bool ?? false,
             showsWindowClock: defaults.object(forKey: Key.showsWindowClock) as? Bool ?? false,
+            windowClockDirection: Self.storedWindowClockDirection(in: defaults),
             showsRemaining: defaults.object(forKey: Key.showsRemaining) as? Bool ?? false,
             warningThreshold: (defaults.object(forKey: Key.warningThreshold) as? Int)
                 .flatMap(WarningThreshold.init(rawValue:)) ?? .default,
@@ -1488,6 +1593,8 @@ final class AppSettings {
         static let deepSeekBasis = "settings.deepSeekBasis"
         static let deepSeekBudget = "settings.deepSeekBudget"
         static let deepSeekCurrency = "settings.deepSeekCurrency"
+        static let qoderSite = "settings.qoderSite"
+        static let serverAddresses = "settings.serverAddresses"
         static let lowBalanceAlerts = "settings.lowBalanceAlerts"
         static let language = "settings.language"
         static let pinnedWindows = "settings.pinnedWindows"
@@ -1505,11 +1612,13 @@ final class AppSettings {
         static let railSpacing = "settings.railSpacing"
         static let usesGlass = "settings.usesGlass"
         static let panelAppearance = "settings.panelAppearance"
+        static let glassTransparency = "settings.glassTransparency"
         static let topRailShowsPercentages = "settings.topRailShowsPercentages"
         static let sideRailShowsPercentages = "settings.sideRailShowsPercentages"
         static let labelAboveRing = "settings.labelAboveRing"
         static let usesRoundEnds = "settings.usesRoundEnds"
         static let showsWindowClock = "settings.showsWindowClock"
+        static let windowClockDirection = "settings.windowClockDirection"
         static let botMarks = "settings.botMarks"
         static let botPersonas = "settings.botPersonas"
         static let botShapes = "settings.botShapes"

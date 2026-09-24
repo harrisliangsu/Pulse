@@ -121,7 +121,8 @@ enum UsageSource: String, CaseIterable, Identifiable, Sendable {
             // Never shown: `options(for:)` offers it to Claude Code alone.
             .localized("Use the endpoint when possible, the other route when not.")
         case (_, .openCodeGo), (_, .zai), (_, .glmCoding),
-             (_, .minimax), (_, .minimaxCN), (_, .copilot), (_, .commandCode), (_, .deepSeek):
+             (_, .minimax), (_, .minimaxCN), (_, .copilot), (_, .commandCode), (_, .deepSeek),
+             (_, .sub2api), (_, .newAPI), (_, .v2ex):
             // Never shown either — one route, and it needs a key.
             .localized("Uses the key you entered.")
         case (.endpoint, .devin):
@@ -143,11 +144,13 @@ enum UsageSource: String, CaseIterable, Identifiable, Sendable {
             // Never shown: one route, and it reads the console with the
             // browser session rather than with a key.
             .localized("Reads the console with your signed-in browser session.")
+        case (_, .qoder):
+            // Never shown: one route, the account page's own request, made
+            // with the browser session for the site that was chosen.
+            .localized("Reads your credits with your signed-in browser session.")
         case (_, .ollamaCloud):
             // Never shown: one route, and it reads a page rather than an API.
             .localized("Reads your quota from Ollama's own settings page.")
-        case (_, .qoder):
-            .localized("Reads Qoder Credits from the signed-in account page.")
         case (_, .antigravity):
             // Never shown — Antigravity has one route, so settings states it
             // rather than offering a choice. See `Provider.hasSourceChoice`.
@@ -245,8 +248,8 @@ enum PanelSize: String, CaseIterable, Identifiable, Sendable {
 /// One setting, not two. Glass used to be a separate toggle that silently
 /// overrode Light, so both looked switched on and only one was showing.
 /// Dark stays the default. Light is for sitting on a page of work without
-/// punching a hole in it. Auto follows the Mac. Glass takes its cue from
-/// whatever is behind it, which is why it cannot also be Light.
+/// punching a hole in it. Auto follows the Mac. Glass is clear Liquid Glass:
+/// the content is pinned dark and a transparency slider dims the material.
 enum PanelAppearance: String, CaseIterable, Identifiable, Sendable {
     case dark
     case light
@@ -268,13 +271,13 @@ enum PanelAppearance: String, CaseIterable, Identifiable, Sendable {
 
     /// What the panel's content should treat as its colour scheme.
     ///
-    /// Glass is left to the system: the material switches itself, and pinning
-    /// dark is what left white text sitting on bright glass.
+    /// Glass is pinned dark. Clear Liquid Glass is dimmed and the content is
+    /// white; following the Mac left dark text on a dark window.
     func resolved(matching system: ColorScheme) -> ColorScheme {
         switch self {
-        case .dark: .dark
+        case .dark, .glass: .dark
         case .light: .light
-        case .system, .glass: system
+        case .system: system
         }
     }
 
@@ -313,6 +316,28 @@ enum RailSpacing: String, CaseIterable, Identifiable, Sendable {
         case .compact: .localized("Tight")
         case .standard: .localized("Standard")
         case .roomy: .localized("Loose")
+        }
+    }
+}
+
+/// Which end of an allowance window the neutral outer clock arc measures.
+///
+/// Elapsed keeps the behaviour Pulse shipped with. Remaining turns the same
+/// provider-reported reset and duration into a countdown: full when the window
+/// opens, empty when it resets. Neither direction invents a duration where the
+/// provider did not state one.
+enum WindowClockDirection: String, CaseIterable, Identifiable, Sendable {
+    case elapsed
+    case remaining
+
+    static let `default` = WindowClockDirection.elapsed
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .elapsed: .localized("Elapsed")
+        case .remaining: .localized("Remaining")
         }
     }
 }

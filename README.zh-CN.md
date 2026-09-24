@@ -44,7 +44,7 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 ### 一目了然的用量圆环
 - **智能用量着色**：环形进度随使用率平滑变色（绿 → 琥珀 → 红 → 用尽深红），亦可按账号自定义专属高亮色。
 - **实时工作状态灯**：圆环边缘带动态旋转光点，实时指示 Agent 是否正在生成或执行任务（支持 Claude Code 与 Codex）。
-- **时间窗口进度弧**：可选的外层时钟副弧线，直观呈现当前限额窗口的时间流逝比例。
+- **时间窗口进度弧**：可选的外层时钟副弧线，可选择显示当前限额窗口已过去或剩余的时间比例。
 - **正数 / 倒数自由切换**：支持在“已消耗百分比（如 `75% used`）”与“剩余可用额度（如 `25% left`）”之间切换。
 
 ### 悬停详情卡与智能消耗预测
@@ -58,21 +58,21 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 - **边缘微光收起**：闲置时自动折叠为一条极窄细线，不遮挡代码与工作视线；仅在额度见底预警时细线泛红提醒。
 - **可选的系统通知**：默认全部关闭。开启后可在限额越过 75/80/90/95%、服务商判定用尽、之前提醒过的窗口重置、连续几次读不到用量（面板正悄悄显示旧数字）、以及预付费额度跌破你设定的金额时收到通知。每件事只说一次：打开开关时已经越线的限额会立刻告诉你一次，之后不再重复，直到它重置或者更糟。
 - **全屏空间避让**：默认只留在你当前工作的 Space，全屏应用那边交给它自己。
-- **原生质感**：提供沉稳耐看的纯黑底板，macOS 26+ 更可选原生 **Liquid Glass（流动玻璃）** 材质。
+- **原生质感**：提供沉稳耐看的纯黑底板，macOS 26+ 更可选原生 **液态玻璃（Liquid Glass）** 材质。
 - **动画标记（可选）**：把供应商图标换成一个会随该账号状态反应的小机器人——正在干活、正在取数、额度用满还是闲着。默认关闭，按账号开启；八种人格、十八种形状，颜色也可以自己指定。
 - **浮动栏菜单与快捷键**：右键浮动栏——或收起后的细线，按住 Control 点击同样有效——可打开含「设置」与「退出」的菜单。在 **设置 › 通用 › 快捷键** 中，可自行将全局快捷键分配给**打开设置**与**显示或隐藏面板**；两者默认都不绑定。
 - **五种界面语言**：英文、简体中文、繁体中文、日语与韩语；大数缩写分别使用 K/M/B、万/亿、萬/億、万/億与 만/억。
 
 ### 多账号管理与本地消费账本
 - **多账号并行**：支持同一服务绑定多个订阅（Claude Code、Codex、Grok、Grok Bot、Kimi Code），并排查看并自定义标签。
-- **Token 消耗（设置内查看）**：默认关闭，在页面顶部开启后才读取本机记录，关闭即可停止扫描。支持本地日志、数据库与导出文件，目录涵盖 **54 个客户端来源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 和 GitHub Copilot。Cursor、Trae 等导出来源需要先导出或捕获记录。这些来源与浮动栏上的 20 个配额服务商不同，各自支持的格式和真实客户端验证情况见[来源说明](Docs/token-spend-sources.md)。
+- **Token 消耗（设置内查看）**：默认关闭，在页面顶部开启后才读取本机记录，关闭即可停止扫描。支持本地日志、数据库与导出文件，目录涵盖 **54 个客户端来源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 和 GitHub Copilot。Cursor、Trae 等导出来源需要先导出或捕获记录。这些来源与浮动栏上的 24 个配额服务商不同，各自支持的格式和真实客户端验证情况见[来源说明](Docs/token-spend-sources.md)。
 - **明确的用量估算**：默认查看最近 7 天，并记住所选区间。费用按公开 API 价格折算，不是订阅账单；未知价格保留为不可用，计数不完整或时间粒度较粗会明确标注，没有 token 计数的来源会如实标注为不可用。
 - **模型详情与图表**：点开单个模型可查看输入/输出/缓存读写用量与估算费用、有记录支撑的每日与每小时图表、各 Agent 的贡献，以及可排序、分页的明细表。指向图表即可读取对应日期或小时的 Token 数量。缺失的每日或每小时明细会标注为不可用。
-- **二十一个服务商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（国际与国内）、火山引擎、Command Code、DeepSeek、Devin、小米 Coding Plan，以及本仓库的 Qoder。
+- **二十四个服务商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（国际与国内）、火山引擎、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX，以及 Qoder。
 - **可脚本化**：`Pulse --json` 输出最近一次读数——套餐、每条限额、重置时间，以及数字有多旧——可接 tmux、sketchybar、Raycast 或 shell 提示符。它只读缓存，所以高频轮询几乎不花代价。
 - **开发者集成**：在设置中导出 Raycast 扩展及可直接配置的 tmux、sketchybar、终端脚本；通过账户链接直达对应设置页。[安装指南](Docs/integrations.md)。
 - **连接诊断**：查看实际读数来源、缓存使用情况、最近检查及回退结果；根据原因直接重连、重新登录或编辑凭据，并可复制不含账户信息和密钥的诊断报告。
-- **本地优先**：Pulse 跑在你自己的 Mac 上，用你自己的登录态。它只发起三类连接，这里列的就是全部——你已在使用的服务商、为 Token 消耗页取公开模型价格的 [models.dev](https://models.dev)，以及检查更新的 GitHub/Sparkle。服务商请求、登录时的令牌交换和 models.dev 会使用「设置 › 通用 › 网络」里选择的代理，Pulse 也会把手动代理传给支持的辅助进程。Sparkle 的更新检查始终跟随 macOS 系统代理设置。
+- **本地优先**：Pulse 跑在你自己的 Mac 上，用你自己的登录态。它只发起三类连接，这里列的就是全部——你已在使用的服务商、为 Token 消耗页取公开模型价格的 [models.dev](https://models.dev)，以及检查更新的 GitHub/Sparkle。服务商请求、登录时的令牌交换和 models.dev 会使用「设置 › 网络与刷新」里选择的代理，Pulse 也会把手动代理传给支持的辅助进程。Sparkle 的更新检查始终跟随 macOS 系统代理设置。
 
 <p align="center">
   <img src="Docs/panel.webp" height="300" alt="详情卡片">
@@ -125,6 +125,10 @@ Pulse 只呈现各服务上报的数字，每个百分比都来自那份回复�
 | **DeepSeek** | 设置中填入 API Key；官方文档化的 `GET /user/balance` | 仅报告预付余额、无额度；圆环的度量基准由你选择 |
 | **Devin** | 什么都不用填——读取浏览器里的登录会话，无需钥匙串授权 | 每日与每周额度均由 Devin 报告。没有浏览器会话或手填凭据时，读取应用存下的带日期套餐；接口失败只使用账户与组织匹配的接口缓存（[Docs/providers/devin.md](Docs/providers/devin.md)）|
 | **小米 Coding Plan** | 什么都不用填——读取浏览器里已登录的会话，也可以手动粘贴 `Cookie:` 头 | 小米 MiMo 控制台上的月度 token 额度，有结束时间就一并显示。预付余额作为一行附在卡片上。账号上没有 Coding Plan 时会直说，而不是画一个 0%（[Docs/providers/xiaomi-coding-plan.md](Docs/providers/xiaomi-coding-plan.md)） |
+| **sub2api** | 粘贴的分组密钥；网关地址自行填写 | 读取自建 [sub2api](https://github.com/Wei-Shaw/sub2api) 网关按分组核算的用量——余额、配额、订阅或限速窗口，取决于分组的设置方式（[Docs/providers/sub2api.md](Docs/providers/sub2api.md)） |
+| **New API** | 粘贴的 `sk-` 密钥；网关地址自行填写 | 读取自建 [New API](https://github.com/QuantumNous/new-api) 网关的余额，按部署方设定的币种显示；不显示百分比，因为回复里的比例可能有两种含义（[Docs/providers/newapi.md](Docs/providers/newapi.md)） |
+| **V2EX** | 粘贴的个人访问令牌 | AI Chat 滚动 5 小时的 token 配额，买过加油包再多画一个环；窗口还没开始时不显示倒计时（[Docs/providers/v2ex.md](Docs/providers/v2ex.md)） |
+| **Qoder** | 什么都不用填——读取浏览器里 qoder.com 或 qoder.com.cn 的登录会话，也可以手动粘贴 `Cookie:` 头或个人令牌（`pt-` / `jt-`） | 积分额度（套餐加加油包），按 Qoder 上报的重置时间显示；团队套餐的共享积分单独画一个环，从不相加；额度为零时会直说，而不是画一个空环（[Docs/providers/qoder.md](Docs/providers/qoder.md)） |
 
 ---
 
@@ -150,7 +154,7 @@ Pulse 只呈现各服务上报的数字，每个百分比都来自那份回复�
 ## 隐私与安全性
 
 Pulse 秉持“本地优先”与最小权限设计原则：
-- **无 Pulse 后端**：你的 Mac 用你自己的登录态连接你已在使用的服务商。同时会为 Token 消耗页从 [models.dev](https://models.dev) 获取公开模型价格，并向 GitHub/Sparkle 检查更新。服务商请求、登录时的令牌交换和 models.dev 会使用「设置 › 通用 › 网络」里选择的代理，Pulse 也会把手动代理传给支持的辅助进程。Sparkle 的更新检查始终跟随 macOS 系统代理设置。
+- **无 Pulse 后端**：你的 Mac 用你自己的登录态连接你已在使用的服务商。同时会为 Token 消耗页从 [models.dev](https://models.dev) 获取公开模型价格，并向 GitHub/Sparkle 检查更新。服务商请求、登录时的令牌交换和 models.dev 会使用「设置 › 网络与刷新」里选择的代理，Pulse 也会把手动代理传给支持的辅助进程。Sparkle 的更新检查始终跟随 macOS 系统代理设置。
 - **凭据来源**：在产品本身如此工作时，复用本地开发工具已有的登录态（`~/.claude`、`~/.codex`、Cursor 本地状态等）；部分服务需要在设置中填写密钥或登录。
 - **本地加密存储**：手动输入的 API Key 和 Session 均经过加密保存于 Pulse 应用目录内，权限仅限当前系统用户。
 - **本地用量记录**：Pulse 从会话日志、数据库与导出文件中读取 token 数量，以及标题、工作目录等会话信息。这些记录可能包含对话文本；处理全程在你的 Mac 上完成，记录也留在本机。Pulse 只读取这些记录，仅此而已。

@@ -22,6 +22,7 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 | [build-from-source.md](build-from-source.md) | Toolchain, `swift build`, `#Preview`, local run |
 | [releasing.md](releasing.md) | Tag, bundle, Sparkle, DMG, CI |
 | [providers/README.md](providers/README.md) | Per-provider routes, auth, cookies, extra accounts |
+| [setup/](setup/) | Per-provider setup pages for users — what the in-app **Setup help** link opens |
 | [decisions/README.md](decisions/README.md) | Why / failure lessons (historical) |
 
 ## Providers
@@ -46,4 +47,5 @@ What each release changed, and the source of both the GitHub release page and th
 
 ## User-facing
 
+- [setup/](setup/) — one page per provider: where the key or login comes from and where it goes in Pulse. **Setup help** in the app opens these (`ConnectionRemedy.helpURL`), so a new provider needs one, and a changed settings label or failure message means updating its page. English only; no internals.
 - [../README.md](../README.md) with [zh-CN](../README.zh-CN.md) / [zh-Hant](../README.zh-Hant.md) / [ja](../README.ja.md) / [ko](../README.ko.md) — product pages. Keep all five in parity. They are not the architecture source of truth.
