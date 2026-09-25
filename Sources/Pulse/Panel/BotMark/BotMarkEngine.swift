@@ -187,6 +187,19 @@ final class BotMarkEngine {
     private var pointerY = 0.0
     private var pointerTargetX = 0.0
     private var pointerTargetY = 0.0
+    /// How much this mark is attending to the pointer, 0 to 1.
+    ///
+    /// **A spring, not the boolean it comes from.** Watching the pointer
+    /// damps the mark's own gaze to a fifth and takes most of the
+    /// expression's glance back out — up to 76 units — and doing that in one
+    /// frame had every ring on the rail snap to the cursor together the
+    /// moment it arrived, like a switch rather than a look. Eased, the eyes
+    /// travel over in about 0.4s.
+    private var attention = BotMarkSpring(0)
+    /// When a pointer that has just arrived is first noticed. Each mark
+    /// waits its own short, random moment, so a rail of them turns one after
+    /// another instead of in unison. Nil while no pointer is present.
+    private var noticeAt: Double?
 
     init() {
         let blob = library.shape("blob")
@@ -442,6 +455,8 @@ final class BotMarkEngine {
             carryY.step(frequency: 12, damping: 1, delta: step)
             carryDegrees.step(frequency: 12, damping: 1, delta: step)
             carryTurn.step(frequency: 12, damping: 1, delta: step)
+            // Critically damped, about 0.4s to settle: a look, not a snap.
+            attention.step(frequency: 11, damping: 1, delta: step)
         }
     }
 
@@ -1187,17 +1202,12 @@ final class BotMarkEngine {
                                       into: &shapes)
 
         let normal = 1 - morphAmount
-        // **Bounded to the room the viewBox has.** The box is 259 units
-        // around a 229-unit body, so the character has about 15 units to move
-        // in — and `drowsy` nods 25, a bounce gesture throws it 48, and
-        // `dragging` slides 16. Off the canvas it is simply clipped: the top
-        // of the head disappears, which reads as a glitch rather than as a
-        // jump. Bounded here rather than at the spring targets, so the physics
-        // stay the upstream's and only what is drawn is kept inside. Morph
-        // poses are left alone: an effect brings its own wider viewBox.
-        let room = 12.0
-        let travelX = BotMath.clamp((headX.value + directX) * normal, -room, room)
-        let travelY = BotMath.clamp((headY.value + directY) * normal, -room, room)
+        // **Not bounded, as upstream.** Pulse once kept the drawn position
+        // within 12 units so a big move (`drowsy` nods 25, a bounce throws
+        // the body 48) stayed inside the viewBox; the original lets it run
+        // off and be clipped, and the original is what is drawn.
+        let travelX = (headX.value + directX) * normal
+        let travelY = (headY.value + directY) * normal
         let rawX = travelX + pose.x
         let rawY = travelY + pose.y
         let rawDegrees = rotation.value * 180 / .pi * geometry.tiltScale * normal
@@ -1207,18 +1217,8 @@ final class BotMarkEngine {
             carryY = Self.carry(drawn.y - rawY)
             carryDegrees = Self.carry(Self.wrapped(drawn.degrees - rawDegrees, period: 360))
         }
-        // Carry keeps the handoff from popping, and while it settles it can
-        // push a bob that is already at the edge out of the box — a bounce
-        // peaks at 48 and the clamp above only sees the spring, not the
-        // carry. Once the morph is gone the viewBox is the plain one, so the
-        // drawn point has to stay in it. A morph pose is still added in full:
-        // that effect opens its own box.
-        var translateX = rawX + carryX.value
-        var translateY = rawY + carryY.value
-        if morphAmount < 0.01 {
-            translateX = BotMath.clamp(translateX, -room, room)
-            translateY = BotMath.clamp(translateY, -room, room)
-        }
+        let translateX = rawX + carryX.value
+        let translateY = rawY + carryY.value
         let degrees = rawDegrees + carryDegrees.value
         drawn = (translateX, translateY, degrees, turnAngle)
         drawnState = state
@@ -1340,7 +1340,18 @@ final class BotMarkEngine {
             ? BotMath.clamp((distance - 5) / (leftHalf + rightHalf), 0.35, 4)
             : 4
 
-        if config.pointer, let pointer {
+        // Noticed after a moment of this mark's own, then attended to
+        // gradually — see `attention`. Leaving needs no delay: the eyes
+        // simply ease back.
+        if config.pointer, pointer != nil {
+            if noticeAt == nil { noticeAt = now + BotMath.random(50, 250) }
+        } else {
+            noticeAt = nil
+        }
+        let noticed = noticeAt.map { now >= $0 } ?? false
+        attention.target = noticed ? 1 : 0
+
+        if noticed, let pointer {
             // Not turned around with the gaze: the pointer is a real place on
             // the screen, and the eyes follow it there whichever way the mark
             // is facing.
@@ -1353,13 +1364,6 @@ final class BotMarkEngine {
         // Frame-rate corrected exponential smoothing, as upstream.
         let smoothing = 1 - exp(60 * log(0.91) * delta)
 
-        let bodyExtents = shapeRing.reduce(
-            into: (minimum: Double.infinity, maximum: -Double.infinity)
-        ) { extents, point in
-            extents.minimum = min(extents.minimum, Double(point.x))
-            extents.maximum = max(extents.maximum, Double(point.x))
-        }
-        let edgeClearance = max(bodyExtents.maximum - bodyExtents.minimum, 0) * 0.025
         var output: [BotMarkFrame.Eye] = []
         for index in 0..<2 {
             // Upstream advances the pointer once per eye, so it settles twice
@@ -1400,8 +1404,8 @@ final class BotMarkEngine {
             // the expression's built-in glance reaches 76, against a pointer
             // worth 22 — a rail on the right-hand edge kept staring left with
             // the cursor sitting on its right, which is not watching anything.
-            let watching = config.pointer && pointer != nil
-            let autonomousGazeWeight = watching ? 0.2 : 1.0
+            let focus = BotMath.clamp(attention.value, 0, 1)
+            let autonomousGazeWeight = 1 - 0.8 * focus
 
             // **Only the gaze turns round, not the mark.** Mirroring the
             // whole drawing aimed the eyes correctly and looked absurd: the
@@ -1426,21 +1430,13 @@ final class BotMarkEngine {
             // still look sad, and straightening the pair completely would
             // make every expression's eyes sit in the same place.
             driftX -= pairOffset * (1 - autonomousGazeWeight)
-            driftX += pointerX
-
-            // **The gaze rides inside the face; it does not push past it.**
-            // The expression is already looking somewhere — up to `eyeReach`
-            // off the head's centre — and the lean, the state's glance and
-            // the pointer are all added on top. Stacked the same way they put
-            // an eye outside the silhouette, where it is simply clipped: on a
-            // 25pt ring that reads as a mark with one eye missing, which is
-            // what it looked like. So the boldest thing the artwork itself
-            // does is the ceiling for the total, and anything Pulse adds has
-            // to fit under it. Moving back toward the middle is never
-            // restricted — only leaving the face is.
-            let reach = library.eyeReach
-            driftX = BotMath.clamp(pairOffset + driftX, -reach, reach) - pairOffset
-            driftY += pointerY + aimY.value * autonomousGazeWeight + directGazeY
+            driftX += pointerX * focus
+            // **No ceiling of Pulse's own on the total.** One capped it at the
+            // boldest expression's reach, and that cut the upstream's own
+            // glances and gestures short whenever the expression already
+            // leaned that way — a head shake lost half its sweep. The
+            // silhouette clamp below is the upstream's, and the only bound.
+            driftY += pointerY * focus + aimY.value * autonomousGazeWeight + directGazeY
             let notification = BotMath.clamp(notify.value, 0, 1)
             driftX -= 10 * notification
             driftY += 7 * notification
@@ -1457,11 +1453,9 @@ final class BotMarkEngine {
             let y = BotMath.clamp(headCentre + face.y + (centre.y + driftY - headCentre) * face.sy,
                           scanTop + halfHeight, scanBottom - halfHeight)
 
-            // Keep the eye visibly inside the silhouette: sample the body's
-            // width at every other point of the eye outline and clamp to the
-            // tightest. The inset is about half a point at ring size, enough
-            // that antialiasing does not turn an edge-clamped eye into half an
-            // eye without pulling ordinary glances toward the middle.
+            // Keep the eye inside the silhouette, as the upstream does: sample
+            // the body's width at every other point of the eye outline and
+            // clamp to the tightest.
             var maxLeft = -Double.infinity
             var minRight = Double.infinity
             for pointIndex in stride(from: 0, to: ring.count, by: 2) {
@@ -1470,8 +1464,8 @@ final class BotMarkEngine {
                 let span = abs(turnAngle) > 0.001
                     ? BotMarkGeometry.spanAt(shapeRing, sampleY, headCentre: headCentre)
                     : BotMarkGeometry.shapeSpanAt(shape, spanSamples: spanSamples, sampleY, headCentre: headCentre)
-                maxLeft = max(maxLeft, span.0 + edgeClearance - scaledX)
-                minRight = min(minRight, span.1 - edgeClearance - scaledX)
+                maxLeft = max(maxLeft, span.0 - scaledX)
+                minRight = min(minRight, span.1 - scaledX)
             }
             let desired = localCentre + offsetX + driftX * face.sx
             let bounded = maxLeft <= minRight

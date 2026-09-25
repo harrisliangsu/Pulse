@@ -10,7 +10,7 @@ Source: [`Sources/Pulse/Usage/UsageReport.swift`](../Sources/Pulse/Usage/UsageRe
 
 ## It prints the cache and never fetches
 
-A status line polls every couple of seconds. Twenty-four providers cannot be asked at that rate, and a command that opened network connections and touched the keychain every time a terminal redrew would be a worse citizen than no command at all.
+A status line polls every couple of seconds. Twenty-five providers cannot be asked at that rate, and a command that opened network connections and touched the keychain every time a terminal redrew would be a worse citizen than no command at all.
 
 So this reads what the **running app** last banked and says how old it is. Every account carries `observedAt` and `ageSeconds`; decide for yourself what counts as too old. With the app not running the figures simply stop moving — they are never presented as current. An installation where the app has never run prints an empty rail rather than a guess at what would be switched on.
 
@@ -52,6 +52,8 @@ accounts[]
     estimated          true when the denominator was inferred, not reported
     estimatedFrom      which inference: planPrice | sinceTopUp | yourBudget
     resetsAt
+    expiresAt          when part of the allowance lapses (not a reset); Qoder and StepFun
+    expiringAmount     how much lapses then, in the allowance's own unit
 ```
 
 `headline` repeats a window from `windows` on purpose: the common case is one number in a status line, and making every consumer re-implement "which limit matters" — the fullest, or the provider's included pool, unless one is pinned — is how they end up disagreeing with the ring.

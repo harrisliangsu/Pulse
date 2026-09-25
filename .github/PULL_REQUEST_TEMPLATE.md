@@ -2,7 +2,7 @@
 
 Closes #
 
-New features and significant changes must be discussed and accepted in an issue before implementation.
+Required: an issue a maintainer has labelled `accepted`, bug fixes included. A PR without one, or a third open PR from the same person, is closed automatically. See CONTRIBUTING.md → Pull requests.
 
 ## Problem
 
@@ -22,7 +22,7 @@ List anything not tested, known failures, or environments not covered.
 
 ## Checklist
 
-- [ ] This PR is linked to an accepted issue when required.
+- [ ] This PR is linked to an issue labelled `accepted`.
 - [ ] I searched existing issues and pull requests for duplicates.
 - [ ] The change is focused and contains no unrelated work.
 - [ ] I updated the relevant documentation.

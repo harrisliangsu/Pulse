@@ -10,6 +10,18 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.5
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Synced from upstream qunqin24/Pulse** (twelve commits this fork had not yet taken, on top of their 1.4.0 line).
+- **StepFun’s Step Plan is the twenty-fifth provider.** A signed-in browser session for `platform.stepfun.com` or `platform.stepfun.ai` (or a pasted `Cookie:` header) reads a Token Plan’s monthly credits and top-up packs as one ring, with the date the soonest of them lapse, or a Coding Plan’s five-hour and weekly windows. An account with no plan says so.
+- **Qoder shows when bonus packs lapse.** Each pack has its own end date; the card shows the soonest, such as “Oct 18: 86 credits expire”, with packs ending the same day added together. `--json` gains `expiresAt` and `expiringAmount`.
+- **A stale Qoder reset date no longer drops the reading.** A mainland trial can reply with a reset long past; Pulse used to discard the whole reading as expired. The date is ignored and the remaining credits are shown. Buying a pack is still not a reset — only the reset date moving forward counts.
+- **Qoder reporting no credits clears the cached percentage.** A confirmed empty allowance removes the banked reading, so an old figure no longer stands in on the panel, after relaunch, or in `--json`.
+- **Model prices refresh without restarting Pulse.** An expired price table is downloaded again on the next read; a failed download keeps the old one and may retry after five minutes.
+- **The bot mark follows the original animation.** Glances, gestures and larger moves play at full size, so an eye may touch the edge and the top of the head may briefly leave the ring. An arriving pointer is noticed one mark after another, each turning over about 0.4 seconds, rather than every ring snapping in the same frame.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen’s cookie store; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.4
 
 - **Weekday upstream syncs fail less often on the first CI run.** `Scripts/fork-compat-check.sh` runs in CI before the build. The sync agent should run it after merging upstream, before pushing. It rejects conflict markers, unbalanced braces in the files a merge rewrites, a second `async let` for the same provider (the duplicate Qoder fetch), and a switch that drops a fork case — Qoder, a Kimi session, a credit window — without a `default`.

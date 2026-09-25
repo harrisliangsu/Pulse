@@ -148,6 +148,10 @@ enum UsageSource: String, CaseIterable, Identifiable, Sendable {
             // Never shown: one route, the account page's own request, made
             // with the browser session for the site that was chosen.
             .localized("Reads your credits with your signed-in browser session.")
+        case (_, .stepFun):
+            // Never shown: one route, the console's own request, made with the
+            // browser session for the site that was chosen.
+            .localized("Reads your Step Plan with your signed-in browser session.")
         case (_, .ollamaCloud):
             // Never shown: one route, and it reads a page rather than an API.
             .localized("Reads your quota from Ollama's own settings page.")

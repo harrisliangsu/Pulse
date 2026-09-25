@@ -715,6 +715,7 @@
 "The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "你的 AI 客户端连这台网关用的那个 key。只发到上面那个地址。加密保存在本机。";
 "Credit allowance" = "积分额度";
 "Team credits" = "团队共享积分";
+"%@: %@ credits expire" = "%@ %@ 积分到期";
 "Sign in to Qoder in a browser to see usage." = "在浏览器里登录 Qoder 后才能看到用量。";
 "Qoder's saved session expired. Sign in again in your browser." = "Qoder 的登录信息已过期，请在浏览器里重新登录。";
 "This Qoder account has no credits." = "这个 Qoder 账号上没有积分。";
@@ -722,3 +723,8 @@
 "No Qoder session found. Sign in at %@ first." = "没找到 Qoder 的登录信息。请先在 %@ 登录。";
 "Site" = "站点";
 "Where you signed in. Changing it clears the saved session." = "你在哪个站登录的。切换后会清掉已保存的登录信息。";
+"Sign in to StepFun's platform in a browser to see usage." = "在浏览器里登录阶跃星辰开放平台后才能看到用量。";
+"StepFun's saved session expired. Sign in again in your browser." = "阶跃星辰的登录信息已过期，请在浏览器里重新登录。";
+"No Step Plan on this StepFun account." = "这个阶跃星辰账号没有订阅 Step Plan。";
+"Reads your Step Plan with your signed-in browser session." = "用你已登录的浏览器会话读取 Step Plan。";
+"No StepFun session found. Sign in at %@ first." = "没找到阶跃星辰的登录信息。请先在 %@ 登录。";

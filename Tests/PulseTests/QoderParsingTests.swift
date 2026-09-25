@@ -16,6 +16,8 @@ struct QoderParsingTests {
     }
 
     private static let resetDate = Date(timeIntervalSince1970: 1_725_148_800)
+    /// A day before the fixtures' reset, so their date is still ahead.
+    private static let before = resetDate.addingTimeInterval(-86_400)
 
     // MARK: - The credential
 
@@ -73,7 +75,7 @@ struct QoderParsingTests {
         #expect(snapshot.shared == nil)
         #expect(snapshot.resetsAt == Self.resetDate)
 
-        let windows = QoderUsageService.windows(from: snapshot)
+        let windows = QoderUsageService.windows(from: snapshot, at: Self.before)
         #expect(windows.count == 1)
         #expect(windows[0].kind == .credits)
         #expect(windows[0].usedFraction == 0.25)
@@ -97,7 +99,7 @@ struct QoderParsingTests {
     /// stopping the reader. Two rings, and the personal one says spent.
     @Test("A team pool is a second ring, never a sum")
     func teamPoolIsItsOwnRing() throws {
-        let windows = QoderUsageService.windows(from: try QoderClient.parse(Self.fixture("qoder-credits-team")))
+        let windows = QoderUsageService.windows(from: try QoderClient.parse(Self.fixture("qoder-credits-team")), at: Self.before)
         #expect(windows.map(\.kind) == [.credits, .sharedCredits])
         #expect(windows[0].usedFraction == 1)
         #expect(windows[0].isExhausted)
@@ -107,13 +109,96 @@ struct QoderParsingTests {
         #expect(windows[1].resetsAt == nil)
     }
 
+    /// The mainland trial reply from issue #59: 586 of 600 credits left and a
+    /// `nextResetAt` a month in the past. The credits are drawn; the stale
+    /// date is not, or the cache would drop the ring as already reset and say
+    /// no limits were reported.
+    @Test("A reset date already past is dropped, not the credits")
+    func staleResetIsDropped() async throws {
+        let snapshot = try QoderClient.parse(Self.fixture("qoder-credits-trial-stale-reset"))
+        #expect(snapshot.personal == .init(used: 14, limit: 600, remaining: 586))
+        #expect(snapshot.resetsAt == Date(timeIntervalSince1970: 1_787_304_668.180))
+
+        let read = Date(timeIntervalSince1970: 1_790_179_680) // 2026-09-23T16:08Z
+        let windows = QoderUsageService.windows(from: snapshot, at: read)
+        #expect(windows.count == 1)
+        #expect(windows[0].resetsAt == nil)
+        #expect(!windows[0].isExhausted)
+        // What the card says instead: the pack with 86 left, lapsing first.
+        #expect(windows[0].nextExpiry == .init(amount: 86, at: Date(timeIntervalSince1970: 1_792_313_971.562)))
+
+        let usage = ProviderUsage(account: AccountKey(.qoder), windows: windows, observedAt: Date(),
+                                  state: .live, plan: nil, creditBalance: nil)
+        let shown = await UsageCache(file: FileManager.default.temporaryDirectory
+            .appending(path: "pulse-qoder-test-\(UUID().uuidString).json")).reconciled(usage)
+        #expect(shown.state == .live)
+        #expect(shown.windows.count == 1)
+    }
+
+    /// Six bonus packs, each ending on its own day. The plan's entry has no
+    /// date and is not one of them; the one with credits left that ends first
+    /// is what the card names.
+    @Test("The packs' end dates are read, soonest first")
+    func packsAreRead() throws {
+        let snapshot = try QoderClient.parse(Self.fixture("qoder-credits-trial-stale-reset"))
+        #expect(snapshot.packs.count == 6)
+        #expect(snapshot.packs.map(\.remaining).reduce(0, +) == 586)
+    }
+
+    /// Packs ending the same day are one line on the card, added up; a pack
+    /// already gone or already spent is none.
+    @Test("Packs lapsing the same day are added up")
+    func sameDayPacksAddUp() {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
+        let now = Date(timeIntervalSince1970: 1_790_000_000)
+        let morning = now.addingTimeInterval(3 * 86_400)
+        let packs: [QoderSnapshot.Pack] = [
+            .init(remaining: 40, expiresAt: now.addingTimeInterval(-60)),
+            .init(remaining: 100, expiresAt: morning.addingTimeInterval(3_600)),
+            .init(remaining: 86, expiresAt: morning),
+            .init(remaining: 100, expiresAt: morning.addingTimeInterval(2 * 86_400)),
+        ]
+        let expiry = QoderUsageService.nextExpiry(of: packs, at: now, calendar: utc)
+        #expect(expiry == .init(amount: 186, at: morning))
+        #expect(QoderUsageService.nextExpiry(of: [], at: now) == nil)
+    }
+
+    /// Older fixtures carry no detail at all, and a detail list this cannot
+    /// read must not cost the summary beside it.
+    @Test("No detail, or an unreadable one, is no expiry")
+    func unreadableDetailIsNoExpiry() throws {
+        #expect(try QoderClient.parse(Self.fixture("qoder-credits")).packs.isEmpty)
+        let odd = try QoderClient.parse(Data(#"""
+            {"total_quota":{"quota_summary":{"used_value":1,"limit_value":10},"quota_detail":"soon"}}
+            """#.utf8))
+        #expect(odd.personal.limit == 10)
+        #expect(odd.packs.isEmpty)
+    }
+
+    /// Banked with the reading, so a restart does not lose the line; a cache
+    /// written before it existed reads as no expiry.
+    @Test("The expiry survives the cache, and its absence reads as none")
+    func expiryIsBanked() throws {
+        let expiry = UsageWindow.Expiry(amount: 86, at: Date(timeIntervalSince1970: 1_792_313_971))
+        let window = UsageWindow(id: "qoder.credits", kind: .credits, scope: nil, usedFraction: 0.02,
+                                 windowSeconds: 30 * 86_400, resetsAt: nil, reportsLength: false,
+                                 nextExpiry: expiry)
+        let data = try JSONEncoder().encode(window)
+        #expect(try JSONDecoder().decode(UsageWindow.self, from: data).nextExpiry == expiry)
+
+        let old = UsageWindow(id: "qoder.credits", kind: .credits, scope: nil, usedFraction: 0.02,
+                              windowSeconds: 30 * 86_400, resetsAt: nil)
+        #expect(try JSONDecoder().decode(UsageWindow.self, from: JSONEncoder().encode(old)).nextExpiry == nil)
+    }
+
     /// A limit of zero is an account with nothing granted. Not a ring at 100%,
     /// which would say something was spent.
     @Test("No credits at all draws nothing")
     func zeroLimitDrawsNothing() throws {
         let snapshot = try QoderClient.parse(Self.fixture("qoder-credits-none"))
         #expect(snapshot.shared == nil)
-        #expect(QoderUsageService.windows(from: snapshot).isEmpty)
+        #expect(QoderUsageService.windows(from: snapshot, at: Self.before).isEmpty)
     }
 
     @Test("A reply without the account's summary is unreadable, not empty")
@@ -133,9 +218,9 @@ struct QoderParsingTests {
     @Test("Spent follows Qoder's remainder when it gives one")
     func exhaustionFollowsTheRemainder() {
         let stated = QoderSnapshot(personal: .init(used: 10, limit: 10, remaining: 3), shared: nil, resetsAt: nil)
-        #expect(QoderUsageService.windows(from: stated).first?.isExhausted == false)
+        #expect(QoderUsageService.windows(from: stated, at: Self.before).first?.isExhausted == false)
         let silent = QoderSnapshot(personal: .init(used: 10, limit: 10, remaining: nil), shared: nil, resetsAt: nil)
-        #expect(QoderUsageService.windows(from: silent).first?.isExhausted == true)
+        #expect(QoderUsageService.windows(from: silent, at: Self.before).first?.isExhausted == true)
     }
 
     /// A pack bought on top raises the limit, and the fraction falls with
@@ -146,17 +231,17 @@ struct QoderParsingTests {
         let before = Date(timeIntervalSince1970: 1_725_148_800)
         let bought = QoderSnapshot(personal: .init(used: 450, limit: 2_500, remaining: 2_050),
                                    shared: nil, resetsAt: before)
-        let window = try #require(QoderUsageService.windows(from: bought).first)
+        let window = try #require(QoderUsageService.windows(from: bought, at: Self.before).first)
         #expect(!window.hasTurnedOver(since: 0.9, resetsAt: before))
 
         let team = QoderSnapshot(personal: .init(used: 0, limit: 10, remaining: 10),
                                  shared: .init(used: 10, limit: 5_000, remaining: 4_990), resetsAt: nil)
-        let shared = try #require(QoderUsageService.windows(from: team).last)
+        let shared = try #require(QoderUsageService.windows(from: team, at: Self.before).last)
         #expect(!shared.hasTurnedOver(since: 0.9, resetsAt: nil))
 
         let renewed = QoderSnapshot(personal: .init(used: 5, limit: 500, remaining: 495),
                                     shared: nil, resetsAt: before.addingTimeInterval(30 * 86_400))
-        let next = try #require(QoderUsageService.windows(from: renewed).first)
+        let next = try #require(QoderUsageService.windows(from: renewed, at: Self.before).first)
         #expect(next.hasTurnedOver(since: 0.9, resetsAt: before))
     }
 

@@ -1491,6 +1491,10 @@ struct SettingsView: View {
             case .qoder:
                 host = settings.qoderSite.host
                 keep = { try? QoderCookie.normalize($0) }
+            // Likewise StepFun: the chosen console's host only.
+            case .stepFun:
+                host = settings.stepFunSite.host
+                keep = { try? StepFunCookie.normalize($0) }
             case .claudeCode, .codex, .kiro, .antigravity, .cursor, .openCodeGo,
                  .kimiCode, .zai, .glmCoding, .minimax, .minimaxCN, .copilot,
                  .grok, .grokBot, .volcengine, .commandCode, .deepSeek, .devin,
@@ -1526,6 +1530,8 @@ struct SettingsView: View {
                     String.localized("No Qoder session found. Sign in at \(settings.qoderSite.host) first.")
                 case .xiaomiMiMo:
                     String.localized("No Xiaomi session found. Sign in at platform.xiaomimimo.com first.")
+                case .stepFun:
+                    String.localized("No StepFun session found. Sign in at \(settings.stepFunSite.host) first.")
                 default:
                     String.localized("No Ollama session found. Sign in at ollama.com first.")
                 }
@@ -2249,6 +2255,37 @@ struct SettingsView: View {
         }
     }
 
+    /// Which StepFun console the account is on. The same rule as
+    /// `qoderSiteRow`: changing it discards the saved session, which belongs
+    /// to the other host.
+    private func stepFunSiteRow(for account: AccountKey) -> some View {
+        SettingsRow(
+            String.localized("Site"),
+            subtitle: String.localized("Where you signed in. Changing it clears the saved session.")
+        ) {
+            Picker("", selection: Binding(
+                get: { settings.stepFunSite },
+                set: { site in
+                    guard site != settings.stepFunSite else { return }
+                    settings.stepFunSite = site
+                    guard APIKeyStore.setKey(nil, for: .stepFun) else { return }
+                    apiKey = ""
+                    savedKey = ""
+                    sessionMessage = nil
+                    store.loadAPIKeys()
+                    store.refresh(account)
+                }
+            )) {
+                ForEach(StepFunSite.allCases, id: \.self) { site in
+                    Text(verbatim: site.label).tag(site)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.segmented)
+            .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+        }
+    }
+
     /// Where a self-hosted gateway lives.
     ///
     /// The only addresses in the app a reader types, so the only ones that can
@@ -2569,6 +2606,10 @@ struct SettingsView: View {
             // cookies the browser is asked for.
             if account.provider == .qoder {
                 qoderSiteRow(for: account)
+                SettingsRowDivider()
+            }
+            if account.provider == .stepFun {
+                stepFunSiteRow(for: account)
                 SettingsRowDivider()
             }
 

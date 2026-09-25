@@ -43,12 +43,14 @@ enum ConnectionRemedy: Equatable {
         case .serverAddressMissing, .serverAddressRefused: return .editAddress
         case .ollamaSessionMissing, .ollamaSessionExpired,
              .qoderSessionMissing, .qoderSessionExpired,
-             .xiaomiSessionMissing, .xiaomiSessionExpired: return .readBrowser
+             .xiaomiSessionMissing, .xiaomiSessionExpired,
+             .stepFunSessionMissing, .stepFunSessionExpired: return .readBrowser
         case .claudeDesktopKeyRefused, .unreachable, .rateLimited, .serverError,
              .codexServerFailed: return .retry
         case .codexNotInstalled, .kiroNotInstalled, .kiroVersionUnsupported,
              .volcengineCLIMissing, .noLimitsReported,
              .grokBotNotIncluded, .zaiNoCodingPlan, .xiaomiNoCodingPlan, .qoderNoCredits,
+             .stepFunNoPlan,
              .ollamaPageChanged, .unreadableReply:
             return .help
         }
@@ -95,6 +97,7 @@ enum ConnectionRemedy: Equatable {
         case .sub2api: "sub2api"
         case .newAPI: "newapi"
         case .v2ex: "v2ex"
+        case .stepFun: "stepfun"
         }
         // Setup pages are the user-facing ones. They live in this fork.
         return URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/setup/\(page).md")!
