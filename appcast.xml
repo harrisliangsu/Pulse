@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.5</title>
+            <pubDate>Fri, 25 Sep 2026 01:35:25 -0000</pubDate>
+            <sparkle:version>1.4.5</sparkle:version>
+            <sparkle:shortVersionString>1.4.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.5</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.5</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>同步上游 qunqin24/Pulse</strong>（相对其 1.4.0 之后、本仓库尚未合入的十二个提交）。</li><li><strong>新增阶跃星辰 Step Plan，成为第二十五个服务商。</strong> 读取浏览器里 <code>platform.stepfun.com</code> 或 <code>platform.stepfun.ai</code> 的登录（也可以粘贴 <code>Cookie:</code> 头）。Token Plan 的月度积分和加油包合成一个圆环，并显示最早一批的到期日；Coding Plan 显示 5 小时和每周两个窗口。没有套餐时会直说。</li><li><strong>Qoder 显示加油包何时到期。</strong> 每个积分包有自己的到期时间；卡片显示最早到期的那批，例如「10月18日 86 积分到期」，同一天到期的合并计算。<code>--json</code> 新增 <code>expiresAt</code> 和 <code>expiringAmount</code>。</li><li><strong>过期的 Qoder 重置日期不再丢掉整份读数。</strong> 大陆站体验版可能返回一个早已过去的重置时间，Pulse 以前据此把读数当作过期丢掉；现在忽略这个日期，照常显示剩余积分。买来的加油包仍然不算重置——只有重置时间往后推才算。</li><li><strong>Qoder 确认没有积分时，清掉缓存里的旧百分比。</strong> 明确的空额度会从内存和磁盘去掉上次的读数，面板、重启后和 <code>--json</code> 里都不再用旧数字顶上。</li><li><strong>模型价格不用重启也会更新。</strong> 价格表过期后，下次读取时重新下载；下载失败就继续用旧表，五分钟后可再试。</li><li><strong>小机器人按原版动画活动。</strong> 眼神、手势和大幅动作不再被额外压小，眼睛可能贴着边缘，头顶可能短暂超出圆环。鼠标移上胶囊时，各个标记依次转过去看，大约 0.4 秒，不再同一帧齐刷刷转向。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.5">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.5/Pulse-1.4.5.zip"
+                       length="9227174"
+                       type="application/octet-stream"
+                       sparkle:edSignature="sMl4cah8rJH1QtJsYuVpPiHSiOEgy4phf30HyX/aE0QU0HHzTVreCOdHtOZTrIssQO4DMTMWq7T4I6u3OrxMAg==" />
+        </item>
+        <item>
             <title>1.4.4</title>
             <pubDate>Thu, 24 Sep 2026 03:19:06 -0000</pubDate>
             <sparkle:version>1.4.4</sparkle:version>
