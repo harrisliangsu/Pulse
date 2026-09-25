@@ -24,18 +24,6 @@ struct BotMarkLibrary {
     let expressions: [[[CGPoint]]]
     let states: [BotMarkStateInfo]
 
-    /// How far off the head's centre the boldest expression puts its pair of
-    /// eyes, in the upstream's units.
-    ///
-    /// **An expression is drawn already looking somewhere.** The glance is in
-    /// the artwork rather than added on top of it, and across the twenty-five
-    /// of them the pair's own centre runs from 44 units left of the head's to
-    /// 76 right. That furthest one is as far as a face in this vocabulary ever
-    /// looks, which makes it the natural ceiling for everything Pulse adds —
-    /// see `BotMarkEngine.renderEyes`. Read from the data rather than written
-    /// down, so re-extracting the table cannot leave a stale number here.
-    let eyeReach: Double
-
     /// Loaded once and never written to afterwards; the drawing code that
     /// reads it all runs on the main actor.
     nonisolated(unsafe) static let shared: BotMarkLibrary = {
@@ -180,19 +168,6 @@ extension BotMarkLibrary {
         shapeOrder = raw.shapeOrder
         shapeLabels = raw.shapeLabels
         expressions = raw.expressions.map { $0.map { $0.map(BotMarkLibrary.point) } }
-        // Empty rings are skipped rather than divided by. A malformed table
-        // would otherwise make this NaN, and `eyeReach` is a clamp bound —
-        // NaN there is every eye on the rail positioned at NaN and nothing
-        // drawn, with no error anywhere to say why.
-        eyeReach = expressions.reduce(0.0) { furthest, pair in
-            let centres = pair.compactMap { ring -> Double? in
-                guard !ring.isEmpty else { return nil }
-                return ring.reduce(0.0) { $0 + Double($1.x) } / Double(ring.count)
-            }
-            guard !centres.isEmpty else { return furthest }
-            let centre = centres.reduce(0, +) / Double(centres.count)
-            return max(furthest, abs(centre - raw.headC))
-        }
         states = raw.states.map { state in
             BotMarkStateInfo(
                 id: state.id, en: state.en, zh: state.zh, morph: state.morph,

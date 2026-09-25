@@ -164,6 +164,11 @@ enum UsageReport {
         /// the wording shown on the card is, this is not.
         let estimatedFrom: String?
         let resetsAt: Date?
+        /// The soonest part of the allowance to lapse — not a reset, the
+        /// opposite: `expiringAmount` in the allowance's own unit goes away at
+        /// `expiresAt`. Absent where the provider states no expiry.
+        let expiresAt: Date?
+        let expiringAmount: Double?
 
         init(_ window: UsageWindow) {
             id = window.id
@@ -177,6 +182,8 @@ enum UsageReport {
             estimated = window.isEstimated
             estimatedFrom = window.estimate?.rawValue
             resetsAt = window.resetsAt
+            expiresAt = window.nextExpiry?.at
+            expiringAmount = window.nextExpiry?.amount
         }
 
         /// `UsageWindow.Kind` is `Codable`, but its synthesised form is an

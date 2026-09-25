@@ -65,10 +65,9 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 
 ### 多账号管理与本地消费账本
 - **多账号并行**：支持同一服务绑定多个订阅（Claude Code、Codex、Grok、Grok Bot、Kimi Code），并排查看并自定义标签。
-- **Token 消耗（设置内查看）**：默认关闭，在页面顶部开启后才读取本机记录，关闭即可停止扫描。支持本地日志、数据库与导出文件，目录涵盖 **54 个客户端来源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 和 GitHub Copilot。Cursor、Trae 等导出来源需要先导出或捕获记录。这些来源与浮动栏上的 24 个配额服务商不同，各自支持的格式和真实客户端验证情况见[来源说明](Docs/token-spend-sources.md)。
-- **明确的用量估算**：默认查看最近 7 天，并记住所选区间。费用按公开 API 价格折算，不是订阅账单；未知价格保留为不可用，计数不完整或时间粒度较粗会明确标注，没有 token 计数的来源会如实标注为不可用。
+- **Token 消耗（设置内查看）**：默认关闭，在页面顶部开启后才读取本机记录，关闭即可停止扫描。支持本地日志、数据库与导出文件，目录涵盖 **54 个客户端来源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 和 GitHub Copilot。Cursor、Trae 等导出来源需要先导出或捕获记录。这些来源与浮动栏上的 25 个配额服务商不同，各自支持的格式和真实客户端验证情况见[来源说明](Docs/token-spend-sources.md)。- **明确的用量估算**：默认查看最近 7 天，并记住所选区间。费用按公开 API 价格折算，不是订阅账单；未知价格保留为不可用，计数不完整或时间粒度较粗会明确标注，没有 token 计数的来源会如实标注为不可用。
 - **模型详情与图表**：点开单个模型可查看输入/输出/缓存读写用量与估算费用、有记录支撑的每日与每小时图表、各 Agent 的贡献，以及可排序、分页的明细表。指向图表即可读取对应日期或小时的 Token 数量。缺失的每日或每小时明细会标注为不可用。
-- **二十四个服务商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（国际与国内）、火山引擎、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX，以及 Qoder。
+- **二十五个服务商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（国际与国内）、火山引擎、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX、Qoder，以及阶跃星辰（StepFun）。
 - **可脚本化**：`Pulse --json` 输出最近一次读数——套餐、每条限额、重置时间，以及数字有多旧——可接 tmux、sketchybar、Raycast 或 shell 提示符。它只读缓存，所以高频轮询几乎不花代价。
 - **开发者集成**：在设置中导出 Raycast 扩展及可直接配置的 tmux、sketchybar、终端脚本；通过账户链接直达对应设置页。[安装指南](Docs/integrations.md)。
 - **连接诊断**：查看实际读数来源、缓存使用情况、最近检查及回退结果；根据原因直接重连、重新登录或编辑凭据，并可复制不含账户信息和密钥的诊断报告。
@@ -129,7 +128,7 @@ Pulse 只呈现各服务上报的数字，每个百分比都来自那份回复�
 | **New API** | 粘贴的 `sk-` 密钥；网关地址自行填写 | 读取自建 [New API](https://github.com/QuantumNous/new-api) 网关的余额，按部署方设定的币种显示；不显示百分比，因为回复里的比例可能有两种含义（[Docs/providers/newapi.md](Docs/providers/newapi.md)） |
 | **V2EX** | 粘贴的个人访问令牌 | AI Chat 滚动 5 小时的 token 配额，买过加油包再多画一个环；窗口还没开始时不显示倒计时（[Docs/providers/v2ex.md](Docs/providers/v2ex.md)） |
 | **Qoder** | 什么都不用填——读取浏览器里 qoder.com 或 qoder.com.cn 的登录会话，也可以手动粘贴 `Cookie:` 头或个人令牌（`pt-` / `jt-`） | 积分额度（套餐加加油包），按 Qoder 上报的重置时间显示；团队套餐的共享积分单独画一个环，从不相加；额度为零时会直说，而不是画一个空环（[Docs/providers/qoder.md](Docs/providers/qoder.md)） |
-
+| **阶跃星辰（StepFun）** | 什么都不用填——读取浏览器里 platform.stepfun.com 或 platform.stepfun.ai 的登录会话，也可以手动粘贴 `Cookie:` 头 | Step Plan：Token Plan 的月度 Credit 和加油包合成一个环，并显示最早一批的到期日；旧版 Coding Plan 显示 5 小时和每周两个窗口；没有订阅时会直说，而不是画一个环（[Docs/providers/stepfun.md](Docs/providers/stepfun.md)） |
 ---
 
 ## 安装与快速上手

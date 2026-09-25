@@ -165,7 +165,8 @@ enum OAuthLogin {
                 )
             case .kiro, .antigravity, .cursor, .openCodeGo, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grokBot, .volcengine, .qoder,
-             .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api, .newAPI, .v2ex:
+             .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api, .newAPI,
+             .v2ex, .stepFun:
                 nil
             }
         }

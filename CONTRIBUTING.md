@@ -4,13 +4,23 @@ Pulse is a macOS menu-bar app. There is no linter; there is a test target (`swif
 
 ## Workflow
 
-1. Open an issue before starting a new feature or substantial change, and wait for a maintainer to accept the direction. Acceptance of the problem does not automatically approve a particular implementation. A large PR submitted without prior agreement may be closed even if the implementation is complete.
+1. Open an issue first — for every pull request, bug fixes included — and wait for a maintainer to label it `accepted`. Acceptance of the problem does not automatically approve a particular implementation. See [Pull requests](#pull-requests).
 2. Read the **topic doc** for the area you are changing ([Docs/README.md](Docs/README.md)). If the change is about *why* something is the way it is, also read the linked decision.
 3. Change code and the **authoritative topic doc in the same patch**. Do not leave CLAUDE.md as a second source of truth, and do not grow it with new architecture.
 4. Run the verification that area needs ([Docs/development.md](Docs/development.md), [Docs/build-from-source.md](Docs/build-from-source.md)). At minimum, a Swift 6 warning-clean build if you touched Swift, and `./Scripts/check-localization.sh` if you touched user-visible strings.
 5. Do not claim a behaviour is verified unless you used a method that can actually see it. See evidence levels below.
 
 Provider routes, auth, cookies, and extra-account login belong in [Docs/providers/README.md](Docs/providers/README.md), not in UI or architecture docs.
+
+## Pull requests
+
+Review is one person's time. These rules exist to spend it on problems people actually have, and `.github/workflows/pr-gate.yml` enforces the first two: a PR that breaks them is closed automatically. Maintainers are exempt.
+
+- **Every PR references an issue labelled `accepted`** (`Closes #N` in the description). Bug fixes too: describe the bug in an issue first. "No existing issue; focused bug fix" is not an exception.
+- **At most two open PRs per person.** Wait for those to be reviewed before opening another.
+- **A finding from reading or scanning the code is not a bug report on its own**, whether a person or a model did the scanning. File an issue when you can show it on a real setup: what you did, what Pulse showed, what it should have shown. "This code path could do X" or a synthetic test that makes it do X is a question for an issue, not a PR.
+- **One PR does one thing.** Do not carry another PR's commits, and do not bundle a refactor with a fix.
+- **Screenshots for the review go in the PR description**, not in the repository (`Docs/images/` is for pictures the docs use).
 
 ## Authoritative docs vs this file
 

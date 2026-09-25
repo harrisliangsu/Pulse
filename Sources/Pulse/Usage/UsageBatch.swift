@@ -40,6 +40,7 @@ struct UsageBatch: Sendable {
     var sub2api: Sub2APIUsageService
     var newAPI: NewAPIUsageService
     var v2ex: V2EXUsageService
+    var stepFun: StepFunUsageService
 
     /// Side by side, on this function's main actor. That is where the old
     /// `async let` list in `UsageStore.refresh` ran, so a fetch that touches
@@ -77,6 +78,7 @@ struct UsageBatch: Sendable {
         async let sub2apiUsage = load(.sub2api)
         async let newAPIUsage = load(.newAPI)
         async let v2exUsage = load(.v2ex)
+        async let stepFunUsage = load(.stepFun)
 
         var readings: [Provider: ProviderUsage] = [:]
         for row in [
@@ -86,6 +88,7 @@ struct UsageBatch: Sendable {
             await copilotUsage, await grokUsage, await grokBotUsage, await volcengineUsage,
             await qoderUsage, await commandCodeUsage, await deepSeekUsage, await devinUsage,
             await xiaomiUsage, await sub2apiUsage, await newAPIUsage, await v2exUsage,
+            await stepFunUsage,
         ] {
             guard let (provider, usage) = row else { continue }
             readings[provider] = usage
@@ -153,6 +156,8 @@ struct UsageBatch: Sendable {
             await newAPI.fetch()
         case .v2ex:
             await v2ex.fetch()
+        case .stepFun:
+            await stepFun.fetch()
         }
     }
 }

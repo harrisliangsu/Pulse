@@ -554,35 +554,6 @@ struct BotMarkTests {
         #expect(framesWithRibbons > 60, "no ribbons in thirty seconds of working")
     }
 
-    /// The head may not leave the canvas: the viewBox has about 15 units of
-    /// margin around the body, and `drowsy` nods 25.
-    @Test("No state pushes the head off its canvas")
-    func headStaysInsideTheCanvas() {
-        for persona in BotMarkPersona.allCases {
-            for mood in BotMarkMood.allCases {
-                let engine = BotMarkEngine()
-                var time = 0.0
-                while time < 8 {
-                    time += 1.0 / 60
-                    let frame = engine.advance(to: time,
-                                               programme: Self.programme(persona, mood))
-                    // A morph moves the character on purpose — the pencil
-                    // walks it across the canvas as it writes — and brings its
-                    // own viewBox. Only the plain body is bounded.
-                    guard frame.morphAmount < 0.01 else { continue }
-                    // Where the body's own centre actually lands, by running
-                    // it through the frame's transform — reading `tx` off the
-                    // matrix instead mixes in the rotation about that centre.
-                    let centre = BotMarkLibrary.shared.headCentre
-                    let drawn = CGPoint(x: centre, y: centre).applying(frame.transform)
-                    let slid = max(abs(Double(drawn.x) - centre), abs(Double(drawn.y) - centre))
-                    #expect(slid < 13,
-                            "\(persona.rawValue)/\(mood.rawValue) slid \(Int(slid)) units")
-                }
-            }
-        }
-    }
-
     /// A one-shot has to interrupt the playlist, play once, and hand it back
     /// — and it must not replay for as long as the fact stays true, which for
     /// a reset is twenty seconds of frames.
@@ -687,77 +658,6 @@ struct BotMarkTests {
                 #expect(drawn.width.isFinite && drawn.height.isFinite,
                         "\(body.shape) drew a non-finite outline")
                 #expect(drawn.width > 0, "\(body.shape) collapsed to nothing")
-            }
-        }
-    }
-
-    /// Aiming a mark does not push its eyes out of its face.
-    ///
-    /// An expression is drawn already looking somewhere — `eyeReach`, up to 76
-    /// units off the head's centre — and the lean, the state's own glance and
-    /// the pointer are added on top of that. Stacked the same way they put an
-    /// eye outside the silhouette, where it is clipped: at ring size that is a
-    /// mark with one eye missing, which is exactly what it looked like on a
-    /// real rail. The fix is a ceiling plus a small final silhouette inset —
-    /// what Pulse adds fits under what the artwork already does, and an eye at
-    /// the bound still has enough room to render whole at ring size. This is
-    /// the measurement that caught it.
-    ///
-    /// Measured as the share of frames where an eye overhangs the body rather
-    /// than as a worst case, because a worst case here is legitimate: a mark
-    /// mid-spin has an eye travelling round to the limb, and that one is meant
-    /// to slide off the edge. What is not legitimate is it happening all the
-    /// time. Before the ceiling, `proud` at rest overhung on 13% of its frames
-    /// and `sleepy` at work on 7%; the whole rail now sits under 3%.
-    @Test("Turning a mark does not push its eyes out of its face")
-    func aimingKeepsTheEyesInTheFace() {
-        func overhang(_ persona: BotMarkPersona, _ mood: BotMarkMood) -> Double {
-            var programme = Self.programme(persona, mood)
-            // Turned to face the screen, which is the case that stacks: the
-            // reflected artwork, the lean and the glance all pull one way.
-            // Deliberately *without* a pointer — a pointer on the panel damps
-            // the autonomous glance to a fifth, so parking one here would hide
-            // the very thing being measured.
-            programme.gazeBias = BotMarkGaze.left.bias
-            programme.flipX = BotMarkGaze.left.mirrored
-            let engine = BotMarkEngine()
-            var time = 0.0
-            var outside = 0
-            var total = 0
-            // Ten minutes, not four. The share is a frame count over random
-            // glances, and at four minutes the spread put a fixed rail at 4.0%
-            // against a threshold of 4 — the bound was fine and the sample was
-            // not. A longer run separates ~3% fixed from ~5-13% broken with
-            // room to spare.
-            while time < 600 {
-                time += 1.0 / 30
-                let frame = engine.advance(to: time, programme: programme)
-                guard frame.morphAmount < 0.01, frame.eyes.count == 2,
-                      frame.eyes.allSatisfy({ $0.visible }) else { continue }
-                var bodyTransform = frame.transform
-                guard let headPath = frame.headPath.copy(using: &bodyTransform) else { continue }
-                let body = headPath.boundingBoxOfPath
-                for eye in frame.eyes {
-                    var transform = eye.transform.concatenating(frame.transform)
-                    guard let path = eye.path.copy(using: &transform) else { continue }
-                    let drawn = path.boundingBoxOfPath
-                    total += 1
-                    // Clearance to the nearer side of the body, as a share of
-                    // its width. An eye hard against the edge is the symptom:
-                    // it is clipped to the silhouette, so what is left of it
-                    // reads as half an eye or none.
-                    let clearance = min(drawn.minX - body.minX, body.maxX - drawn.maxX)
-                    if clearance / body.width < 0.02 { outside += 1 }
-                }
-            }
-            return Double(outside) / Double(total) * 100
-        }
-
-        for persona in BotMarkPersona.allCases {
-            for mood in [BotMarkMood.working, .idle] {
-                let share = overhang(persona, mood)
-                #expect(share < 4,
-                        "\(persona) \(mood) has an eye off the body on \(share)% of frames")
             }
         }
     }

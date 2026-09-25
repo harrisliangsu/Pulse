@@ -525,6 +525,7 @@ final class UsageStore {
         let ollama = OllamaCloudUsageService(cookie: apiKeys[.ollamaCloud])
         let xiaomi = XiaomiMiMoUsageService(cookie: apiKeys[.xiaomiMiMo])
         let qoder = QoderUsageService(cookie: apiKeys[.qoder], site: settings.qoderSite)
+        let stepFun = StepFunUsageService(cookie: apiKeys[.stepFun], site: settings.stepFunSite)
         let zai = ZaiUsageService(provider: .zai, enteredKey: apiKeys[.zai])
         let glm = ZaiUsageService(provider: .glmCoding, enteredKey: apiKeys[.glmCoding])
         let minimax = MiniMaxUsageService(provider: .minimax, enteredKey: apiKeys[.minimax])
@@ -611,7 +612,8 @@ final class UsageStore {
             devinSource: devinSource,
             sub2api: sub2api,
             newAPI: newAPI,
-            v2ex: v2ex
+            v2ex: v2ex,
+            stepFun: stepFun
         )
         Task {
             let readings = await batch.collect()
@@ -734,6 +736,7 @@ final class UsageStore {
         let ollama = OllamaCloudUsageService(cookie: key)
         let xiaomi = XiaomiMiMoUsageService(cookie: key)
         let qoder = QoderUsageService(cookie: key, site: settings.qoderSite)
+        let stepFun = StepFunUsageService(cookie: key, site: settings.stepFunSite)
         let zai = ZaiUsageService(provider: provider, enteredKey: key)
         let minimax = MiniMaxUsageService(provider: provider, enteredKey: key)
         let volcengine = VolcengineUsageService(enteredKey: key)
@@ -806,6 +809,8 @@ final class UsageStore {
                 raw = await v2ex.fetch()
             case .qoder:
                 raw = await qoder.fetch()
+            case .stepFun:
+                raw = await stepFun.fetch()
             }
             }
 
@@ -880,7 +885,8 @@ final class UsageStore {
         // Nothing else can be signed in to, so nothing else gets here.
         case .kiro, .antigravity, .cursor, .openCodeGo, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine, .qoder,
-             .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api, .newAPI, .v2ex:
+             .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api, .newAPI,
+             .v2ex, .stepFun:
             .unavailable(account, reason: .loading)
         }
     }

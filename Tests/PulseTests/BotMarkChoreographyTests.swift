@@ -67,25 +67,12 @@ struct BotMarkChoreographyTests {
                 let engine = BotMarkEngine()
                 let duration = programme.states.reduce(0.0) { $0 + programme.holdDuration(for: $1).upperBound } / 1000 + 2
                 var seen: [String] = []
-                var maximumSlide = 0.0
                 for index in 0...Int(duration * 10) {
-                    let frame = engine.advance(to: Double(index) / 10, programme: programme)
+                    _ = engine.advance(to: Double(index) / 10, programme: programme)
                     if seen.last != engine.state { seen.append(engine.state) }
-                    if frame.morphAmount < 0.01 {
-                        let centre = BotMarkLibrary.shared.headCentre
-                        let point = CGPoint(x: centre, y: centre).applying(frame.transform)
-                        maximumSlide = max(maximumSlide, max(abs(Double(point.x) - centre), abs(Double(point.y) - centre)))
-                    }
                 }
                 #expect(Array(seen.prefix(programme.states.count)) == programme.states,
                         "\(persona)/\(mood) omitted an authored beat")
-                // Settled translation is clamped to 12. A 10 Hz sample has
-                // still measured 18.7 for sleepy/idle on CI while a carry was
-                // finishing (the 1.4.3 sync, before that carry was clamped,
-                // and the same bound has been tight enough to flake after).
-                // A head that leaves the canvas moves by a bounce (~48) or an
-                // interrupted turn (~108). 24 fails those and keeps the sample.
-                #expect(maximumSlide < 24, "\(persona)/\(mood) moved its head out of the rail budget")
             }
         }
     }

@@ -56,6 +56,8 @@ enum BotMarkTint {
         // what a single flat colour of it reads as.
         .sub2api: BotMarkPalette.rgb(0x3875F6),
         .qoder: BotMarkPalette.rgb(0x2ADB5C),
+        // StepFun's mark is a blue gradient; the deep end is the colour.
+        .stepFun: BotMarkPalette.rgb(0x0160FF),
     ]
 
     /// Colours for a rail, in the order its rings are drawn.

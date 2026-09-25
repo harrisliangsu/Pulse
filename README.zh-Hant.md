@@ -65,10 +65,9 @@ Pulse 是一個停靠在螢幕邊緣的小巧懸浮監視器。它顯示各服�
 
 ### 多帳號與本機帳本
 - **多帳號支援**：可同時監看同一服務商的多個訂閱（Claude Code、Codex、Grok、Grok Bot、Kimi Code），並排顯示並自訂標籤。
-- **Token 用量支出（僅限設定）**：預設關閉，在頁面頂端開啟後才讀取本機記錄，關閉即可停止掃描。支援本機日誌、資料庫與匯出檔，來源目錄涵蓋 **54 個用戶端來源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 與 GitHub Copilot。Cursor、Trae 等來源需要事先匯出或擷取記錄。這些來源與浮動膠囊上的 24 個配額服務商不同；各來源的支援程度與真實用戶端驗證情形不一。[來源與涵蓋範圍](Docs/token-spend-sources.md)。
-- **清楚的用量估算**：預設開啟最近 7 天，並記住你選擇的區間。費用採用公開的 API 價格，而非訂閱費用。未知價格會保留為不可用，計數不完整或時間粒度較粗者會明確標示；沒有 token 計數器的來源會如實標示為不可用。
+- **Token 用量支出（僅限設定）**：預設關閉，在頁面頂端開啟後才讀取本機記錄，關閉即可停止掃描。支援本機日誌、資料庫與匯出檔，來源目錄涵蓋 **54 個用戶端來源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 與 GitHub Copilot。Cursor、Trae 等來源需要事先匯出或擷取記錄。這些來源與浮動膠囊上的 25 個配額服務商不同；各來源的支援程度與真實用戶端驗證情形不一。[來源與涵蓋範圍](Docs/token-spend-sources.md)。- **清楚的用量估算**：預設開啟最近 7 天，並記住你選擇的區間。費用採用公開的 API 價格，而非訂閱費用。未知價格會保留為不可用，計數不完整或時間粒度較粗者會明確標示；沒有 token 計數器的來源會如實標示為不可用。
 - **模型詳情與圖表**：點開單一模型可查看輸入／輸出／快取用量與估算費用、記錄足以支撐時的每日與每小時圖表、各 agent 的貢獻，以及可排序、分頁的明細表。將指標移到圖表上，即可讀取對應日期或小時及其 token 數量。無法取得的每日或每小時明細會標註為不可用。
-- **二十四個服務商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（國際與中國大陸）、Volcengine、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX 與 Qoder。
+- **二十五個服務商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（國際與中國大陸）、Volcengine、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX、Qoder 與階躍星辰（StepFun）。
 - **可腳本化**：`Pulse --json` 印出最近一次讀數——方案、每一條額度、重設時間，以及數字有多舊——可接 tmux、sketchybar、Raycast 或 shell 提示字元。它只讀快取，所以高頻輪詢幾乎沒有成本。
 - **開發者整合**：在設定中匯出 Raycast 擴充功能，以及可直接設定的 tmux、sketchybar 與 shell 指令碼。帳號連結會直接開啟對應頁面。[設定指南](Docs/integrations.md)。
 - **連線診斷**：查看實際的讀取來源、快取使用情形、最近一次檢查與備援結果。情境化操作可協助重新連線、重新登入或修正憑證；可複製不含帳號資訊與金鑰的診斷報告。
@@ -129,7 +128,7 @@ Pulse 只呈現各服務回報的數字，每個百分比都來自那份回覆�
 | **New API** | 貼上的 `sk-` 金鑰；閘道位址自行輸入 | 讀取自架 [New API](https://github.com/QuantumNous/new-api) 閘道的餘額，依部署端設定的幣別顯示；不顯示百分比，因為回覆中的比例可能有兩種含義（[Docs/providers/newapi.md](Docs/providers/newapi.md)） |
 | **V2EX** | 貼上的個人存取權杖 | AI Chat 滾動 5 小時的 token 配額，買過加油包再多畫一個環；視窗尚未開始時不顯示倒數（[Docs/providers/v2ex.md](Docs/providers/v2ex.md)） |
 | **Qoder** | 無需輸入——讀取瀏覽器中 qoder.com 或 qoder.com.cn 的登入工作階段，也可以手動貼上 `Cookie:` 標頭或個人令牌（`pt-` / `jt-`） | 點數額度（方案加加購包），依 Qoder 回報的重設時間顯示；團隊方案的共用點數另外畫一個環，絕不相加；點數為零時會直接說明，而不是畫一個空環（[Docs/providers/qoder.md](Docs/providers/qoder.md)） |
-
+| **階躍星辰（StepFun）** | 無需輸入——讀取瀏覽器中 platform.stepfun.com 或 platform.stepfun.ai 的登入工作階段，也可以手動貼上 `Cookie:` 標頭 | Step Plan：Token Plan 的每月 Credit 與加購包合成一個環，並顯示最早一批的到期日；舊版 Coding Plan 顯示 5 小時與每週兩個視窗；沒有訂閱時會直接說明，而不是畫一個環（[Docs/providers/stepfun.md](Docs/providers/stepfun.md)） |
 ---
 
 ## 安裝

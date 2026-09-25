@@ -20,8 +20,9 @@ import Foundation
 /// found it disagreeing with the billing page for paid accounts. The web
 /// route is the one the page itself uses.
 ///
-/// Reply shape, from the account page's own request — camelCase today, and
-/// the snake_case of an earlier build is still accepted:
+/// Reply shape, from the account page's own request. Both spellings are
+/// accepted per field: the mainland site's reply mixes them (`nextResetAt`
+/// beside `total_quota`), and other readers recorded all-camelCase:
 ///
 /// ```json
 /// { "quotaKey": "big_model_credits", "status": "active",
@@ -64,9 +65,6 @@ enum QoderError: Error, Equatable {
     /// elsewhere. Separate from `missingCookie`, because one is "set this up"
     /// and the other is "you already did, do it again".
     case sessionExpired
-    /// The session works and the account holds no credits at all: a limit of
-    /// zero. A complete answer, not a fault, and not a ring at 100% either.
-    case noCredits
     case unreadableReply
     case rateLimited
     case serverError
@@ -164,6 +162,16 @@ struct QoderSnapshot: Equatable, Sendable {
     /// an empty placeholder — a pool of zero is not one anybody can spend.
     let shared: Pool?
     let resetsAt: Date?
+
+    /// A part of the personal total with an end date of its own — on the one
+    /// reply seen, a bonus pack of 100 credits. Only the ones with credits
+    /// left and a date stated: a plan's entry carries `expires_at: 0`.
+    struct Pack: Equatable, Sendable {
+        let remaining: Double
+        let expiresAt: Date
+    }
+
+    var packs: [Pack] = []
 }
 
 /// A read-only adapter for the account page's route. Kept apart from the app
@@ -232,8 +240,24 @@ struct QoderClient: Sendable {
         guard let personal = reply.totalQuota?.quotaSummary.flatMap(Self.pool) else {
             throw QoderError.unreadableReply
         }
-        let shared = reply.sharedQuota?.quotaSummary.flatMap(Self.pool).flatMap { $0.limit > 0 ? $0 : nil }
-        return QoderSnapshot(personal: personal, shared: shared, resetsAt: reply.nextResetAt)
+        let shared: QoderSnapshot.Pool?
+        if let container = reply.sharedQuota {
+            // An absent team pool is normal; an unreadable one is not proof
+            // that no allowance remains. Only a valid zero pool is omitted.
+            guard let pool = container.quotaSummary.flatMap(Self.pool) else {
+                throw QoderError.unreadableReply
+            }
+            shared = pool.limit > 0 ? pool : nil
+        } else {
+            shared = nil
+        }
+        let packs = (reply.totalQuota?.quotaDetail ?? []).compactMap { detail -> QoderSnapshot.Pack? in
+            guard detail.isActive != false, let remaining = detail.remainingValue,
+                  remaining.isFinite, remaining > 0, let expiresAt = detail.expiresAt
+            else { return nil }
+            return .init(remaining: remaining, expiresAt: expiresAt)
+        }
+        return QoderSnapshot(personal: personal, shared: shared, resetsAt: reply.nextResetAt, packs: packs)
     }
 
     /// A summary Qoder stated in full, or nil. Negative figures are not a
@@ -255,10 +279,29 @@ struct QoderClient: Sendable {
 
         struct Container: Decodable {
             let quotaSummary: Summary?
+            /// The pieces the summary adds up, each with its own end date.
+            /// Read for those dates only, and **never allowed to cost the
+            /// summary**: an entry this cannot read is left out, and a detail
+            /// list it cannot read at all is an empty one.
+            let quotaDetail: [Detail]?
 
             init(from decoder: Decoder) throws {
                 let container = try decoder.container(keyedBy: AnyKey.self)
                 quotaSummary = try container.either(Summary.self, "quotaSummary", "quota_summary")
+                quotaDetail = (try? container.either([Detail].self, "quotaDetail", "quota_detail")) ?? nil
+            }
+        }
+
+        struct Detail: Decodable {
+            let remainingValue: Double?
+            let expiresAt: Date?
+            let isActive: Bool?
+
+            init(from decoder: Decoder) throws {
+                let container = try decoder.container(keyedBy: AnyKey.self)
+                remainingValue = (try? container.either(Double.self, "remainingValue", "remaining_value")) ?? nil
+                expiresAt = container.date("expiresAt") ?? container.date("expires_at")
+                isActive = (try? container.either(Bool.self, "isActive", "is_active")) ?? nil
             }
         }
 
@@ -345,11 +388,13 @@ struct QoderUsageService: Sendable {
         }
         do {
             let snapshot = try await client.fetch(cookie: cookie, site: site)
-            let windows = Self.windows(from: snapshot)
-            guard !windows.isEmpty else { throw QoderError.noCredits }
+            let now = Date()
+            let windows = Self.windows(from: snapshot, at: now)
+            // A complete answer: the account has no allowance to display.
+            guard !windows.isEmpty else { return .unavailable(.qoder, reason: .qoderNoCredits) }
             return .init(account: AccountKey(.qoder),
                          windows: windows,
-                         observedAt: Date(),
+                         observedAt: now,
                          state: .live,
                          plan: nil,
                          creditBalance: nil)
@@ -357,7 +402,6 @@ struct QoderUsageService: Sendable {
             let reason: ProviderUsage.Unavailability = switch error {
             case .missingCookie, .invalidCookie: .qoderSessionMissing
             case .sessionExpired: .qoderSessionExpired
-            case .noCredits: .qoderNoCredits
             case .rateLimited: .rateLimited
             case .serverError: .serverError
             case .unreadableReply: .unreadableReply
@@ -378,10 +422,20 @@ struct QoderUsageService: Sendable {
     /// rounding. A pool with a limit of zero is **not drawn**: there is no
     /// allowance to divide by, and a ring at 100% would say something was
     /// spent that was never granted.
-    static func windows(from snapshot: QoderSnapshot) -> [UsageWindow] {
+    ///
+    /// **A reset already behind `now` is no reset.** A mainland trial account
+    /// was seen answering with a `nextResetAt` a month in the past beside 586
+    /// credits it could still spend (issue #59): the period stopped turning
+    /// over and the date was left where it was. Passed on, it marks the ring
+    /// as reset, the cache drops it as expired, and a complete reading
+    /// becomes "no limits reported". The credits are real; the date is not,
+    /// so the ring is drawn without one.
+    static func windows(from snapshot: QoderSnapshot, at now: Date) -> [UsageWindow] {
         var windows: [UsageWindow] = []
-        if let window = window(snapshot.personal, id: "qoder.credits", kind: .credits,
-                               resetsAt: snapshot.resetsAt) {
+        let resetsAt = snapshot.resetsAt.flatMap { $0 > now ? $0 : nil }
+        if var window = window(snapshot.personal, id: "qoder.credits", kind: .credits,
+                               resetsAt: resetsAt) {
+            window.nextExpiry = nextExpiry(of: snapshot.packs, at: now)
             windows.append(window)
         }
         // The reset Qoder states is the account's. Whether a team's pool turns
@@ -392,6 +446,13 @@ struct QoderUsageService: Sendable {
             windows.append(window)
         }
         return windows
+    }
+
+    /// The soonest packs to lapse, by `UsageWindow.Expiry.soonest`'s rule.
+    static func nextExpiry(of packs: [QoderSnapshot.Pack], at now: Date,
+                           calendar: Calendar = .current) -> UsageWindow.Expiry? {
+        UsageWindow.Expiry.soonest(of: packs.map { ($0.remaining, $0.expiresAt) },
+                                   after: now, calendar: calendar)
     }
 
     private static func window(_ pool: QoderSnapshot.Pool, id: String, kind: UsageWindow.Kind,

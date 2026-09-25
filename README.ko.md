@@ -65,10 +65,9 @@ Pulse는 화면 가장자리에 깔끔하게 자리 잡는, 눈에 띄지 않는
 
 ### 다중 계정과 로컬 원장
 - **다중 계정 지원**: 같은 제공업체의 여러 구독(Claude Code, Codex, Grok, Grok Bot, Kimi Code)을 나란히 모니터링하고 라벨을 붙일 수 있습니다.
-- **토큰 지출(설정에서만)**: 기본값은 꺼짐입니다. 페이지 상단에서 켜면 로컬 기록을 읽기 시작하며, 끄면 스캔을 중단합니다. **54개 클라이언트 소스**의 로컬 로그, 데이터베이스, 내보내기 파일을 지원합니다. Gemini CLI, Cline, Roo Code, OpenClaw, GitHub Copilot 등이 포함됩니다. Cursor, Trae 및 기타 내보내기 소스는 사전 내보내기나 캡처가 필요합니다. 이는 레일의 24개 할당량 제공업체와는 다르며, 지원 범위와 실제 클라이언트 검증 여부는 소스마다 다릅니다. [소스와 지원 범위](Docs/token-spend-sources.md).
-- **명확한 사용량 추정**: 기본적으로 최근 7일을 보여 주며 선택한 기간을 기억합니다. 비용은 공개된 API 가격으로 계산한 추정치이며 구독 청구액이 아닙니다. 가격을 알 수 없거나 집계가 불완전한 경우, 세부 시간 정보가 없는 경우에는 이를 표시합니다. 토큰 수 정보가 없는 소스는 그대로 표시합니다.
+- **토큰 지출(설정에서만)**: 기본값은 꺼짐입니다. 페이지 상단에서 켜면 로컬 기록을 읽기 시작하며, 끄면 스캔을 중단합니다. **54개 클라이언트 소스**의 로컬 로그, 데이터베이스, 내보내기 파일을 지원합니다. Gemini CLI, Cline, Roo Code, OpenClaw, GitHub Copilot 등이 포함됩니다. Cursor, Trae 및 기타 내보내기 소스는 사전 내보내기나 캡처가 필요합니다. 이는 레일의 25개 할당량 제공업체와는 다르며, 지원 범위와 실제 클라이언트 검증 여부는 소스마다 다릅니다. [소스와 지원 범위](Docs/token-spend-sources.md).- **명확한 사용량 추정**: 기본적으로 최근 7일을 보여 주며 선택한 기간을 기억합니다. 비용은 공개된 API 가격으로 계산한 추정치이며 구독 청구액이 아닙니다. 가격을 알 수 없거나 집계가 불완전한 경우, 세부 시간 정보가 없는 경우에는 이를 표시합니다. 토큰 수 정보가 없는 소스는 그대로 표시합니다.
 - **모델 상세와 차트**: 모델을 열면 입력/출력/캐시 수치와 추정 비용, 기록이 뒷받침하는 일별·시간별 차트, 에이전트별 기여, 정렬과 페이지 이동이 가능한 상세 표를 볼 수 있습니다. 차트를 가리키면 해당 날짜나 시간과 토큰 수를 읽을 수 있습니다. 제공되지 않는 일별·시간별 상세는 0이 아니라 사용할 수 없음으로 표시됩니다.
-- **스물네 개 제공업체**: Claude Code, Codex, Kiro, Antigravity, Cursor, GitHub Copilot, Grok, Grok Bot, OpenCode Go, Kimi Code, Ollama Cloud, z.ai, Zhipu, MiniMax(국제 및 중국 본토), Volcengine, Command Code, DeepSeek, Devin, Xiaomi Coding Plan, sub2api, New API, V2EX, Qoder.
+- **스물다섯 개 제공업체**: Claude Code, Codex, Kiro, Antigravity, Cursor, GitHub Copilot, Grok, Grok Bot, OpenCode Go, Kimi Code, Ollama Cloud, z.ai, Zhipu, MiniMax(국제 및 중국 본토), Volcengine, Command Code, DeepSeek, Devin, Xiaomi Coding Plan, sub2api, New API, V2EX, Qoder, StepFun.
 - **스크립트 가능**: `Pulse --json`이 마지막으로 읽은 값——플랜, 모든 한도, 초기화 시각, 숫자가 얼마나 오래됐는지——을 출력합니다. tmux, sketchybar, Raycast, 셸 프롬프트에 쓰세요. 캐시만 읽으므로 폴링 비용이 들지 않습니다.
 - **개발자 통합**: 설정에서 Raycast 확장과 바로 설정할 수 있는 tmux, sketchybar, 셸 스크립트를 내보냅니다. 계정 링크는 해당 패널을 바로 엽니다. [설정 가이드](Docs/integrations.md).
 - **연결 진단**: 실제 읽기 출처, 캐시 사용, 최근 검사와 대체 결과를 확인합니다. 상황에 맞는 작업으로 다시 연결, 다시 로그인, 자격 증명 수정을 할 수 있고, 계정 정보나 비밀 없는 진단 보고서를 복사할 수 있습니다.
@@ -129,7 +128,7 @@ Pulse는 각 서비스가 보고하는 숫자를 그대로 보여 줍니다. 화
 | **New API** | 붙여 넣은 `sk-` 키. 게이트웨이 주소는 직접 입력 | 직접 운영하는 [New API](https://github.com/QuantumNous/new-api) 게이트웨이의 잔액을 운영자가 설정한 통화로 표시. 응답의 비율은 두 가지 의미일 수 있어 백분율은 표시하지 않음([Docs/providers/newapi.md](Docs/providers/newapi.md)) |
 | **V2EX** | 붙여 넣은 개인 액세스 토큰 | AI Chat의 롤링 5시간 토큰 한도. 구매한 추가 팩이 있으면 링을 하나 더 표시. 아직 시작하지 않은 창은 카운트다운을 표시하지 않음([Docs/providers/v2ex.md](Docs/providers/v2ex.md)) |
 | **Qoder** | 입력할 것이 없음——qoder.com 또는 qoder.com.cn에 로그인된 브라우저 세션을 읽음. `Cookie:` 헤더나 개인 토큰(`pt-` / `jt-`)을 붙여 넣을 수도 있음 | 크레딧 한도(플랜과 팩 합산)를 Qoder가 보고하는 초기화 시각과 함께 표시. 팀 플랜의 공유 크레딧은 별도 링으로 표시하며 절대 합산하지 않음. 크레딧이 0이면 링을 그리지 않고 그렇다고 알림([Docs/providers/qoder.md](Docs/providers/qoder.md)) |
-
+| **StepFun** | 입력할 것이 없음——platform.stepfun.com 또는 platform.stepfun.ai에 로그인된 브라우저 세션을 읽음. `Cookie:` 헤더를 붙여 넣을 수도 있음 | Step Plan: Token Plan의 월간 Credit과 추가 팩을 하나의 링으로 합치고 가장 먼저 만료되는 분의 날짜를 표시. 구 Coding Plan은 5시간·주간 두 창. 플랜이 없으면 링을 그리지 않고 그렇게 표시함([Docs/providers/stepfun.md](Docs/providers/stepfun.md)) |
 ---
 
 ## 설치 및 빠른 시작

@@ -24,6 +24,14 @@ The upstream README grants no open-source licence and says outright that the ref
 
 Nothing above is legal advice and none of it has been checked with anyone; it is the record of what was known when the code was written.
 
+## The original's motion is not trimmed
+
+**Status:** in force since 1.4.1, on the maintainer's instruction ("keep the original animation; we don't add limits"). Where Pulse and the upstream disagree about how far or how fast the mark moves, the upstream wins, even when Pulse's version looks tidier on a 25pt ring.
+
+Three limits Pulse had added were removed for this in one day: a ceiling on the total gaze at the boldest expression's reach (it cut the upstream's own glances and gestures short — a head shake lost half its sweep), a 2.5% inset on the eye's silhouette clamp, and a 12-unit bound on the drawn position. The cost, accepted: an eye may sit against the body's edge, and a big move can run the head briefly off the canvas. A PR that tightened the position bound (#65) was declined for the same reason.
+
+What Pulse keeps on top of the original is only what a rail of several marks needs and a single upstream bot never faced: facing into the screen, the pointer measured over four radii rather than two, the other habits giving way to the pointer, and each mark noticing it after its own 50–250ms with a 0.4s ease. Before adding anything else that limits, damps or retimes the motion, read the upstream's `component/runtime/svg-renderer.js` and match it.
+
 ## Why it is off by default
 
 `AppSettings.botMarks` ships empty, and it is a choice per account rather than one switch: a rail of provider logos is the app telling you which twenty-three products it is watching, and a rail of identical bots in different colours is not. Switched on where somebody wants to watch a ring work, off everywhere else. Current behaviour: [../ui/rings-and-surface.md](../ui/rings-and-surface.md).

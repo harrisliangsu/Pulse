@@ -65,10 +65,9 @@ Pulse は画面の端にすっと収まる、控えめなフローティング�
 
 ### マルチアカウントとローカル台帳
 - **マルチアカウント対応**：同じプロバイダの複数のサブスクリプション（Claude Code、Codex、Grok、Grok Bot、Kimi Code）を並べて監視し、ラベルを付けられます。
-- **トークン消費（設定内のみ）**：初期状態はオフです。ページ上部でオンにするとローカル記録を読み始め、オフにすると停止します。ログ・データベース・エクスポートを含む **54 のクライアントソース**に対応しています（Gemini CLI、Cline、Roo Code、OpenClaw、GitHub Copilot など）。Cursor や Trae などのエクスポート系ソースは、事前のエクスポートかキャプチャが必要です。これらはレールに表示する 24 のクォータプロバイダとは別物で、対応状況と実クライアントでの検証状況はソースごとに異なります。[ソースと対応範囲](Docs/token-spend-sources.md)。
-- **明確な使用量の推定**：直近 7 日を初期表示し、選んだ期間を記憶します。コストは公開 API 価格で算出し、サブスクリプションの請求額ではありません。価格が不明な場合やトークン数の集計が不完全な場合、時刻の詳細が分からない場合はその旨を表示します。トークン数を記録しないソースは、その旨をそのまま表示します。
+- **トークン消費（設定内のみ）**：初期状態はオフです。ページ上部でオンにするとローカル記録を読み始め、オフにすると停止します。ログ・データベース・エクスポートを含む **54 のクライアントソース**に対応しています（Gemini CLI、Cline、Roo Code、OpenClaw、GitHub Copilot など）。Cursor や Trae などのエクスポート系ソースは、事前のエクスポートかキャプチャが必要です。これらはレールに表示する 25 のクォータプロバイダとは別物で、対応状況と実クライアントでの検証状況はソースごとに異なります。[ソースと対応範囲](Docs/token-spend-sources.md)。- **明確な使用量の推定**：直近 7 日を初期表示し、選んだ期間を記憶します。コストは公開 API 価格で算出し、サブスクリプションの請求額ではありません。価格が不明な場合やトークン数の集計が不完全な場合、時刻の詳細が分からない場合はその旨を表示します。トークン数を記録しないソースは、その旨をそのまま表示します。
 - **モデル詳細とチャート**：モデルを開くと、入力・出力・キャッシュのトークン数と推定コスト、記録に基づく日次・時間別チャート、エージェント別の内訳、並べ替えとページ送りができる詳細テーブルを表示します。チャートにポインタを合わせると、日付または時刻とそのトークン数を読み取れます。利用できない日次・時間別の内訳は「利用不可」と表示し、ゼロとはみなしません。
-- **24 のプロバイダ**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（国際・中国本土）、Volcengine、Command Code、DeepSeek、Devin、Xiaomi Coding Plan、sub2api、New API、V2EX、Qoder。
+- **25 のプロバイダ**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（国際・中国本土）、Volcengine、Command Code、DeepSeek、Devin、Xiaomi Coding Plan、sub2api、New API、V2EX、Qoder、StepFun。
 - **スクリプト可**：`Pulse --json` が最後の読み取り値——プラン、すべての上限、リセット時刻、数字がどれだけ古いか——を出力します。tmux、sketchybar、Raycast、シェルプロンプトにどうぞ。キャッシュを読むだけなので、ポーリングのコストはかかりません。
 - **開発者向け連携**：設定から Raycast 拡張と、そのまま設定できる tmux・sketchybar・シェルのスクリプトを書き出せます。アカウントのリンクは該当ペインを直接開きます。[セットアップガイド](Docs/integrations.md)。
 - **接続診断**：実際の読み取り元、キャッシュの利用、最新のチェックとフォールバックの結果を確認できます。状況に応じた操作で再接続・再ログイン・認証情報の修正ができ、アカウント情報やシークレットを含まない診断レポートをコピーできます。
@@ -129,7 +128,7 @@ Pulse は各サービスが報告する数字をそのまま表示します。�
 | **New API** | 貼り付けた `sk-` キー。ゲートウェイのアドレスは自分で入力 | 自前で運用する [New API](https://github.com/QuantumNous/new-api) ゲートウェイの残高を、運用者が設定した通貨で表示。回答の比率は意味が二通りありうるため、割合は表示しない（[Docs/providers/newapi.md](Docs/providers/newapi.md)） |
 | **V2EX** | 貼り付けた個人アクセストークン | AI Chat のローリング 5 時間トークン枠。購入した追加パックがあれば、もう 1 つ輪を表示。ウィンドウがまだ始まっていないときはカウントダウンを表示しない（[Docs/providers/v2ex.md](Docs/providers/v2ex.md)） |
 | **Qoder** | 入力は不要——qoder.com または qoder.com.cn のサインイン済みブラウザセッションを読み取る。`Cookie:` ヘッダー、または個人トークン（`pt-` / `jt-`）を貼り付けることもできる | クレジット枠（プランとパックの合計）を Qoder が報告するリセット時刻とともに表示。チームプランの共有クレジットは別の輪として表示し、決して合算しない。クレジットが 0 のときはそう表示し、輪は描かない（[Docs/providers/qoder.md](Docs/providers/qoder.md)） |
-
+| **StepFun** | 入力は不要——platform.stepfun.com または platform.stepfun.ai のサインイン済みブラウザセッションを読み取る。`Cookie:` ヘッダーを貼り付けることもできる | Step Plan：Token Plan の月次 Credit と追加パックを 1 つの輪にまとめ、最も早く失効する分の日付を表示。旧 Coding Plan は 5 時間枠と週間枠。プランがなければ輪を描かずにそう表示する（[Docs/providers/stepfun.md](Docs/providers/stepfun.md)） |
 ---
 
 ## インストール

@@ -27,7 +27,7 @@ extension Provider {
             .localized("Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan.")
         case .volcengine:
             .localized("Runs arkcli with its saved login, or uses access keys entered in Settings. Pulse does not request Keychain access.")
-        case .ollamaCloud, .xiaomiMiMo, .qoder:
+        case .ollamaCloud, .xiaomiMiMo, .qoder, .stepFun:
             .localized("Uses a browser session you import in Settings. Importing may ask for browser Keychain access.")
         case .copilot:
             .localized("Uses the GitHub login you connect in Settings. No Keychain prompt.")

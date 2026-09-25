@@ -17,7 +17,7 @@ A decision records a reason, not proof the measurement still holds — a local p
 | [appcast-same-version.md](appcast-same-version.md) | [../releasing.md](../releasing.md) |
 | [sdk-stamp-and-appearance.md](sdk-stamp-and-appearance.md) | [../releasing.md](../releasing.md) |
 | [localization.md](localization.md) | [../development.md](../development.md) |
-| [bot-mark-geometry.md](bot-mark-geometry.md) | [../ui/rings-and-surface.md](../ui/rings-and-surface.md) |
+| [bot-mark-geometry.md](bot-mark-geometry.md) — where the mark comes from, and why its motion follows the original | [../ui/rings-and-surface.md](../ui/rings-and-surface.md) |
 | [quiet-is-not-greyscale.md](quiet-is-not-greyscale.md) | [../ui/rings-and-surface.md](../ui/rings-and-surface.md) |
 
 When the *reason* changes, edit the decision. When only the current fact changes (counts, intervals), edit the topic doc.

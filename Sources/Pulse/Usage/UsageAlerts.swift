@@ -482,6 +482,7 @@ struct AlertMemory: Codable, Sendable, Equatable {
         case .claudeLoginExpired, .claudeDesktopKeyRefused, .claudeDesktopSessionExpired,
              .cursorLoginExpired, .grokLoginExpired, .kimiLoginExpired, .signedOut, .apiKeyRefused,
              .ollamaSessionExpired, .ollamaPageChanged, .qoderSessionExpired, .xiaomiSessionExpired,
+             .stepFunSessionExpired,
              .unreachable, .unreadableReply, .rateLimited, .serverError,
              .codexServerFailed:
             .failure
@@ -501,8 +502,8 @@ struct AlertMemory: Codable, Sendable, Equatable {
              // account simply has no plan on it.
              .xiaomiNoCodingPlan,
              // And for Qoder: the session worked and the account holds no
-             // credits. An answer, not an outage.
-             .qoderNoCredits:
+             // credits. An answer, not an outage. StepFun's no-plan likewise.
+             .qoderNoCredits, .stepFunNoPlan:
             .answered
 
         // Never set up, never signed in, or an app that simply is not
@@ -513,7 +514,8 @@ struct AlertMemory: Codable, Sendable, Equatable {
              .codexNotInstalled, .kiroNotInstalled, .kiroVersionUnsupported,
              .kiroSignInRequired, .antigravityNotRunning, .antigravityNotAnswering,
              .cursorSignInRequired, .grokSignInRequired, .kimiSignInRequired, .notSignedIn,
-             .ollamaSessionMissing, .qoderSessionMissing, .xiaomiSessionMissing, .apiKeyMissing, .volcengineCLIMissing,
+             .ollamaSessionMissing, .qoderSessionMissing, .xiaomiSessionMissing, .stepFunSessionMissing,
+             .apiKeyMissing, .volcengineCLIMissing,
              .volcengineSignInRequired,
              // An app that was never installed or never signed in, which is
              // the same standing as a CLI that is not there: true until
