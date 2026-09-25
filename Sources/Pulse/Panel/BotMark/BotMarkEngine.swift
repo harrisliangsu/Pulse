@@ -1217,18 +1217,8 @@ final class BotMarkEngine {
             carryY = Self.carry(drawn.y - rawY)
             carryDegrees = Self.carry(Self.wrapped(drawn.degrees - rawDegrees, period: 360))
         }
-        // Carry keeps the handoff from popping, and while it settles it can
-        // push a bob that is already at the edge out of the box — a bounce
-        // peaks at 48 and the clamp above only sees the spring, not the
-        // carry. Once the morph is gone the viewBox is the plain one, so the
-        // drawn point has to stay in it. A morph pose is still added in full:
-        // that effect opens its own box.
-        var translateX = rawX + carryX.value
-        var translateY = rawY + carryY.value
-        if morphAmount < 0.01 {
-            translateX = BotMath.clamp(translateX, -room, room)
-            translateY = BotMath.clamp(translateY, -room, room)
-        }
+        let translateX = rawX + carryX.value
+        let translateY = rawY + carryY.value
         let degrees = rawDegrees + carryDegrees.value
         drawn = (translateX, translateY, degrees, turnAngle)
         drawnState = state
