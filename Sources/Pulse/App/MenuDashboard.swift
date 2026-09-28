@@ -277,7 +277,10 @@ private struct MenuAccountDetail: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.primary.opacity(0.12))
                     Capsule()
-                        .fill(window.tint(warningAt: settings.warningThreshold.fraction))
+                        .fill(window.tint(
+                            warningAt: settings.warningThreshold.fraction,
+                            scheme: settings.ringColourScheme
+                        ))
                         .frame(width: proxy.size.width * min(max(fraction, 0), 1))
                 }
             }
