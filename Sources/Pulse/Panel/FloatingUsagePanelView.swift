@@ -132,6 +132,7 @@ struct FloatingUsagePanelView: View {
                             edge: placement.edge,
                             showsRemaining: settings.showsRemaining,
                             showsForecast: settings.showsForecast,
+                            resetCredits: selected.account == AccountKey(.codex) ? store.codexResetCredits : nil,
                             pointerCenter: pointerCentre(for: index),
                             openSettings: openSettings,
                             codexReset: selected.provider == .codex ? codexResetStatus : nil,

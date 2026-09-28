@@ -1,0 +1,10 @@
+# LiteLLM
+
+Profiled provider: [`Sources/Pulse/Providers/Profiled/LiteLLMUsageService.swift`](../../Sources/Pulse/Providers/Profiled/LiteLLMUsageService.swift). User setup: [../setup/litellm.md](../setup/litellm.md).
+
+- **Credential:** `keyAndAddress` — a virtual key and the proxy's address, checked by `GatewayAddress` (https, or http on a private network; `/v1` trimmed). The key goes to that address only. `requiresScopeMatch`, and every reading carries `GatewayAddress.scope` so a banked reading from another proxy or key never stands in.
+- **Route:** `GET /key/info` (bearer) → `info.user_id`, `info.team_id`. Then `GET /user/info?user_id=…` when there is a user, else `GET /team/info?team_id=…`. A key with neither is "No limits reported". 403 or 404 on `/key/info` is also "No limits reported" (the deployment will not let the key read itself); 401 is a refused key.
+- **Reply:** `/user/info` → `{ user_id, user_info: { user_id, spend, max_budget, budget_duration, budget_reset_at }, teams: [{ team_id, spend, max_budget, budget_duration, budget_reset_at }] }`. `/team/info` → `{ team_id, team_info: { … } }`. The id answered must match the id asked for, or the reply is unreadable.
+- **Windows:** the key's team budget (from `teams[]`, matched on `team_id`) first, as `.sharedCredits`; the user budget second. `spend / max_budget`, both as reported; no `max_budget` or a non-positive one leaves that budget off. `budget_duration` (`30s`, `12h`, `7d`, `2w`) is a stated length: 5 h, 1 d and 7 d map to their kinds, others to `.other(seconds:)`. `1mo` is `.monthly` with its 30 days only a sort key. No duration: `.spend`, 30-day sort key, no length claimed. `budget_reset_at` as reported.
+- **Left out:** CodexBar's fallback when `/key/info` is closed — `/key/spend/report` then `/user/spend/report`, a month's spend with no limit. Pulse has nowhere to show spend alone. The key's own `max_budget` in `/key/info` is not read either (CodexBar does not read it).
+- **Evidence:** second-hand. The shapes come from CodexBar's LiteLLM plugin and its tests (MIT); no live proxy has been read. Fixtures: `Tests/PulseTests/Fixtures/litellm-*.json`.

@@ -622,7 +622,9 @@ actor UsageLedgerReader {
     }
 
     private static func logFiles(for provider: Provider, home: URL) -> [URL] {
-        let root: URL? = switch provider {
+        // None of the profiled providers leaves transcripts here either.
+        guard let written = provider.handWritten else { return [] }
+        let root: URL? = switch written {
         case .claudeCode: home.appending(path: ".claude/projects")
         case .codex: home.appending(path: ".codex/sessions")
         // Antigravity is an editor and keeps nothing; OpenCode keeps its own
@@ -630,7 +632,7 @@ actor UsageLedgerReader {
         case .kiro, .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
              .volcengine, .commandCode, .deepSeek, .devin, .xiaomiMiMo,
-             .sub2api, .newAPI, .v2ex, .qoder, .stepFun: nil
+             .sub2api, .newAPI, .v2ex, .qoder, .stepFun, .pulseExtension: nil
         }
 
         guard let root else { return [] }
@@ -672,13 +674,15 @@ actor UsageLedgerReader {
 
     // Internal for the on-disk streaming/cancellation regression fixtures.
     func parse(_ file: URL, provider: Provider) -> Scanned {
-        switch provider {
+        // No profiled provider leaves a transcript this reads either.
+        guard let written = provider.handWritten else { return Scanned() }
+        switch written {
         case .claudeCode: return parseClaudeCode(LogLines(at: file))
         case .codex: return parseCodex(LogLines(at: file))
         case .kiro, .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
              .volcengine, .commandCode, .deepSeek, .devin, .xiaomiMiMo,
-             .sub2api, .newAPI, .v2ex, .qoder, .stepFun: return Scanned()
+             .sub2api, .newAPI, .v2ex, .qoder, .stepFun, .pulseExtension: return Scanned()
         }
     }
 

@@ -27,7 +27,7 @@ struct NotchGeometryTests {
     func attachedLayout() {
         let placement = PanelPlacement(dock: .edge(.top), horizontalRatio: 0.2)
         placement.notch = notch
-        let panel = FloatingPanelController.Layout.size(for: .top, notchSize: notch.size)
+        let panel = FloatingPanelController.Layout.size(for: .top, notchSize: notch.size, capacity: 12)
         for count in [1, 6, 12] {
             let rail = DockLayout.size(for: count, on: .horizontal)
             let layout = placement.layout(in: visible, topEdge: visible.maxY, panel: panel, rail: rail)
@@ -53,7 +53,7 @@ struct NotchGeometryTests {
     @Test("Without a notch, top docking still uses the chosen horizontal position")
     func ordinaryTopLayout() {
         let placement = PanelPlacement(dock: .edge(.top), horizontalRatio: 0.2)
-        let panel = FloatingPanelController.Layout.size(for: .top)
+        let panel = FloatingPanelController.Layout.size(for: .top, capacity: 12)
         let rail = DockLayout.size(for: 6, on: .horizontal)
         let layout = placement.layout(in: visible, topEdge: screen.maxY, panel: panel, rail: rail)
         #expect(layout.railOrigin.x == (visible.width - rail.width) * 0.2)
@@ -82,8 +82,8 @@ struct NotchGeometryTests {
                 #expect(surface.maxY == rail.maxY)
                 #expect(surface.minY == 0)
                 #expect(surface.midX == rail.midX)
-                let ordinary = FloatingPanelController.Layout.size(for: .top)
-                let attached = FloatingPanelController.Layout.size(for: .top, notchSize: notch.size)
+                let ordinary = FloatingPanelController.Layout.size(for: .top, capacity: 12)
+                let attached = FloatingPanelController.Layout.size(for: .top, notchSize: notch.size, capacity: 12)
                 // Budgets to the whole point the window is rounded up to
                 // (`Layout.size`) — under a point of slack, never more.
                 #expect(abs(attached.height - ordinary.height - notch.height) < 1)
@@ -93,8 +93,8 @@ struct NotchGeometryTests {
                 #expect(ordinary.height == (railSize.height + DetailCardLayout.horizontalGap
                         + DetailCardLayout.pointerWidth + DetailCardLayout.maximumHeight).rounded(.up))
                 for edge in [PanelEdge.left, .right] {
-                    #expect(FloatingPanelController.Layout.size(for: edge, notchSize: notch.size)
-                            == FloatingPanelController.Layout.size(for: edge))
+                    #expect(FloatingPanelController.Layout.size(for: edge, notchSize: notch.size, capacity: 12)
+                            == FloatingPanelController.Layout.size(for: edge, capacity: 12))
                 }
             }
         }

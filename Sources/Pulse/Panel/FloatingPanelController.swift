@@ -37,12 +37,19 @@ final class FloatingPanelController {
         /// the edge — exactly where anyone reaching for a docked rail puts it
         /// — was "off the panel". The sliver opened on entry and the sampler
         /// shut it again, over and over. Rounded here, the two cannot differ.
-        static func size(for edge: PanelEdge, notchSize: CGSize? = nil) -> CGSize {
-            let size = unrounded(for: edge, notchSize: notchSize)
+        /// `capacity` is the ring budget, which the running app sets from what
+        /// is switched on. A test passes its own rather than read a global
+        /// another test may be moving.
+        static func size(
+            for edge: PanelEdge,
+            notchSize: CGSize? = nil,
+            capacity: Int = PanelMetrics.railCapacity
+        ) -> CGSize {
+            let size = unrounded(for: edge, notchSize: notchSize, capacity: capacity)
             return CGSize(width: size.width.rounded(.up), height: size.height.rounded(.up))
         }
 
-        private static func unrounded(for edge: PanelEdge, notchSize: CGSize?) -> CGSize {
+        private static func unrounded(for edge: PanelEdge, notchSize: CGSize?, capacity: Int) -> CGSize {
             // Card + its pointer + the gap after it, which is the room the
             // card unfolds into whichever way it unfolds.
             let reach = DetailCardLayout.width
@@ -58,12 +65,12 @@ final class FloatingPanelController {
                     // beside it. A card taller than the window gets sliced off
                     // flat against its edge, which reads as a drawing bug
                     // rather than as a card that didn't fit.
-                    height: max(DockLayout.maximumLength(on: .vertical), DetailCardLayout.maximumHeight)
+                    height: max(DockLayout.maximumLength(on: .vertical, capacity: capacity), DetailCardLayout.maximumHeight)
                 )
             case .horizontal:
                 return CGSize(
                     // Wide enough for whichever is wider, for the same reason.
-                    width: max(DockLayout.maximumLength(on: .horizontal), DetailCardLayout.width, notchSize?.width ?? 0),
+                    width: max(DockLayout.maximumLength(on: .horizontal, capacity: capacity), DetailCardLayout.width, notchSize?.width ?? 0),
                     height: DockLayout.thickness(on: .horizontal)
                         + (notchSize?.height ?? 0)
                         + DetailCardLayout.horizontalGap

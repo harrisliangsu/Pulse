@@ -262,8 +262,8 @@ enum DockLayout {
     /// Rail length with every provider switched on, which is what the panel
     /// has to leave room for. Measured docked, which is the longer of the two —
     /// the window never needs to shrink, only the rail drawn inside it.
-    static func maximumLength(on axis: PanelEdge.Axis) -> CGFloat {
-        length(for: PanelMetrics.railCapacity, on: axis, docked: true)
+    static func maximumLength(on axis: PanelEdge.Axis, capacity: Int = PanelMetrics.railCapacity) -> CGFloat {
+        length(for: capacity, on: axis, docked: true)
     }
 
     /// Kept for the vertical rail, which is what every existing caller means.
@@ -298,10 +298,10 @@ enum DockLayout {
             : CGSize(width: collapsedHeight, height: collapsedHitWidth)
     }
 
-    /// The tallest the rail ever gets. The panel window is kept at this height
-    /// whatever is switched on, so turning a provider off never has to resize
-    /// the window — the rail simply draws shorter inside it, and the leftover
-    /// space is transparent.
+    /// The tallest the rail gets with what is switched on now. The panel window
+    /// is kept at this height while a reading changes the rail — a split
+    /// account's second ring is already budgeted for — and resized only when a
+    /// setting changes what is shown. See `AppSettings.railSlotCount`.
     static var maximumHeight: CGFloat { height(for: PanelMetrics.railCapacity) }
 }
 
@@ -427,12 +427,12 @@ struct UsageDockView: View {
         .allowsHitTesting(notchSize == nil || isExpanded)
         .accessibilityHidden(notchSize != nil && !isExpanded)
         // No drag handle lives here any more. A press only reaches a view
-        // inside `NSHostingView` if SwiftUI claims it first, and it would not
-        // claim the empty black between the rings: the berth opts out of hit
-        // testing and nothing else covers those points, so the panel could be
-        // dragged by its rings and nowhere else. Laying a shape over the handle
-        // to claim them swallowed the press instead of passing it down, and
-        // then nothing could be dragged at all.
+        // inside `NSHostingView` if SwiftUI claims it first, so the berth
+        // (`PanelSurface`) is deliberately hit-testable: it is what claims
+        // the empty black between the rings, which is what lets the panel be
+        // dragged from there and not only by its rings. Laying a shape over
+        // the handle to claim them once swallowed the press instead of
+        // passing it down, and then nothing could be dragged at all.
         //
         // The window takes its own mouse events instead — see `FloatingPanel`
         // in FloatingPanelController.swift — which happens before any of
@@ -957,7 +957,7 @@ struct DockBerthShape: Shape {
 
 #Preview("Dock") {
     UsageDockView(
-        entries: Provider.allCases.map {
+        entries: Provider.builtIn.map {
             RailEntry(
                 usage: .unavailable($0, reason: .loading),
                 headline: nil,

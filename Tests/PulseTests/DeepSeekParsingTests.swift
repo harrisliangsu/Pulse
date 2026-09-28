@@ -28,7 +28,7 @@ struct DeepSeekParsingTests {
 
     private static func windows(
         _ purse: DeepSeekUsageService.Purse,
-        basis: DeepSeekBasis,
+        basis: BalanceBasis,
         budget: Double? = nil,
         peak: Double = 0,
         isAvailable: Bool? = true

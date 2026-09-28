@@ -137,7 +137,10 @@ struct KimiCodeUsageService: Sendable {
 
     // MARK: - Reading the reply
 
-    /// Internal so a fixture test can hold it. Not a public contract.
+    /// Internal rather than private, and deliberately: this and `windows(from:)`
+    /// / `planName(_:)` below are what a fixture test holds a reconstructed
+    /// reply against. Nothing outside the module can see them either way. Do
+    /// not tidy these back to `private` — that takes the fixture test with it.
     struct Reply: Decodable {
         struct Detail: Decodable {
             let limit: String?
@@ -164,7 +167,6 @@ struct KimiCodeUsageService: Sendable {
         let limits: [Limit]?
     }
 
-    /// Internal so a fixture test can hold it. Not a public contract.
     static func windows(from reply: Reply) -> [UsageWindow] {
         var found: [UsageWindow] = []
 

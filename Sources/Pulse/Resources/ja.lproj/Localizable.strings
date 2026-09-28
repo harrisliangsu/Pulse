@@ -213,6 +213,7 @@
 "Sign in to Claude Code to see usage." = "使用量を見るには Claude Code にサインインしてください。";
 "A backup for when the saved login expires. Your own status line keeps working." = "保存されたログインが切れたときの予備です。元のステータスラインはそのまま動きます。";
 "Ring shows" = "リングに表示";
+"Ring measures" = "リングの計算方法";
 "Ring colour" = "リングの色";
 "Custom" = "カスタム";
 "Colour" = "色";
@@ -245,6 +246,7 @@
 "Today" = "今日";
 "All time" = "累計";
 "Limit reset credits" = "上限リセット券";
+"Next expiry" = "次の期限";
 "1 available" = "残り 1 枚";
 "%@ available" = "残り %@ 枚";
 "%@ tokens" = "%@ トークン";
@@ -360,6 +362,8 @@
 "The Ollama session expired. Sign in again and add it." = "Ollama のセッションの期限が切れました。サインインし直して追加してください。";
 "Ollama's page has changed and can no longer be read." = "Ollama のページが変わり、読み取れなくなりました。";
 "Reads your quota from Ollama's own settings page." = "Ollama 自身の設定ページから残量を読みます。";
+"Show" = "表示";
+"Hide" = "隠す";
 "Save" = "保存";
 "Monthly limit" = "月あたりの上限";
 "Daily limit" = "1 日あたりの上限";
@@ -502,7 +506,6 @@
 "Full tank" = "満額の基準";
 "What you call a full balance. The ring measures against it." = "いくらを満額とみなすかです。リングはこれを基準に測ります。";
 "How much of the balance Pulse last saw you top up to is gone." = "Pulse が最後に見たチャージ額から、どれだけ使ったかです。";
-"The money left, with no ring. DeepSeek reports no allowance." = "リングを描かず残高だけを表示します。DeepSeek は割り当てを報告しません。";
 "How much of the figure you set is gone." = "設定した金額のうち、どれだけ使ったかです。";
 "From platform.deepseek.com. Stored encrypted on this Mac." = "platform.deepseek.com で取得します。この Mac に暗号化して保存されます。";
 "Balance" = "残高";
@@ -651,6 +654,7 @@
 
 /* 監視するサービスの選択 */
 "Choose services to monitor" = "監視するサービスを選択";
+"Choose services to start monitoring…" = "サービスを選んで監視を開始…";
 "New services detected" = "新たに対応したサービス";
 "Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "サービスを1つ以上選んでください。「完了」を押すと、選んだサービスのログイン情報を読み取り、使用量の確認を始めます。後から設定で変更できます。";
 "This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "このバージョンで新たに対応したサービスが Mac に見つかりました。追加するものを選んでください。これまでの選択はそのままです。";
@@ -730,3 +734,211 @@
 "No Step Plan on this StepFun account." = "この StepFun アカウントには Step Plan がありません。";
 "Reads your Step Plan with your signed-in browser session." = "サインイン済みのブラウザセッションで Step Plan を読み取ります。";
 "No StepFun session found. Sign in at %@ first." = "StepFun のセッションが見つかりません。先に %@ でサインインしてください。";
+
+/* Extensions */
+"An extension is a program you add yourself that reports one account's usage. Pulse draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials." = "拡張機能は自分で追加するプログラムで、1 つのアカウントの使用量を報告します。Pulse はその出力をリングとして表示します。オンにするまでは実行せず、認証情報も一切渡しません。";
+"Another extension already uses the id %@." = "ID「%@」は別の拡張機能がすでに使っています。";
+"Couldn't be used" = "使用できないもの";
+"Each extension is a folder of its own, holding pulse-extension.json and its program." = "拡張機能は 1 つにつき 1 フォルダで、pulse-extension.json とプログラム本体を入れます。";
+"Extension" = "拡張機能";
+"Extension program" = "拡張機能のプログラム";
+"Extensions" = "拡張機能";
+"Extensions folder" = "拡張機能フォルダ";
+"Folder" = "フォルダ";
+"Found" = "見つかったもの";
+"From its pulse-extension.json. Pulse keeps this extension's settings under it." = "pulse-extension.json に書かれた値です。Pulse はこの拡張機能の設定をこの ID で保存します。";
+"How to write an extension" = "拡張機能の作り方";
+"Id" = "ID";
+"Its id must be lowercase letters, digits, dots, dashes or underscores, 64 at most." = "ID に使えるのは小文字の英字・数字・ピリオド・ハイフン・アンダースコアのみで、64 文字までです。";
+"Its name is empty." = "名前が空です。";
+"Its program has to be inside its own folder." = "プログラムは拡張機能自身のフォルダ内に置く必要があります。";
+"Its program isn't there, or isn't executable." = "プログラムが見つからないか、実行できません。";
+"Look again" = "再読み込み";
+"Manage extensions" = "拡張機能の管理";
+"No pulse-extension.json in this folder." = "このフォルダに pulse-extension.json がありません。";
+"None yet" = "まだありません";
+"Program" = "プログラム";
+"Pulse reads this folder when it starts. After adding or changing an extension, look again." = "Pulse は起動時にこのフォルダを読み込みます。拡張機能を追加・変更したら、再読み込みしてください。";
+"Runs a program from your extensions folder on the refresh schedule. Pulse passes it no credentials; what it reads and where it connects are up to the program." = "拡張機能フォルダ内のプログラムを更新のたびに実行します。Pulse は認証情報を渡しません。何を読み取り、どこに接続するかはプログラム次第です。";
+"Show in Finder" = "Finder に表示";
+"Shown in the panel" = "パネルに表示中";
+"Stopped if it hasn't answered by then." = "この時間内に応答がなければ停止します。";
+"The extension didn't answer in time." = "拡張機能が時間内に応答しませんでした。";
+"The extension says its login has expired." = "拡張機能によると、ログインの有効期限が切れています。";
+"The extension stopped with an error." = "拡張機能がエラーで終了しました。";
+"This extension's program can't be run. Check its folder." = "この拡張機能のプログラムを実行できません。フォルダを確認してください。";
+"Time limit" = "制限時間";
+"Written for extension schema %@, which this version of Pulse doesn't read." = "拡張機能スキーマ %@ 向けに書かれていますが、このバージョンの Pulse は読み込めません。";
+"pulse-extension.json isn't valid JSON, or is missing a field." = "pulse-extension.json が正しい JSON ではないか、必要な項目が欠けています。";
+
+/* Profiled providers: shared wording */
+"No session found. Sign in at %@ first." = "セッションが見つかりません。先に %@ でサインインしてください。";
+"Nothing saved on this Mac yet. Open the service's app once, then retry." = "この Mac にはまだ何も保存されていません。そのサービスのアプリを一度開いてから、再試行してください。";
+"Read a browser session in Settings." = "設定でブラウザのセッションを読み込んでください。";
+"Sign in with this service's own app or command-line tool first." = "先にそのサービス自身のアプリかコマンドラインツールでサインインしてください。";
+"The browser session expired. Sign in on the website, then read it again in Settings." = "ブラウザのセッションの有効期限が切れました。Web サイトでサインインしてから、設定でもう一度読み込んでください。";
+"The saved login has expired. Sign in again with the service's own app or tool." = "保存されているログインの有効期限が切れました。そのサービス自身のアプリかツールでサインインし直してください。";
+"This account has no plan with usage limits." = "このアカウントには使用量の上限があるプランがありません。";
+
+/* ClinePass */
+"From app.cline.bot. Stored encrypted on this Mac." = "app.cline.bot で取得します。この Mac に暗号化して保存されます。";
+
+/* Amp */
+"From ampcode.com/settings. Stored encrypted on this Mac." = "ampcode.com/settings で取得します。この Mac に暗号化して保存されます。";
+/* Gemini */
+"Reads the login saved in ~/.gemini/oauth_creds.json. No Keychain prompt." = "~/.gemini/oauth_creds.json に保存されたログインを読み取ります。キーチェーンの確認はありません。";
+"Gemini CLI's own login" = "Gemini CLI 自身のログイン";
+"Uses the login Gemini CLI already saved. Using Gemini CLI renews it." = "Gemini CLI が既に保存しているログインを使います。Gemini CLI を使うと更新されます。";
+
+/* Kilo Code */
+"Uses a key entered in Settings, or reads ~/.local/share/kilo/auth.json. No Keychain prompt." = "設定で入力したキーを使うか、~/.local/share/kilo/auth.json を読み取ります。キーチェーンの確認はありません。";
+"From app.kilo.ai. Optional — Pulse can use the login the Kilo CLI saved. Stored encrypted on this Mac." = "app.kilo.ai で取得します。省略可能で、その場合は Kilo CLI が保存したログインを Pulse が使います。この Mac に暗号化して保存されます。";
+
+/* Mistral */
+/* Factory */
+"From app.factory.ai. Stored encrypted on this Mac." = "app.factory.ai で取得します。この Mac に暗号化して保存されます。";
+
+/* Windsurf */
+
+/* Profiled providers: browser storage */
+"Reads windsurf.com's sign-in from a Chromium browser when you press Read. No Keychain prompt." = "「読み取る」を押すと、Chromium 系ブラウザから windsurf.com のサインイン情報を読み込みます。キーチェーンの確認はありません。";
+"Browser session" = "ブラウザのセッション";
+/* OpenAI API */
+"From platform.openai.com. Stored encrypted on this Mac." = "platform.openai.com で取得します。この Mac に暗号化して保存されます。";
+
+/* JetBrains AI */
+"As current as the IDE last left it." = "IDE が最後に書き込んだ時点の内容です。";
+"Reads the AI Assistant quota your JetBrains IDE saves on this Mac. Nothing is sent anywhere." = "JetBrains IDE がこの Mac に保存している AI Assistant の利用枠を読み取ります。どこにも送信しません。";
+"The quota your JetBrains IDE saved" = "JetBrains IDE が保存した利用枠";
+
+/* Warp */
+"From Warp's settings, under API Keys. Stored encrypted on this Mac." = "Warp の設定の「API Keys」で取得します。この Mac に暗号化して保存されます。";
+
+/* IBM Bob */
+"From bob.ibm.com. Stored encrypted on this Mac." = "bob.ibm.com で取得します。この Mac に暗号化して保存されます。";
+/* Synthetic */
+"From synthetic.new. Stored encrypted on this Mac." = "synthetic.new で取得します。この Mac に暗号化して保存されます。";
+
+/* ElevenLabs */
+"From elevenlabs.io, with the user_read permission. Stored encrypted on this Mac." = "elevenlabs.io で user_read 権限を付けて取得します。この Mac に暗号化して保存されます。";
+
+/* Chutes */
+"From chutes.ai. Stored encrypted on this Mac." = "chutes.ai で取得します。この Mac に暗号化して保存されます。";
+
+/* GitKraken AI */
+"Uses only the access token you enter in Settings. No Keychain prompt." = "設定で入力したアクセストークンだけを使います。キーチェーンの確認はありません。";
+"The Bearer token from gitkraken.dev's usage request, copied from the browser's developer tools. Stored encrypted on this Mac." = "gitkraken.dev の使用量リクエストに付いている Bearer トークンを、ブラウザの開発者ツールからコピーします。この Mac に暗号化して保存されます。";
+
+/* xKiro */
+"From xkiro.com. Stored encrypted on this Mac." = "xkiro.com で取得します。この Mac に暗号化して保存されます。";
+
+/* Hyper */
+"From hyper.charm.land. Stored encrypted on this Mac." = "hyper.charm.land で取得します。この Mac に暗号化して保存されます。";
+
+/* Atlas Cloud */
+"From atlascloud.ai, with permission to read the balance. Stored encrypted on this Mac." = "atlascloud.ai で、残高を読める権限のあるキーを取得します。この Mac に暗号化して保存されます。";
+
+/* Poe */
+"From poe.com/api/keys. Stored encrypted on this Mac." = "poe.com/api/keys で取得します。この Mac に暗号化して保存されます。";
+/* Aixy */
+"From aixy-gateway.com. Stored encrypted on this Mac." = "aixy-gateway.com で取得します。この Mac に暗号化して保存されます。";
+
+/* Neuralwatt */
+"From portal.neuralwatt.com. Stored encrypted on this Mac." = "portal.neuralwatt.com で取得します。この Mac に暗号化して保存されます。";
+
+/* ClawRouter */
+"From clawrouter.openclaw.ai. Stored encrypted on this Mac." = "clawrouter.openclaw.ai で取得します。この Mac に暗号化して保存されます。";
+
+/* ZenMux */
+"A Management API key from zenmux.ai. An ordinary API key won't work. Stored encrypted on this Mac." = "zenmux.ai で発行した Management API キーです。通常の API キーは使えません。この Mac に暗号化して保存されます。";
+
+/* v0 */
+"From v0.app. Stored encrypted on this Mac." = "v0.app で取得します。この Mac に暗号化して保存されます。";
+
+/* DevPass */
+"An API key from llmgateway.io. Stored encrypted on this Mac." = "llmgateway.io で発行した API キーです。この Mac に暗号化して保存されます。";
+
+/* DeepInfra */
+"From deepinfra.com. Stored encrypted on this Mac." = "deepinfra.com で取得します。この Mac に暗号化して保存されます。";
+
+/* Vercel AI Gateway */
+"An AI Gateway API key from vercel.com. Stored encrypted on this Mac." = "vercel.com で発行した AI Gateway の API キーです。この Mac に暗号化して保存されます。";
+/* Alibaba Coding Plan */
+"From the Coding Plan page in Model Studio. Stored encrypted on this Mac." = "Model Studio の Coding Plan ページで取得します。この Mac に暗号化して保存されます。";
+
+/* Alibaba Token Plan */
+"Bailian CLI" = "Bailian CLI";
+"Runs the Bailian CLI (bl) with its saved login. Pulse does not read or store its credentials." = "保存済みのログインで Bailian CLI（bl）を実行します。Pulse はその認証情報を読み取りも保存もしません。";
+"Uses the login the Bailian CLI already saved." = "Bailian CLI が既に保存しているログインを使います。";
+/* Nous Portal */
+"Reads the Nous Portal login Hermes Agent saved in ~/.hermes. No Keychain prompt." = "Hermes Agent が ~/.hermes に保存した Nous Portal のログインを読み取ります。キーチェーンの確認はありません。";
+"Hermes Agent's login" = "Hermes Agent のログイン";
+"Uses the login Hermes Agent already saved. Pulse never renews it." = "Hermes Agent が既に保存しているログインを使います。Pulse がこのログインを更新することはありません。";
+
+/* Hugging Face */
+"Uses a token entered in Settings, or reads the one hf auth login saved in ~/.cache/huggingface. No Keychain prompt." = "設定で入力したトークンを使うか、hf auth login が ~/.cache/huggingface に保存したトークンを読み取ります。キーチェーンの確認はありません。";
+"From huggingface.co/settings/tokens. Stored encrypted on this Mac." = "huggingface.co/settings/tokens で取得します。この Mac に暗号化して保存されます。";
+
+/* Moonshot */
+"From the Kimi Open Platform console, international or China. Stored encrypted on this Mac." = "Kimi Open Platform のコンソール（国際版または中国版）で取得します。この Mac に暗号化して保存されます。";
+
+/* Codebuff */
+"Uses a key entered in Settings, or reads the login the codebuff CLI saved in ~/.config/manicode. No Keychain prompt." = "設定で入力したキーを使うか、codebuff CLI が ~/.config/manicode に保存したログインを読み取ります。キーチェーンの確認はありません。";
+"From codebuff.com. Optional — Pulse can use the login the codebuff CLI saved. Stored encrypted on this Mac." = "codebuff.com で取得します。省略可能で、その場合は codebuff CLI が保存したログインを Pulse が使います。この Mac に暗号化して保存されます。";
+
+/* Venice */
+"From venice.ai's API settings. Stored encrypted on this Mac." = "venice.ai の API 設定で取得します。この Mac に暗号化して保存されます。";
+
+/* TypeSafe */
+"Uses the Cookie header you paste in Settings. No Keychain prompt." = "設定に貼り付けた Cookie ヘッダーを使います。キーチェーンの確認はありません。";
+"The Cookie header of a request to console.typesafe.ai/settings/billing. Stored encrypted on this Mac." = "console.typesafe.ai/settings/billing へのリクエストに付いている Cookie ヘッダーです。この Mac に暗号化して保存されます。";
+
+/* xAI API */
+"TeamID:ManagementKey, from console.x.ai. An inference key won't work. Stored encrypted on this Mac." = "TeamID:ManagementKey の形式で入力します。console.x.ai で取得します。推論用のキーは使えません。この Mac に暗号化して保存されます。";
+
+/* Billing groups */
+"Subscriptions" = "サブスクリプション";
+"API and pay-as-you-go" = "API・従量課金";
+"Enabled" = "有効";
+"The money left, with no ring. There is no allowance to measure against." = "残高だけを表示し、リングは描きません。比べる上限がないためです。";
+
+/* Codex reset credits */
+"Reset credits on the card" = "カードにリセット券を表示";
+"How many limit reset credits are left, and when the next one expires. Asks Codex's app server on every refresh." = "残っている上限リセット券の枚数と、次の券の有効期限。更新のたびに Codex の app server に問い合わせます。";
+"Not available" = "取得できません";
+"codex not found" = "codex が見つかりません";
+"Show usage in the menu bar" = "メニューバーに使用量を表示";
+"A ring's mark and figure beside the icon, red past the warning line." = "リングのサービスマークと使用量をアイコンの横に表示します。警告ラインを超えると赤になります。";
+"Usage" = "使用量";
+"Menu bar shows" = "メニューバーの表示";
+"An account switched off falls back to the fullest ring." = "選んだアカウントをオフにすると、いちばん使っているリングに戻ります。";
+"Fullest ring" = "いちばん使っているリング";
+"Menu bar style" = "メニューバーのスタイル";
+"Figure" = "数字";
+"Ring" = "リング";
+"Open %@ usage page" = "%@ の使用量ページを開く";
+"Overview" = "概要";
+"Updated just now" = "たった今更新";
+"Updated %@" = "%@に更新";
+"Estimated from token counts at API prices — not your subscription bill." = "API 料金でトークン数から見積もった金額です。サブスクリプションの請求額ではありません。";
+"Reading local records…" = "ローカルの記録を読み込み中…";
+"Usage credits" = "クレジット";
+"%@ remaining" = "残り %@";
+"Split" = "分割";
+"Short: day" = "日";
+"Short: week" = "週";
+"Short: month" = "月";
+"Start windows automatically" = "ウィンドウを自動で開始";
+"Start a new window after each reset" = "リセット後に新しいウィンドウを自動で開始";
+"When the 5-hour limit resets, sends “hi” to Haiku through Claude Code, so the next window starts counting then rather than at your next message. Nothing is saved." = "5 時間の上限がリセットされたら、Claude Code から Haiku に「hi」を送り、次のウィンドウを次のメッセージ時ではなくその時点から計測させます。会話は保存されません。";
+"When the 5-hour or weekly limit resets, sends “hi” to the cheapest model through Codex, so the next window starts counting then rather than at your next message. Nothing is saved." = "5 時間または週の上限がリセットされたら、Codex からいちばん安いモデルに「hi」を送り、次のウィンドウを次のメッセージ時ではなくその時点から計測させます。会話は保存されません。";
+"Only between" = "この時間帯のみ";
+"A reset outside these hours is started when they begin. Shared by Claude Code and Codex." = "時間帯外のリセットは、時間帯が始まったときに開始します。Claude Code と Codex で共通です。";
+"Last started" = "前回の自動開始";
+"Use at your own risk" = "自己責任でご利用ください";
+"I understand the risk, turn it on" = "リスクを理解して有効にする";
+"This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Pulse only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that." = "これは Anthropic や OpenAI が提供する機能ではありません。使用量ウィンドウを自動で開始することは使用制限の回避とみなされ、アカウントの制限や停止につながる可能性があります。Pulse はサインイン済みのツールから短いメッセージを 1 通送るだけで、その結果アカウントに生じたいかなる影響についても責任を負いません。これを受け入れる場合のみ有効にしてください。";
+"Not started yet" = "まだ自動開始していません";
+"%@ · the command-line tool was not found" = "%@ · コマンドラインツールが見つかりません";
+"%@ · it did not go through; check the tool is signed in" = "%@ · 送信できませんでした。ツールにサインインしているか確認してください";
+"%@ · it did not answer in time" = "%@ · 時間内に応答がありませんでした";

@@ -2,7 +2,7 @@
 
 AI entry for this repo. Human workflow, evidence rules, and the docs map live in [CONTRIBUTING.md](CONTRIBUTING.md) and [Docs/README.md](Docs/README.md). Change the **authoritative topic doc** in the same patch as the code; do not grow this file.
 
-Pulse is a macOS menu-bar usage monitor. SwiftUI draws the panel; a transparent, non-activating AppKit `NSPanel` owns size, placement, and input. Twenty-five providers, no Pulse backend, no Pulse account. Per-provider routes, auth, cookies, and extra logins: [Docs/providers/README.md](Docs/providers/README.md).
+Pulse is a macOS menu-bar usage monitor. SwiftUI draws the panel; a transparent, non-activating AppKit `NSPanel` owns size, placement, and input. Seventy-seven providers, no Pulse backend, no Pulse account. Per-provider routes, auth, cookies, and extra logins: [Docs/providers/README.md](Docs/providers/README.md).
 
 Sources sit in six directories under `Sources/Pulse`: **App** (lifecycle, settings store, updates), **Panel** (the window, its placement, and everything drawn in it), **Settings** (the settings window), **Usage** (store, cache, ledger, forecast, alerts), **Providers** (one service per product, plus their helpers), **Auth** (keys, logins, cookies). Swift has no directory namespace and SwiftPM recurses, so a file's directory is a claim about what it belongs to and nothing else — move a file when that claim stops being true.
 
@@ -34,12 +34,13 @@ Treat remaining warnings as failures. macOS 14+, Swift tools 6.0, no linter. **`
 
 - **Panel frame while a card opens:** do not resize the window and do not put card + rail in a shared stack. Axis change (side ↔ top) *may* resize. [Docs/ui/panel-geometry.md](Docs/ui/panel-geometry.md)
 - **Hover:** SwiftUI `.onHover` does not work on this accessory, non-key panel. Enter from tracking areas, leave from sampling the pointer — never exit events. Drag and ring clicks belong to `FloatingPanel.sendEvent`. `hitTest` / synthesised events are not proof of real input. [Docs/ui/input.md](Docs/ui/input.md)
-- **Percentages:** Pulse does not invent usage percentages. If a provider reports none, say so. Labelled exceptions only, each marked as inferred on screen and each drawing **nothing** rather than a zero when its inputs are missing: the money estimate; Command Code's monthly plan grant (reported remainder, unreported plan size); and DeepSeek, which reports a balance and no allowance at all — its denominator is one Pulse watched, one the reader typed, or none. [Docs/refresh-and-data.md](Docs/refresh-and-data.md), [Docs/providers/command-code.md](Docs/providers/command-code.md), [Docs/providers/deepseek.md](Docs/providers/deepseek.md)
+- **Percentages:** Pulse does not invent usage percentages. If a provider reports none, say so. Labelled exceptions only, each marked as inferred on screen and each drawing **nothing** rather than a zero when its inputs are missing: the money estimate; Command Code's monthly plan grant (reported remainder, unreported plan size); and every API account or extension that reports money and no allowance (`BalanceRing`, DeepSeek's rule first) — its denominator is one Pulse watched, one the reader typed, or none, and only the provider's own flag may call it spent. [Docs/refresh-and-data.md](Docs/refresh-and-data.md), [Docs/providers/command-code.md](Docs/providers/command-code.md), [Docs/providers/deepseek.md](Docs/providers/deepseek.md)
 - **Localization:** only `String.localized(_:)` / `Text(localized:)`. No implicit `Text("…")`. No conditionals inside `localized:`. Interpolate `String`, not `Int` (`%lld` vs `%@`). Run `./Scripts/check-localization.sh`. **Translations are written, not converted**: no English syntax, no term the reader has no word for, and a control agrees with its own sub-settings. The script checks keys, not whether the copy reads. [Docs/development.md](Docs/development.md)
 - **Notifications say nothing Pulse did not witness.** `spent` only when the provider says so, a reset only on unambiguous evidence, an unavailable reading is not automatically a failure, and a **push** route going quiet (Claude Code's status line) is not one either. A limit already past the line when the setting goes on **is** announced, once — silence then a wall is the feature failing. All off by default, all silent. `UNUserNotificationCenter` **raises without an app bundle** — every entry point is fenced by `UsageAlerts.isSupported`, so test from `./Scripts/bundle.sh`, never `swift run`. [Docs/notifications.md](Docs/notifications.md)
 - **Disabled providers are not fetched.** Shared `Unavailability` copy names no provider.
 - **Layout constants are budgets** (`PanelMetrics` computed `var`, never `static let`). Anything new on the panel takes size from them.
 - **Do not fetch or document provider auth here.** [Docs/providers/README.md](Docs/providers/README.md)
+- **Pulse reads; the window starter is the one exception.** It sends a single "hi" through the provider's own CLI, off by default, switched on only through the risk confirmation, nothing saved. Nothing else may send on the user's behalf. [Docs/window-starter.md](Docs/window-starter.md)
 
 ## Read by task
 
@@ -56,6 +57,7 @@ Treat remaining warnings as failures. macOS 14+, Swift tools 6.0, no linter. **`
 | What is tested, fixtures | [Docs/testing.md](Docs/testing.md) |
 | `--json` output contract | [Docs/json-output.md](Docs/json-output.md) |
 | Developer integrations, account links | [Docs/integrations.md](Docs/integrations.md) |
+| Starting usage windows after a reset | [Docs/window-starter.md](Docs/window-starter.md) |
 | Localization, resources, adding UI | [Docs/development.md](Docs/development.md) |
 | Bundle, tag, Sparkle, DMG | [Docs/releasing.md](Docs/releasing.md) / [Docs/build-from-source.md](Docs/build-from-source.md) |
 | Why / failure lessons | [Docs/decisions/README.md](Docs/decisions/README.md) |
@@ -63,4 +65,4 @@ Treat remaining warnings as failures. macOS 14+, Swift tools 6.0, no linter. **`
 
 ## Current facts (verify in code if they matter)
 
-Twenty-five `Provider` cases. Extra accounts: Claude Code, Codex, Grok, Grok Bot, Kimi Code (`supportsMultipleAccounts`). Adaptive refresh is a **one-shot** timer, **2–30 minutes** (`AdaptiveRefresh.floor` 120s / `ceiling` 1800s) — not a 60s loop. Liquid Glass drag: historical “material swallows input” diagnosis is **uncertain**; current approach is a hit-testable `PanelSurface` plus window `sendEvent`. Real-input verification is not claimed. Settings still say to drag by a ring while glass is on.
+Seventy-seven built-in providers (`Provider.builtIn`) — twenty-five written case by case, fifty-two as `ProviderProfile`s under `Providers/Profiled/` ([Docs/providers/README.md](Docs/providers/README.md#adding-a-provider)) — plus `.pulseExtension`, which carries every user-added extension as an account ([Docs/extensions.md](Docs/extensions.md)). Extra accounts: Claude Code, Codex, Grok, Grok Bot, Kimi Code (`supportsMultipleAccounts`). Adaptive refresh is a **one-shot** timer, **2–30 minutes** (`AdaptiveRefresh.floor` 120s / `ceiling` 1800s) — not a 60s loop. Liquid Glass drag: historical “material swallows input” diagnosis is **uncertain**; current approach is a hit-testable `PanelSurface` plus window `sendEvent`. Real-input verification is not claimed. Settings still say to drag by a ring while glass is on.

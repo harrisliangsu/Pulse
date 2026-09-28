@@ -144,6 +144,10 @@ enum UsageReport {
         /// A stable token, not the localized name the card shows.
         let kind: String
         let scope: String?
+        /// An extension's own name for this limit. Absent for every built-in
+        /// provider, whose limits are named by `kind`. The program's words, so
+        /// never translated.
+        let label: String?
         /// The figure the ring shows — the display rule, so a status line
         /// built from this agrees with the panel.
         let usedPercent: Int
@@ -174,6 +178,7 @@ enum UsageReport {
             id = window.id
             kind = Self.token(for: window.kind)
             scope = window.scope
+            label = window.label
             usedPercent = window.percentValue()
             usedFraction = window.usedFraction
             exhausted = window.isExhausted

@@ -31,6 +31,10 @@ A manual HTTP proxy starts `codex app-server` and `arkcli` with `HTTP_PROXY` and
 
 Selecting Follow System sets no child environment. This is intentional: a helper launched from Finder or a login item inherits no shell proxy, while one launched from a terminal may. Follow System means preserving that existing behaviour, not manufacturing environment variables from macOS network settings.
 
+Every helper CLI Pulse starts — `codex app-server`, Kiro's ACP client, `arkcli`, Alibaba's `bl` — gets the folder it was found in at the front of `PATH` (`BoundedProcess.environment(leading:over:)`), because an npm-installed CLI is a Node script and a GUI app's `PATH` has no `node` ([providers/codex.md](providers/codex.md#app-server--sigpipe--path)).
+
+Extensions do **not** inherit Pulse's environment under either setting: they get a short list of basics plus whatever proxy variables are in effect, so a manual proxy reaches them and a token exported for another tool does not. [extensions.md](extensions.md)
+
 `UsageStore.settingsChanged` shuts down an existing Codex app server before it queues the new full pass. The next request starts a child with the new environment. `arkcli` is already one process per request.
 
 ## Updates

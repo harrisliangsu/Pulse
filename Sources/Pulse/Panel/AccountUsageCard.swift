@@ -234,7 +234,7 @@ struct AccountUsageCard: View {
 
     // MARK: - Formatting
 
-    private static func money(_ amount: Double) -> String {
+    static func money(_ amount: Double) -> String {
         // Both providers publish their rates in dollars, so the figure is in
         // dollars whatever the reader's own currency is — hence a fixed code
         // rather than the locale's.
@@ -262,7 +262,7 @@ struct AccountUsageCard: View {
 }
 
 /// Daily totals as bars, oldest on the left.
-private struct DailyTokensChart: View {
+struct DailyTokensChart: View {
     let days: [LedgerDay]
 
     var body: some View {

@@ -484,7 +484,12 @@ struct AlertMemory: Codable, Sendable, Equatable {
              .ollamaSessionExpired, .ollamaPageChanged, .qoderSessionExpired, .xiaomiSessionExpired,
              .stepFunSessionExpired,
              .unreachable, .unreadableReply, .rateLimited, .serverError,
-             .codexServerFailed:
+             .codexServerFailed,
+             // An extension that answered before and has stopped: the same
+             // news as any route going down.
+             .extensionTimedOut, .extensionFailed, .extensionSignedOut,
+             // A credential that worked and has stopped.
+             .sessionExpired, .localLoginExpired:
             .failure
 
         // The provider replied. "No limits on this plan" and "your Cursor plan
@@ -503,7 +508,8 @@ struct AlertMemory: Codable, Sendable, Equatable {
              .xiaomiNoCodingPlan,
              // And for Qoder: the session worked and the account holds no
              // credits. An answer, not an outage. StepFun's no-plan likewise.
-             .qoderNoCredits, .stepFunNoPlan:
+             .qoderNoCredits, .stepFunNoPlan,
+             .noPlan:
             .answered
 
         // Never set up, never signed in, or an app that simply is not
@@ -517,6 +523,11 @@ struct AlertMemory: Codable, Sendable, Equatable {
              .ollamaSessionMissing, .qoderSessionMissing, .xiaomiSessionMissing, .stepFunSessionMissing,
              .apiKeyMissing, .volcengineCLIMissing,
              .volcengineSignInRequired,
+             // A program taken out of its folder is a setup change somebody
+             // made, not an outage.
+             .extensionMissing,
+             // Nothing set up yet, for a profiled provider.
+             .sessionMissing, .localLoginMissing, .localAppMissing,
              // An app that was never installed or never signed in, which is
              // the same standing as a CLI that is not there: true until
              // somebody does something, and not an outage to announce.

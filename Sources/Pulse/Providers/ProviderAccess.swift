@@ -4,7 +4,8 @@ extension Provider {
     /// Shown before enabling a provider, both in the chooser and in Settings.
     /// Pure copy: drawing this must never inspect the credentials it describes.
     var monitoringAccessDescription: String {
-        switch self {
+        guard let written = handWritten else { return profile?.accessDescription() ?? "" }
+        return switch written {
         case .claudeCode:
             .localized("Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage.")
         case .codex:
@@ -37,6 +38,11 @@ extension Provider {
         // says where the key goes: nowhere but the server they named.
         case .sub2api, .newAPI:
             .localized("Sends the key you enter only to the server address you enter. No Keychain prompt.")
+        // A program Pulse did not write and has not reviewed. What it reads
+        // is its own business, so the sentence says what Pulse gives it —
+        // nothing — rather than guess.
+        case .pulseExtension:
+            .localized("Runs a program from your extensions folder on the refresh schedule. Pulse passes it no credentials; what it reads and where it connects are up to the program.")
         }
     }
 }

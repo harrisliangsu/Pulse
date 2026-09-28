@@ -87,14 +87,14 @@ struct BotMarkTests {
     /// identical bots. A hash over the ids was tried first and collided: six
     /// of the original set shared two colours.
     ///
-    /// Counted from `Provider.allCases`, not a literal. A hardcoded colourless
-    /// total has already gone stale when a provider was added, and the build
-    /// then failed a sync for the wrong reason. Qoder stays branded: the map
-    /// defaults everyone else to a dealt colour, including a case upstream
-    /// adds before this table names it.
+    /// Up to the size of the wheel: there are more colourless providers than
+    /// the wheel has colours, and a rail that long repeats one whatever is
+    /// done. Until then, none may. Qoder stays branded; the assertion below
+    /// holds that, and the colourless count is taken from the providers rather
+    /// than a literal that goes stale on the next sync.
     @Test("A rail of colourless providers gives every provider a distinct colour")
     func dealtColoursAreDistinct() {
-        let colourless = Provider.allCases.filter { BotMarkTint.brand(for: $0) == nil }
+        let colourless = Array(Provider.allCases.filter { BotMarkTint.brand(for: $0) == nil }.prefix(17))
         let colours = BotMarkTint.deal(over: colourless).map(\.hexString)
         #expect(BotMarkTint.brand(for: .qoder) != nil, "Qoder's green was dropped from the brand map")
         #expect(colours.allSatisfy { $0 != nil })
