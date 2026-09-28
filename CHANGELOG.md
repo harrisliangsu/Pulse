@@ -10,6 +10,21 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.6
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Synced from upstream qunqin24/Pulse** (one hundred and thirteen commits this fork had not yet taken, through the opt-in that starts Claude Code’s and Codex’s usage windows after they reset).
+- **Extensions.** A program in the extensions folder can report one account’s usage — an internal quota, or a prepaid balance — and Pulse draws it as a ring. Nothing runs until it is switched on, and Pulse hands it no credentials. How to write one: [Docs/extensions.md](Docs/extensions.md).
+- **Fifty-two more providers, 77 built in.** They are described by a profile rather than a new case in every switch: ClinePass, Alibaba Cloud Model Studio’s Coding Plan and Token Plan, Qwen Cloud, LongCat, Gemini, Kilo Code, Factory, Augment Code, Windsurf, Amp, Mistral, Moonshot, OpenAI API, xAI API, and the rest named in the README. Those fifty-two were ported by reading [CodexBar](https://github.com/steipete/CodexBar) and have not all been checked against a live account.
+- **Subscriptions and API accounts are listed apart.** Enabled accounts sit at the top. Every account that reports a balance can choose what its ring measures — since the last top-up, the balance alone, or a budget you type — the three choices DeepSeek already had.
+- **Usage in the menu bar**, off by default. The icon can show the fullest ring, or one account, as a figure, a small ring, or the five-hour and weekly limits side by side. The menu is a dashboard: an overview, a tab per account, Codex’s reset credits and credits left, and estimated spend when Token spend is on. **Show floating panel** is in that menu. Opening Pulse again while it is already running opens Settings.
+- **The panel is sized for the rings that are switched on**, not for every provider. Order lists only those accounts. The Settings sidebar is wider. A key field can show what was typed.
+- **Codex’s card can show limit reset credits**, behind a switch. Pulse looks for the `codex` the ChatGPT and Codex apps ship, including where ChatGPT 26.924 moved it, and says when none can be found. The card can show when the next credit expires.
+- **With Liquid Glass, the card’s tail is part of the card.**
+- **After a reset, Pulse can start Claude Code’s and Codex’s usage windows**, off by default. Turning it on asks for a confirmation: this is not a feature of those products, and it sends one short message through the tool already signed in on this Mac.
+- **Grok’s pool counts as spent at 100%.** Removing an added account clears that account’s settings, including its animated mark.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen’s cookie store; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.5
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.

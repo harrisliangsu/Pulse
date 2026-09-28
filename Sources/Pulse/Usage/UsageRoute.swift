@@ -13,6 +13,8 @@ enum UsageRoute: String, Codable, Sendable {
     /// A reading taken out of a desktop app's own saved state rather than
     /// asked of anybody. Devin's: written when that app starts.
     case appCache
+    /// A program in the extensions folder, which answered on stdout.
+    case extensionProgram = "extension"
 
     var title: String {
         switch self {
@@ -25,13 +27,23 @@ enum UsageRoute: String, Codable, Sendable {
         case .webSession: .localized("Signed-in web page")
         case .arkCLI: "arkcli"
         case .appCache: .localized("The app's saved plan")
+        case .extensionProgram: .localized("Extension program")
         }
     }
 
     /// Only single-route providers can be labelled outside their service.
     static func soleRoute(for account: AccountKey) -> UsageRoute? {
+        // Before the added-account rule: every extension is an account of
+        // one provider, and none of them is its first.
+        if account.provider == .pulseExtension { return .extensionProgram }
         if !account.isPrimary { return .endpoint }
-        switch account.provider {
+        guard let written = account.provider.handWritten else {
+            switch account.provider.profile?.credential {
+            case .sessionCookie, .browserStorage: return .webSession
+            default: return .endpoint
+            }
+        }
+        switch written {
         case .claudeCode, .codex, .volcengine, .kimiCode, .devin: return nil
         case .antigravity: return .languageServer
         // Browser session rather than a key (Ollama, Xiaomi, Qoder, StepFun).
@@ -41,6 +53,7 @@ enum UsageRoute: String, Codable, Sendable {
              .minimaxCN, .copilot, .grok, .grokBot, .commandCode, .deepSeek,
              .sub2api, .newAPI, .v2ex:
             return .endpoint
+        case .pulseExtension: return .extensionProgram
         }
     }
 }

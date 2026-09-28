@@ -10,7 +10,7 @@ import Foundation
 ///
 /// There are only three places one can come from, which is why there are
 /// exactly three modes and no more.
-enum DeepSeekBasis: String, CaseIterable, Identifiable, Sendable {
+enum BalanceBasis: String, CaseIterable, Identifiable, Sendable {
     /// The highest balance Pulse has seen since it last went up. Nobody has to
     /// type anything, and the number is one Pulse **watched**, not one it made
     /// up — which is why it is the default.
@@ -30,12 +30,12 @@ enum DeepSeekBasis: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    static let `default`: DeepSeekBasis = .sinceTopUp
+    static let `default`: BalanceBasis = .sinceTopUp
 }
 
 /// The highest balance Pulse has seen since it last rose.
 ///
-/// This is the denominator behind `DeepSeekBasis.sinceTopUp`, and the whole of
+/// This is the denominator behind `BalanceBasis.sinceTopUp`, and the whole of
 /// its honesty rests on one distinction: it is **measured, not inferred**. Pulse
 /// reads the balance every refresh — 2 to 30 minutes — and remembers the peak.
 /// A balance that goes *up* can only be a top-up, so that resets the mark and

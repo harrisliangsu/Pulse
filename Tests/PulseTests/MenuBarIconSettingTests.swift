@@ -52,8 +52,24 @@ struct MenuBarIconSettingTests {
         delegate.menuNeedsUpdate(menu)
         delegate.menuNeedsUpdate(menu)
 
-        #expect(menu.items.map(\.keyEquivalent) == [",", "", "q"])
-        #expect(menu.items[0].keyEquivalentModifierMask == .command)
-        #expect(menu.items[2].keyEquivalentModifierMask == .command)
+        // Whether a service is chosen comes from this machine's defaults, so
+        // the menu is checked for either state rather than assuming one.
+        // Until one is, the menu leads with the way back to the chooser.
+        let lead = delegate.settings.needsProviderSelection ? 2 : 0
+        if lead > 0 {
+            #expect(menu.items[0].title == String.localized("Choose services to start monitoring…"))
+            #expect(menu.items[1].isSeparatorItem)
+        }
+        // Once one is, the panel's switch comes first — somebody who wants
+        // only the menu bar turns the rail off from here.
+        var rest = Array(menu.items.dropFirst(lead))
+        if !delegate.settings.needsProviderSelection {
+            #expect(rest.first?.title == String.localized("Show floating panel"))
+            #expect(rest.first?.state == (delegate.settings.isPanelVisible ? .on : .off))
+            rest.removeFirst()
+        }
+        #expect(rest.map(\.keyEquivalent) == [",", "", "q"])
+        #expect(rest[0].keyEquivalentModifierMask == .command)
+        #expect(rest[2].keyEquivalentModifierMask == .command)
     }
 }

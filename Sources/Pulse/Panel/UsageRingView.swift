@@ -569,7 +569,7 @@ enum LobeIconStore {
 
 #Preview("Usage rings") {
     HStack(spacing: 20) {
-        ForEach(Provider.allCases) { provider in
+        ForEach(Provider.builtIn) { provider in
             UsageRingView(
                 provider: provider,
                 usedFraction: 0.42,

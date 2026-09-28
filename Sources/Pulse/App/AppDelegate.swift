@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -16,6 +17,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// that can report a combination the window server refused.
     let shortcuts = GlobalShortcutMonitor()
     private lazy var store = UsageStore(settings: settings, alerts: alerts)
+    /// Which tab the menu bar's menu last had open, kept between openings.
+    private let dashboard = MenuDashboardModel()
+    /// Starts usage windows after they reset, for the providers switched on.
+    private lazy var primer = WindowPrimer(store: store, settings: settings)
+    /// Bumped on every redraw of the status item. A tracking closure re-arms
+    /// only while it still holds the latest, so the chain started by each
+    /// settings change replaces the one before instead of running beside it.
+    private var menuBarGeneration = 0
 
     private var panelController: FloatingPanelController?
     private var statusItem: NSStatusItem?
@@ -83,7 +92,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updateMenuBarItem()
 
         if settings.needsProviderSelection {
-            showProviderSelection(providers: Set(Provider.allCases), isInitial: true)
+            showProviderSelection(providers: Set(Provider.builtIn), isInitial: true)
         } else {
             startMonitoring()
             if !settings.suggestedProviders.isEmpty {
@@ -122,6 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         controller.contextMenu = { [weak self] in self?.panelMenu() ?? NSMenu() }
         if settings.isPanelVisible { controller.show() }
         store.start()
+        primer.start()
         prepareClaudeIfSelected()
     }
 
@@ -171,20 +181,47 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
 
-        guard statusItem == nil else { return }
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let button = item.button {
-            button.image = NSImage(
-                systemSymbolName: "chart.pie.fill",
-                accessibilityDescription: "Pulse"
-            )
-            button.image?.isTemplate = true
-            button.toolTip = "Pulse"
+        if statusItem == nil {
+            let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+            let menu = makeMenu()
+            menu.delegate = self
+            item.menu = menu
+            statusItem = item
         }
-        let menu = makeMenu()
-        menu.delegate = self
-        item.menu = menu
-        statusItem = item
+        showMenuBarReading()
+    }
+
+    /// The menu bar item's face: Pulse's mark alone, or — with
+    /// `showsUsageInMenuBar` on — the mark of the account whose ring is
+    /// fullest and that ring's percentage, red past the warning line.
+    ///
+    /// Re-read whenever anything it reads changes: the tracking is armed
+    /// again on every change, because `withObservationTracking` fires once.
+    private func showMenuBarReading() {
+        guard let button = statusItem?.button else { return }
+        menuBarGeneration += 1
+        let generation = menuBarGeneration
+        let (reading, remaining, style, label) = withObservationTracking {
+            let reading = settings.showsUsageInMenuBar
+                ? MenuBarReading.choose(
+                    among: settings.shownAccounts,
+                    chosen: settings.menuBarAccount.flatMap(AccountKey.init(id:)),
+                    usage: store.usage(for:),
+                    pinned: settings.pinnedWindow(for:),
+                    warningAt: settings.warningThreshold.fraction
+                )
+                : nil
+            // The label inside too: renaming the account is a change to show.
+            return (reading, settings.showsRemaining, settings.menuBarStyle,
+                    reading.map { settings.label(for: $0.account) })
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                guard let self, self.menuBarGeneration == generation else { return }
+                self.showMenuBarReading()
+            }
+        }
+
+        MenuBarReading.draw(reading, remaining: remaining, style: style, label: label, on: button)
     }
 
     /// An accessory app has no Dock icon. When the panel is also hidden, a
@@ -212,7 +249,75 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        // Only the menu bar's menu: the rail's own menu opens beside the rings
+        // it would be repeating.
+        if menu === statusItem?.menu { addDashboard(to: menu) }
         populateMenu(menu)
+    }
+
+    /// The tabbed view at the top of the menu bar's menu, and the items that
+    /// go with whichever tab is open. See `MenuDashboard`.
+    private func addDashboard(to menu: NSMenu) {
+        guard !settings.needsProviderSelection, !settings.shownAccounts.isEmpty else { return }
+
+        let item = NSMenuItem()
+        let hosting = NSHostingView(rootView: AnyView(EmptyView()))
+        hosting.rootView = AnyView(MenuDashboard(
+            store: store,
+            settings: settings,
+            model: dashboard,
+            onResize: { [weak hosting] size in
+                // The menu lays itself out from its items' frames, so a tab
+                // of a different height has to say so here.
+                guard let hosting, hosting.frame.size != size else { return }
+                hosting.setFrameSize(size)
+            }
+        ))
+        hosting.setFrameSize(hosting.fittingSize)
+        item.view = hosting
+        menu.addItem(item)
+        menu.addItem(.separator())
+
+        let page = NSMenuItem(title: "", action: #selector(openUsagePage(_:)), keyEquivalent: "")
+        page.target = self
+        page.image = NSImage(systemSymbolName: "safari", accessibilityDescription: nil)
+        menu.addItem(page)
+
+        let refresh = NSMenuItem(title: .localized("Refresh"), action: #selector(refreshAll), keyEquivalent: "r")
+        refresh.target = self
+        refresh.image = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: nil)
+        menu.addItem(refresh)
+        menu.addItem(.separator())
+
+        // The page item names the open tab's provider, and is there only when
+        // that provider has a page Pulse knows.
+        let showPage = { [weak self, weak page] in
+            guard let self, let page else { return }
+            let account = self.dashboard.selected.flatMap(AccountKey.init(id:))
+                .flatMap { self.settings.shownAccounts.contains($0) ? $0 : nil }
+            if let account, let url = account.provider.usagePage {
+                page.title = .localized("Open \(account.provider.displayName) usage page")
+                page.representedObject = url
+                page.isHidden = false
+            } else {
+                page.isHidden = true
+            }
+        }
+        dashboard.onSelect = showPage
+        showPage()
+    }
+
+    @objc private func openUsagePage(_ sender: NSMenuItem) {
+        guard let url = sender.representedObject as? URL else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    @objc private func togglePanelFromMenu() {
+        settings.isPanelVisible.toggle()
+    }
+
+    @objc private func refreshAll() {
+        store.refresh()
     }
 
     private func makeMenu() -> NSMenu {
@@ -222,6 +327,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func populateMenu(_ menu: NSMenu) {
+        // With no service chosen there is no rail, and nothing else on screen
+        // says why. Rebuilt on every open, so it goes once a choice is made.
+        if settings.needsProviderSelection {
+            let item = NSMenuItem(
+                title: .localized("Choose services to start monitoring…"),
+                action: #selector(chooseServices),
+                keyEquivalent: ""
+            )
+            item.target = self
+            menu.addItem(item)
+            menu.addItem(.separator())
+        }
+
         if let newer = update.newer {
             let item = NSMenuItem(
                 title: .localized("Pulse \(newer.version) is available"),
@@ -231,6 +349,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             item.target = self
             menu.addItem(item)
             menu.addItem(.separator())
+        }
+
+        // Some people want the menu bar and nothing at the screen's edge. The
+        // switch lives in Settings → Position too; here it is one click from
+        // where such a person already is. Through the setting, like the
+        // shortcut, so a hidden panel stays hidden across a launch and hiding
+        // the last way back brings the menu bar icon back (`settingsChanged`).
+        if !settings.needsProviderSelection {
+            let panelItem = NSMenuItem(
+                title: .localized("Show floating panel"),
+                action: #selector(togglePanelFromMenu),
+                keyEquivalent: ""
+            )
+            panelItem.target = self
+            panelItem.state = settings.isPanelVisible ? .on : .off
+            menu.addItem(panelItem)
         }
 
         let settingsItem = NSMenuItem(
@@ -252,12 +386,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(quit)
     }
 
+    @objc private func chooseServices() {
+        providerSetupWindow?.close()
+        showProviderSelection(providers: Set(Provider.builtIn), isInitial: true)
+    }
+
     @objc private func openSettingsFromMenu() {
         showSettings()
     }
 
     @objc private func checkForUpdate() {
         update.check()
+    }
+
+    /// Opening Pulse while it is already running — a double-click in
+    /// Applications, Spotlight, Launchpad — opens Settings.
+    ///
+    /// An accessory app has no Dock icon, and with the panel and the menu bar
+    /// icon both hidden (allowed once a global shortcut is registered) nothing
+    /// of it is on screen. A forgotten shortcut then left no way back short
+    /// of Activity Monitor; opening the app again is the way everybody tries
+    /// first, and it did nothing at all.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        // Before a service is chosen the chooser is the way in, not Settings —
+        // the one already open brought forward rather than a second made.
+        if settings.needsProviderSelection {
+            if let chooser = providerSetupWindow {
+                chooser.show()
+            } else {
+                showProviderSelection(providers: Set(Provider.builtIn), isInitial: true)
+            }
+        } else {
+            showSettings()
+        }
+        return false
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {

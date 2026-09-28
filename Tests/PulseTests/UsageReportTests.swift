@@ -200,6 +200,26 @@ struct UsageReportTests {
         #expect(windows.allSatisfy { $0["scope"] == nil })
     }
 
+    @Test("An extension is named by its manifest, and its limits by the program")
+    func extensionAccount() throws {
+        let account = AccountKey(.pulseExtension, slot: "acme")
+        let rail = AppSettings.StoredRail(accounts: [account], labels: [account.id: "Acme Quota"], pinnedWindows: [:])
+        var limit = Self.window("extension.month", kind: .other(seconds: 0), used: 0.4, seconds: 0, reportsLength: false)
+        limit.label = "Monthly requests"
+        var reading = Self.reading(account, [limit], observedAt: Self.generatedAt)
+        reading.origin = .extensionProgram
+        let entry = try Self.accounts(try Self.object(rail: rail, readings: [account.id: reading]))[0]
+
+        #expect(entry["id"] as? String == "extension#acme")
+        #expect(entry["provider"] as? String == "extension")
+        #expect(entry["label"] as? String == "Acme Quota")
+        #expect(entry["source"] as? String == "extension")
+        #expect(entry["settingsURL"] as? String == "pulse://account/extension%23acme")
+        let windows = try #require(entry["windows"] as? [[String: Any]])
+        #expect(windows.first?["label"] as? String == "Monthly requests")
+        #expect(windows.first?["reportsLength"] as? Bool == false)
+    }
+
     @Test("An added account is named by the user's own label")
     func addedAccountsCarryTheirLabel() throws {
         let extra = AccountKey(.claudeCode, slot: "work")

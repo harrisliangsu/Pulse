@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harrisliangsu/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/qunqin24/Pulse?color=black" alt="最新版本"></a>
+  <a href="https://github.com/harrisliangsu/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/harrisliangsu/Pulse?color=black" alt="最新版本"></a>
   <img src="https://img.shields.io/badge/macOS-14.0%2B%20Sonoma-333333?logo=apple" alt="macOS 14+">
   <a href="https://github.com/harrisliangsu/Pulse/actions/workflows/ci.yml"><img src="https://github.com/harrisliangsu/Pulse/actions/workflows/ci.yml/badge.svg" alt="构建状态"></a>
   <img src="https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white" alt="Swift 6.0">
@@ -61,15 +61,18 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 - **原生质感**：提供沉稳耐看的纯黑底板，macOS 26+ 更可选原生 **液态玻璃（Liquid Glass）** 材质。
 - **动画标记（可选）**：把供应商图标换成一个会随该账号状态反应的小机器人——正在干活、正在取数、额度用满还是闲着。默认关闭，按账号开启；八种人格、十八种形状，颜色也可以自己指定。
 - **浮动栏菜单与快捷键**：右键浮动栏——或收起后的细线，按住 Control 点击同样有效——可打开含「设置」与「退出」的菜单。在 **设置 › 通用 › 快捷键** 中，可自行将全局快捷键分配给**打开设置**与**显示或隐藏面板**；两者默认都不绑定。
+- **菜单栏用量（可选）**：在菜单栏图标旁显示用得最多的那个圆环——或你指定的账号——可选数字、迷你圆环，或并排显示 5 小时与每周额度（`5h/9%  周/15%`），超过警示线时变红。点开是一个用量面板：概览列出所有账号，每个账号一个标签页，含各项额度与重置时间、额度余额、花费估算（开启 Token 消耗时）和服务方官方用量页链接。只想用菜单栏的话，可在同一菜单里关掉悬浮面板。
 - **五种界面语言**：英文、简体中文、繁体中文、日语与韩语；大数缩写分别使用 K/M/B、万/亿、萬/億、万/億与 만/억。
 
 ### 多账号管理与本地消费账本
 - **多账号并行**：支持同一服务绑定多个订阅（Claude Code、Codex、Grok、Grok Bot、Kimi Code），并排查看并自定义标签。
-- **Token 消耗（设置内查看）**：默认关闭，在页面顶部开启后才读取本机记录，关闭即可停止扫描。支持本地日志、数据库与导出文件，目录涵盖 **54 个客户端来源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 和 GitHub Copilot。Cursor、Trae 等导出来源需要先导出或捕获记录。这些来源与浮动栏上的 25 个配额服务商不同，各自支持的格式和真实客户端验证情况见[来源说明](Docs/token-spend-sources.md)。- **明确的用量估算**：默认查看最近 7 天，并记住所选区间。费用按公开 API 价格折算，不是订阅账单；未知价格保留为不可用，计数不完整或时间粒度较粗会明确标注，没有 token 计数的来源会如实标注为不可用。
+- **Token 消耗（设置内查看）**：默认关闭，在页面顶部开启后才读取本机记录，关闭即可停止扫描。支持本地日志、数据库与导出文件，目录涵盖 **54 个客户端来源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 和 GitHub Copilot。Cursor、Trae 等导出来源需要先导出或捕获记录。这些来源与浮动栏上的 77 个配额服务商不同，各自支持的格式和真实客户端验证情况见[来源说明](Docs/token-spend-sources.md)。
+- **明确的用量估算**：默认查看最近 7 天，并记住所选区间。费用按公开 API 价格折算，不是订阅账单；未知价格保留为不可用，计数不完整或时间粒度较粗会明确标注，没有 token 计数的来源会如实标注为不可用。
 - **模型详情与图表**：点开单个模型可查看输入/输出/缓存读写用量与估算费用、有记录支撑的每日与每小时图表、各 Agent 的贡献，以及可排序、分页的明细表。指向图表即可读取对应日期或小时的 Token 数量。缺失的每日或每小时明细会标注为不可用。
-- **二十五个服务商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（国际与国内）、火山引擎、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX、Qoder，以及阶跃星辰（StepFun）。
+- **七十七个服务商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（国际与国内）、火山引擎、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX、Qoder，以及阶跃星辰（StepFun）；另有 Abacus AI、Aixy、Alibaba Coding Plan、Alibaba Token Plan、Amp、Atlas Cloud、Augment Code、Bifrost、Chutes、ClawRouter、ClinePass、Codebuff、DeepInfra、DevPass、ElevenLabs、Factory、Gemini、GitKraken AI、Hugging Face、Hyper、IBM Bob、JetBrains AI、Kilo Code、LiteLLM、LLM API Key Proxy、LongCat、Manus、Mistral、Moonshot、Neuralwatt、Notion AI、Nous Portal、OpenAI API、Perplexity、Poe、Qwen Cloud、Raycast AI、Replicate、Sakana AI、Synthetic、T3 Chat、TypeSafe、v0、Venice、Vercel AI Gateway、Warp、Windsurf、xAI API、xKiro、Zed、ZenMux、ZoomMate。
 - **可脚本化**：`Pulse --json` 输出最近一次读数——套餐、每条限额、重置时间，以及数字有多旧——可接 tmux、sketchybar、Raycast 或 shell 提示符。它只读缓存，所以高频轮询几乎不花代价。
 - **开发者集成**：在设置中导出 Raycast 扩展及可直接配置的 tmux、sketchybar、终端脚本；通过账户链接直达对应设置页。[安装指南](Docs/integrations.md)。
+- **扩展**：你自己写个小程序，就能让 Pulse 显示某个账号的用量，比如公司内部的额度接口，不用再维护一份分支。开启之前不会运行，Pulse 也不会交给它任何凭据。[编写说明](Docs/extensions.md)（英文）。
 - **连接诊断**：查看实际读数来源、缓存使用情况、最近检查及回退结果；根据原因直接重连、重新登录或编辑凭据，并可复制不含账户信息和密钥的诊断报告。
 - **本地优先**：Pulse 跑在你自己的 Mac 上，用你自己的登录态。它只发起三类连接，这里列的就是全部——你已在使用的服务商、为 Token 消耗页取公开模型价格的 [models.dev](https://models.dev)，以及检查更新的 GitHub/Sparkle。服务商请求、登录时的令牌交换和 models.dev 会使用「设置 › 网络与刷新」里选择的代理，Pulse 也会把手动代理传给支持的辅助进程。Sparkle 的更新检查始终跟随 macOS 系统代理设置。
 
@@ -129,6 +132,65 @@ Pulse 只呈现各服务上报的数字，每个百分比都来自那份回复�
 | **V2EX** | 粘贴的个人访问令牌 | AI Chat 滚动 5 小时的 token 配额，买过加油包再多画一个环；窗口还没开始时不显示倒计时（[Docs/providers/v2ex.md](Docs/providers/v2ex.md)） |
 | **Qoder** | 什么都不用填——读取浏览器里 qoder.com 或 qoder.com.cn 的登录会话，也可以手动粘贴 `Cookie:` 头或个人令牌（`pt-` / `jt-`） | 积分额度（套餐加加油包），按 Qoder 上报的重置时间显示；团队套餐的共享积分单独画一个环，从不相加；额度为零时会直说，而不是画一个空环（[Docs/providers/qoder.md](Docs/providers/qoder.md)） |
 | **阶跃星辰（StepFun）** | 什么都不用填——读取浏览器里 platform.stepfun.com 或 platform.stepfun.ai 的登录会话，也可以手动粘贴 `Cookie:` 头 | Step Plan：Token Plan 的月度 Credit 和加油包合成一个环，并显示最早一批的到期日；旧版 Coding Plan 显示 5 小时和每周两个窗口；没有订阅时会直说，而不是画一个环（[Docs/providers/stepfun.md](Docs/providers/stepfun.md)） |
+
+### 更多服务商
+
+参照 [CodexBar](https://github.com/steipete/CodexBar) 的实现编写。**尚未用真实账号验证**——如果某家用不了，欢迎[提 issue](https://github.com/harrisliangsu/Pulse/issues)。各家的设置步骤见 [Docs/setup/](Docs/setup/)（英文），维护说明见 [Docs/providers/README.md](Docs/providers/README.md#profiled-providers)。
+
+| 服务商 | 读取通道与鉴权方式 | 显示内容 |
+|---|---|---|
+| **Abacus AI** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 算力点数与账单日期 |
+| **Aixy** | 设置中填入 API Key | 按周期的网关预算 |
+| **Alibaba Coding Plan** | 设置中填入 API Key | 5 小时、每周、每月额度；先问国际站，再问国内站 |
+| **Alibaba Token Plan** | 运行阿里 `bl` CLI，使用其已保存的登录 | 5 小时、每周、每月用量占比 |
+| **Amp** | 设置中填入 API Key | 免费每日额度、套餐额度与余额 |
+| **Atlas Cloud** | 设置中填入 API Key | 余额 |
+| **Augment Code** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 本周期已用积分 |
+| **Bifrost** | 填入 Key；自建网关地址由你填写 | 虚拟 Key 的美元预算 |
+| **Chutes** | 设置中填入 API Key | 滚动窗口与每月额度 |
+| **ClawRouter** | 设置中填入 API Key | 每月预算 |
+| **ClinePass** | 设置中填入 API Key | 5 小时、每周、每月限额 |
+| **Codebuff** | 填入 Key，或读取其 CLI 已保存的登录 | 积分；用 CLI 登录时另有每周限额 |
+| **DeepInfra** | 设置中填入 API Key | 余额；在其后台设过限额时显示花费占比 |
+| **DevPass** | 设置中填入 API Key | 每周高级额度与套餐积分 |
+| **ElevenLabs** | 设置中填入 API Key | 本计费周期的字符额度 |
+| **Factory** | 设置中填入 API Key | 5 小时、每周、每月限额（旧计费为 Standard 与 Premium）；额外用量余额 |
+| **Gemini** | 读取 Gemini CLI 保存的登录，只读、从不代为刷新 | 每个模型的配额。该登录约一小时过期，只在近期用过 Gemini CLI 时有读数 |
+| **GitKraken AI** | 粘贴 token | 个人积分与共享池 |
+| **Hugging Face** | 粘贴 token，或读取 `hf auth login` 保存的 | ZeroGPU 配额 |
+| **Hyper** | 设置中填入 API Key | Hypercredit 余额 |
+| **IBM Bob** | 设置中填入 API Key | Bobcoins 相对团队预算的用量 |
+| **JetBrains AI** | 读取 JetBrains IDE 保存的配额文件，不向任何地方发送数据 | AI Assistant 配额；IDE 运行时才更新 |
+| **Kilo Code** | 填入 Key，或读取其 CLI 已保存的登录 | 积分余额与 Kilo Pass |
+| **LiteLLM** | 填入 Key；自建网关地址由你填写 | 团队与用户预算 |
+| **LLM API Key Proxy** | 填入 Key；自建网关地址由你填写 | 按上游划分的配额组 |
+| **LongCat** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | Token 包额度与加油包 |
+| **Manus** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 每日与每月积分 |
+| **Mistral** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | API 与 Vibe 的每月额度，以及可用余额 |
+| **Moonshot** | 设置中填入 API Key | Kimi 开放平台余额，美元或人民币 |
+| **Neuralwatt** | 设置中填入 API Key | kWh 订阅、消费额度与余额 |
+| **Notion AI** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 滚动窗口与计费周期额度（Business 与 Enterprise） |
+| **Nous Portal** | 读取 Hermes Agent 保存的登录，只读 | 每月积分额度与余额 |
+| **OpenAI API** | 设置中填入 API Key | 预付余额（旧计费接口仍可用时） |
+| **Perplexity** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | API 余额 |
+| **Poe** | 设置中填入 API Key | 积分余额 |
+| **Qwen Cloud** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 5 小时、每周、每月占比，以及档位 |
+| **Raycast AI** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | AI 积分与续期日期 |
+| **Replicate** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 预付余额 |
+| **Sakana AI** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 5 小时与每周限额 |
+| **Synthetic** | 设置中填入 API Key | 5 小时、每周与搜索额度 |
+| **T3 Chat** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 4 小时窗口与每月用量 |
+| **TypeSafe** | 粘贴 `Cookie:` 请求头 | 余额与套餐 |
+| **v0** | 设置中填入 API Key | 计费额度 |
+| **Venice** | 设置中填入 API Key | 余额，美元或 DIEM |
+| **Vercel AI Gateway** | 设置中填入 API Key | 余额 |
+| **Warp** | 设置中填入 API Key | 套餐积分与附加积分 |
+| **Windsurf** | 从 Chromium 内核浏览器读取 windsurf.com 的登录 | 每日与每周配额 |
+| **xAI API** | 以 `TeamID:ManagementKey` 格式填入 | 团队预付余额（xAI 已入账的数额） |
+| **xKiro** | 设置中填入 API Key | 5 小时与每周窗口、每日免费 Token 与钱包 |
+| **Zed** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 编辑预测额度与消费上限 |
+| **ZenMux** | 填入管理密钥 | 5 小时与 7 天配额，以及余额 |
+| **ZoomMate** | 读取浏览器登录会话，或粘贴 `Cookie:` 请求头 | 积分相对预算上限的用量 |
 ---
 
 ## 安装与快速上手

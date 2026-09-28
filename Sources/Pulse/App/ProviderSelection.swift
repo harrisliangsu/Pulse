@@ -28,8 +28,8 @@ struct ProviderSelection: Equatable {
             stored = nil
         }
         let enabled = Set(stored ?? offered ?? []).intersection(knownAccounts)
-        let knownProviders = Set(offered ?? Provider.allCases.map(\.rawValue))
-        let suggestions = Set(Provider.allCases.filter {
+        let knownProviders = Set(offered ?? Provider.builtIn.map(\.rawValue))
+        let suggestions = Set(Provider.builtIn.filter {
             !enabled.isEmpty && !knownProviders.contains($0.rawValue)
                 && !enabled.contains($0.rawValue) && detected.contains($0)
         })
@@ -37,7 +37,7 @@ struct ProviderSelection: Equatable {
         // First-run dismissal keeps an explicit empty choice, so it asks again
         // next launch. Upgrade suggestions are offered once, even if dismissed.
         defaults.set(Array(enabled).sorted(), forKey: enabledKey)
-        defaults.set(Provider.allCases.map(\.rawValue), forKey: offeredKey)
+        defaults.set(Provider.builtIn.map(\.rawValue), forKey: offeredKey)
         defaults.set(true, forKey: hasRunKey)
         return Self(enabledAccounts: enabled, suggestedProviders: suggestions)
     }

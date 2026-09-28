@@ -72,8 +72,10 @@ enum DetailCardLayout {
     /// limits (Codex adds one group per model with its own limits), so this
     /// budgets for more than are on screen today. Codex also adds the reset
     /// intel block; that height is in the budget before any card opens, so
-    /// opening one does not resize the window.
-    static var maximumHeight: CGFloat { height(forWindows: 5, footnote: true) + codexIntelHeight }
+    /// opening one does not resize the window. One row more than the limits
+    /// covers Codex's reset-credit lines: the count and the soonest expiry
+    /// are two text lines, shorter than a limit's row.
+    static var maximumHeight: CGFloat { height(forWindows: 6, footnote: true) + codexIntelHeight }
 
     /// Prediction line, a wrapped forecast phrase, the latest announcement
     /// (one line of relative time, then a type-and-clock line that may wrap),
@@ -120,6 +122,9 @@ struct UsageDetailCard: View {
     var showsRemaining: Bool = false
     /// Say whether each limit will last its window.
     var showsForecast: Bool = false
+    /// Codex's limit reset credits, when its switch is on and it has been
+    /// asked. Nil draws no row at all.
+    var resetCredits: CodexResetCredits?
     /// Where the pointer's tip should sit along the side facing the rail,
     /// measured from the card's own top or leading edge. The card gets pushed
     /// around by the panel's own edges (see
@@ -179,7 +184,21 @@ struct UsageDetailCard: View {
             // and the message below covered it. DeepSeek on "balance only"
             // reports money and no limits *by design*, and the money is then
             // the whole reading — so it is what the card says.
-            if usage.windows.isEmpty, let balance = usage.creditBalance {
+            // The count Codex reported, or that it reported none — never one
+            // Pulse worked out. Then when the soonest of them lapses, to the
+            // minute, since that decides whether to spend one now (issue #67).
+            if let resetCredits {
+                ValueRow(title: String.localized("Limit reset credits"), value: Self.resetCreditsText(resetCredits))
+                if let expiry = Self.resetCreditExpiryText(resetCredits) {
+                    ValueRow(title: String.localized("Next expiry"), value: expiry)
+                }
+            }
+
+            // An extension may report limits and money both — a relay's
+            // quota and its prepaid credit — and the ring can only draw one,
+            // so the card keeps the money in view either way.
+            if usage.windows.isEmpty || usage.account.provider == .pulseExtension,
+               let balance = usage.creditBalance {
                 ValueRow(title: String.localized("Credit balance"), value: balance)
             }
 
@@ -231,9 +250,31 @@ struct UsageDetailCard: View {
         .mask { bubble }
         // The card follows the rail's surface: a glass capsule beside a solid
         // black card reads as two different components, not one panel.
-        .background(PanelSurface(shape: bubble, usesGlass: usesGlass))
+        .background(LiquidBubbleSurface(bubble: bubble, usesGlass: usesGlass))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(String.localized("\(title ?? usage.provider.displayName) usage details"))
+    }
+
+    /// The soonest available credit's expiry, with the year: a credit can
+    /// last past New Year, and one whose date is misread gets wasted. Nil when
+    /// there is none to spend or Codex gave no date.
+    static func resetCreditExpiryText(_ credits: CodexResetCredits) -> String? {
+        guard case .available(let count, let expiry?) = credits, count > 0 else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = LocalizationSource.locale
+        formatter.setLocalizedDateFormatFromTemplate("yMMMdjmm")
+        return formatter.string(from: expiry)
+    }
+
+    static func resetCreditsText(_ credits: CodexResetCredits) -> String {
+        switch credits {
+        case .available(let count, _):
+            count == 1 ? .localized("1 available") : .localized("\("\(count)") available")
+        case .unreported:
+            .localized("Not available")
+        case .codexMissing:
+            .localized("codex not found")
+        }
     }
 
     /// A limit the next card has and this one did not waits for the card to
@@ -301,6 +342,9 @@ struct UsageDetailCard: View {
                 ?? String.localized("Reading may be out of date")
         }
     }
+
+    /// The card's line under a limit, for the menu bar's list too.
+    static func resetDescription(_ window: UsageWindow) -> String { resetText(window) }
 
     private static func resetText(_ window: UsageWindow) -> String {
         // **Whichever happens first.** Credits lapsing before a reset hands
@@ -863,6 +907,39 @@ private struct PulseProgressStyle: ProgressViewStyle {
     }
 }
 
+
+/// The card's surface. Solid, it is the outline filled in one go. Glass, it is
+/// the body and the tail as **two pieces of glass the system fuses**.
+///
+/// Drawn as one outline, the glass read the tail as a narrow shape of its own:
+/// thin enough to be all rim, it refracted what was behind it sharply and
+/// lighter, while the body beside it blurred — over a busy backdrop the tail
+/// looked like a crystal stuck onto the card. In a `GlassEffectContainer` the
+/// two shapes are joined the way Liquid Glass joins any two pieces that come
+/// close, with one continuous surface and a smooth neck, so the tail shades
+/// on from the body. Only the surface: the content is still masked to the
+/// whole outline.
+///
+/// The spacing is what the pieces fuse across. The tail already overlaps the
+/// body, so it only has to be small; 40 was tried and rippled the body's edge
+/// beside the tail.
+private struct LiquidBubbleSurface: View {
+    let bubble: UsageBubbleShape
+    let usesGlass: Bool
+
+    var body: some View {
+        if #available(macOS 26, *), usesGlass {
+            GlassEffectContainer(spacing: 12 * PanelMetrics.scale) {
+                ZStack {
+                    PanelSurface(shape: bubble.only(.body), usesGlass: true)
+                    PanelSurface(shape: bubble.only(.tail), usesGlass: true)
+                }
+            }
+        } else {
+            PanelSurface(shape: bubble, usesGlass: usesGlass)
+        }
+    }
+}
 #Preview("Detail card") {
     UsageDetailCard(
         usage: .unavailable(.claudeCode, reason: .loading),

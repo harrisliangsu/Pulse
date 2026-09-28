@@ -213,6 +213,7 @@
 "Sign in to Claude Code to see usage." = "登入 Claude Code 後才能看到用量。";
 "A backup for when the saved login expires. Your own status line keeps working." = "登入資訊過期時的備援來源。你原本的狀態列照常運作。";
 "Ring shows" = "圓環顯示";
+"Ring measures" = "圓環計算方式";
 "Ring colour" = "圓環顏色";
 "Custom" = "自訂";
 "Colour" = "顏色";
@@ -245,6 +246,7 @@
 "Today" = "今天";
 "All time" = "累計";
 "Limit reset credits" = "額度重設券";
+"Next expiry" = "最近到期";
 "1 available" = "可用 1 張";
 "%@ available" = "可用 %@ 張";
 "%@ tokens" = "%@ tokens";
@@ -360,6 +362,8 @@
 "The Ollama session expired. Sign in again and add it." = "Ollama 的登入已過期，請重新登入後再加入。";
 "Ollama's page has changed and can no longer be read." = "Ollama 的頁面改了，已經讀不出來。";
 "Reads your quota from Ollama's own settings page." = "從 Ollama 自己的設定頁面讀取額度。";
+"Show" = "顯示";
+"Hide" = "隱藏";
 "Save" = "儲存";
 "Monthly limit" = "每月額度";
 "Daily limit" = "每日額度";
@@ -502,7 +506,6 @@
 "Full tank" = "滿額基準";
 "What you call a full balance. The ring measures against it." = "你認為多少算滿，圓環就照這個來量。";
 "How much of the balance Pulse last saw you top up to is gone." = "自 Pulse 上次看到你儲值以來，已經用掉多少。";
-"The money left, with no ring. DeepSeek reports no allowance." = "只顯示餘額，不畫圓環。DeepSeek 不回報任何額度。";
 "How much of the figure you set is gone." = "你設定的金額已經用掉多少。";
 "From platform.deepseek.com. Stored encrypted on this Mac." = "在 platform.deepseek.com 取得。加密儲存在本機。";
 "Balance" = "餘額";
@@ -651,6 +654,7 @@
 
 /* 服務選擇 */
 "Choose services to monitor" = "選擇要監控的服務";
+"Choose services to start monitoring…" = "選擇服務，開始監控…";
 "New services detected" = "找到新支援的服務";
 "Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "請至少勾選一項服務。按「完成」後，Pulse 才會讀取所選服務的登入資訊並查詢用量。之後可以在設定中更改。";
 "This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "這個版本新增支援以下服務，也在你的 Mac 上找到了它們。勾選想加入的服務即可，原有選擇會保留。";
@@ -730,3 +734,211 @@
 "No Step Plan on this StepFun account." = "這個階躍星辰帳號沒有訂閱 Step Plan。";
 "Reads your Step Plan with your signed-in browser session." = "用你已登入的瀏覽器工作階段讀取 Step Plan。";
 "No StepFun session found. Sign in at %@ first." = "找不到階躍星辰的登入資訊，請先在 %@ 登入。";
+
+/* Extensions */
+"An extension is a program you add yourself that reports one account's usage. Pulse draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials." = "擴充功能是你自己加入的程式，用來回報某一個帳號的用量，Pulse 會把它輸出的資料畫成圓環。只有你開啟後 Pulse 才會執行它，也不會交給它任何登入憑證。";
+"Another extension already uses the id %@." = "另一個擴充功能已經在用 ID「%@」。";
+"Couldn't be used" = "無法使用";
+"Each extension is a folder of its own, holding pulse-extension.json and its program." = "每個擴充功能各自一個資料夾，裡面放 pulse-extension.json 和它的程式。";
+"Extension" = "擴充功能";
+"Extension program" = "擴充功能程式";
+"Extensions" = "擴充功能";
+"Extensions folder" = "擴充功能資料夾";
+"Folder" = "資料夾";
+"Found" = "已找到";
+"From its pulse-extension.json. Pulse keeps this extension's settings under it." = "來自它的 pulse-extension.json。Pulse 用這個 ID 儲存這個擴充功能的設定。";
+"How to write an extension" = "如何撰寫擴充功能";
+"Id" = "ID";
+"Its id must be lowercase letters, digits, dots, dashes or underscores, 64 at most." = "ID 只能使用小寫字母、數字、句點、連字號和底線，最多 64 個字元。";
+"Its name is empty." = "名稱是空的。";
+"Its program has to be inside its own folder." = "程式必須放在擴充功能自己的資料夾裡。";
+"Its program isn't there, or isn't executable." = "找不到它的程式，或者程式無法執行。";
+"Look again" = "重新尋找";
+"Manage extensions" = "管理擴充功能";
+"No pulse-extension.json in this folder." = "這個資料夾裡沒有 pulse-extension.json。";
+"None yet" = "還沒有";
+"Program" = "程式";
+"Pulse reads this folder when it starts. After adding or changing an extension, look again." = "Pulse 在啟動時讀取這個資料夾。加入或修改擴充功能後，請按「重新尋找」。";
+"Runs a program from your extensions folder on the refresh schedule. Pulse passes it no credentials; what it reads and where it connects are up to the program." = "每次更新時執行擴充功能資料夾裡的這個程式。Pulse 不會交給它任何憑證；它讀取什麼、連線到哪裡，由程式自己決定。";
+"Show in Finder" = "在 Finder 中顯示";
+"Shown in the panel" = "已在面板中顯示";
+"Stopped if it hasn't answered by then." = "超過這個時間還沒有回傳結果，就會被停止。";
+"The extension didn't answer in time." = "擴充功能沒有在時限內回傳結果。";
+"The extension says its login has expired." = "擴充功能回報它的登入已過期。";
+"The extension stopped with an error." = "擴充功能執行出錯，已結束。";
+"This extension's program can't be run. Check its folder." = "無法執行這個擴充功能的程式，請檢查它的資料夾。";
+"Time limit" = "時間限制";
+"Written for extension schema %@, which this version of Pulse doesn't read." = "它依擴充功能格式第 %@ 版撰寫，這個版本的 Pulse 讀不了。";
+"pulse-extension.json isn't valid JSON, or is missing a field." = "pulse-extension.json 不是有效的 JSON，或者缺少必填欄位。";
+
+/* Profiled providers: shared wording */
+"No session found. Sign in at %@ first." = "沒有找到登入資訊。請先在 %@ 登入。";
+"Nothing saved on this Mac yet. Open the service's app once, then retry." = "這台 Mac 上還沒有儲存任何資料。先開啟一次這個服務的 App，再重試。";
+"Read a browser session in Settings." = "請在設定中從瀏覽器讀取登入資訊。";
+"Sign in with this service's own app or command-line tool first." = "請先用這個服務自己的 App 或命令列工具登入。";
+"The browser session expired. Sign in on the website, then read it again in Settings." = "瀏覽器登入資訊已過期。請先在網站上登入，再到設定裡重新讀取。";
+"The saved login has expired. Sign in again with the service's own app or tool." = "儲存的登入已過期。請用這個服務自己的 App 或工具重新登入。";
+"This account has no plan with usage limits." = "這個帳號沒有附用量額度的方案。";
+
+/* ClinePass */
+"From app.cline.bot. Stored encrypted on this Mac." = "在 app.cline.bot 取得。加密儲存在本機。";
+
+/* Amp */
+"From ampcode.com/settings. Stored encrypted on this Mac." = "在 ampcode.com/settings 取得。加密儲存在本機。";
+/* Gemini */
+"Reads the login saved in ~/.gemini/oauth_creds.json. No Keychain prompt." = "讀取 ~/.gemini/oauth_creds.json 中儲存的登入資訊。不會出現鑰匙圈提示。";
+"Gemini CLI's own login" = "Gemini CLI 自己的登入資訊";
+"Uses the login Gemini CLI already saved. Using Gemini CLI renews it." = "使用 Gemini CLI 已經存下的登入資訊。使用一次 Gemini CLI 就會更新。";
+
+/* Kilo Code */
+"Uses a key entered in Settings, or reads ~/.local/share/kilo/auth.json. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取 ~/.local/share/kilo/auth.json。不會出現鑰匙圈提示。";
+"From app.kilo.ai. Optional — Pulse can use the login the Kilo CLI saved. Stored encrypted on this Mac." = "在 app.kilo.ai 取得。可以不填——Pulse 能用 Kilo CLI 已存下的登入。加密儲存在本機。";
+
+/* Mistral */
+/* Factory */
+"From app.factory.ai. Stored encrypted on this Mac." = "在 app.factory.ai 取得。加密儲存在本機。";
+
+/* Windsurf */
+
+/* Profiled providers: browser storage */
+"Reads windsurf.com's sign-in from a Chromium browser when you press Read. No Keychain prompt." = "按「讀取」時，從 Chromium 核心瀏覽器讀取 windsurf.com 的登入資訊。不會出現鑰匙圈提示。";
+"Browser session" = "瀏覽器登入資訊";
+/* OpenAI API */
+"From platform.openai.com. Stored encrypted on this Mac." = "在 platform.openai.com 取得。加密儲存在本機。";
+
+/* JetBrains AI */
+"As current as the IDE last left it." = "以 IDE 最後一次寫入的內容為準。";
+"Reads the AI Assistant quota your JetBrains IDE saves on this Mac. Nothing is sent anywhere." = "讀取 JetBrains IDE 在本機儲存的 AI Assistant 用量額度。不會傳送資料到任何地方。";
+"The quota your JetBrains IDE saved" = "JetBrains IDE 儲存的用量額度";
+
+/* Warp */
+"From Warp's settings, under API Keys. Stored encrypted on this Mac." = "在 Warp 設定的 API Keys 中取得。加密儲存在本機。";
+
+/* IBM Bob */
+"From bob.ibm.com. Stored encrypted on this Mac." = "在 bob.ibm.com 取得。加密儲存在本機。";
+/* Synthetic */
+"From synthetic.new. Stored encrypted on this Mac." = "在 synthetic.new 取得。加密儲存在本機。";
+
+/* ElevenLabs */
+"From elevenlabs.io, with the user_read permission. Stored encrypted on this Mac." = "在 elevenlabs.io 取得，需開啟 user_read 權限。加密儲存在本機。";
+
+/* Chutes */
+"From chutes.ai. Stored encrypted on this Mac." = "在 chutes.ai 取得。加密儲存在本機。";
+
+/* GitKraken AI */
+"Uses only the access token you enter in Settings. No Keychain prompt." = "只使用你在設定中輸入的存取權杖。不會出現鑰匙圈提示。";
+"The Bearer token from gitkraken.dev's usage request, copied from the browser's developer tools. Stored encrypted on this Mac." = "在瀏覽器開發者工具中，從 gitkraken.dev 的用量請求複製 Bearer 權杖。加密儲存在本機。";
+
+/* xKiro */
+"From xkiro.com. Stored encrypted on this Mac." = "在 xkiro.com 取得。加密儲存在本機。";
+
+/* Hyper */
+"From hyper.charm.land. Stored encrypted on this Mac." = "在 hyper.charm.land 取得。加密儲存在本機。";
+
+/* Atlas Cloud */
+"From atlascloud.ai, with permission to read the balance. Stored encrypted on this Mac." = "在 atlascloud.ai 取得，需有查看餘額的權限。加密儲存在本機。";
+
+/* Poe */
+"From poe.com/api/keys. Stored encrypted on this Mac." = "在 poe.com/api/keys 取得。加密儲存在本機。";
+/* Aixy */
+"From aixy-gateway.com. Stored encrypted on this Mac." = "在 aixy-gateway.com 取得。加密儲存在本機。";
+
+/* Neuralwatt */
+"From portal.neuralwatt.com. Stored encrypted on this Mac." = "在 portal.neuralwatt.com 取得。加密儲存在本機。";
+
+/* ClawRouter */
+"From clawrouter.openclaw.ai. Stored encrypted on this Mac." = "在 clawrouter.openclaw.ai 取得。加密儲存在本機。";
+
+/* ZenMux */
+"A Management API key from zenmux.ai. An ordinary API key won't work. Stored encrypted on this Mac." = "在 zenmux.ai 產生的 Management API 金鑰，一般的 API 金鑰無法使用。加密儲存在本機。";
+
+/* v0 */
+"From v0.app. Stored encrypted on this Mac." = "在 v0.app 取得。加密儲存在本機。";
+
+/* DevPass */
+"An API key from llmgateway.io. Stored encrypted on this Mac." = "在 llmgateway.io 產生的 API 金鑰。加密儲存在本機。";
+
+/* DeepInfra */
+"From deepinfra.com. Stored encrypted on this Mac." = "在 deepinfra.com 取得。加密儲存在本機。";
+
+/* Vercel AI Gateway */
+"An AI Gateway API key from vercel.com. Stored encrypted on this Mac." = "在 vercel.com 產生的 AI Gateway API 金鑰。加密儲存在本機。";
+/* Alibaba Coding Plan */
+"From the Coding Plan page in Model Studio. Stored encrypted on this Mac." = "在百鍊（Model Studio）的 Coding Plan 頁面取得。加密儲存在本機。";
+
+/* Alibaba Token Plan */
+"Bailian CLI" = "百鍊 CLI";
+"Runs the Bailian CLI (bl) with its saved login. Pulse does not read or store its credentials." = "啟動百鍊 CLI（bl），使用它已儲存的登入。Pulse 不讀取或儲存其憑證。";
+"Uses the login the Bailian CLI already saved." = "使用百鍊 CLI 已經存下的登入。";
+/* Nous Portal */
+"Reads the Nous Portal login Hermes Agent saved in ~/.hermes. No Keychain prompt." = "讀取 Hermes Agent 儲存在 ~/.hermes 中的 Nous Portal 登入資訊。不會出現鑰匙圈提示。";
+"Hermes Agent's login" = "Hermes Agent 的登入資訊";
+"Uses the login Hermes Agent already saved. Pulse never renews it." = "使用 Hermes Agent 已經存下的登入資訊。Pulse 不會替它續期。";
+
+/* Hugging Face */
+"Uses a token entered in Settings, or reads the one hf auth login saved in ~/.cache/huggingface. No Keychain prompt." = "使用在設定中輸入的 token，或讀取 hf auth login 儲存在 ~/.cache/huggingface 中的 token。不會出現鑰匙圈提示。";
+"From huggingface.co/settings/tokens. Stored encrypted on this Mac." = "在 huggingface.co/settings/tokens 取得。加密儲存在本機。";
+
+/* Moonshot */
+"From the Kimi Open Platform console, international or China. Stored encrypted on this Mac." = "在 Kimi 開放平台主控台（國際站或中國站）取得。加密儲存在本機。";
+
+/* Codebuff */
+"Uses a key entered in Settings, or reads the login the codebuff CLI saved in ~/.config/manicode. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取 codebuff CLI 儲存在 ~/.config/manicode 中的登入資訊。不會出現鑰匙圈提示。";
+"From codebuff.com. Optional — Pulse can use the login the codebuff CLI saved. Stored encrypted on this Mac." = "在 codebuff.com 取得。可以不填——Pulse 能用 codebuff CLI 已存下的登入。加密儲存在本機。";
+
+/* Venice */
+"From venice.ai's API settings. Stored encrypted on this Mac." = "在 venice.ai 的 API 設定中取得。加密儲存在本機。";
+
+/* TypeSafe */
+"Uses the Cookie header you paste in Settings. No Keychain prompt." = "使用你在設定中貼上的 Cookie 標頭。不會出現鑰匙圈提示。";
+"The Cookie header of a request to console.typesafe.ai/settings/billing. Stored encrypted on this Mac." = "開啟 console.typesafe.ai/settings/billing 時請求中帶的 Cookie 標頭。加密儲存在本機。";
+
+/* xAI API */
+"TeamID:ManagementKey, from console.x.ai. An inference key won't work. Stored encrypted on this Mac." = "格式為 TeamID:ManagementKey，在 console.x.ai 取得。推論用的金鑰不能用。加密儲存在本機。";
+
+/* Billing groups */
+"Subscriptions" = "訂閱";
+"API and pay-as-you-go" = "API 與按量計費";
+"Enabled" = "已啟用";
+"The money left, with no ring. There is no allowance to measure against." = "只顯示餘額，不畫圓環：沒有可以對照的額度。";
+
+/* Codex reset credits */
+"Reset credits on the card" = "在卡片上顯示額度重設券";
+"How many limit reset credits are left, and when the next one expires. Asks Codex's app server on every refresh." = "還剩幾張額度重設券，以及最近一張什麼時候到期。每次更新都會詢問 Codex 的 app server。";
+"Not available" = "無法取得";
+"codex not found" = "找不到 codex";
+"Show usage in the menu bar" = "在選單列顯示用量";
+"A ring's mark and figure beside the icon, red past the warning line." = "在圖示旁顯示一個圓環的服務標誌和用量，超過警示線時變紅。";
+"Usage" = "用量";
+"Menu bar shows" = "選單列顯示";
+"An account switched off falls back to the fullest ring." = "選中的帳號被關掉後，改回顯示用得最多的那個。";
+"Fullest ring" = "用得最多的那個";
+"Menu bar style" = "選單列樣式";
+"Figure" = "數字";
+"Ring" = "圓環";
+"Open %@ usage page" = "打開 %@ 用量頁";
+"Overview" = "概覽";
+"Updated just now" = "剛剛更新";
+"Updated %@" = "%@更新";
+"Estimated from token counts at API prices — not your subscription bill." = "按 API 價格根據 Token 用量估算，不是訂閱帳單。";
+"Reading local records…" = "正在讀取本機記錄…";
+"Usage credits" = "額度";
+"%@ remaining" = "%@ 剩餘";
+"Split" = "分項";
+"Short: day" = "日";
+"Short: week" = "週";
+"Short: month" = "月";
+"Start windows automatically" = "自動開始新視窗";
+"Start a new window after each reset" = "額度重設後自動開始新視窗";
+"When the 5-hour limit resets, sends “hi” to Haiku through Claude Code, so the next window starts counting then rather than at your next message. Nothing is saved." = "5 小時額度重設後，透過 Claude Code 給 Haiku 發一句「hi」，讓下一個視窗從這時開始計時，而不是等到你下一次發訊息。不會儲存任何對話。";
+"When the 5-hour or weekly limit resets, sends “hi” to the cheapest model through Codex, so the next window starts counting then rather than at your next message. Nothing is saved." = "5 小時或每週額度重設後，透過 Codex 給最便宜的模型發一句「hi」，讓下一個視窗從這時開始計時，而不是等到你下一次發訊息。不會儲存任何對話。";
+"Only between" = "僅在此時段";
+"A reset outside these hours is started when they begin. Shared by Claude Code and Codex." = "在這個時段以外重設的，會等到時段開始時再自動開始。Claude Code 與 Codex 共用。";
+"Last started" = "上次自動開始";
+"Use at your own risk" = "請自行承擔風險";
+"I understand the risk, turn it on" = "我了解風險，開啟";
+"This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Pulse only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that." = "這不是 Anthropic 或 OpenAI 提供的功能。自動開始用量視窗可能被視為規避用量限制，可能導致你的帳號被限制或停用。Pulse 只會透過你已登入的命令列工具傳送一則簡短訊息，對你的帳號因此受到的任何影響不承擔責任。請確認接受這一點後再開啟。";
+"Not started yet" = "尚未自動開始過";
+"%@ · the command-line tool was not found" = "%@ · 找不到命令列工具";
+"%@ · it did not go through; check the tool is signed in" = "%@ · 沒有傳送成功，請檢查工具是否已登入";
+"%@ · it did not answer in time" = "%@ · 沒有及時回應";

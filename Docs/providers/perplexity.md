@@ -1,0 +1,13 @@
+# Perplexity
+
+Profiled provider: [`Sources/Pulse/Providers/Profiled/PerplexityUsageService.swift`](../../Sources/Pulse/Providers/Profiled/PerplexityUsageService.swift). User setup: [../setup/perplexity.md](../setup/perplexity.md).
+
+- **Credential:** `sessionCookie(host: "www.perplexity.ai", cookies: ["__Secure-next-auth.session-token"])`. Of the four names CodexBar tries, the one Perplexity's NextAuth sets over https; the site's `/api/auth/csrf` sets `next-auth.csrf-token` (seen 2026-09-25). Only the session cookie is sent. A NextAuth session split into `.0`, `.1` chunks is not found by the shared keep-filter.
+- **Route:** `GET https://www.perplexity.ai/rest/billing/credits?version=2.18&source=default`, with `Origin` and `Referer` (the usage page) and a desktop Chrome `User-Agent`, as the page's own request carries — the site is behind Cloudflare's bot screen. Ephemeral session, no cookie store, **no redirects followed**.
+- **Status:** 3xx, 401, 403 → `.sessionExpired` (a Cloudflare challenge answered with 403 reads the same; nothing in the status tells them apart). The rest through `ProfileHTTP.classify`.
+- **Reply:** `{ balance_cents, renewal_date_ts, current_period_purchased_cents, credit_grants: [{ type, amount_cents, expires_at_ts }], total_usage_cents }`; camelCase spellings are accepted too. `credit_grants` must be an array or the reply is unreadable. Every amount is US cents; timestamps are Unix seconds.
+- **Balance:** `balance_cents / 100` → `creditBalance` and `creditRemaining` (USD). `reportsSpendableBalance` is on. Negative or missing: left off.
+- **Window:** `recurring` grants (the subscription's monthly credit) as `.credits`, `total_usage_cents / sum(recurring)`, reset `renewal_date_ts`, 30 days as a sort key (length not stated) — **only** when no unexpired `promotional`/other grant and no `current_period_purchased_cents` sits beside it. Perplexity states the total used but not which grant it came from; with only one grant, it came from that one.
+- **Reasons:** no window and no balance → `.noLimitsReported`.
+- **Left out:** CodexBar's split of the total across recurring → purchased → bonus in that order, and its rings for bonus and purchased credit: the order is its assumption, not Perplexity's figure. Its full "0/0 credits" ring when there is no recurring grant — a figure nobody reported. Its "Pro"/"Max" plan name, inferred from the grant's size.
+- **Evidence:** second-hand. The shape comes from CodexBar's Perplexity plugin and its tests (MIT); no live account has been read. The fixture is `Tests/PulseTests/Fixtures/perplexity-credits.json`.

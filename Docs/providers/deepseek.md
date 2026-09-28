@@ -36,6 +36,8 @@ A key pasted into Settings, kept encrypted on this Mac by `APIKeyStore`. There i
 
 ## There is no allowance, so the ring has no denominator
 
+*Since generalized:* these three modes are now every API account's rule — see `BalanceRing` and [README.md](README.md#subscriptions-and-api-accounts). DeepSeek keeps its own settings (`deepSeekBasis`, `deepSeekBudget`) and its own mark file, and makes its window through the same `BalanceRing.window`.
+
 **This is the first provider Pulse carries that reports no percentage at all.** The reply says how much money is left and stops. There is no quota, no window, no reset, and no spend-history endpoint anywhere in the API. Every other provider reports at least one fraction.
 
 A ring needs a denominator, and there are exactly three places one can come from — which is why `DeepSeekBasis` has exactly three cases and the user picks between them in DeepSeek's settings pane.

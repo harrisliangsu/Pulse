@@ -61,15 +61,18 @@ Pulse는 화면 가장자리에 깔끔하게 자리 잡는, 눈에 띄지 않는
 - **macOS 미학**: 차분한 무광 블랙 표면, 또는 macOS 26+의 네이티브 **Liquid Glass**.
 - **애니메이션 마크(선택)**: 제공자 로고를 해당 계정의 상태에 반응하는 작은 봇으로 바꿉니다. 작업 중, 조회 중, 소진, 대기 상태를 나타냅니다. 기본값은 꺼짐이며 계정별로 켤 수 있고, 8가지 성격과 18가지 모양, 원하는 색상을 지정할 수 있습니다.
 - **레일 메뉴와 단축키**: 플로팅 레일——또는 접힌 가느다란 선——을 오른쪽 클릭하면(Control 키를 누른 채 클릭해도 됩니다) 설정과 종료가 있는 메뉴가 열립니다. **설정 › 일반 › 단축키**에서 **설정 열기**와 **패널 표시 전환**에 전역 단축키를 선택적으로 지정할 수 있으며, 둘 다 지정하기 전까지는 비어 있습니다.
+- **메뉴 막대 사용량 (선택)**: 가장 많이 쓴 링—또는 직접 고른 계정—을 메뉴 막대 아이콘 옆에 숫자, 작은 링, 또는 5시간·주간 한도 나란히(`5h/9%  주/15%`)로 표시하고, 경고선을 넘으면 빨간색이 됩니다. 클릭하면 대시보드: 모든 계정 개요와 계정별 탭(각 한도와 초기화 시각, 크레딧 잔여, 토큰 사용량을 켰을 때의 예상 비용, 서비스 공식 사용량 페이지 링크). 메뉴 막대만 쓰고 싶다면 같은 메뉴에서 플로팅 패널을 끌 수 있습니다.
 - **다섯 가지 인터페이스 언어**: 영어, 중국어 간체, 중국어 번체, 일본어, 한국어를 지원하며, 언어에 맞는 큰 수 단위를 씁니다: 각각 K/M/B, 万/亿, 萬/億, 万/億, 만/억.
 
 ### 다중 계정과 로컬 원장
 - **다중 계정 지원**: 같은 제공업체의 여러 구독(Claude Code, Codex, Grok, Grok Bot, Kimi Code)을 나란히 모니터링하고 라벨을 붙일 수 있습니다.
-- **토큰 지출(설정에서만)**: 기본값은 꺼짐입니다. 페이지 상단에서 켜면 로컬 기록을 읽기 시작하며, 끄면 스캔을 중단합니다. **54개 클라이언트 소스**의 로컬 로그, 데이터베이스, 내보내기 파일을 지원합니다. Gemini CLI, Cline, Roo Code, OpenClaw, GitHub Copilot 등이 포함됩니다. Cursor, Trae 및 기타 내보내기 소스는 사전 내보내기나 캡처가 필요합니다. 이는 레일의 25개 할당량 제공업체와는 다르며, 지원 범위와 실제 클라이언트 검증 여부는 소스마다 다릅니다. [소스와 지원 범위](Docs/token-spend-sources.md).- **명확한 사용량 추정**: 기본적으로 최근 7일을 보여 주며 선택한 기간을 기억합니다. 비용은 공개된 API 가격으로 계산한 추정치이며 구독 청구액이 아닙니다. 가격을 알 수 없거나 집계가 불완전한 경우, 세부 시간 정보가 없는 경우에는 이를 표시합니다. 토큰 수 정보가 없는 소스는 그대로 표시합니다.
+- **토큰 지출(설정에서만)**: 기본값은 꺼짐입니다. 페이지 상단에서 켜면 로컬 기록을 읽기 시작하며, 끄면 스캔을 중단합니다. **54개 클라이언트 소스**의 로컬 로그, 데이터베이스, 내보내기 파일을 지원합니다. Gemini CLI, Cline, Roo Code, OpenClaw, GitHub Copilot 등이 포함됩니다. Cursor, Trae 및 기타 내보내기 소스는 사전 내보내기나 캡처가 필요합니다. 이는 레일의 77개 할당량 제공업체와는 다르며, 지원 범위와 실제 클라이언트 검증 여부는 소스마다 다릅니다. [소스와 지원 범위](Docs/token-spend-sources.md).
+- **명확한 사용량 추정**: 기본적으로 최근 7일을 보여 주며 선택한 기간을 기억합니다. 비용은 공개된 API 가격으로 계산한 추정치이며 구독 청구액이 아닙니다. 가격을 알 수 없거나 집계가 불완전한 경우, 세부 시간 정보가 없는 경우에는 이를 표시합니다. 토큰 수 정보가 없는 소스는 그대로 표시합니다.
 - **모델 상세와 차트**: 모델을 열면 입력/출력/캐시 수치와 추정 비용, 기록이 뒷받침하는 일별·시간별 차트, 에이전트별 기여, 정렬과 페이지 이동이 가능한 상세 표를 볼 수 있습니다. 차트를 가리키면 해당 날짜나 시간과 토큰 수를 읽을 수 있습니다. 제공되지 않는 일별·시간별 상세는 0이 아니라 사용할 수 없음으로 표시됩니다.
-- **스물다섯 개 제공업체**: Claude Code, Codex, Kiro, Antigravity, Cursor, GitHub Copilot, Grok, Grok Bot, OpenCode Go, Kimi Code, Ollama Cloud, z.ai, Zhipu, MiniMax(국제 및 중국 본토), Volcengine, Command Code, DeepSeek, Devin, Xiaomi Coding Plan, sub2api, New API, V2EX, Qoder, StepFun.
+- **일흔일곱 개 제공업체**: Claude Code, Codex, Kiro, Antigravity, Cursor, GitHub Copilot, Grok, Grok Bot, OpenCode Go, Kimi Code, Ollama Cloud, z.ai, Zhipu, MiniMax(국제 및 중국 본토), Volcengine, Command Code, DeepSeek, Devin, Xiaomi Coding Plan, sub2api, New API, V2EX, Qoder, StepFun. 그 밖에 Abacus AI, Aixy, Alibaba Coding Plan, Alibaba Token Plan, Amp, Atlas Cloud, Augment Code, Bifrost, Chutes, ClawRouter, ClinePass, Codebuff, DeepInfra, DevPass, ElevenLabs, Factory, Gemini, GitKraken AI, Hugging Face, Hyper, IBM Bob, JetBrains AI, Kilo Code, LiteLLM, LLM API Key Proxy, LongCat, Manus, Mistral, Moonshot, Neuralwatt, Notion AI, Nous Portal, OpenAI API, Perplexity, Poe, Qwen Cloud, Raycast AI, Replicate, Sakana AI, Synthetic, T3 Chat, TypeSafe, v0, Venice, Vercel AI Gateway, Warp, Windsurf, xAI API, xKiro, Zed, ZenMux, ZoomMate.
 - **스크립트 가능**: `Pulse --json`이 마지막으로 읽은 값——플랜, 모든 한도, 초기화 시각, 숫자가 얼마나 오래됐는지——을 출력합니다. tmux, sketchybar, Raycast, 셸 프롬프트에 쓰세요. 캐시만 읽으므로 폴링 비용이 들지 않습니다.
 - **개발자 통합**: 설정에서 Raycast 확장과 바로 설정할 수 있는 tmux, sketchybar, 셸 스크립트를 내보냅니다. 계정 링크는 해당 패널을 바로 엽니다. [설정 가이드](Docs/integrations.md).
+- **확장**: 직접 만든 작은 프로그램으로 계정 하나의 사용량(사내 할당량 API 등)을 Pulse 링에 표시할 수 있습니다. 포크를 따로 관리할 필요가 없습니다. 켜기 전에는 실행되지 않고, Pulse가 인증 정보를 넘기지도 않습니다. [만드는 방법](Docs/extensions.md)(영문).
 - **연결 진단**: 실제 읽기 출처, 캐시 사용, 최근 검사와 대체 결과를 확인합니다. 상황에 맞는 작업으로 다시 연결, 다시 로그인, 자격 증명 수정을 할 수 있고, 계정 정보나 비밀 없는 진단 보고서를 복사할 수 있습니다.
 - **개인정보 우선**: Pulse는 여러분의 Mac에서, 여러분 자신의 로그인으로 동작합니다. 연결하는 곳은 세 가지뿐이며 여기 적은 것이 전부입니다 — 이미 사용 중인 제공업체, 토큰 지출 패널의 공개 모델 가격을 가져오는 [models.dev](https://models.dev), 그리고 앱 업데이트를 확인하는 GitHub/Sparkle. 제공업체 요청, 로그인 토큰 교환, models.dev에는 설정 › 네트워크 및 새로 고침에서 선택한 프록시가 사용되며, 수동 프록시는 지원되는 도우미 프로세스에도 전달됩니다. Sparkle 업데이트 확인은 항상 macOS 시스템 프록시 설정을 따릅니다.
 
@@ -129,6 +132,65 @@ Pulse는 각 서비스가 보고하는 숫자를 그대로 보여 줍니다. 화
 | **V2EX** | 붙여 넣은 개인 액세스 토큰 | AI Chat의 롤링 5시간 토큰 한도. 구매한 추가 팩이 있으면 링을 하나 더 표시. 아직 시작하지 않은 창은 카운트다운을 표시하지 않음([Docs/providers/v2ex.md](Docs/providers/v2ex.md)) |
 | **Qoder** | 입력할 것이 없음——qoder.com 또는 qoder.com.cn에 로그인된 브라우저 세션을 읽음. `Cookie:` 헤더나 개인 토큰(`pt-` / `jt-`)을 붙여 넣을 수도 있음 | 크레딧 한도(플랜과 팩 합산)를 Qoder가 보고하는 초기화 시각과 함께 표시. 팀 플랜의 공유 크레딧은 별도 링으로 표시하며 절대 합산하지 않음. 크레딧이 0이면 링을 그리지 않고 그렇다고 알림([Docs/providers/qoder.md](Docs/providers/qoder.md)) |
 | **StepFun** | 입력할 것이 없음——platform.stepfun.com 또는 platform.stepfun.ai에 로그인된 브라우저 세션을 읽음. `Cookie:` 헤더를 붙여 넣을 수도 있음 | Step Plan: Token Plan의 월간 Credit과 추가 팩을 하나의 링으로 합치고 가장 먼저 만료되는 분의 날짜를 표시. 구 Coding Plan은 5시간·주간 두 창. 플랜이 없으면 링을 그리지 않고 그렇게 표시함([Docs/providers/stepfun.md](Docs/providers/stepfun.md)) |
+
+### 그 밖의 제공업체
+
+[CodexBar](https://github.com/steipete/CodexBar)의 구현을 참고해 옮겨 온 것입니다. **실제 계정으로는 아직 확인하지 않았습니다**——동작하지 않는 것이 있으면 [issue](https://github.com/harrisliangsu/Pulse/issues)로 알려 주십시오. 제공업체별 설정 방법은 [Docs/setup/](Docs/setup/)(영문), 유지 관리 설명은 [Docs/providers/README.md](Docs/providers/README.md#profiled-providers)에 있습니다.
+
+| 제공업체 | 데이터 경로와 인증 방식 | 표시 내용 |
+|---|---|---|
+| **Abacus AI** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 컴퓨트 포인트와 청구일 |
+| **Aixy** | 붙여 넣은 API 키 | 기간별 게이트웨이 예산 |
+| **Alibaba Coding Plan** | 붙여 넣은 API 키 | 5시간·주간·월간 한도. 국제 콘솔을 먼저, 이어서 중국 본토 |
+| **Alibaba Token Plan** | Alibaba `bl` CLI를 저장된 로그인으로 실행 | 5시간·주간·월간 사용 비율 |
+| **Amp** | 붙여 넣은 API 키 | 무료 일일 한도, 플랜 한도와 크레딧 |
+| **Atlas Cloud** | 붙여 넣은 API 키 | 잔액 |
+| **Augment Code** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 이번 주기에 사용한 크레딧 |
+| **Bifrost** | 붙여 넣은 키. 직접 운영하는 게이트웨이 주소를 입력 | 가상 키의 달러 예산 |
+| **Chutes** | 붙여 넣은 API 키 | 롤링 창과 월간 한도 |
+| **ClawRouter** | 붙여 넣은 API 키 | 월간 예산 |
+| **ClinePass** | 붙여 넣은 API 키 | 5시간·주간·월간 한도 |
+| **Codebuff** | 붙여 넣은 키 또는 CLI가 저장한 로그인 | 크레딧. CLI 로그인 시 주간 한도도 표시 |
+| **DeepInfra** | 붙여 넣은 API 키 | 잔액. 그쪽에서 한도를 정했다면 그 대비 지출 |
+| **DevPass** | 붙여 넣은 API 키 | 주간 프리미엄 한도와 플랜 크레딧 |
+| **ElevenLabs** | 붙여 넣은 API 키 | 청구 기간의 문자 크레딧 |
+| **Factory** | 붙여 넣은 API 키 | 5시간·주간·월간 한도(구 청구 방식은 Standard와 Premium). 추가 사용 잔액 |
+| **Gemini** | Gemini CLI가 저장한 로그인을 읽기만 함(갱신하지 않음) | 모델별 할당량. 로그인이 약 1시간 만에 만료되므로 Gemini CLI를 쓰는 동안만 읽힘 |
+| **GitKraken AI** | 붙여 넣은 토큰 | 개인 크레딧과 공유 풀 |
+| **Hugging Face** | 붙여 넣은 토큰 또는 `hf auth login`이 저장한 토큰 | ZeroGPU 할당량 |
+| **Hyper** | 붙여 넣은 API 키 | Hypercredit 잔액 |
+| **IBM Bob** | 붙여 넣은 API 키 | 팀 예산 대비 Bobcoins 사용량 |
+| **JetBrains AI** | JetBrains IDE가 저장하는 할당량 파일. 어디에도 전송하지 않음 | AI Assistant 할당량. IDE 실행 중에만 갱신 |
+| **Kilo Code** | 붙여 넣은 키 또는 CLI가 저장한 로그인 | 크레딧 잔액과 Kilo Pass |
+| **LiteLLM** | 붙여 넣은 키. 직접 운영하는 게이트웨이 주소를 입력 | 팀과 사용자 예산 |
+| **LLM API Key Proxy** | 붙여 넣은 키. 직접 운영하는 게이트웨이 주소를 입력 | 업스트림별 할당량 그룹 |
+| **LongCat** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 토큰 팩 한도와 추가 팩 |
+| **Manus** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 일간과 월간 크레딧 |
+| **Mistral** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | API와 Vibe 월간 한도, 사용 가능한 크레딧 |
+| **Moonshot** | 붙여 넣은 API 키 | Kimi 오픈 플랫폼 잔액(USD 또는 CNY) |
+| **Neuralwatt** | 붙여 넣은 API 키 | kWh 구독, 사용 한도와 잔액 |
+| **Notion AI** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 롤링 창과 청구 기간 한도(Business·Enterprise) |
+| **Nous Portal** | Hermes Agent가 저장한 로그인을 읽기만 함 | 월간 크레딧 지급량과 잔액 |
+| **OpenAI API** | 붙여 넣은 API 키 | 선불 잔액(구 청구 경로가 응답하는 경우) |
+| **Perplexity** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | API 크레딧 잔액 |
+| **Poe** | 붙여 넣은 API 키 | 포인트 잔액 |
+| **Qwen Cloud** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 5시간·주간·월간 비율과 등급 |
+| **Raycast AI** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | AI 크레딧과 갱신일 |
+| **Replicate** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 선불 잔액 |
+| **Sakana AI** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 5시간과 주간 한도 |
+| **Synthetic** | 붙여 넣은 API 키 | 5시간·주간·검색 한도 |
+| **T3 Chat** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 4시간 창과 월간 수치 |
+| **TypeSafe** | 붙여 넣은 `Cookie:` 헤더 | 크레딧 잔액과 플랜 |
+| **v0** | 붙여 넣은 API 키 | 청구 한도 |
+| **Venice** | 붙여 넣은 API 키 | 잔액(USD 또는 DIEM) |
+| **Vercel AI Gateway** | 붙여 넣은 API 키 | 잔액 |
+| **Warp** | 붙여 넣은 API 키 | 플랜 크레딧과 추가 크레딧 |
+| **Windsurf** | Chromium 계열 브라우저에서 windsurf.com 로그인을 읽음 | 일간과 주간 할당량 |
+| **xAI API** | `TeamID:ManagementKey` 형식으로 붙여 넣음 | 팀 선불 잔액(xAI에 기록된 금액) |
+| **xKiro** | 붙여 넣은 API 키 | 5시간·주간 창, 일일 무료 토큰과 지갑 |
+| **Zed** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 편집 예측 한도와 지출 한도 |
+| **ZenMux** | 붙여 넣은 관리 키 | 5시간·7일 할당량과 잔액 |
+| **ZoomMate** | 로그인된 브라우저 세션을 읽거나 `Cookie:` 헤더를 붙여 넣음 | 예산 상한 대비 크레딧 |
 ---
 
 ## 설치 및 빠른 시작

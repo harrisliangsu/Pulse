@@ -1,0 +1,14 @@
+# ZoomMate
+
+Profiled provider: [`Sources/Pulse/Providers/Profiled/ZoomMateUsageService.swift`](../../Sources/Pulse/Providers/Profiled/ZoomMateUsageService.swift). User setup: [../setup/zoommate.md](../setup/zoommate.md).
+
+- **Credential:** a browser session read for host `zoom.us` — Zoom's SSO cookies are set on the parent domain, so a narrower host would miss them — kept to `_zm_ssid` (required) and `cf_clearance`. The fetch applies the same filter again. **The names are unverified:** they are the only two CodexBar's tests use, and CodexBar itself sends every cookie a browser would attach. If ZoomMate's exchange needs another, it will answer as an expired session.
+- **Route:** per refresh, on `ai.zoom.us`, then on `zoommate.zoom.us` only if the first host didn't answer (unreachable or 5xx — a refusal or an unreadable reply is the same on both):
+  1. `GET /ai-computer/api/v1/login/?continue=https://zoommate.zoom.us/` with the cookies → `{ success, data: { nak } }`. `nak` is a short-lived bearer token. This is the exchange ZoomMate's web client makes on every load; it mints nothing that persists and writes nothing.
+  2. `GET /ai-computer/api/v1/credits/status` with the cookies and `Authorization: Bearer <nak>`.
+  Both send `Origin`/`Referer: https://zoommate.zoom.us`. Redirects are refused; a 3xx, 401 or 403 is an expired session, as is a login reply with `success: false`. The token lives for one refresh and is never stored.
+- **Reply:** `{ data: { credit_status: { budget_cap, used_credit, remaining_credit, overage_credit, allow_overage, cycle_start_date, cycle_end_date, is_quota_available, is_unlimited } }, status_code, error_message }`. Dates are epoch milliseconds.
+- **Window:** one, `.credits` (`zoommate.credits`, "Credit allowance"): `used_credit / budget_cap`, or `(budget_cap − remaining_credit) / budget_cap` when only the remainder is given. Reset at `cycle_end_date`. The length is stated when both cycle dates are (`end − start`, `reportsLength: true`); otherwise 30 days as a sort key, not claimed. Exhausted when `is_quota_available` is false, or past the cap with `allow_overage` not true.
+- **Figures:** `is_unlimited`, a cap of zero or less, or no used figure → "No limits reported". CodexBar draws these as 0%; Pulse draws nothing.
+- **Left out, deliberately:** `credits/history` (spend over 30 days — Pulse has no place for spend-only figures) and CodexBar's pace built on it; the account email in the login reply (no identity line for profiled providers); CodexBar's bearer-token cache and its Keychain cookie cache; its manual cURL-capture mode.
+- **Evidence:** second-hand. The shapes come from CodexBar's ZoomMate provider and its tests (MIT), whose payloads are synthetic; no live account has been read. Fixtures: `Tests/PulseTests/Fixtures/zoommate-*.json`.

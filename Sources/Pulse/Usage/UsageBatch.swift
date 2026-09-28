@@ -41,6 +41,9 @@ struct UsageBatch: Sendable {
     var newAPI: NewAPIUsageService
     var v2ex: V2EXUsageService
     var stepFun: StepFunUsageService
+    /// Profiled providers due on this pass, keyed by provider. Empty when
+    /// none of them were asked. Their fetch uses only this context.
+    var profiles: [Provider: (ProviderProfile, ProfileContext)] = [:]
 
     /// Side by side, on this function's main actor. That is where the old
     /// `async let` list in `UsageStore.refresh` ran, so a fetch that touches
@@ -79,6 +82,8 @@ struct UsageBatch: Sendable {
         async let newAPIUsage = load(.newAPI)
         async let v2exUsage = load(.v2ex)
         async let stepFunUsage = load(.stepFun)
+        // Started beside the hand-written reads, not after they return.
+        async let profiledRows = profiledReadings()
 
         var readings: [Provider: ProviderUsage] = [:]
         for row in [
@@ -93,7 +98,27 @@ struct UsageBatch: Sendable {
             guard let (provider, usage) = row else { continue }
             readings[provider] = usage
         }
+        for (provider, usage) in await profiledRows {
+            readings[provider] = usage
+        }
         return readings
+    }
+
+    /// Profiled providers, side by side. Each fetch was handed its credential
+    /// already, so this does not touch the keychain or settings.
+    private func profiledReadings() async -> [(Provider, ProviderUsage)] {
+        let jobs = profiles
+        return await withTaskGroup(of: (Provider, ProviderUsage).self) { group in
+            for provider in wanted where jobs[provider] != nil {
+                let pair = jobs[provider]!
+                let profile = pair.0
+                let context = pair.1
+                group.addTask { (provider, await profile.fetch(context)) }
+            }
+            var rows: [(Provider, ProviderUsage)] = []
+            for await row in group { rows.append(row) }
+            return rows
+        }
     }
 
     /// `nil` when this pass did not ask. The child still starts, and it
@@ -107,7 +132,7 @@ struct UsageBatch: Sendable {
 
     @MainActor
     private func read(_ provider: Provider) async -> ProviderUsage {
-        switch provider {
+        switch provider.handWritten {
         case .codex:
             await codex.fetch(source: codexSource)
         case .kiro:
@@ -158,6 +183,16 @@ struct UsageBatch: Sendable {
             await v2ex.fetch()
         case .stepFun:
             await stepFun.fetch()
+        case .pulseExtension:
+            // Extensions are programs, fetched beside this batch. There is
+            // never a primary account of this provider.
+            .unavailable(AccountKey(.pulseExtension), reason: .extensionMissing)
+        case nil:
+            if let pair = profiles[provider] {
+                await pair.0.fetch(pair.1)
+            } else {
+                .unavailable(AccountKey(provider), reason: .loading)
+            }
         }
     }
 }

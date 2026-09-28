@@ -16,7 +16,10 @@ extension Provider {
             ["/Applications/\(name).app", local("Applications/\(name).app")]
         }
 
-        switch self {
+        guard let written = handWritten else {
+            return (profile?.discoveryPaths ?? []).map { $0.hasPrefix("/") ? $0 : local($0) }
+        }
+        switch written {
         case .claudeCode:
             return [local(".claude"), local("Library/Application Support/Claude")] + app("Claude")
         case .codex: return [local(".codex")]
@@ -49,6 +52,10 @@ extension Provider {
         // is nothing on this Mac that says either is in use.
         case .kimiCode, .ollamaCloud, .zai, .minimax, .minimaxCN, .copilot,
              .volcengine, .deepSeek, .xiaomiMiMo, .sub2api, .newAPI, .v2ex:
+            return []
+        // Found by its manifest in the extensions folder, not by anything
+        // installed. See `ExtensionCatalog`.
+        case .pulseExtension:
             return []
         }
     }

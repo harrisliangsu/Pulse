@@ -149,7 +149,8 @@ extension Provider {
     /// login — so a second account of theirs is not something Pulse can be
     /// shown, however the rest of the app is shaped.
     var supportsMultipleAccounts: Bool {
-        switch self {
+        guard let written = handWritten else { return false }
+        return switch written {
         // Grok Bot is signed in to through Cursor's own login page rather
         // than by OAuth — a second allowance is a second Cursor account. See
         // `CursorWebLogin`.
@@ -162,6 +163,7 @@ extension Provider {
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine, .qoder,
              .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api, .newAPI,
              .v2ex, .stepFun: false
+        case .pulseExtension: false
         }
     }
 }

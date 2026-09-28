@@ -135,7 +135,15 @@ struct RefreshPacingTests {
     @Test("Only the providers this Mac cannot watch are unwatched")
     func onlyUnwatchableProvidersAreUnwatched() {
         let unwatched: Set<Provider> = [.deepSeek, .commandCode, .sub2api, .newAPI, .v2ex]
+        // A profiled provider names its own answer in its profile, and a
+        // money balance overrides it — the same rule the named ones follow.
         for provider in Provider.allCases {
+            if let profile = provider.profile {
+                #expect(provider.spendingIsWatchedLocally
+                            == (profile.spendingIsWatchedLocally && !profile.reportsSpendableBalance),
+                        "\(provider.rawValue)")
+                continue
+            }
             #expect(provider.spendingIsWatchedLocally == !unwatched.contains(provider),
                     "\(provider.rawValue)")
         }

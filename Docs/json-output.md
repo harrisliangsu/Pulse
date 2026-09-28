@@ -10,7 +10,7 @@ Source: [`Sources/Pulse/Usage/UsageReport.swift`](../Sources/Pulse/Usage/UsageRe
 
 ## It prints the cache and never fetches
 
-A status line polls every couple of seconds. Twenty-five providers cannot be asked at that rate, and a command that opened network connections and touched the keychain every time a terminal redrew would be a worse citizen than no command at all.
+A status line polls every couple of seconds. Seventy-seven providers cannot be asked at that rate, and a command that opened network connections and touched the keychain every time a terminal redrew would be a worse citizen than no command at all.
 
 So this reads what the **running app** last banked and says how old it is. Every account carries `observedAt` and `ageSeconds`; decide for yourself what counts as too old. With the app not running the figures simply stop moving — they are never presented as current. An installation where the app has never run prints an empty rail rather than a guess at what would be switched on.
 
@@ -23,15 +23,16 @@ Window names are localized in the app and would change under a script's feet, so
 - `kind` — a flat token: `fiveHour`, `daily`, `weekly`, `monthly`, `spend`, `balance`, `messages`, `topUp`, `credits`, `sharedCredits`, or `other:<seconds>`. `messages` is an allowance counted in messages rather than in time ([providers/devin.md](providers/devin.md)): no window, no reset, `reportsLength` false. `balance` is prepaid credit, which is **not a limit**: it never turns over, so `reportsLength` is false and `resetsAt` is null on those rows ([providers/deepseek.md](providers/deepseek.md)). `topUp` is an allowance bought on top of a window's and spent after it, with a size the provider states, no expiry and no clock ([providers/v2ex.md](providers/v2ex.md)) — same nulls as `balance`, and the same rule that only the provider's own remainder may call it spent. `credits` is an allowance counted in the provider's own credits and `sharedCredits` a team's pool of them, reported beside it and never summed with it ([providers/qoder.md](providers/qoder.md)): each carries the provider's reset where it states one, and `reportsLength` false. `UsageWindow.Kind` is `Codable`, but its synthesised form is an object with an associated value in it; fine on disk, awkward in a `jq` filter.
 - `scope`, `name` — product names, the same in every language.
 - `estimated` / `estimatedFrom` — true where the provider said how much of an allowance is **left** and never how large it is, so the denominator behind `usedFraction` was inferred; `estimatedFrom` is a stable token saying which inference — `planPrice` ([providers/command-code.md](providers/command-code.md)), `sinceTopUp` or `yourBudget` ([providers/deepseek.md](providers/deepseek.md)). The wording that marks it on screen is localized; neither of these is, which is why they are not folded into `scope`.
-- `label` — the user's own name for an added account, theirs to have written in any language.
+- `label` — the user's own name for an added account, theirs to have written in any language; an extension's name from its manifest. On a **window**, `label` is an extension's own name for that limit — absent for every built-in provider, whose limits are named by `kind`. See [extensions.md](extensions.md).
 
 ## Shape
 
 ```
 generatedAt            ISO 8601
 accounts[]
-  id                   "claudeCode", "claudeCode#<slot>" for an added account
-  provider             the Provider case
+  id                   "claudeCode", "claudeCode#<slot>" for an added account,
+                       "extension#<id>" for an extension
+  provider             the Provider case; "extension" for every extension
   name                 the product's name
   label                the user's name for it; the product's name for a first account
   plan                 when the provider names one
@@ -43,6 +44,7 @@ accounts[]
   headline{}           the window the ring shows: windowId, usedPercent, exhausted, resetsAt
   windows[]
     id, kind, scope
+    label              an extension's name for this limit; absent otherwise
     usedPercent        the figure the ring shows — the display rule, so a
                        status line agrees with the panel
     usedFraction       the reading itself, unrounded
@@ -60,7 +62,7 @@ accounts[]
 
 `usedPercent` carries the display rule, so anything used never reads 0% and not quite full never reads 100%. `UsageWindow.percentValue` is the one copy of it; `percentText` is that plus a `%`.
 
-`source` is a stable token: `endpoint`, `statusLine`, `desktopSession`, `appServer`, `languageServer`, `webSession`, or `arkCLI`. It describes where the saved figures came from, not the user's current route preference or the outcome of a later failed check. Old cache files carry no source; Pulse does not reconstruct one from today's settings. Consumers should tolerate future source tokens.
+`source` is a stable token: `endpoint`, `statusLine`, `desktopSession`, `appServer`, `kiroACP`, `languageServer`, `webSession`, `arkCLI`, `appCache`, or `extension`. It describes where the saved figures came from, not the user's current route preference or the outcome of a later failed check. Old cache files carry no source; Pulse does not reconstruct one from today's settings. Consumers should tolerate future source tokens.
 
 `settingsURL` exists even without a reading. Added-account `#` separators are encoded as `%23`, not URL fragments. The bundled app opens that account's settings. Ready-to-use consumers and installation: [integrations.md](integrations.md).
 

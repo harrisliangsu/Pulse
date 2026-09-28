@@ -370,40 +370,61 @@ def duplicate_fetches() -> list[str]:
 
 
 def batch_covers_providers() -> list[str]:
-    """`collect` starts one `load` per provider, or loops `wanted` into `read`.
+    """`collect` starts one `load` per hand-written provider.
 
-    The `read` switch is exhaustive, so a new case fails `swift build`. The
-    `async let` list is not: a provider added only to `read` would compile
-    and never be fetched on a full pass. A loop over `wanted` that calls
-    `read` covers every case the switch does.
+    Profiled providers are not each an `async let`: `profiledReadings` loops
+    `wanted` and calls the profile's fetch. `.pulseExtension` has no primary
+    account; extension programs are fetched in `UsageStore`. A hand-written
+    provider missing from `load` compiles and is never fetched on a full pass.
     """
     provider_cases: set[str] = set()
+    handwritten: set[str] = set()
     for path in swift_files(SOURCES):
         if path.name != "UsageProvider.swift":
             continue
         for name, cases, _line in enum_declarations(path.read_text(encoding="utf-8")):
             if name == "Provider":
                 provider_cases = cases
+            elif name == "HandWrittenProvider":
+                handwritten = cases
     batch = SOURCES / "Pulse" / "Usage" / "UsageBatch.swift"
     if not provider_cases or not batch.exists():
         return ["UsageBatch.collect: could not find Provider cases or UsageBatch.swift."]
     text = code_only(batch.read_text(encoding="utf-8"))
-    # A loop that asks `read` for each wanted provider covers the enum.
+    # A loop that asks `read` for each wanted provider covers the whole enum.
     if re.search(r"\bfor\s+provider\s+in\s+wanted\b", text) and re.search(
         r"\b(?:read|load)\s*\(\s*provider\s*\)", text
     ):
         return []
     loaded = set(re.findall(r"\b(?:load|read)\s*\(\s*\.([A-Za-z_][A-Za-z0-9_]*)", text))
-    missing = sorted(provider_cases - loaded)
-    if not missing:
-        return []
-    shown = ", ".join(f".{name}" for name in missing)
-    return [
-        "Sources/Pulse/Usage/UsageBatch.swift: collect never loads "
-        f"{shown}. Add `async let … = load(.{missing[0]})` and a case in "
-        "`read`, or loop `wanted` and call `read(provider)`. A provider "
-        "missing here compiles and is never fetched on a full pass."
-    ]
+    # No primary account. UsageStore fetches each extension program itself.
+    required = (handwritten or provider_cases) - {"pulseExtension"}
+    missing = sorted(required - loaded)
+    problems: list[str] = []
+    if missing:
+        shown = ", ".join(f".{name}" for name in missing)
+        problems.append(
+            "Sources/Pulse/Usage/UsageBatch.swift: collect never loads "
+            f"{shown}. Add `async let … = load(.{missing[0]})` and a case in "
+            "`read`. A hand-written provider missing here compiles and is "
+            "never fetched on a full pass."
+        )
+    profiled = provider_cases - handwritten if handwritten else set()
+    profile_loop = bool(
+        re.search(r"\bfor\s+provider\s+in\s+wanted\b", text)
+        and re.search(r"\.fetch\s*\(", text)
+    )
+    if profiled and not profile_loop:
+        uncovered = sorted(profiled - loaded)
+        if uncovered:
+            shown = ", ".join(f".{name}" for name in uncovered[:8])
+            problems.append(
+                "Sources/Pulse/Usage/UsageBatch.swift: profiled providers are "
+                f"not fetched ({shown}{'…' if len(uncovered) > 8 else ''}). "
+                "Loop `for provider in wanted` and call the profile fetch, "
+                "or `load` each one."
+            )
+    return problems
 
 
 # --- exhaustiveness ---------------------------------------------------------

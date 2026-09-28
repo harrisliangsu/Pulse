@@ -50,8 +50,9 @@ struct RailSlotTests {
         let names = AppSettings(providerOrder: []).orderedAccounts.map(\.provider.displayName)
 
         #expect(names == names.sorted { $0.localizedStandardCompare($1) == .orderedAscending })
-        #expect(names.first == "Antigravity")
-        #expect(names.count == Provider.allCases.count)
+        // Not declaration order, where Claude Code comes first.
+        #expect(names.first != Provider.builtIn.first?.displayName)
+        #expect(names.count == Provider.builtIn.count)
     }
 
     /// An arrangement somebody made is theirs, and is not to be re-sorted

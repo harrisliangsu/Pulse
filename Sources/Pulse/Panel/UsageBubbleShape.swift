@@ -18,6 +18,18 @@ struct UsageBubbleShape: Shape {
     let cornerRadius: CGFloat
     let pointerWidth: CGFloat
     let pointerHeight: CGFloat
+    /// Which of the outline to draw. Glass draws the body and the tail as two
+    /// shapes and lets the system fuse them — see `LiquidBubbleSurface`.
+    var part: Part = .whole
+
+    enum Part { case whole, body, tail }
+
+    /// The same outline, one part of it.
+    func only(_ part: Part) -> UsageBubbleShape {
+        var copy = self
+        copy.part = part
+        return copy
+    }
 
     /// Lets the pointer slide as part of the shape rather than as a separate
     /// animation that could run on its own curve.
@@ -53,13 +65,14 @@ struct UsageBubbleShape: Shape {
             height: rect.height
         )
 
+        if part == .tail { return pointerPath(in: rect, body: body) }
+
         var path = Path(
             roundedRect: body,
             cornerSize: CGSize(width: cornerRadius, height: cornerRadius),
             style: .continuous
         )
-
-        path.addPath(pointerPath(in: rect, body: body))
+        if part == .whole { path.addPath(pointerPath(in: rect, body: body)) }
         return path
     }
 

@@ -31,6 +31,139 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     case newAPI
     case v2ex
     case stepFun
+    // Providers described by a `ProviderProfile`, each in its own file under
+    // `Providers/Profiled/`. Every switch below hands them to that profile.
+    case clinePass
+    case alibabaCodingPlan
+    case alibabaTokenPlan
+    case qwenCloud
+    case factory
+    case gemini
+    case kiloCode
+    case augment
+    case jetBrainsAI
+    case t3Chat
+    case synthetic
+    case elevenLabs
+    case warp
+    case windsurf
+    case bifrost
+    case chutes
+    case longCat
+    case zoomMate
+    case notionAI
+    case ibmBob
+    case nousPortal
+    case raycastAI
+    case gitKraken
+    case xKiro
+    case abacus
+    case moonshot
+    case hyper
+    case atlasCloud
+    case poe
+    case venice
+    case openAIPlatform
+    case amp
+    case zed
+    case sakana
+    case mistral
+    case codebuff
+    case llmProxy
+    case liteLLM
+    case aixy
+    case neuralwatt
+    case clawRouter
+    case zenMux
+    case v0
+    case devPass
+    case perplexity
+    case manus
+    case huggingFace
+    case deepInfra
+    case xaiAPI
+    case replicate
+    case typeSafe
+    case vercelAIGateway
+    /// **Not one provider: every program in the extensions folder.** Each
+    /// extension is an account of this one — `AccountKey(.pulseExtension,
+    /// slot: <the extension's id>)` — so the rail, the cache, the settings
+    /// panes and `--json` carry it the way they carry an added account,
+    /// without a case per program. There is never a primary account of it,
+    /// and it is left out of `builtIn`, which is what every list of "the
+    /// providers" means. See `PulseExtension` and Docs/extensions.md.
+    case pulseExtension = "extension"
+
+    /// The providers Pulse ships, which is what the chooser, the defaults and
+    /// every "each provider's first account" list are built from.
+    static let builtIn = allCases.filter { $0 != .pulseExtension }
+
+    /// The providers written case by case, and the extension type: everything
+    /// `Provider` has that is not a `ProviderProfile`. Switches that need a
+    /// case-by-case answer switch over this, so a profiled provider —
+    /// answered from its profile — is named in none of them. Raw values are
+    /// identical to `Provider`'s, which is what lets `handWritten` below be a
+    /// plain `init(rawValue:)`.
+    enum HandWrittenProvider: String, CaseIterable, Sendable {
+        case claudeCode
+        case codex
+        case kiro
+        case antigravity
+        case cursor
+        case openCodeGo
+        case kimiCode
+        case ollamaCloud
+        case zai
+        case glmCoding
+        case minimax
+        case minimaxCN
+        case copilot
+        case grok
+        case grokBot
+        case volcengine
+        case commandCode
+        case deepSeek
+        case devin
+        case xiaomiMiMo
+        case sub2api
+        case newAPI
+        case v2ex
+        case qoder
+        case stepFun
+        case pulseExtension = "extension"
+    }
+
+    /// This provider's hand-written case, or nil when it is answered by a
+    /// `ProviderProfile` instead. Exactly one of `handWritten` and `profile`
+    /// is non-nil for every case — see `HandWrittenProviderCoverageTests`.
+    var handWritten: HandWrittenProvider? { HandWrittenProvider(rawValue: rawValue) }
+
+    /// How an account is paid for, which is what Pulse sorts providers by.
+    ///
+    /// **Two kinds of account, and they want different things from Pulse.** A
+    /// subscription sells a plan with limits that turn over on a clock, and
+    /// its figure is a percentage the provider states. An API account is
+    /// money put in and drawn down by the call, with no allowance at all: its
+    /// figure is a balance or a spend, and its ring only exists against a
+    /// denominator Pulse watched or the reader typed (see DeepSeek's). They
+    /// were one list while there was one API provider.
+    ///
+    /// A provider that has both is filed under the one its buyers mostly pay
+    /// for: a plan with a balance beside it is a subscription.
+    enum Billing: String, Sendable, CaseIterable {
+        case subscription
+        case api
+    }
+
+    var billing: Billing {
+        if let profile { return profile.billing }
+        switch self {
+        // Money in, drawn down by the call. The two gateways are somebody's
+        // own relay in front of API keys.
+        case .deepSeek, .sub2api, .newAPI: return .api
+        default: return .subscription
+        }
+    }
 
     var id: String { rawValue }
 
@@ -46,7 +179,8 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
 
     /// Product names, left untranslated.
     var displayName: String {
-        switch self {
+        guard let written = handWritten else { return profile?.displayName ?? rawValue }
+        return switch written {
         case .claudeCode: "Claude Code"
         case .codex: "Codex"
         case .kiro: "Kiro"
@@ -126,13 +260,17 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         // Plan", but a ring named for the plan alone says nothing about whose
         // it is, and the company sells nothing else Pulse could mean.
         case .stepFun: "StepFun"
+        // What the type is called. Each extension's own name is its
+        // account's label, from its manifest; see `AppSettings.label(for:)`.
+        case .pulseExtension: "Extension"
         }
     }
 
     /// The parent brand's mark rather than the CLI-specific one — these read
     /// better at ring size and are what people recognise.
     var iconResource: String {
-        switch self {
+        guard let written = handWritten else { return profile?.iconResource ?? "extension" }
+        return switch written {
         case .claudeCode: "claude"
         case .codex: "openai"
         case .kiro: "kiro"
@@ -181,6 +319,10 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         case .newAPI: "newapi"
         case .v2ex: "v2ex"
         case .stepFun: "stepfun"
+        // One mark for every extension. A manifest's own icon is a later
+        // capability; until then the ring says "a program of yours", not
+        // which brand, and its name says the rest.
+        case .pulseExtension: "extension"
         }
     }
 
@@ -191,7 +333,9 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// narrower than `supportsLocalActivity`: lifecycle-only records can drive
     /// an honest activity mark without being usable for a cost estimate.
     var keepsLocalTranscripts: Bool {
-        switch self {
+        // None of the profiled providers leaves transcripts Pulse reads.
+        guard let written = handWritten else { return false }
+        return switch written {
         case .claudeCode, .codex: true
         // Antigravity is an editor and keeps nothing. OpenCode *does* keep
         // sessions with token counts — `opencode stats` adds them up — but in
@@ -201,7 +345,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
         case .kiro, .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
              .volcengine, .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api,
-             .newAPI, .v2ex, .qoder, .stepFun: false
+             .newAPI, .v2ex, .qoder, .stepFun, .pulseExtension: false
         }
     }
 
@@ -210,12 +354,13 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// `keepsLocalTranscripts`: Kiro and ZCode leave enough lifecycle records
     /// for an activity mark, but not the token buckets the spend ledger needs.
     var supportsLocalActivity: Bool {
-        switch self {
+        guard let written = handWritten else { return false }
+        return switch written {
         case .claudeCode, .codex, .kiro, .zai, .glmCoding: true
         case .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
              .minimax, .minimaxCN, .copilot, .grok, .grokBot, .volcengine,
              .commandCode, .deepSeek, .devin, .xiaomiMiMo,
-             .sub2api, .newAPI, .v2ex, .qoder, .stepFun: false
+             .sub2api, .newAPI, .v2ex, .qoder, .stepFun, .pulseExtension: false
         }
     }
 
@@ -258,11 +403,13 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// and no transcripts, and would have been given a stated route it does not
     /// have instead of the picker it needs.
     var hasSourceChoice: Bool {
-        switch self {
+        guard let written = handWritten else { return false }
+        return switch written {
         case .claudeCode, .codex, .volcengine, .kimiCode, .devin: true
         case .kiro, .antigravity, .cursor, .openCodeGo, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
-             .commandCode, .deepSeek, .xiaomiMiMo, .sub2api, .newAPI, .v2ex, .qoder, .stepFun: false
+             .commandCode, .deepSeek, .xiaomiMiMo, .sub2api, .newAPI, .v2ex, .qoder, .stepFun,
+             .pulseExtension: false
         }
     }
 
@@ -278,7 +425,8 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// have and an app it has nothing to do with. A switch here means the next
     /// provider added cannot inherit somebody else's sentence in silence.
     var soleRoute: (name: String, note: String)? {
-        switch self {
+        guard let written = handWritten else { return profile?.soleRoute?() }
+        return switch written {
         case .antigravity:
             (String.localized("Antigravity's language server"),
              String.localized("Only while Antigravity is open."))
@@ -303,6 +451,9 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine,
              .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api, .newAPI, .v2ex, .qoder, .stepFun:
             nil
+        // Stated on its own pane, which names the program instead.
+        case .pulseExtension:
+            nil
         }
     }
 
@@ -312,7 +463,8 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// and that is the route taken first — but a key can also be pasted in for
     /// anyone on the plan who doesn't run the CLI on this Mac.
     var usesAPIKey: Bool {
-        [.openCodeGo, .kimiCode, .ollamaCloud, .zai, .glmCoding, .minimax, .minimaxCN, .volcengine,
+        if let profile { return profile.credential != .localLogin }
+        return [.openCodeGo, .kimiCode, .ollamaCloud, .zai, .glmCoding, .minimax, .minimaxCN, .volcengine,
          .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api, .newAPI,
          .v2ex, .qoder, .stepFun].contains(self)
     }
@@ -325,6 +477,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// drains, so `AdaptiveRefresh`'s signals are blind to it and it would sit
     /// on the ceiling for ever. See `AdaptiveRefresh.unwatchedCeiling`.
     var spendingIsWatchedLocally: Bool {
+        if let profile { return profile.spendingIsWatchedLocally && !profile.reportsSpendableBalance }
         // Money spent through an API on somebody else's servers: the shape
         // this rule was written for.
         if reportsSpendableBalance { return false }
@@ -352,7 +505,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// wallet, and this asks about the provider rather than about one
     /// reading — a group with no balance simply never hands one over.
     var reportsSpendableBalance: Bool {
-        [.deepSeek, .commandCode, .sub2api, .newAPI].contains(self)
+        profile?.reportsSpendableBalance ?? [.deepSeek, .commandCode, .sub2api, .newAPI].contains(self)
     }
 
     /// Whether this provider is somebody's own deployment, so Pulse has to be
@@ -363,7 +516,10 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// on the internet with a credential attached. What Settings draws an
     /// address field for, and what `AppSettings.serverAddress(for:)` is keyed
     /// by.
-    var usesServerAddress: Bool { [.sub2api, .newAPI].contains(self) }
+    var usesServerAddress: Bool {
+        if let profile { return profile.credential == .keyAndAddress }
+        return [.sub2api, .newAPI].contains(self)
+    }
 
     /// Whether the pasted credential is a **pair** rather than one token.
     ///
@@ -386,7 +542,10 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// page reads its credits with the signed-in session.
     /// StepFun is the fourth: its API keys buy inference, and the Step Plan's
     /// allowance is only on the console, behind the signed-in session.
-    var usesSessionCookie: Bool { [.ollamaCloud, .xiaomiMiMo, .qoder, .stepFun].contains(self) }
+    var usesSessionCookie: Bool {
+        if case .sessionCookie = profile?.credential { return true }
+        return [.ollamaCloud, .xiaomiMiMo, .qoder, .stepFun].contains(self)
+    }
 
     /// Whether this provider's credential is read out of a browser rather than
     /// out of another tool's files.
@@ -396,7 +555,10 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// lives in a different file in a different format and — because it is not
     /// encrypted — needs no keychain permission. Both want the same row in
     /// Settings: which browser, and a button to go and look.
-    var readsBrowserStorage: Bool { usesSessionCookie || self == .devin }
+    var readsBrowserStorage: Bool {
+        if case .browserStorage = profile?.credential { return true }
+        return usesSessionCookie || self == .devin
+    }
 
     /// Whether Pulse holds a credential of its own for this provider.
     ///

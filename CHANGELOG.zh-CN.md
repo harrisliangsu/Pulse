@@ -6,6 +6,21 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.6
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **同步上游 qunqin24/Pulse**（本仓库尚未合入的一百一十三个提交，直到「重置后可选地启动 Claude Code 与 Codex 的用量窗口」）。
+- **扩展。** 把一个小程序放进扩展文件夹，就能让 Pulse 显示某个账号的用量，也可以报预存余额，画成一个圆环。开启之前不会运行，Pulse 也不会交给它任何凭据。写法见 [Docs/extensions.md](Docs/extensions.md)。
+- **新增五十二个服务商，内置共七十七个。** 这些服务商用一份 profile 描述，不必在每个 switch 里加一支。包括 ClinePass、阿里云百炼 Coding Plan 与 Token Plan、Qwen Cloud、美团 LongCat、Gemini、Kilo Code、Factory、Augment Code、Windsurf、Amp、Mistral、Moonshot、OpenAI API、xAI API，其余名单在 README。这五十二个参照 [CodexBar](https://github.com/steipete/CodexBar) 移植，还没有全部用真实账号验证过。
+- **订阅和 API 分开列。** 已启用的排在最上面。凡是报余额的账号，圆环都可以各自选择：自上次充值起、只看余额，或你填的预算。原先只有 DeepSeek 有这三项。
+- **菜单栏可以显示用量**（默认关闭）。图标旁可以显示用得最多的那个圆环，或指定某个账号，样式为数字、小圆环，或并排的 5 小时与每周额度。点开是用量面板：概览、每个账号一页、Codex 的重置券和剩余额度；打开「Token 消耗」后还有花费估算。菜单里可以关掉悬浮面板。Pulse 已在运行时再次打开，会直接弹出设置。
+- **面板只按已开启的圆环预留大小**，不再按全部服务商预留。「顺序」只列已开启的账号。设置侧边栏加宽。密钥框可以显示刚输入的内容。
+- **Codex 卡片可以显示额度重置券**，开关默认关闭。Pulse 会去 ChatGPT 和 Codex 应用里找自带的 `codex`，包括 ChatGPT 26.924 换过的位置；一个都找不到时会直说。卡片可以显示下一张券的到期时间。
+- **液态玻璃下，卡片的尾巴和卡片是同一块。**
+- **重置之后，可以自动开始 Claude Code 和 Codex 的用量窗口**，默认关闭。打开时会要求确认：这不是那两家产品自己的功能，Pulse 会通过本机已经登录的命令行工具发一条很短的消息。
+- **Grok 的额度用到 100% 算作已用完。** 删除额外账号时，会清掉它自己的设置，包括小机器人的外观。
+- **保留本仓库特有能力：** Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 `~/.qoder` 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.4.5
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。

@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 
 /// A JSON-RPC client for `codex app-server`.
 ///
@@ -61,6 +61,13 @@ actor CodexAppServer {
         return try await send(method: "account/rateLimits/read")
     }
 
+    /// The models the account may use, as `model/list` reports them, still
+    /// encoded as JSON.
+    func models() async throws -> Data {
+        try await ensureRunning()
+        return try await send(method: "model/list")
+    }
+
     /// The account's token history, as `account/usage/read` reports it, still
     /// encoded as JSON.
     func accountUsage() async throws -> Data {
@@ -107,7 +114,7 @@ actor CodexAppServer {
         let process = Process()
         process.executableURL = executable
         process.arguments = ["app-server"]
-        process.environment = NetworkSession.subprocessEnvironment()
+        process.environment = Self.environment(for: executable, over: BoundedProcess.inheritedEnvironment)
 
         let input = Pipe(), output = Pipe()
         process.standardInput = input
@@ -199,34 +206,75 @@ actor CodexAppServer {
         shutDown()
     }
 
+    /// The helper's environment, with the folder `codex` was found in first on
+    /// `PATH` — see `BoundedProcess.environment(leading:over:)`.
+    static func environment(for executable: URL, over inherited: [String: String]) -> [String: String] {
+        BoundedProcess.environment(leading: executable, over: inherited)
+    }
+
     /// Where `codex` tends to live. A GUI app inherits almost no `PATH`, so
     /// the usual install locations have to be checked by hand rather than
     /// relying on the environment.
-    private static func locateCodex() -> URL? {
-        let home = NSHomeDirectory()
-        var candidates: [String] = []
+    static func locateCodex() -> URL? {
+        let fileManager = FileManager.default
+        // Wherever the app actually is — a second drive, a folder of its own
+        // — Launch Services knows it by its bundle id. Both the ChatGPT app
+        // and the Codex app answer to this one (checked on ChatGPT 26.917).
+        let installed = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.openai.codex")
+        return candidates(
+            home: NSHomeDirectory(),
+            path: ProcessInfo.processInfo.environment["PATH"],
+            app: installed,
+            versions: { (try? fileManager.contentsOfDirectory(atPath: $0))?.sorted() ?? [] }
+        )
+        .first { fileManager.isExecutableFile(atPath: $0) }
+        .map { URL(fileURLWithPath: $0) }
+    }
 
-        if let path = ProcessInfo.processInfo.environment["PATH"] {
-            candidates += path.split(separator: ":").map { "\($0)/codex" }
+    /// Every place, in order. Internal and fed its listing so a test can see
+    /// the order without a disk.
+    ///
+    /// **The desktop apps carry their own.** ChatGPT's and Codex's Mac apps
+    /// ship a signed `codex` in `Contents/Resources`, and somebody who uses
+    /// Codex only through one of them has no other: every place below that
+    /// came up empty, so the reset credits read "Not available" on two Macs
+    /// that had several (issue #67, where the reporter found the one at
+    /// `/Applications/ChatGPT.app/Contents/Resources/codex`, codex-cli
+    /// 0.155.0-alpha). It is a native binary, so it needs no `node` beside
+    /// it. `app` is wherever Launch Services says the app is; the fixed
+    /// paths catch a copy it has not registered.
+    ///
+    /// **Where inside the app has moved once already.** ChatGPT 26.924 put it
+    /// at `Contents/Resources/codex-cli/bin/codex` and dropped the old place,
+    /// and the reporter was back the day 1.5.1 shipped. Both are listed,
+    /// newer first, for every app location (`bundled`).
+    ///
+    /// Node version managers put it under a version directory, so those are
+    /// listed; the folder it is found in leads the helper's `PATH`, which is
+    /// where each of them keeps `node` (`BoundedProcess.environment`).
+    /// Where the desktop apps keep `codex`, relative to the app, newest
+    /// layout first.
+    static let bundled = [
+        "Contents/Resources/codex-cli/bin/codex",
+        "Contents/Resources/codex",
+    ]
+
+    static func candidates(
+        home: String,
+        path: String?,
+        app: URL? = nil,
+        versions: (String) -> [String]
+    ) -> [String] {
+        var candidates = (path ?? "").split(separator: ":").map { "\($0)/codex" }
+        if let app {
+            candidates += bundled.map { app.appending(path: $0).path }
         }
-
-        candidates += [
-            "/opt/homebrew/bin/codex",
-            "/usr/local/bin/codex",
-            "\(home)/.local/bin/codex",
-            "\(home)/.bun/bin/codex",
-            "\(home)/.volta/bin/codex"
-        ]
-
-        // Node installs put it under a version directory, so glob those.
-        let nvm = "\(home)/.nvm/versions/node"
-        if let versions = try? FileManager.default.contentsOfDirectory(atPath: nvm) {
-            candidates += versions.map { "\(nvm)/\($0)/bin/codex" }
+        candidates += CommandLocator.directories(home: home).map { "\($0)/codex" }
+        for app in ["/Applications/Codex.app", "\(home)/Applications/Codex.app",
+                    "/Applications/ChatGPT.app", "\(home)/Applications/ChatGPT.app"] {
+            candidates += bundled.map { "\(app)/\($0)" }
         }
-
-        return candidates
-            .first { FileManager.default.isExecutableFile(atPath: $0) }
-            .map { URL(fileURLWithPath: $0) }
+        return candidates + CommandLocator.managed("codex", home: home, versions: versions)
     }
 
     // MARK: - Messaging

@@ -213,6 +213,7 @@
 "Sign in to Claude Code to see usage." = "Sign in to Claude Code to see usage.";
 "A backup for when the saved login expires. Your own status line keeps working." = "A backup for when the saved login expires. Your own status line keeps working.";
 "Ring shows" = "Ring shows";
+"Ring measures" = "Ring measures";
 "Ring colour" = "Ring colour";
 "Custom" = "Custom";
 "Colour" = "Colour";
@@ -245,6 +246,7 @@
 "Today" = "Today";
 "All time" = "All time";
 "Limit reset credits" = "Limit reset credits";
+"Next expiry" = "Next expiry";
 "1 available" = "1 available";
 "%@ available" = "%@ available";
 "%@ tokens" = "%@ tokens";
@@ -375,6 +377,8 @@
 "The Ollama session expired. Sign in again and add it." = "The Ollama session expired. Sign in again and add it.";
 "Ollama's page has changed and can no longer be read." = "Ollama's page has changed and can no longer be read.";
 "Reads your quota from Ollama's own settings page." = "Reads your quota from Ollama's own settings page.";
+"Show" = "Show";
+"Hide" = "Hide";
 "Save" = "Save";
 "Monthly limit" = "Monthly limit";
 "Daily limit" = "Daily limit";
@@ -529,7 +533,6 @@
 "Full tank" = "Full tank";
 "What you call a full balance. The ring measures against it." = "What you call a full balance. The ring measures against it.";
 "How much of the balance Pulse last saw you top up to is gone." = "How much of the balance Pulse last saw you top up to is gone.";
-"The money left, with no ring. DeepSeek reports no allowance." = "The money left, with no ring. DeepSeek reports no allowance.";
 "How much of the figure you set is gone." = "How much of the figure you set is gone.";
 "From platform.deepseek.com. Stored encrypted on this Mac." = "From platform.deepseek.com. Stored encrypted on this Mac.";
 "Balance" = "Balance";
@@ -649,6 +652,7 @@
 
 /* Provider selection */
 "Choose services to monitor" = "Choose services to monitor";
+"Choose services to start monitoring…" = "Choose services to start monitoring…";
 "New services detected" = "New services detected";
 "Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings.";
 "This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place.";
@@ -728,3 +732,211 @@
 "No Step Plan on this StepFun account." = "No Step Plan on this StepFun account.";
 "Reads your Step Plan with your signed-in browser session." = "Reads your Step Plan with your signed-in browser session.";
 "No StepFun session found. Sign in at %@ first." = "No StepFun session found. Sign in at %@ first.";
+
+/* Extensions */
+"An extension is a program you add yourself that reports one account's usage. Pulse draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials." = "An extension is a program you add yourself that reports one account's usage. Pulse draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials.";
+"Another extension already uses the id %@." = "Another extension already uses the id %@.";
+"Couldn't be used" = "Couldn't be used";
+"Each extension is a folder of its own, holding pulse-extension.json and its program." = "Each extension is a folder of its own, holding pulse-extension.json and its program.";
+"Extension" = "Extension";
+"Extension program" = "Extension program";
+"Extensions" = "Extensions";
+"Extensions folder" = "Extensions folder";
+"Folder" = "Folder";
+"Found" = "Found";
+"From its pulse-extension.json. Pulse keeps this extension's settings under it." = "From its pulse-extension.json. Pulse keeps this extension's settings under it.";
+"How to write an extension" = "How to write an extension";
+"Id" = "Id";
+"Its id must be lowercase letters, digits, dots, dashes or underscores, 64 at most." = "Its id must be lowercase letters, digits, dots, dashes or underscores, 64 at most.";
+"Its name is empty." = "Its name is empty.";
+"Its program has to be inside its own folder." = "Its program has to be inside its own folder.";
+"Its program isn't there, or isn't executable." = "Its program isn't there, or isn't executable.";
+"Look again" = "Look again";
+"Manage extensions" = "Manage extensions";
+"No pulse-extension.json in this folder." = "No pulse-extension.json in this folder.";
+"None yet" = "None yet";
+"Program" = "Program";
+"Pulse reads this folder when it starts. After adding or changing an extension, look again." = "Pulse reads this folder when it starts. After adding or changing an extension, look again.";
+"Runs a program from your extensions folder on the refresh schedule. Pulse passes it no credentials; what it reads and where it connects are up to the program." = "Runs a program from your extensions folder on the refresh schedule. Pulse passes it no credentials; what it reads and where it connects are up to the program.";
+"Show in Finder" = "Show in Finder";
+"Shown in the panel" = "Shown in the panel";
+"Stopped if it hasn't answered by then." = "Stopped if it hasn't answered by then.";
+"The extension didn't answer in time." = "The extension didn't answer in time.";
+"The extension says its login has expired." = "The extension says its login has expired.";
+"The extension stopped with an error." = "The extension stopped with an error.";
+"This extension's program can't be run. Check its folder." = "This extension's program can't be run. Check its folder.";
+"Time limit" = "Time limit";
+"Written for extension schema %@, which this version of Pulse doesn't read." = "Written for extension schema %@, which this version of Pulse doesn't read.";
+"pulse-extension.json isn't valid JSON, or is missing a field." = "pulse-extension.json isn't valid JSON, or is missing a field.";
+
+/* Profiled providers: shared wording */
+"No session found. Sign in at %@ first." = "No session found. Sign in at %@ first.";
+"Nothing saved on this Mac yet. Open the service's app once, then retry." = "Nothing saved on this Mac yet. Open the service's app once, then retry.";
+"Read a browser session in Settings." = "Read a browser session in Settings.";
+"Sign in with this service's own app or command-line tool first." = "Sign in with this service's own app or command-line tool first.";
+"The browser session expired. Sign in on the website, then read it again in Settings." = "The browser session expired. Sign in on the website, then read it again in Settings.";
+"The saved login has expired. Sign in again with the service's own app or tool." = "The saved login has expired. Sign in again with the service's own app or tool.";
+"This account has no plan with usage limits." = "This account has no plan with usage limits.";
+
+/* ClinePass */
+"From app.cline.bot. Stored encrypted on this Mac." = "From app.cline.bot. Stored encrypted on this Mac.";
+
+/* Amp */
+"From ampcode.com/settings. Stored encrypted on this Mac." = "From ampcode.com/settings. Stored encrypted on this Mac.";
+/* Gemini */
+"Reads the login saved in ~/.gemini/oauth_creds.json. No Keychain prompt." = "Reads the login saved in ~/.gemini/oauth_creds.json. No Keychain prompt.";
+"Gemini CLI's own login" = "Gemini CLI's own login";
+"Uses the login Gemini CLI already saved. Using Gemini CLI renews it." = "Uses the login Gemini CLI already saved. Using Gemini CLI renews it.";
+
+/* Kilo Code */
+"Uses a key entered in Settings, or reads ~/.local/share/kilo/auth.json. No Keychain prompt." = "Uses a key entered in Settings, or reads ~/.local/share/kilo/auth.json. No Keychain prompt.";
+"From app.kilo.ai. Optional — Pulse can use the login the Kilo CLI saved. Stored encrypted on this Mac." = "From app.kilo.ai. Optional — Pulse can use the login the Kilo CLI saved. Stored encrypted on this Mac.";
+
+/* Mistral */
+/* Factory */
+"From app.factory.ai. Stored encrypted on this Mac." = "From app.factory.ai. Stored encrypted on this Mac.";
+
+/* Windsurf */
+
+/* Profiled providers: browser storage */
+"Reads windsurf.com's sign-in from a Chromium browser when you press Read. No Keychain prompt." = "Reads windsurf.com's sign-in from a Chromium browser when you press Read. No Keychain prompt.";
+"Browser session" = "Browser session";
+/* OpenAI API */
+"From platform.openai.com. Stored encrypted on this Mac." = "From platform.openai.com. Stored encrypted on this Mac.";
+
+/* JetBrains AI */
+"As current as the IDE last left it." = "As current as the IDE last left it.";
+"Reads the AI Assistant quota your JetBrains IDE saves on this Mac. Nothing is sent anywhere." = "Reads the AI Assistant quota your JetBrains IDE saves on this Mac. Nothing is sent anywhere.";
+"The quota your JetBrains IDE saved" = "The quota your JetBrains IDE saved";
+
+/* Warp */
+"From Warp's settings, under API Keys. Stored encrypted on this Mac." = "From Warp's settings, under API Keys. Stored encrypted on this Mac.";
+
+/* IBM Bob */
+"From bob.ibm.com. Stored encrypted on this Mac." = "From bob.ibm.com. Stored encrypted on this Mac.";
+/* Synthetic */
+"From synthetic.new. Stored encrypted on this Mac." = "From synthetic.new. Stored encrypted on this Mac.";
+
+/* ElevenLabs */
+"From elevenlabs.io, with the user_read permission. Stored encrypted on this Mac." = "From elevenlabs.io, with the user_read permission. Stored encrypted on this Mac.";
+
+/* Chutes */
+"From chutes.ai. Stored encrypted on this Mac." = "From chutes.ai. Stored encrypted on this Mac.";
+
+/* GitKraken AI */
+"Uses only the access token you enter in Settings. No Keychain prompt." = "Uses only the access token you enter in Settings. No Keychain prompt.";
+"The Bearer token from gitkraken.dev's usage request, copied from the browser's developer tools. Stored encrypted on this Mac." = "The Bearer token from gitkraken.dev's usage request, copied from the browser's developer tools. Stored encrypted on this Mac.";
+
+/* xKiro */
+"From xkiro.com. Stored encrypted on this Mac." = "From xkiro.com. Stored encrypted on this Mac.";
+
+/* Hyper */
+"From hyper.charm.land. Stored encrypted on this Mac." = "From hyper.charm.land. Stored encrypted on this Mac.";
+
+/* Atlas Cloud */
+"From atlascloud.ai, with permission to read the balance. Stored encrypted on this Mac." = "From atlascloud.ai, with permission to read the balance. Stored encrypted on this Mac.";
+
+/* Poe */
+"From poe.com/api/keys. Stored encrypted on this Mac." = "From poe.com/api/keys. Stored encrypted on this Mac.";
+/* Aixy */
+"From aixy-gateway.com. Stored encrypted on this Mac." = "From aixy-gateway.com. Stored encrypted on this Mac.";
+
+/* Neuralwatt */
+"From portal.neuralwatt.com. Stored encrypted on this Mac." = "From portal.neuralwatt.com. Stored encrypted on this Mac.";
+
+/* ClawRouter */
+"From clawrouter.openclaw.ai. Stored encrypted on this Mac." = "From clawrouter.openclaw.ai. Stored encrypted on this Mac.";
+
+/* ZenMux */
+"A Management API key from zenmux.ai. An ordinary API key won't work. Stored encrypted on this Mac." = "A Management API key from zenmux.ai. An ordinary API key won't work. Stored encrypted on this Mac.";
+
+/* v0 */
+"From v0.app. Stored encrypted on this Mac." = "From v0.app. Stored encrypted on this Mac.";
+
+/* DevPass */
+"An API key from llmgateway.io. Stored encrypted on this Mac." = "An API key from llmgateway.io. Stored encrypted on this Mac.";
+
+/* DeepInfra */
+"From deepinfra.com. Stored encrypted on this Mac." = "From deepinfra.com. Stored encrypted on this Mac.";
+
+/* Vercel AI Gateway */
+"An AI Gateway API key from vercel.com. Stored encrypted on this Mac." = "An AI Gateway API key from vercel.com. Stored encrypted on this Mac.";
+/* Alibaba Coding Plan */
+"From the Coding Plan page in Model Studio. Stored encrypted on this Mac." = "From the Coding Plan page in Model Studio. Stored encrypted on this Mac.";
+
+/* Alibaba Token Plan */
+"Bailian CLI" = "Bailian CLI";
+"Runs the Bailian CLI (bl) with its saved login. Pulse does not read or store its credentials." = "Runs the Bailian CLI (bl) with its saved login. Pulse does not read or store its credentials.";
+"Uses the login the Bailian CLI already saved." = "Uses the login the Bailian CLI already saved.";
+/* Nous Portal */
+"Reads the Nous Portal login Hermes Agent saved in ~/.hermes. No Keychain prompt." = "Reads the Nous Portal login Hermes Agent saved in ~/.hermes. No Keychain prompt.";
+"Hermes Agent's login" = "Hermes Agent's login";
+"Uses the login Hermes Agent already saved. Pulse never renews it." = "Uses the login Hermes Agent already saved. Pulse never renews it.";
+
+/* Hugging Face */
+"Uses a token entered in Settings, or reads the one hf auth login saved in ~/.cache/huggingface. No Keychain prompt." = "Uses a token entered in Settings, or reads the one hf auth login saved in ~/.cache/huggingface. No Keychain prompt.";
+"From huggingface.co/settings/tokens. Stored encrypted on this Mac." = "From huggingface.co/settings/tokens. Stored encrypted on this Mac.";
+
+/* Moonshot */
+"From the Kimi Open Platform console, international or China. Stored encrypted on this Mac." = "From the Kimi Open Platform console, international or China. Stored encrypted on this Mac.";
+
+/* Codebuff */
+"Uses a key entered in Settings, or reads the login the codebuff CLI saved in ~/.config/manicode. No Keychain prompt." = "Uses a key entered in Settings, or reads the login the codebuff CLI saved in ~/.config/manicode. No Keychain prompt.";
+"From codebuff.com. Optional — Pulse can use the login the codebuff CLI saved. Stored encrypted on this Mac." = "From codebuff.com. Optional — Pulse can use the login the codebuff CLI saved. Stored encrypted on this Mac.";
+
+/* Venice */
+"From venice.ai's API settings. Stored encrypted on this Mac." = "From venice.ai's API settings. Stored encrypted on this Mac.";
+
+/* TypeSafe */
+"Uses the Cookie header you paste in Settings. No Keychain prompt." = "Uses the Cookie header you paste in Settings. No Keychain prompt.";
+"The Cookie header of a request to console.typesafe.ai/settings/billing. Stored encrypted on this Mac." = "The Cookie header of a request to console.typesafe.ai/settings/billing. Stored encrypted on this Mac.";
+
+/* xAI API */
+"TeamID:ManagementKey, from console.x.ai. An inference key won't work. Stored encrypted on this Mac." = "TeamID:ManagementKey, from console.x.ai. An inference key won't work. Stored encrypted on this Mac.";
+
+/* Billing groups */
+"Subscriptions" = "Subscriptions";
+"API and pay-as-you-go" = "API and pay-as-you-go";
+"Enabled" = "Enabled";
+"The money left, with no ring. There is no allowance to measure against." = "The money left, with no ring. There is no allowance to measure against.";
+
+/* Codex reset credits */
+"Reset credits on the card" = "Reset credits on the card";
+"How many limit reset credits are left, and when the next one expires. Asks Codex's app server on every refresh." = "How many limit reset credits are left, and when the next one expires. Asks Codex's app server on every refresh.";
+"Not available" = "Not available";
+"codex not found" = "codex not found";
+"Show usage in the menu bar" = "Show usage in the menu bar";
+"A ring's mark and figure beside the icon, red past the warning line." = "A ring's mark and figure beside the icon, red past the warning line.";
+"Usage" = "Usage";
+"Menu bar shows" = "Menu bar shows";
+"An account switched off falls back to the fullest ring." = "An account switched off falls back to the fullest ring.";
+"Fullest ring" = "Fullest ring";
+"Menu bar style" = "Menu bar style";
+"Figure" = "Figure";
+"Ring" = "Ring";
+"Open %@ usage page" = "Open %@ usage page";
+"Overview" = "Overview";
+"Updated just now" = "Updated just now";
+"Updated %@" = "Updated %@";
+"Estimated from token counts at API prices — not your subscription bill." = "Estimated from token counts at API prices — not your subscription bill.";
+"Reading local records…" = "Reading local records…";
+"Usage credits" = "Credits";
+"%@ remaining" = "%@ remaining";
+"Split" = "Split";
+"Short: day" = "Day";
+"Short: week" = "Wk";
+"Short: month" = "Mo";
+"Start windows automatically" = "Start windows automatically";
+"Start a new window after each reset" = "Start a new window after each reset";
+"When the 5-hour limit resets, sends “hi” to Haiku through Claude Code, so the next window starts counting then rather than at your next message. Nothing is saved." = "When the 5-hour limit resets, sends “hi” to Haiku through Claude Code, so the next window starts counting then rather than at your next message. Nothing is saved.";
+"When the 5-hour or weekly limit resets, sends “hi” to the cheapest model through Codex, so the next window starts counting then rather than at your next message. Nothing is saved." = "When the 5-hour or weekly limit resets, sends “hi” to the cheapest model through Codex, so the next window starts counting then rather than at your next message. Nothing is saved.";
+"Only between" = "Only between";
+"A reset outside these hours is started when they begin. Shared by Claude Code and Codex." = "A reset outside these hours is started when they begin. Shared by Claude Code and Codex.";
+"Last started" = "Last started";
+"Use at your own risk" = "Use at your own risk";
+"I understand the risk, turn it on" = "I understand the risk, turn it on";
+"This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Pulse only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that." = "This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Pulse only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that.";
+"Not started yet" = "Not started yet";
+"%@ · the command-line tool was not found" = "%@ · the command-line tool was not found";
+"%@ · it did not go through; check the tool is signed in" = "%@ · it did not go through; check the tool is signed in";
+"%@ · it did not answer in time" = "%@ · it did not answer in time";

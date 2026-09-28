@@ -19,7 +19,7 @@ import Foundation
 /// this reply and not anywhere else in the API. Every other provider Pulse
 /// carries reports at least one percentage; this one reports money and stops.
 /// So the denominator behind the ring has to come from somewhere, and
-/// `DeepSeekBasis` is the enumeration of the only three places it can:
+/// `BalanceBasis` is the enumeration of the only three places it can:
 /// something Pulse watched, nothing at all, or a figure the user typed. Which
 /// is in force is the user's choice and is stated on the card either way.
 ///
@@ -29,7 +29,7 @@ struct DeepSeekUsageService: Sendable {
     let enteredKey: String?
     /// Which denominator to use. The user's choice, defaulting to the measured
     /// one.
-    let basis: DeepSeekBasis
+    let basis: BalanceBasis
     /// What the user calls a full tank, for `.budget`. Nil, zero or negative
     /// leaves that mode with no denominator, which draws the balance alone
     /// rather than a fraction of a number nobody gave.
@@ -188,56 +188,18 @@ struct DeepSeekUsageService: Sendable {
     /// `reportsLength` is false and the seconds exist only to sort the row.
     static func windows(
         purse: Purse,
-        basis: DeepSeekBasis,
+        basis: BalanceBasis,
         budget: Double?,
         peak: Double,
         since: Date,
         isAvailable: Bool?
     ) -> [UsageWindow] {
-        let measured: (fraction: Double, estimate: UsageWindow.Estimate)? = switch basis {
-        case .balanceOnly:
-            nil
-        case .sinceTopUp:
-            DeepSeekBaseline.usedFraction(balance: purse.total, peak: peak)
-                .map { ($0, UsageWindow.Estimate.sinceTopUp) }
-        case .budget:
-            budget.flatMap { budget in
-                // **Finite, not merely positive.** `Double("inf")` is greater
-                // than zero, and an infinite denominator makes the fraction
-                // NaN — which the clamps below propagate rather than catch.
-                // Settings refuses one too; this is the guard that does not
-                // depend on where the figure came from.
-                budget.isFinite && budget > 0
-                    ? (min(max((budget - purse.total) / budget, 0), 1), UsageWindow.Estimate.yourBudget)
-                    : nil
-            }
-        }
-
-        guard let measured else { return [] }
-
-        return [
-            UsageWindow(
-                id: "balance",
-                kind: .balance,
-                // **Not the scope.** Scope is a product name that `--json`
-                // promises reads the same in every language, and "since
-                // top-up" translated into it broke that the day it shipped.
-                scope: nil,
-                usedFraction: measured.fraction,
-                windowSeconds: 30 * 86_400,
-                resetsAt: nil,
-                reportsLength: false,
-                // The denominator is Pulse's own observation in one mode and
-                // the reader's own figure in the other. Neither is DeepSeek's,
-                // and the row names which.
-                estimate: measured.estimate,
-                // **DeepSeek's own word**, not the arithmetic: `is_available`
-                // is the flag it sets when the balance can no longer pay for a
-                // call. A budget the reader set low can reach 100% with money
-                // still in the account, and that is not the account being spent.
-                isExhausted: isAvailable == false
-            )
-        ]
+        // The rule is every API account's now; DeepSeek's own word on
+        // whether it can still pay for a call is what marks it spent.
+        BalanceRing.window(
+            balance: purse.total, basis: basis, budget: budget, peak: peak,
+            isExhausted: isAvailable == false
+        ).map { [$0] } ?? []
     }
 
     /// What is left, in the currency the account is priced in.

@@ -1,6 +1,6 @@
 # Architecture
 
-Single executable target `Pulse` at `Sources/Pulse`. No internal modules; one SwiftUI view per file. The floating monitor is **not** a SwiftUI `WindowGroup` scene.
+Single executable target `Pulse` at `Sources/Pulse`. No internal modules. The floating monitor is **not** a SwiftUI `WindowGroup` scene.
 
 Provider routes, credentials, cookies, and extra-account OAuth belong in [providers/README.md](providers/README.md). This file is the AppKit shell and the settings/state that every provider shares.
 
@@ -44,7 +44,7 @@ SwiftUI tree inside the panel: `FloatingUsagePanelView` → `UsageDockView` (rai
 
 ## Settings and persistence
 
-`AppSettings` is `@Observable`, stored in `UserDefaults`. `onChange` is how AppKit hears about settings that affect the panel or refresh loop. `hidesMenuBarIcon` is the exception: its dedicated callback removes or restores the AppKit status item without refetching providers. It defaults to `false` to preserve the existing menu bar entry point.
+`AppSettings` is `@Observable`, stored in `UserDefaults`. `onChange` is how AppKit hears about settings that affect the panel or refresh loop. `hidesMenuBarIcon` and `showsUsageInMenuBar` are the exceptions: their dedicated callback (`onMenuBarIconChange`) removes, restores or redraws the AppKit status item without refetching providers. With `showsUsageInMenuBar` on, `AppDelegate.showMenuBarReading` draws `MenuBarReading.choose` — `menuBarAccount` while it is on the rail, else the fullest headline window among the shown accounts, skipping unavailable readings and inferred (`estimate`) rings — as that provider's template mark and its percentage, a small ring or its split timed limits (`menuBarStyle`), `systemRed` at the warning threshold or when spent, and re-arms `withObservationTracking` on every change. `menuNeedsUpdate` puts `MenuDashboard` (an `NSHostingView` that resizes the item as its tab changes), the usage-page item and **Refresh** at the top of the status item's menu only; see [ui/settings.md](ui/settings.md). It defaults to `false` to preserve the existing menu bar entry point.
 
 - Once monitoring starts the **rail** must not be empty (nothing to hover, nothing to grab). Before the initial choice, an empty account set is valid and the panel is not created. An added account alone is a valid rail; rebuilding from `Provider.allCases` must never overwrite that choice.
 - `providerOrder` / `orderedAccounts`: never trust the stored list as written. Drop unknown names; append accounts the list does not mention **in name order** after whatever arrangement is stored. The settings sidebar follows the same order. Reorder does **not** call `onChange` — that path refetches everything.
@@ -62,13 +62,15 @@ Keys pasted in Settings live in `keys.dat` (`APIKeyStore`), not `UserDefaults`. 
 
 ## Provider choice before monitoring
 
-`ProviderSetupWindowController` hosts the chooser in a regular AppKit window. On first launch it lists all providers, unchecked, with detected installations first. **Done** needs at least one selection. Closing it or choosing **Not now** leaves the rail absent and the menu bar usable; enabling a service in its Settings pane also completes the initial choice. Dismissing an initial chooser is not saved as completion: the next launch asks again.
+`ProviderSetupWindowController` hosts the chooser in a regular AppKit window. On first launch it lists all providers, unchecked, with detected installations first. **Done** needs at least one selection. Closing it or choosing **Not now** leaves the rail absent and the menu bar usable; until a service is chosen, the menu bar menu leads with an item that reopens the chooser, since nothing else on screen says why there is no rail; enabling a service in its Settings pane also completes the initial choice. Dismissing an initial chooser is not saved as completion: the next launch asks again.
 
 The startup gate is the resolved account set, `AppSettings.needsProviderSelection`, not whether any window was dismissed. `AppDelegate` creates the panel and starts `UsageStore` only after that set is non-empty. Store construction seeds placeholders without looking for credentials; `start`, both refresh entry points, and settings-driven refresh also refuse an empty selection. Provider panes load credentials and history automatically only for enabled primary accounts; opening Codex's pane while disabled cannot start its helper. Connection, sign-in, diagnostics and usage controls are built only after the initial choice, so even evaluating their contents cannot read a tool's configuration beforehand. The separate Token spend pane keeps its own workflow.
 
 Claude's desktop Keychain request and status-line offer run only after the primary Claude Code account is enabled, including when enabled later through Settings. A new grant's callback checks it is still enabled before refreshing. Per-provider access descriptions and exact discovery paths belong in [providers/README.md](providers/README.md).
 
 Upgrades preserve the saved enabled account ids, including extra-account-only rails. A provider new to `settings.offeredProviders` is **suggested once**, and only if presence-only discovery found it; existing providers continue monitoring while that chooser is open. Dismissal keeps the existing set. Undetected new providers remain available in Settings. All current providers are stamped as offered during restoration, so a declined upgrade offer does not recur.
+
+**Extensions** are found by `ExtensionCatalog.scan` at launch, before the saved choice is restored, so an extension's account id counts as known and its switch survives; a folder that is gone takes the switch with it on the next launch. They are never in the chooser or in an upgrade offer — `Provider.builtIn` leaves the type out — and a new one starts off. [extensions.md](extensions.md)
 
 **Legacy 1.0.0:** it wrote an offered list but no enabled list until the user edited one. Only an **absent** enabled key is restored from that historical offered list. An explicit empty array, malformed value or unknown-only list goes to the chooser. There is no path that enables all current providers as a recovery strategy.
 
