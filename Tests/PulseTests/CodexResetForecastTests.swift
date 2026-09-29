@@ -432,6 +432,146 @@ struct CodexResetForecastTests {
         #expect(legacy.status.latest == nil)
         #expect(legacy.status.card == .empty)
         #expect(legacy.etag == "old")
+        #expect(legacy.schema == CodexResetDisk.legacySchema)
+        #expect(legacy.omitsForecastTiming)
+    }
+
+    @Test("A fresh etag on a watch that never stored expires_at is fetched again, and a current file is not")
+    @MainActor
+    func staleForecastTimingIsNotAFinishedCache() throws {
+        let announced = try #require(CodexResetDates.parse("2026-09-26T18:17:54.000Z"))
+        let phrase = "around OpenAI DevDay 2026 on September 29 (Pacific Time)"
+        let staleStatus = CodexResetStatus(
+            scheduled: nil,
+            watch: .init(level: "strong", chancePercent: nil, forecastWindow: phrase),
+            latest: .init(id: "2103911959544610829", resetType: "regular", announcedAt: announced, text: "Resets all propagated.")
+        )
+        let stale = CodexResetDisk(
+            status: staleStatus,
+            etag: "live",
+            fetchedAt: Date(),
+            maxAge: 600,
+            schema: CodexResetDisk.legacySchema
+        )
+        let staleURL = try Self.write(stale)
+        defer { try? FileManager.default.removeItem(at: staleURL) }
+
+        let staleMonitor = CodexResetMonitor(settings: AppSettings(), file: staleURL) { _ in }
+        let loaded = staleMonitor.restoreCache()
+        #expect(loaded?.watch?.level == "strong")
+        #expect(loaded?.watch?.windowEnds == nil)
+        #expect(loaded?.watch?.forecastWindow == phrase)
+        #expect(loaded?.latest?.resetType == "regular")
+        #expect(staleMonitor.refetchingForecastTiming)
+        #expect(staleMonitor.sendsConditionalRequest == false)
+        #expect(staleMonitor.forecastFetchIsDue)
+
+        let ends = try #require(CodexResetDates.parse("2026-09-30T06:59:59.999Z"))
+        let note = "OpenAI DevDay 2026 is on September 29 (Pacific Time). We expect a possible Codex reset around the event."
+        var watch = try #require(staleStatus.watch)
+        watch.windowEnds = ends
+        watch.text = note
+        let current = CodexResetDisk(
+            status: CodexResetStatus(scheduled: nil, watch: watch, latest: staleStatus.latest),
+            etag: "live",
+            fetchedAt: Date(),
+            maxAge: 600
+        )
+        let encoded = try #require(CodexResetDisk.encode(current))
+        let round = try #require(CodexResetDisk.decode(encoded))
+        #expect(round.schema == CodexResetDisk.timingSchema)
+        #expect(round.omitsForecastTiming == false)
+        #expect(round.status.watch?.windowEnds == ends)
+        #expect(round.status.watch?.text == note)
+
+        let stripped = try Self.droppingSchema(encoded)
+        let missing = try #require(CodexResetDisk.decode(stripped))
+        #expect(missing.schema == CodexResetDisk.legacySchema)
+        #expect(missing.omitsForecastTiming)
+        let restoredEnd = try #require(missing.status.watch?.windowEnds)
+        #expect(abs(restoredEnd.timeIntervalSince(ends)) < 0.01)
+
+        let currentURL = try Self.write(current)
+        defer { try? FileManager.default.removeItem(at: currentURL) }
+        let currentMonitor = CodexResetMonitor(settings: AppSettings(), file: currentURL) { _ in }
+        let kept = currentMonitor.restoreCache()
+        #expect(kept?.watch?.windowEnds == ends)
+        #expect(currentMonitor.refetchingForecastTiming == false)
+        #expect(currentMonitor.sendsConditionalRequest)
+        #expect(currentMonitor.forecastFetchIsDue == false)
+    }
+
+    /// The document codex-resets.com was serving when the card showed only
+    /// 「较强」 and a ? — `expires_at` still ahead, so the two timing lines exist.
+    @Test("The live DevDay watch counts down to expires_at and keeps the event as the note")
+    func liveDevDayWatchShowsTheCountdown() throws {
+        let endsAt = "2026-09-30T06:59:59.999Z"
+        let prose = "around OpenAI DevDay 2026 on September 29 (Pacific Time)"
+        let note = "OpenAI DevDay 2026 is on September 29 (Pacific Time). We expect a possible Codex reset around the event."
+        let status = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": {
+              "id": "2103911959544610829",
+              "reset_type": "regular",
+              "announced_at": "2026-09-26T18:17:54.000Z",
+              "text": "Resets all propagated. That will be all. Have a fantastic weekend.",
+              "source": { "type": "x_post", "author": "thsottiaux", "url": "https://x.com/thsottiaux/status/2103911959544610829" }
+            },
+            "scheduled_reset": null,
+            "active_watch": {
+              "level": "strong",
+              "reset_chance_percent": null,
+              "forecast_window": "\(prose)",
+              "observed_at": "2026-09-27T10:39:35.426Z",
+              "expires_at": "\(endsAt)",
+              "text": "\(note)",
+              "source": { "type": "observed" }
+            },
+            "stats": { "total": 55, "last_reset_at": "2026-09-26T18:17:54.000Z", "days_since_last": 2.7, "avg_interval_days": 6.9 }
+          },
+          "meta": { "api_version": "v1", "generated_at": "2026-09-29T10:27:22.473Z" }
+        }
+        """)))
+        let ends = try #require(CodexResetDates.parse(endsAt))
+        let now = try #require(CodexResetDates.parse("2026-09-29T10:27:22.473Z"))
+        #expect(ends > now)
+        #expect(status.explicitReset == nil)
+        #expect(status.watch?.windowEnds == ends)
+
+        var shanghai = Calendar(identifier: .gregorian)
+        shanghai.timeZone = try #require(TimeZone(identifier: "Asia/Shanghai"))
+        let zh = Locale(identifier: "zh_CN")
+        let lines = CodexResetCardLines.make(status, now: now, locale: zh, calendar: shanghai)
+        let relative = CodexResetPresentation.relative(announcedAt: ends, now: now, locale: zh)
+        #expect(lines.prediction.countdown == CodexResetPresentation.mayReset(relative: relative))
+        let stamp = CodexResetPresentation.predictionStamp(date: ends, locale: zh, calendar: shanghai)
+        #expect(lines.prediction.bound == CodexResetPresentation.expectedBefore(stamp))
+        #expect(lines.prediction.countdown?.contains(prose) == false)
+        #expect(lines.prediction.countdown?.contains("DevDay") == false)
+        #expect(lines.prediction.bound?.contains("DevDay") == false)
+        #expect(lines.prediction.note == note)
+        let watch = try #require(status.watch)
+        #expect(lines.prediction.trailing == CodexResetPresentation.confidence(watch))
+        #expect(lines.latest?.typeLabel == String.localized("Regular reset"))
+        #expect(stamp.contains("30"))
+        #expect(stamp.contains("14") || stamp.contains("15") || stamp.contains("2"))
+    }
+
+    private static func write(_ disk: CodexResetDisk) throws -> URL {
+        let data = try #require(CodexResetDisk.encode(disk))
+        let url = FileManager.default.temporaryDirectory
+            .appending(path: "pulse-codex-resets-\(UUID().uuidString).json")
+        try data.write(to: url, options: .atomic)
+        return url
+    }
+
+    /// A file from 1.4.8 that re-saved an older watch has no `schema` key.
+    private static func droppingSchema(_ data: Data) throws -> Data {
+        let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var copy = object
+        copy.removeValue(forKey: "schema")
+        return try JSONSerialization.data(withJSONObject: copy)
     }
 
     @Test("A watch shows a countdown and a bound, and the event prose is the note")
