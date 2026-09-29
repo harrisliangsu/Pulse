@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.8</title>
+            <pubDate>Tue, 29 Sep 2026 10:19:33 -0000</pubDate>
+            <sparkle:version>1.4.8</sparkle:version>
+            <sparkle:shortVersionString>1.4.8</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.8</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.8</h2><ul><li><strong>预测重置改成倒计时和时刻。</strong> Codex 卡片上的「预测重置」不再把英文活动说明当作正文。它现在写出还要多久可能重置，以及预计在本地的哪一天、几点之前，和 <a href="https://codex-resets.com">codex-resets.com</a> 的预测块一样。活动说明收在这一行的「?」里，悬停才出现。较强、偏高仍在标题右侧。已经公布的时刻仍是提醒所用的时间；只有观察窗口、没有明确时间时，提醒仍然不响。</li><li><strong>保留本仓库特有能力：</strong> 环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.8">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.8/Pulse-1.4.8.zip"
+                       length="12359244"
+                       type="application/octet-stream"
+                       sparkle:edSignature="NX0eRiehc1XOPULbSR4195SS5eVLth8frgoXMnzwSCnfOFNl5tzItSSgvGLAmktpQl3Bq8Z6YpnnXR5U6QlTAg==" />
+        </item>
+        <item>
             <title>1.4.7</title>
             <pubDate>Tue, 29 Sep 2026 01:37:32 -0000</pubDate>
             <sparkle:version>1.4.7</sparkle:version>
