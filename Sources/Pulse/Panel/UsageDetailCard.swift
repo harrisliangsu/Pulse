@@ -86,7 +86,8 @@ enum DetailCardLayout {
     /// The relative time stays on one line. The type's explanation is a
     /// tooltip on those words, not another row and not an icon. The link to
     /// the site and the help mark sit on the title row, so neither adds a
-    /// row of its own. The event note is that mark's tooltip, not a line.
+    /// row of its own. The event note is an overlay on that mark, not a line
+    /// and not a system tooltip — unfolding it does not change this height.
     static var codexIntelHeight: CGFloat {
         contentSpacing
             + rowTextLineHeight * 2
@@ -150,6 +151,11 @@ struct UsageDetailCard: View {
     /// Banked credits for the primary Codex login. Nil when the app server
     /// has not answered; the line is omitted.
     var codexCredits: CodexCreditSummary? = nil
+    /// The event note, drawn over the prediction. A system tooltip does not
+    /// appear on this panel. Kept out of the layout: showing it must not move
+    /// the mark or grow the card, or the pointer's own enter and exit would
+    /// chase each other.
+    @State private var predictionNoteVisible = false
 
     /// Where Red alert turns red, so the card's bars agree with the rail's rings.
     @Environment(\.usageWarningThreshold) private var warningThreshold
@@ -228,6 +234,9 @@ struct UsageDetailCard: View {
                 codexIntel
                     .id(CodexResetCardLines.identity(resolvedCodexReset))
                     .animation(nil, value: CodexResetCardLines.identity(resolvedCodexReset))
+                    .onChange(of: CodexResetCardLines.identity(resolvedCodexReset)) { _, _ in
+                        predictionNoteVisible = false
+                    }
             }
 
             if let footnote {
@@ -402,11 +411,12 @@ struct UsageDetailCard: View {
     ///
     /// The title row is the label, the link, the help mark, and the
     /// confidence. Under it, a countdown and the local bound — the same two
-    /// facts the site's prediction block leads with. The event note is the
-    /// mark's tooltip, not a line. A latest announcement is an extra row
-    /// under that, including when the prediction is empty. Account reset
-    /// cards, when the app server has them, stay underneath: they are this
-    /// login's inventory, not the public announcement.
+    /// facts the site's prediction block leads with. The event note is drawn
+    /// over those lines while the mark is held; it is not itself a line. A
+    /// latest announcement is an extra row under that, including when the
+    /// prediction is empty. Account reset cards, when the app server has
+    /// them, stay underneath: they are this login's inventory, not the
+    /// public announcement.
     private var codexIntel: some View {
         let prediction = codexLines.prediction
         return VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
@@ -418,7 +428,7 @@ struct UsageDetailCard: View {
                 HStack(spacing: 2) {
                     CodexResetsLink()
                     if let note = prediction.note {
-                        CodexResetNoteButton(note: note)
+                        CodexResetNoteButton(note: note, visible: $predictionNoteVisible)
                     }
                 }
 
@@ -455,6 +465,11 @@ struct UsageDetailCard: View {
             }
         }
         .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+        .overlay(alignment: .top) {
+            if predictionNoteVisible, let note = prediction.note {
+                CodexResetNoteCallout(note: note)
+            }
+        }
     }
 
     /// The status this card draws. The store wins while the panel is
@@ -658,13 +673,19 @@ private extension View {
     }
 }
 
-/// The event note, hidden until the pointer rests on it. The panel has no
-/// popover; `.help` is the tooltip the header buttons already use. The mark
-/// claims the point so a click does not fall through the panel, and it does
-/// not open the site — the arrow beside it does that.
+/// The event note. The panel never becomes key, and this mark is an `NSView`
+/// that takes the point, so SwiftUI `.help` — a system tooltip — does not
+/// appear here. Hover and click both reveal the note, drawn by the card over
+/// the lines underneath. The mark claims the point so a click does not fall
+/// through the panel, and it does not open the site — the arrow beside it does.
 private struct CodexResetNoteButton: View {
     let note: String
+    @Binding var visible: Bool
     @State private var hovering = false
+    @State private var pinned = false
+    /// Set by a click that puts the note away, so a pointer that is still
+    /// inside the mark does not show it again until it leaves.
+    @State private var suppressed = false
 
     private var label: String { String.localized("About this prediction") }
 
@@ -672,16 +693,72 @@ private struct CodexResetNoteButton: View {
         let side = DetailCardLayout.rowTextLineHeight
         Image(systemName: "questionmark.circle")
             .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .semibold))
-            .foregroundStyle(.primary.opacity(hovering ? 1 : 0.75))
+            .foregroundStyle(.primary.opacity(hovering || pinned ? 1 : 0.75))
             .frame(width: side, height: side)
             .contentShape(Rectangle())
             .overlay {
-                PointerHand(onHover: { hovering = $0 }) {}
+                PointerHand(onHover: { inside in
+                    hovering = inside
+                    if !inside { suppressed = false }
+                    publish()
+                }) {
+                    if pinned {
+                        pinned = false
+                        suppressed = true
+                    } else {
+                        suppressed = false
+                        pinned = true
+                    }
+                    publish()
+                }
             }
-            .help(note)
             .accessibilityElement()
             .accessibilityLabel(label)
             .accessibilityValue(note)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction(.default) {
+                if pinned {
+                    pinned = false
+                    suppressed = true
+                } else {
+                    suppressed = false
+                    pinned = true
+                }
+                publish()
+            }
+    }
+
+    private func publish() {
+        visible = !suppressed && (hovering || pinned)
+    }
+}
+
+/// The event note, laid over the prediction. It does not take part in the
+/// card's height: the mark stays where it is, and a hover cannot resize the
+/// card out from under the pointer.
+private struct CodexResetNoteCallout: View {
+    let note: String
+
+    var body: some View {
+        Text(verbatim: note)
+            .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+            .foregroundStyle(.primary)
+            .multilineTextAlignment(.leading)
+            .lineLimit(6)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(.background.opacity(0.96))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(.primary.opacity(0.16), lineWidth: 1)
+            }
+            .padding(.top, DetailCardLayout.rowTextLineHeight + DetailCardLayout.rowInternalSpacing)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 }
 

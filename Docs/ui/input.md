@@ -2,6 +2,8 @@
 
 SwiftUI `.onHover` **does not work here**. It tracks only while the app is active. Pulse is `.accessory` behind a non-activating panel that never becomes key, so it is essentially never active.
 
+SwiftUI `.help` does not show on a control this panel draws with `PointerHand`. The window can never become key, and that `NSView` is the one under the pointer, so the tooltip is never the view the pointer is on. Help copy that has to be read from such a control is drawn in the card from that tracking area — hover and click — and must not change the card's height. A callout that grows the card moves the mark, the tracking area exits, and the callout closes.
+
 Do not treat `hitTest` or synthesised `NSEvent`s as proof that a real click arrives. They have reported handles as reachable at widths the rail did not have, and they bypass whatever a material installs. Geometry probes are useful (“is this point in `grabArea`?”). Whether a person can drag the panel is **real input**: last verified by hand on the docked glass rail after #68.
 
 Why enter/leave are split, why the window owns the drag, and the Liquid Glass episode: [../decisions/hover-and-drag.md](../decisions/hover-and-drag.md), [../decisions/liquid-glass.md](../decisions/liquid-glass.md).
