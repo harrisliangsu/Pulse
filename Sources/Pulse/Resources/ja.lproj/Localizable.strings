@@ -696,6 +696,13 @@
 "Elevated" = "やや高い";
 "Strong" = "高い";
 "%@ · %@ chance" = "%@ · %@ の見込み";
+/* まだ先の予測枠への相対カウントダウン。語句はすでに「21時間後」。 */
+"May reset %@" = "%@にリセットされる可能性";
+/* 予測枠が終わる現地の日時。 */
+"Expected before %@" = "%@ より前の見込み";
+/* 告知された時刻への相対カウントダウン。語句はすでに「21時間後」。 */
+"Resets %@" = "%@にリセット";
+"About this prediction" = "この予測について";
 "Reset cards" = "リセットカード";
 "Reset reminders" = "リセットの事前通知";
 "Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "Codex Resets が時刻を示しているときだけ、その前に知らせます。見通しだけで時刻がなければ通知しません。";

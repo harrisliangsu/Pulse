@@ -77,18 +77,20 @@ enum DetailCardLayout {
     /// are two text lines, shorter than a limit's row.
     static var maximumHeight: CGFloat { height(forWindows: 6, footnote: true) + codexIntelHeight }
 
-    /// Prediction line, a wrapped forecast phrase, the latest announcement
-    /// (one line of relative time, then a type-and-clock line that may wrap),
-    /// and banked credits. The prediction, the forecast, the type line, and
-    /// the credits may each take two lines. The budget is that tall case — a
-    /// watch, a latest announcement, and reset cards together — even when a
-    /// given card draws fewer of them. The relative time stays on one line.
-    /// The type's explanation is a tooltip on those words, not another row
-    /// and not an icon. The link to the site sits on the prediction line, so
-    /// it adds no row of its own.
+    /// Title row (confidence may wrap), a countdown, the local bound (may
+    /// wrap), the latest announcement (one line of relative time, then a
+    /// type-and-clock line that may wrap), and banked credits. The countdown,
+    /// the bound, the type line, and the credits may each take two lines.
+    /// The budget is that tall case — a watch, a latest announcement, and
+    /// reset cards together — even when a given card draws fewer of them.
+    /// The relative time stays on one line. The type's explanation is a
+    /// tooltip on those words, not another row and not an icon. The link to
+    /// the site and the help mark sit on the title row, so neither adds a
+    /// row of its own. The event note is that mark's tooltip, not a line.
     static var codexIntelHeight: CGFloat {
         contentSpacing
             + rowTextLineHeight * 2
+            + rowInternalSpacing + rowTextLineHeight * 2
             + rowInternalSpacing + rowTextLineHeight * 2
             + rowInternalSpacing + rowTextLineHeight
             + rowInternalSpacing + rowTextLineHeight * 2
@@ -398,30 +400,47 @@ struct UsageDetailCard: View {
     /// Irregular Codex reset intel, plus banked credits when the app server
     /// has them. Not the 5-hour or weekly `resetsAt` rows above.
     ///
-    /// The prediction row is unchanged: an explicit time, a watch, or
-    /// "No prediction yet". A latest announcement is an extra row under
-    /// that, including when the prediction is empty. Account reset cards,
-    /// when the app server has them, stay underneath: they are this login's
-    /// inventory, not the public announcement.
+    /// The title row is the label, the link, the help mark, and the
+    /// confidence. Under it, a countdown and the local bound — the same two
+    /// facts the site's prediction block leads with. The event note is the
+    /// mark's tooltip, not a line. A latest announcement is an extra row
+    /// under that, including when the prediction is empty. Account reset
+    /// cards, when the app server has them, stay underneath: they are this
+    /// login's inventory, not the public announcement.
     private var codexIntel: some View {
-        VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
+        let prediction = codexLines.prediction
+        return VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(localized: "Predicted reset")
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
-                CodexResetsLink()
+                HStack(spacing: 2) {
+                    CodexResetsLink()
+                    if let note = prediction.note {
+                        CodexResetNoteButton(note: note)
+                    }
+                }
 
                 Spacer(minLength: 8)
 
-                Text(predictionValue)
+                if let trailing = prediction.trailing {
+                    Text(verbatim: trailing)
+                        .foregroundStyle(.primary.opacity(0.9))
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(2)
+                }
+            }
+
+            if let countdown = prediction.countdown {
+                Text(verbatim: countdown)
                     .foregroundStyle(.primary.opacity(0.9))
-                    .multilineTextAlignment(.trailing)
+                    .fixedSize(horizontal: false, vertical: true)
                     .lineLimit(2)
             }
 
-            if let detail = predictionDetail {
-                Text(verbatim: detail)
+            if let bound = prediction.bound {
+                Text(verbatim: bound)
                     .foregroundStyle(.primary.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
                     .lineLimit(2)
@@ -514,35 +533,6 @@ struct UsageDetailCard: View {
         }
     }
 
-    private var predictionValue: String {
-        switch resolvedCodexReset?.card {
-        case .scheduled(let date):
-            Self.clock(date)
-        case .watch(let watch):
-            Self.watchHeadline(watch)
-        case .empty, nil:
-            .localized("No prediction yet")
-        }
-    }
-
-    /// The API's own forecast phrase. Absent for an explicit time and for the
-    /// empty state — `expires_at` is never rendered.
-    private var predictionDetail: String? {
-        guard case .watch(let watch) = resolvedCodexReset?.card else { return nil }
-        return watch.forecastWindow
-    }
-
-    private static func watchHeadline(_ watch: CodexResetStatus.Watch) -> String {
-        let level = switch watch.level {
-        case "elevated": String.localized("Elevated")
-        case "strong": String.localized("Strong")
-        default: watch.level
-        }
-        guard let chance = watch.chancePercent else { return level }
-        let figure = "\(chance)%"
-        return .localized("\(level) · \(figure) chance")
-    }
-
     private func creditLine(_ credits: CodexCreditSummary) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -574,15 +564,6 @@ struct UsageDetailCard: View {
             let remaining = Self.remainingFormatter.string(from: Date(), to: expires)
         else { return nil }
         return .localized("Next expires in \(remaining)")
-    }
-
-    private static func clock(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = LocalizationSource.locale
-        formatter.setLocalizedDateFormatFromTemplate(
-            Calendar.current.isDateInToday(date) ? "jmm" : "MMMdjmm"
-        )
-        return formatter.string(from: date)
     }
 
     private static var remainingFormatter: DateComponentsFormatter {
@@ -674,6 +655,33 @@ private extension View {
         } else {
             self
         }
+    }
+}
+
+/// The event note, hidden until the pointer rests on it. The panel has no
+/// popover; `.help` is the tooltip the header buttons already use. The mark
+/// claims the point so a click does not fall through the panel, and it does
+/// not open the site — the arrow beside it does that.
+private struct CodexResetNoteButton: View {
+    let note: String
+    @State private var hovering = false
+
+    private var label: String { String.localized("About this prediction") }
+
+    var body: some View {
+        let side = DetailCardLayout.rowTextLineHeight
+        Image(systemName: "questionmark.circle")
+            .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .semibold))
+            .foregroundStyle(.primary.opacity(hovering ? 1 : 0.75))
+            .frame(width: side, height: side)
+            .contentShape(Rectangle())
+            .overlay {
+                PointerHand(onHover: { hovering = $0 }) {}
+            }
+            .help(note)
+            .accessibilityElement()
+            .accessibilityLabel(label)
+            .accessibilityValue(note)
     }
 }
 

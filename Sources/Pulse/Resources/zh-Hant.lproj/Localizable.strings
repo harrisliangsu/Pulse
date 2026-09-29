@@ -696,6 +696,13 @@
 "Elevated" = "偏高";
 "Strong" = "較強";
 "%@ · %@ chance" = "%@ · %@ 的可能";
+/* 相對倒計時。短語本身已是「21小時後」。 */
+"May reset %@" = "%@可能重置";
+/* 預測窗口結束的本地日期和時刻。 */
+"Expected before %@" = "預計在 %@ 前";
+/* 已公布時刻的相對倒計時。短語本身已是「21小時後」。 */
+"Resets %@" = "%@重置";
+"About this prediction" = "這則預測的說明";
 "Reset cards" = "重置卡";
 "Reset reminders" = "重置提醒";
 "Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "在 Codex Resets 給出明確時間時提前提醒；只有預測、沒有具體時間則不通知。";

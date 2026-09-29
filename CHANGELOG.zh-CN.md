@@ -6,6 +6,11 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.8
+
+- **预测重置改成倒计时和时刻。** Codex 卡片上的「预测重置」不再把英文活动说明当作正文。它现在写出还要多久可能重置，以及预计在本地的哪一天、几点之前，和 [codex-resets.com](https://codex-resets.com) 的预测块一样。活动说明收在这一行的「?」里，悬停才出现。较强、偏高仍在标题右侧。已经公布的时刻仍是提醒所用的时间；只有观察窗口、没有明确时间时，提醒仍然不响。
+- **保留本仓库特有能力：** 环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 `~/.qoder` 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.4.7
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。

@@ -10,6 +10,11 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.8
+
+- **Codex’s predicted reset shows the time.** On the Codex card, 「预测重置」 counts down and gives the local date, the way [codex-resets.com](https://codex-resets.com) does: how long until a reset may happen, and the moment it is expected before. The event note (DevDay and the like) sits behind a ? on that row. Confidence stays at the end of the title. An announced time is still what a reminder counts down to; a watch’s window end is not.
+- **Fork-only pieces kept:** ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen’s cookie store; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.7
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
