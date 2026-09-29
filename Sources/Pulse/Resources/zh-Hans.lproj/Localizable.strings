@@ -694,6 +694,13 @@
 "Elevated" = "偏高";
 "Strong" = "较强";
 "%@ · %@ chance" = "%@ · %@ 的可能";
+/* 相对倒计时。短语本身已是「21小时后」。 */
+"May reset %@" = "%@可能重置";
+/* 预测窗口结束的本地日期和时刻。 */
+"Expected before %@" = "预计在 %@ 前";
+/* 已公布时刻的相对倒计时。短语本身已是「21小时后」。 */
+"Resets %@" = "%@重置";
+"About this prediction" = "这条预测的说明";
 "Reset cards" = "重置卡";
 "Reset reminders" = "重置提醒";
 "Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "在 Codex Resets 给出明确时间时提前提醒；只有预测、没有具体时间则不通知。";

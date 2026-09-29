@@ -694,6 +694,13 @@
 "Elevated" = "Elevated";
 "Strong" = "Strong";
 "%@ · %@ chance" = "%@ · %@ chance";
+/* Relative countdown to a forecast window that is still ahead. The phrase is already "in 21 hours". */
+"May reset %@" = "May reset %@";
+/* Local date and time the forecast runs until. */
+"Expected before %@" = "Expected before %@";
+/* Relative countdown to an announced time. The phrase is already "in 21 hours". */
+"Resets %@" = "Resets %@";
+"About this prediction" = "About this prediction";
 "Reset cards" = "Reset cards";
 "Reset reminders" = "Reset reminders";
 "Before an explicit time from Codex Resets; a forecast with no time stays quiet." = "Before an explicit time from Codex Resets; a forecast with no time stays quiet.";

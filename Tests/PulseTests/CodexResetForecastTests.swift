@@ -81,6 +81,40 @@ struct CodexResetForecastTests {
         #expect(watch.level == "elevated")
         #expect(watch.chancePercent == 42)
         #expect(watch.forecastWindow == "later today")
+        let ends = try #require(CodexResetDates.parse(expiresAt))
+        #expect(watch.windowEnds == ends)
+        #expect(watch.text == "watch")
+        #expect(status.explicitReset != watch.windowEnds)
+    }
+
+    @Test("A window end without a phrase is still a watch, and not a reset time")
+    func windowEndWithoutProse() throws {
+        let endsAt = "2026-09-30T06:59:59.999Z"
+        let status = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": null,
+            "scheduled_reset": null,
+            "active_watch": {
+              "level": "strong",
+              "reset_chance_percent": null,
+              "forecast_window": "  ",
+              "expires_at": "\(endsAt)",
+              "text": "  "
+            }
+          }
+        }
+        """)))
+        let ends = try #require(CodexResetDates.parse(endsAt))
+        guard case .watch(let watch) = status.card else {
+            Issue.record("expected a watch")
+            return
+        }
+        #expect(watch.windowEnds == ends)
+        #expect(watch.forecastWindow.isEmpty)
+        #expect(watch.text == nil)
+        #expect(status.explicitReset == nil)
+        #expect(CodexResetPresentation.context(forecastWindow: watch.forecastWindow, text: watch.text) == nil)
     }
 
     @Test("Neither a time nor a watch is an empty card")
@@ -400,6 +434,135 @@ struct CodexResetForecastTests {
         #expect(legacy.etag == "old")
     }
 
+    @Test("A watch shows a countdown and a bound, and the event prose is the note")
+    func watchCountdownIsNotTheEvent() throws {
+        let endsAt = "2026-09-30T06:59:59.999Z"
+        let prose = "around OpenAI DevDay 2026 on September 29 (Pacific Time)"
+        let note = "OpenAI DevDay 2026 is on September 29 (Pacific Time). We expect a possible Codex reset around the event."
+        let status = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": null,
+            "scheduled_reset": null,
+            "active_watch": {
+              "level": "strong",
+              "reset_chance_percent": null,
+              "forecast_window": "\(prose)",
+              "observed_at": "2026-09-27T10:39:35.426Z",
+              "expires_at": "\(endsAt)",
+              "text": "\(note)",
+              "source": { "type": "observed" }
+            }
+          }
+        }
+        """)))
+        let ends = try #require(CodexResetDates.parse(endsAt))
+        let now = ends.addingTimeInterval(-21 * 3600)
+        #expect(status.explicitReset == nil)
+        #expect(status.watch?.windowEnds == ends)
+        #expect(status.watch?.text == note)
+
+        var shanghai = Calendar(identifier: .gregorian)
+        shanghai.timeZone = try #require(TimeZone(identifier: "Asia/Shanghai"))
+        let zh = Locale(identifier: "zh_CN")
+        let stamp = CodexResetPresentation.predictionStamp(date: ends, locale: zh, calendar: shanghai)
+        #expect(stamp.contains("30"))
+        #expect(stamp.contains("三"))
+        #expect(stamp.contains("59"))
+        #expect(!stamp.contains(prose))
+
+        let relative = CodexResetPresentation.relative(announcedAt: ends, now: now, locale: zh)
+        #expect(relative.contains("小时") || relative.contains("小時"))
+        #expect(relative.contains("后") || relative.contains("後"))
+
+        let en = Locale(identifier: "en_US")
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+        let lines = CodexResetCardLines.make(status, now: now, locale: en, calendar: utc)
+        let enRelative = CodexResetPresentation.relative(announcedAt: ends, now: now, locale: en)
+        #expect(enRelative == "in 21 hours")
+        #expect(lines.prediction.countdown == CodexResetPresentation.mayReset(relative: enRelative))
+        #expect(lines.prediction.countdown?.contains(prose) == false)
+        #expect(lines.prediction.countdown?.contains("DevDay") == false)
+        let enStamp = CodexResetPresentation.predictionStamp(date: ends, locale: en, calendar: utc)
+        #expect(lines.prediction.bound == CodexResetPresentation.expectedBefore(enStamp))
+        #expect(lines.prediction.bound?.contains(prose) == false)
+        #expect(lines.prediction.note == note)
+        let watch = try #require(status.watch)
+        #expect(lines.prediction.trailing == CodexResetPresentation.confidence(watch))
+        #expect(lines.prediction.countdown != lines.prediction.note)
+
+        let past = CodexResetCardLines.make(status, now: ends.addingTimeInterval(60), locale: en, calendar: utc)
+        #expect(past.prediction.countdown == nil)
+        #expect(past.prediction.bound == nil)
+        #expect(past.prediction.note == note)
+        #expect(past.prediction.trailing == lines.prediction.trailing)
+    }
+
+    @Test("Prose with no instant stays on the note, and an announced time is definite")
+    func proseAndScheduled() throws {
+        let proseOnly = CodexResetStatus(
+            scheduled: nil,
+            watch: .init(level: "elevated", chancePercent: 42, forecastWindow: "within 24h")
+        )
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let proseLines = CodexResetCardLines.make(proseOnly, now: now, locale: Locale(identifier: "en_US"))
+        #expect(proseLines.prediction.countdown == nil)
+        #expect(proseLines.prediction.bound == nil)
+        #expect(proseLines.prediction.note == "within 24h")
+        let proseWatch = try #require(proseOnly.watch)
+        #expect(proseLines.prediction.trailing == CodexResetPresentation.confidence(proseWatch))
+
+        let when = now.addingTimeInterval(21 * 3600)
+        let scheduled = CodexResetStatus(
+            scheduled: .init(id: "post-1", scheduledFor: when),
+            watch: .init(
+                level: "strong",
+                chancePercent: nil,
+                forecastWindow: "around an event",
+                windowEnds: when,
+                text: "Some event."
+            )
+        )
+        #expect(scheduled.explicitReset == when)
+        #expect(scheduled.card == .scheduled(when))
+        let lines = CodexResetCardLines.make(scheduled, now: now, locale: Locale(identifier: "en_US"))
+        let relative = CodexResetPresentation.relative(announcedAt: when, now: now, locale: Locale(identifier: "en_US"))
+        #expect(relative == "in 21 hours")
+        #expect(lines.prediction.countdown == CodexResetPresentation.resets(relative: relative))
+        #expect(lines.prediction.countdown != CodexResetPresentation.mayReset(relative: relative))
+        #expect(lines.prediction.bound == CodexResetPresentation.predictionStamp(date: when, locale: Locale(identifier: "en_US")))
+        #expect(lines.prediction.note == nil)
+        #expect(lines.prediction.trailing == nil)
+        #expect(lines.prediction.countdown?.contains("around an event") == false)
+
+        let ago = CodexResetCardLines.make(
+            CodexResetStatus(scheduled: .init(id: "old", scheduledFor: now.addingTimeInterval(-3600)), watch: nil),
+            now: now,
+            locale: Locale(identifier: "en_US")
+        )
+        #expect(ago.prediction.countdown == nil)
+        #expect(ago.prediction.bound?.isEmpty == false)
+    }
+
+    @Test("A cached watch from before the window end still decodes")
+    func decodesWatchWithoutWindowEnd() throws {
+        let data = Data(#"{"level":"elevated","chancePercent":null,"forecastWindow":"soon"}"#.utf8)
+        let watch = try JSONDecoder().decode(CodexResetStatus.Watch.self, from: data)
+        #expect(watch.level == "elevated")
+        #expect(watch.forecastWindow == "soon")
+        #expect(watch.windowEnds == nil)
+        #expect(watch.text == nil)
+        #expect(watch.chancePercent == nil)
+
+        let withEnd = watch
+        var copied = withEnd
+        copied.windowEnds = Date(timeIntervalSince1970: 1_800_000_000)
+        copied.text = "An event."
+        #expect(CodexResetCardLines.identity(CodexResetStatus(scheduled: nil, watch: watch))
+            != CodexResetCardLines.identity(CodexResetStatus(scheduled: nil, watch: copied)))
+    }
+
     @Test("The card link opens the site, not the status document")
     func siteLink() {
         #expect(CodexResetClient.site.absoluteString == "https://codex-resets.com")
@@ -478,8 +641,15 @@ struct AdvanceResetReminderTests {
 
         let watchOnly = CodexResetStatus(
             scheduled: .init(id: "post-9", scheduledFor: nil),
-            watch: .init(level: "elevated", chancePercent: 40, forecastWindow: "this week")
+            watch: .init(
+                level: "elevated",
+                chancePercent: 40,
+                forecastWindow: "this week",
+                windowEnds: now.addingTimeInterval(20 * 3600)
+            )
         )
+        #expect(watchOnly.explicitReset == nil)
+        #expect(watchOnly.watch?.windowEnds != nil)
         #expect(AdvanceReminderPlanner.predicted(status: watchOnly, lead: lead12, now: now) == nil)
         #expect(AdvanceReminderPlanner.predicted(
             status: CodexResetStatus(scheduled: nil, watch: nil),
