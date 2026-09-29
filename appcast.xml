@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.7</title>
+            <pubDate>Tue, 29 Sep 2026 01:37:32 -0000</pubDate>
+            <sparkle:version>1.4.7</sparkle:version>
+            <sparkle:shortVersionString>1.4.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.7</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.7</h2><ul><li><strong>本仓库（<a href="https://github.com/harrisliangsu/Pulse">harrisliangsu/Pulse</a>）为更新源。</strong> Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。</li><li><strong>同步上游 qunqin24/Pulse</strong>（本仓库尚未合入的七个提交，直到其 1.6.1）。本仓库版本仍走自己的线：<strong>1.4.7</strong>。没有抄入上游的 Sparkle 推送；<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。</li><li><strong>新图标。</strong> 一笔画成的 P：竖笔是面板贴着的屏幕边，荧光绿的圆肚子是一个还没合上的用量环。按 macOS 26 的要求，从图标编排文档编译，液态玻璃会跟随深色、透明和着色图标样式。更早的系统仍用压平后的图标。</li><li><strong>开着液态玻璃、面板吸附在屏幕边时，圆环之间的空白处也能拖动了</strong>，不再只能按住圆环。玻璃下面铺了一层几乎看不见的填充，让窗口自己拥有这些像素。设置里「开启后只能按住圆环拖动」这句提示已去掉。感谢 <a href="https://github.com/qunqin24/Pulse/issues/68">@annsyun</a> 在上游反馈。</li><li><strong>README 的功能列表写上了「重置后自动开始用量窗口」。</strong> 这个行为在 1.4.6 里已经有了，仍然默认关闭。</li><li><strong>LiteLLM 的时长分支提前写明类型</strong>，测试文件才能通过类型检查。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.7">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.7/Pulse-1.4.7.zip"
+                       length="12327886"
+                       type="application/octet-stream"
+                       sparkle:edSignature="rIq6msIW5ckvy20JbMnDqbs3UQh3FUPZl86OB04j6SWfOn/+RKJkam41GAyp7JJYy63+nmlYNb/xjVq3u3SZAw==" />
+        </item>
+        <item>
             <title>1.4.6</title>
             <pubDate>Mon, 28 Sep 2026 01:53:20 -0000</pubDate>
             <sparkle:version>1.4.6</sparkle:version>
