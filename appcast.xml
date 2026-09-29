@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.9</title>
+            <pubDate>Tue, 29 Sep 2026 11:01:36 -0000</pubDate>
+            <sparkle:version>1.4.9</sparkle:version>
+            <sparkle:shortVersionString>1.4.9</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.9</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.9</h2><ul><li><strong>预测重置的倒计时和说明都会出现。</strong> 1.4.8 之后，卡片仍可能只剩「预测重置」和「较强」，没有还要多久，也没有「预计在 … 前」。升级前写在本机的状态里没有窗口结束时间；服务器若回 304，这份旧状态就会一直留着。现在会立刻重新拉取。活动说明仍在「?」里，悬停或点击都会画在卡片上——这块浮动栏成不了焦点窗口，系统提示出不来。较强、偏高仍在标题右侧。提醒仍然只对已经公布的时刻倒计时。</li><li><strong>保留本仓库特有能力：</strong> 环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.9">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.9/Pulse-1.4.9.zip"
+                       length="12379168"
+                       type="application/octet-stream"
+                       sparkle:edSignature="IzmjcG4jOy5gO+zi0WL7dizyNeZESdy9/0kqTBiZpRYkh/1HeX4zM/o1SRxFuGX37DylP80FIDY249excOWbBQ==" />
+        </item>
+        <item>
             <title>1.4.8</title>
             <pubDate>Tue, 29 Sep 2026 10:19:33 -0000</pubDate>
             <sparkle:version>1.4.8</sparkle:version>
