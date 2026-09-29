@@ -12,6 +12,10 @@ Pulse is a macOS menu-bar app. There is no linter; there is a test target (`swif
 
 Provider routes, auth, cookies, and extra-account login belong in [Docs/providers/README.md](Docs/providers/README.md), not in UI or architecture docs.
 
+## Issues
+
+An issue's title says what it is about, after the template's prefix. `.github/workflows/issue-gate.yml` closes one whose title is only the prefix (`[Bug]`, `[Question]`…): the forms prefill it and cannot require anything after it. Maintainers are exempt.
+
 ## Pull requests
 
 Review is one person's time. These rules exist to spend it on problems people actually have, and `.github/workflows/pr-gate.yml` enforces the first two: a PR that breaks them is closed automatically. Maintainers are exempt.

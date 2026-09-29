@@ -10,6 +10,13 @@ body:
   - type: markdown
     attributes:
       value: >
+        **Write the title after `[Provider]`.** An issue whose title is only the
+        prefix is closed automatically. Example: "[Provider] Kimi Code". 标题在 `[Provider]` 后面
+        写清楚是什么事，只有前缀的 issue 会被自动关闭。例如：“[Provider] Kimi Code”。
+
+  - type: markdown
+    attributes:
+      value: >
         Fill in what you know and leave the rest blank — partial answers still
         help. The one that usually decides whether a service can be supported
         at all is **whether it publishes a usage or quota API**: Pulse never

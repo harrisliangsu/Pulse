@@ -10,6 +10,13 @@ body:
   - type: markdown
     attributes:
       value: >
+        **Write the title after `[Bug]`.** An issue whose title is only the
+        prefix is closed automatically. Example: "[Bug] Codex ring stuck at 0% since 1.6.1". 标题在 `[Bug]` 后面
+        写清楚是什么事，只有前缀的 issue 会被自动关闭。例如：“[Bug] 升级 1.6.1 后 Codex 圆环一直是 0%”。
+
+  - type: markdown
+    attributes:
+      value: >
         A vague report costs a round trip before anyone can start. Say where you
         saw it, what it showed, and what the service itself showed at the same
         moment. 含糊的报告要先来回问一轮。写清楚在哪看到的、显示成什么，
