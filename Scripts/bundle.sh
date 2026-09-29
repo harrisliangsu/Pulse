@@ -107,7 +107,18 @@ cp "$BUILT/Pulse" "$APP/Contents/MacOS/Pulse"
 # folders. `Bundle.module` looks in the main bundle's Resources, so this is
 # where it has to land — the app is silently English with no icons without it.
 cp -R "$BUILT/Pulse_Pulse.bundle" "$APP/Contents/Resources/"
-cp AppIcon/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+# The icon is an Icon Composer document, compiled the way Xcode would: an
+# Assets.car that macOS 26 draws as Liquid Glass — light, dark, clear and
+# tinted — and an AppIcon.icns that actool flattens for the systems before it.
+# A hand-made .icns alone is drawn by macOS 26 as a flat picture set inside the
+# system's own squircle. Needs Xcode 26 or later; CI is on it for the SDK.
+xcrun actool AppIcon/AppIcon.icon \
+    --compile "$APP/Contents/Resources" \
+    --platform macosx --target-device mac \
+    --minimum-deployment-target 14.0 \
+    --app-icon AppIcon \
+    --output-partial-info-plist "$(mktemp -t pulse-icon)" \
+    --errors --warnings >/dev/null
 
 # A ready-to-copy developer kit. Never ship local npm dependencies or build output.
 mkdir -p "$APP/Contents/Resources/Integrations/raycast"
@@ -140,6 +151,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundleExecutable</key><string>Pulse</string>
     <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
+    <!-- Points at the asset catalog's icon; without it macOS falls back to
+         the flattened .icns and the glass is never drawn. -->
+    <key>CFBundleIconName</key><string>AppIcon</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
     <!-- Without this the app is English on a Chinese Mac. The strings ship

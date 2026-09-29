@@ -1496,13 +1496,11 @@ struct SettingsView: View {
         }
     }
 
-    /// Glass is one of the appearance cases, not a second switch. The drag
-    /// caption still only applies while glass is actually on.
+    /// Glass is one of the appearance cases, not a second switch. The docked
+    /// rail can be dragged from the glass between its rings, so this no longer
+    /// tells the reader to drag by a ring.
     private var appearanceSubtitle: String {
-        let base = String.localized("Dark, light, match the Mac, or glass.")
-        guard settings.usesGlass else { return base }
-        let gap = base.hasSuffix("。") ? "" : " "
-        return base + gap + .localized("Drag it by a ring while this is on.")
+        String.localized("Dark, light, match the Mac, or glass.")
     }
 
     /// On automatic the cadence is decided at each tick, so the setting says

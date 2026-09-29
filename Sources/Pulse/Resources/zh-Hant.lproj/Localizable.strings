@@ -308,7 +308,6 @@
 "Clear glass that shows what is behind the panel, instead of solid black." = "透出面板後方的內容，取代純黑背景。";
 "Transparency" = "透明度";
 "Clearer to the right. Darker reads better over bright pages." = "越往右越透。偏暗一點，在淺色頁面上更容易看清。";
-"Drag it by a ring while this is on." = "開啟後只能按住圓環拖曳。";
 "Open Antigravity to see its usage." = "開啟 Antigravity 才讀得到它的用量。";
 "Asks the language server Antigravity runs while it is open." = "向 Antigravity 開啟時執行的語言伺服器讀取。";
 "Only while Antigravity is open." = "只有在 Antigravity 開啟時才讀得到。";

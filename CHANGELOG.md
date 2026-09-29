@@ -10,6 +10,16 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.7
+
+- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Synced from upstream qunqin24/Pulse** (seven commits this fork had not yet taken, through their 1.6.1 line). This fork stays on its own version: **1.4.7**. Their Sparkle offer was not copied; `appcast.xml` is unchanged until this version is tagged.
+- **A new icon.** A P drawn in one stroke: the stem is the screen edge the panel docks to, the lime bowl a usage ring left open. It is built from an Icon Composer document, as macOS 26 expects, so Liquid Glass follows the dark, clear, and tinted icon styles. Older systems still get the flattened icon.
+- **With Liquid Glass on and the panel docked, the rail can be dragged from between its rings**, not only by a ring. A near-invisible fill under the glass gives the window those pixels. The settings caption that said to drag by a ring is gone. Thanks to [@annsyun](https://github.com/qunqin24/Pulse/issues/68) for reporting it upstream.
+- **The window starter is listed among the features** in the README. Starting Claude Code’s and Codex’s usage windows after a reset already shipped in 1.4.6, still off by default.
+- **LiteLLM’s duration cases are written out** so that test file type-checks.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen’s cookie store; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.6
 
 - **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.

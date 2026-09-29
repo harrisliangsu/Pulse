@@ -84,16 +84,24 @@ struct LiteLLMTests {
         #expect(usage.state == .unavailable(.unreadableReply))
     }
 
-    @Test("budget_duration becomes a stated length, a month only a sort key", arguments: [
-        ("5h", UsageWindow.Kind.fiveHour, 5 * 3_600, true),
-        ("1d", .daily, 86_400, true),
-        ("24h", .daily, 86_400, true),
-        ("7d", .weekly, 7 * 86_400, true),
-        ("2w", .other(seconds: 14 * 86_400), 14 * 86_400, true),
-        ("30d", .other(seconds: 30 * 86_400), 30 * 86_400, true),
-        ("1mo", .monthly, 30 * 86_400, false),
-        ("soon", .spend, 30 * 86_400, false),
-    ])
+    /// Typed up front: as a literal inside `@Test(arguments:)` the tuples'
+    /// arithmetic is more than the type checker will infer in time.
+    static let durationCases: [(String, UsageWindow.Kind, Int, Bool)] = {
+        let hour: Int = 3_600
+        let day: Int = 86_400
+        return [
+            ("5h", .fiveHour, 5 * hour, true),
+            ("1d", .daily, day, true),
+            ("24h", .daily, day, true),
+            ("7d", .weekly, 7 * day, true),
+            ("2w", .other(seconds: 14 * day), 14 * day, true),
+            ("30d", .other(seconds: 30 * day), 30 * day, true),
+            ("1mo", .monthly, 30 * day, false),
+            ("soon", .spend, 30 * day, false),
+        ]
+    }()
+
+    @Test("budget_duration becomes a stated length, a month only a sort key", arguments: durationCases)
     func durations(text: String, kind: UsageWindow.Kind, seconds: Int, stated: Bool) {
         let period = LiteLLMUsageService.period(text)
         #expect(period.kind == kind)

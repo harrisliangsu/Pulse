@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Outlines only, no strokes: Icon Composer takes an open stroked path as
+       enclosing the area its chord closes, and shadows that edge — a line
+       drawn straight across the empty counter. The mark's own geometry is
+       pulse-mark.svg's (a 100-wide stroke), laid out here as fills. -->
+  <g transform="translate(512 512) scale(0.795) translate(-532 -512)">
+    <path fill="#F5F5F1" d="M302 244 A50 50 0 0 1 352 194 H402 V780 A50 50 0 0 1 302 780 Z" />
+    <!-- The bowl, from the stem's edge round to its end cap. The concave
+         corner where it leaves the stem is filleted: the glass bevels a sharp
+         inner corner into a crease. -->
+    <path fill="#C8F03C" d="M402 194 H562 A200 200 0 0 1 562 594 H530 A50 50 0 0 1 530 494 H562 A100 100 0 0 0 562 294 H442 A40 40 0 0 0 402 334 Z" />
+  </g>
+</svg>
