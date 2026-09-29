@@ -6,6 +6,16 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.7
+
+- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **同步上游 qunqin24/Pulse**（本仓库尚未合入的七个提交，直到其 1.6.1）。本仓库版本仍走自己的线：**1.4.7**。没有抄入上游的 Sparkle 推送；`appcast.xml` 保持不动，等这个版本打 tag 后再由发布流程写入。
+- **新图标。** 一笔画成的 P：竖笔是面板贴着的屏幕边，荧光绿的圆肚子是一个还没合上的用量环。按 macOS 26 的要求，从图标编排文档编译，液态玻璃会跟随深色、透明和着色图标样式。更早的系统仍用压平后的图标。
+- **开着液态玻璃、面板吸附在屏幕边时，圆环之间的空白处也能拖动了**，不再只能按住圆环。玻璃下面铺了一层几乎看不见的填充，让窗口自己拥有这些像素。设置里「开启后只能按住圆环拖动」这句提示已去掉。感谢 [@annsyun](https://github.com/qunqin24/Pulse/issues/68) 在上游反馈。
+- **README 的功能列表写上了「重置后自动开始用量窗口」。** 这个行为在 1.4.6 里已经有了，仍然默认关闭。
+- **LiteLLM 的时长分支提前写明类型**，测试文件才能通过类型检查。
+- **保留本仓库特有能力：** Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 `~/.qoder` 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.4.6
 
 - **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。

@@ -308,7 +308,6 @@
 "Clear glass that shows what is behind the panel, instead of solid black." = "真っ黒ではなく、背後の内容が透けて見えるガラスにします。";
 "Transparency" = "透明度";
 "Clearer to the right. Darker reads better over bright pages." = "右ほど透明になります。暗めにすると、明るいページの上でも読みやすくなります。";
-"Drag it by a ring while this is on." = "オンのあいだはリングをつかんでドラッグします。";
 "Open Antigravity to see its usage." = "使用量を読むには Antigravity を開いてください。";
 "Asks the language server Antigravity runs while it is open." = "Antigravity が起動中に走らせている language server に問い合わせます。";
 "Only while Antigravity is open." = "Antigravity が開いているあいだだけ読めます。";

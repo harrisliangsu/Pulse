@@ -1,6 +1,6 @@
 # Liquid Glass: diagnosis uncertain
 
-**Status:** current implementation is hit-testable `PanelSurface` + `FloatingPanel.sendEvent`. **Evidence:** historical measurements of materials; drag diagnosis **uncertain**; real input **not** re-verified.
+**Status:** current implementation is hit-testable `PanelSurface` + `FloatingPanel.sendEvent`. **Evidence:** historical measurements of materials; rings-only drag on glass resolved by real input (#68, below).
 
 ## What we still believe
 
@@ -15,6 +15,8 @@ Halo: opaque disc over blur is invisible on black and a white coin on glass. His
 The first write-up treated rings-only drag with glass on as a **system** bug: macOS 26 material implementing interactivity outside SwiftUI’s hit-testing chain (developer.apple.com/forums/thread/816366). `.allowsHitTesting(false)`, `.disabled(true)`, opaque ink above and below were tried; none helped. `hitTest` and synthesised events reported the handle reachable throughout.
 
 **Suspect that was never a glass bug.** The same symptom (“only the rings can be dragged”) is exactly what the SwiftUI-hosted handle produced on the **black** panel once the berth stopped claiming presses. Window-owned events give the material no say. If dragging works on glass, the settings caption (“Drag it by a ring while this is on.”) and this suspicion should be revisited — **after real input**, not after another probe.
+
+**Resolved by real input (#68).** On glass, a floating capsule dragged from anywhere; a docked rail only by its rings. The press on bare glass never reached the window at all: the glass is composited by the system and leaves the window's own pixels empty, and a transparent window is not handed presses on empty pixels. `PanelGlass.claim`, a black 0.01 fill under the glass, gives the window those pixels; the docked rail then dragged from the gaps. Why floating glass worked without it was not established. The settings caption is gone.
 
 This cannot be reproduced in a harness: probes bypass whatever the material installs. When a symptom survives every local probe, that is not evidence it is glass.
 

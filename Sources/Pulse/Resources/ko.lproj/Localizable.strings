@@ -308,7 +308,6 @@
 "Clear glass that shows what is behind the panel, instead of solid black." = "완전한 검정 대신, 뒤에 있는 내용이 비쳐 보이는 유리를 씁니다.";
 "Transparency" = "투명도";
 "Clearer to the right. Darker reads better over bright pages." = "오른쪽으로 갈수록 투명해집니다. 어둡게 하면 밝은 페이지 위에서도 잘 읽힙니다.";
-"Drag it by a ring while this is on." = "켜져 있는 동안에는 링을 잡고 끌어야 합니다.";
 "Open Antigravity to see its usage." = "사용량을 읽으려면 Antigravity를 여십시오.";
 "Asks the language server Antigravity runs while it is open." = "Antigravity가 열려 있을 때 실행하는 언어 서버에 물어봅니다.";
 "Only while Antigravity is open." = "Antigravity가 열려 있는 동안에만 읽을 수 있습니다.";

@@ -82,6 +82,14 @@ struct PanelSurface<S: Shape>: View {
     private var glass: some View {
         if #available(macOS 26, *) {
             Color.clear.glassEffect(.clear.tint(tint ?? PanelGlass.dim(transparency: transparency)), in: shape)
+                // The glass and its tint are composited by the system, not
+                // drawn into this window, so where only glass lies the
+                // window's own pixels are empty — and the window server sends
+                // a press there to whatever is behind, before `sendEvent`
+                // could take it. Reported on the docked rail (#68): rings
+                // draggable, glass between them not. A fill no one can see
+                // gives those pixels to the window.
+                .background(shape.fill(PanelGlass.claim))
         } else {
             shape
                 .fill(.ultraThinMaterial)
@@ -96,6 +104,9 @@ enum PanelGlass {
     /// default sits there, in the middle of the slider.
     static let maximumDim = 0.6
     static let defaultTransparency = 0.5
+    /// Under the glass only so the window owns the pixels and is handed the
+    /// press. Not zero: a fully clear pixel is one the window server passes on.
+    static let claim = Color.black.opacity(0.01)
 
     /// Laid under the panel's white content on clear glass. The alert tint
     /// replaces it on the sliver.
