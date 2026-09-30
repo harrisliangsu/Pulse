@@ -39,6 +39,18 @@ enum BudgetEstimator {
     /// And below this there isn't enough money in play to be worth reporting.
     static let minimumSpend = 0.20
 
+    /// "≈$220": whole dollars from a hundred up, because the figure is an
+    /// estimate and cents would claim a precision it does not have. Shared by
+    /// the account's settings pane and the detailed card, so the two agree.
+    static func approximate(_ amount: Double) -> String {
+        let text = amount.formatted(
+            .currency(code: "USD")
+                .precision(.fractionLength(amount >= 100 ? 0 : 2))
+                .locale(LocalizationSource.locale)
+        )
+        return "≈\(text)"
+    }
+
     static func estimate(
         for window: UsageWindow,
         ledger: UsageLedger,

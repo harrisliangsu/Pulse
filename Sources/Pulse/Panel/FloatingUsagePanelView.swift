@@ -127,6 +127,8 @@ struct FloatingUsagePanelView: View {
                             isDetailed: settings.showsDetailedCard(for: selected.account),
                             spend: showsSpend(for: selected.account)
                                 ? cardLedgers.spend(for: selected.account.provider) : nil,
+                            promptCache: showsSpend(for: selected.account)
+                                ? cardLedgers.promptCache[selected.account.provider] : nil,
                             pointerCenter: pointerCentre(for: index)
                         )
                         .fixedSize()
@@ -194,6 +196,7 @@ struct FloatingUsagePanelView: View {
                 if let account = selectedUsage?.account, showsSpend(for: account),
                    let source = account.provider.cardHistory {
                     cardLedgers.read(account.provider, from: source)
+                    if source.readsThisMac { cardLedgers.readPromptCache(account.provider) }
                 }
             }
             .onChange(of: isNotchHeld) { _, held in

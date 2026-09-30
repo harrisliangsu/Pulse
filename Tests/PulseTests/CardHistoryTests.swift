@@ -45,6 +45,21 @@ struct CardHistoryTests {
         #expect(added.earliest == start)
     }
 
+    /// The value estimate reads quarter-hours, so adding agents keeps them,
+    /// in time order — `BudgetEstimator` takes the first as where the records begin.
+    @Test func addingKeepsTheQuarterHoursInOrder() throws {
+        let start = Date(timeIntervalSince1970: 1_790_000_000)
+        func ledger(_ offsets: [TimeInterval]) -> UsageLedger {
+            let day = LedgerDay(date: Calendar.current.startOfDay(for: start), tokens: 10, cost: 1,
+                                unpricedTokens: 0, models: [:])
+            return UsageLedger(days: [day], earliest: start, unpricedModels: [], modelNames: [:],
+                               slots: offsets.map { .init(start: start.addingTimeInterval($0), tokens: 10, cost: 0.5) })
+        }
+        let added = UsageLedger.adding([ledger([900, 2700]), ledger([0, 1800])])
+        #expect(added.slots.map(\.start) == [0, 900, 1800, 2700].map { start.addingTimeInterval($0) })
+        #expect(abs(added.spend(since: start.addingTimeInterval(900)).cost - 1.5) < 0.0001)
+    }
+
     @Test func oneLedgerIsPassedThroughUntouched() {
         let only = UsageLedger(days: [LedgerDay(date: Date(timeIntervalSince1970: 0), tokens: 5, cost: 0,
                                                 unpricedTokens: 5, models: [:])],

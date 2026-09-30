@@ -43,6 +43,11 @@ struct AccountUsageCard: View {
                 Divider()
 
                 summary
+
+                if !cacheRates.isEmpty {
+                    Divider()
+                    cacheHitRates
+                }
             }
             .background(.background)
             .clipShape(.rect(cornerRadius: 10, style: .continuous))
@@ -194,6 +199,72 @@ struct AccountUsageCard: View {
         .font(.system(size: 11))
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+
+    // MARK: - Cache hit rate
+
+    private var cacheRates: [UsageLedger.ModelCacheRate] {
+        ledger.cacheHitRatesByModel(overLast: Self.span)
+    }
+
+    /// How much of each model's input was read from the prompt cache, over
+    /// the same month as the figures above: the whole account's rate beside
+    /// the heading, each model on its own line under it.
+    ///
+    /// **Every model with records, not only the top one.** The rate differs
+    /// by model — a long agent session on one re-reads its context, a quick
+    /// question on another does not — and the account's single figure hides
+    /// which is which.
+    private var cacheHitRates: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(localized: "Cache hit rate")
+                    .font(.system(size: 12, weight: .semibold))
+                Spacer(minLength: 0)
+                if let overall = ledger.cacheHitRate(overLast: Self.span) {
+                    Text(verbatim: Self.percent(overall))
+                        .font(.system(size: 12, weight: .semibold))
+                        .monospacedDigit()
+                }
+            }
+
+            ForEach(cacheRates, id: \.name) { model in
+                HStack(spacing: 10) {
+                    Text(verbatim: model.name)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(width: 150, alignment: .leading)
+                    GeometryReader { proxy in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(.quaternary)
+                            Capsule().fill(.tint)
+                                .frame(width: proxy.size.width * min(max(model.rate, 0), 1))
+                        }
+                    }
+                    .frame(height: 5)
+                    Text(verbatim: Self.percent(model.rate))
+                        .monospacedDigit()
+                        .frame(width: 36, alignment: .trailing)
+                }
+                .font(.system(size: 11))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(model.name)
+                .accessibilityValue(Self.percent(model.rate))
+            }
+
+            Text(localized: "Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
+    private static func percent(_ rate: Double) -> String {
+        "\(Int((rate * 100).rounded()))%"
     }
 
     private func line(_ label: String, _ value: String) -> some View {

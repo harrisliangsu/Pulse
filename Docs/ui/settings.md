@@ -102,6 +102,8 @@ Codex's first account also has **Reset credits on the card** in its Panel group:
 
 Every account has **Detailed card** in its Panel group (`AppSettings.detailedCards`, account ids; off by default). It is per account on purpose — a first version was one switch in Rings and figures, and the detailed card is worth its height for the account somebody watches closely and noise on the rest. The subtitle says what the card adds and what history it will carry, the way it will carry it (`SettingsView.detailedCardSubtitle`): none, the account's month from the provider (Z.ai, Zhipu), or this Mac's recent activity with Token spend on. The card itself: [panel-geometry.md](panel-geometry.md#detailed-card).
 
+Claude Code's pane has a **Prompt cache** group ahead of the estimate and history, while its account is on: every conversation still holding a cache, soonest to lapse first, each with its time left ([panel-geometry.md](panel-geometry.md#detailed-card)).
+
 Per-account rows live here rather than on the Panel pane, because they are choices about *one ring*: ring colour, the animated mark, and that mark's personality, colour and shape ([rings-and-surface.md](rings-and-surface.md)). All four are stored keyed by account id, and all four store "off" / "automatic" / "round" as an absent key rather than as a value. The personality and shape rows appear only while that account's mark is on — controls over something invisible otherwise, the same rule the colour well follows.
 
 The credential field (API key, session cookie, access keys) is masked, with an eye button between it and **Save** that shows what is typed. It hides again whenever the pane changes account, so a key shown once is not left on screen for the next provider.

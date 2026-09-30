@@ -40,6 +40,10 @@ final class CardLedgers {
     /// Asked and not answered: the provider's statistics did not come back.
     private(set) var failed: Set<Provider> = []
     @ObservationIgnored private var readAt: [Provider: Date] = [:]
+    /// When each live session's prompt cache lapses, for the providers whose
+    /// logs say (Claude Code). Read on every opening, not on `lifetime`: one
+    /// new message moves it, and a countdown five minutes behind is wrong.
+    private(set) var promptCache: [Provider: PromptCacheReading] = [:]
 
     /// Long enough that moving between rings does not rescan, short enough
     /// that "Today" is today's. The menu's tabs keep the same.
@@ -79,6 +83,16 @@ final class CardLedgers {
         }
     }
 
+    /// The latest session's cache, read off the main thread: a directory
+    /// listing and the tail of one file, cheap enough for every card opening.
+    func readPromptCache(_ provider: Provider) {
+        guard provider == .claudeCode else { return }
+        Task { [weak self] in
+            let reading = await Task.detached(priority: .utility) { ClaudePromptCache.read() }.value
+            self?.promptCache[provider] = reading
+        }
+    }
+
     /// Nil when the provider was asked and did not answer.
     private static func ledger(for provider: Provider, from source: CardHistorySource) async -> UsageLedger? {
         switch source {
@@ -101,9 +115,10 @@ final class CardLedgers {
 
 extension UsageLedger {
     /// Several agents' ledgers as one, day by day — what the card needs of
-    /// them and no more: tokens, money and models per day, and the models'
-    /// names. The finer detail (slots, sessions, token kinds) is left behind,
-    /// because nothing on the card reads it.
+    /// them and no more: tokens, money, token kinds and models per day, the
+    /// models' names, and the quarter-hours the value estimate reads. The finer detail
+    /// (sessions, token kinds) is left behind, because nothing on the card
+    /// reads it.
     static func adding(_ ledgers: [UsageLedger]) -> UsageLedger {
         let present = ledgers.filter { !$0.days.isEmpty }
         guard present.count > 1 else { return present.first ?? .empty }
@@ -112,7 +127,9 @@ extension UsageLedger {
         var cost: [Date: Double] = [:]
         var unpriced: [Date: Int] = [:]
         var models: [Date: [String: Int]] = [:]
+        var tallies: [Date: TokenTally] = [:]
         for day in present.flatMap(\.days) {
+            tallies[day.date, default: TokenTally()] = (tallies[day.date] ?? TokenTally()) + day.tally
             tokens[day.date, default: 0] += day.tokens
             cost[day.date, default: 0] += day.cost
             unpriced[day.date, default: 0] += day.unpricedTokens
@@ -125,10 +142,12 @@ extension UsageLedger {
         var days: [LedgerDay] = []
         var date = first
         while date <= last {
-            days.append(LedgerDay(
+            var day = LedgerDay(
                 date: date, tokens: tokens[date] ?? 0, cost: cost[date] ?? 0,
                 unpricedTokens: unpriced[date] ?? 0, models: models[date] ?? [:]
-            ))
+            )
+            day.tally = tallies[date] ?? TokenTally()
+            days.append(day)
             guard let next = calendar.date(byAdding: .day, value: 1, to: date) else { break }
             date = next
         }
@@ -137,9 +156,11 @@ extension UsageLedger {
             earliest: present.compactMap(\.earliest).min(),
             unpricedModels: Array(Set(present.flatMap(\.unpricedModels))).sorted(),
             modelNames: present.reduce(into: [:]) { $0.merge($1.modelNames) { first, _ in first } },
-            slots: []
+            slots: present.flatMap(\.slots).sorted { $0.start < $1.start }
         )
         ledger.origin = present.contains { $0.origin == .importedRecords } ? .importedRecords : .localTranscripts
+        // One agent that cannot vouch for its counts leaves the sum unvouched.
+        ledger.hasPartialCounts = present.contains(where: \.hasPartialCounts)
         return ledger
     }
 }
