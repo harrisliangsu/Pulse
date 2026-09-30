@@ -19,9 +19,11 @@ body:
     attributes:
       value: >
         **A title says what should change, not how it felt.** Good: "Show a
-        daily budget line under the ring". Bad: "有意思的想法". One request per
-        issue — if you want two things, open two. 标题写"要改什么"，不写感受。
-        一个 issue 只提一件事，两件就分开提。
+        daily budget line under the ring". Bad: "有意思的想法". An issue whose
+        title is only `[Feature]` is closed automatically. One request per
+        issue — if you want two things, open two. 标题写"要改什么"，不写感受，
+        只有 `[Feature]` 前缀的 issue 会被自动关闭。一个 issue 只提一件事，
+        两件就分开提。
 
   - type: dropdown
     id: kind

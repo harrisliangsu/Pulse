@@ -10,6 +10,12 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.10
+
+- **An issue titled with only the template prefix is closed.** New issues start with `[Bug]`, `[Feature]`, `[Provider]`, or `[Question]` already filled in, and the form cannot require any text after that prefix. If nothing is left once those prefixes are removed, the issue is closed, with a short note in both languages asking for a new one whose title says what it is about. Each of the four templates says so. Maintainers are exempt.
+- **Synced from upstream qunqin24/Pulse** (the one commit this fork had not yet taken). This fork’s version is **1.4.10**. `appcast.xml` is unchanged until this version is tagged.
+- **Fork-only pieces kept:** ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen’s cookie store; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.9
 
 - **The Codex countdown and its note both show.** After 1.4.8 the card could still stop at 「预测重置」 and the confidence, with no countdown and no 「预计在 … 前」. A status saved before the window end was stored has no `expires_at`, and a 304 keeps that copy. Pulse now fetches it again at once. The event note still lives on the ?, and hovering or clicking draws it on the card — this panel never becomes key, so a system tooltip there does not appear. Confidence stays at the end of the title. A reminder still counts down only to an announced time.
