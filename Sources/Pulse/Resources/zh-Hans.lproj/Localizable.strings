@@ -876,3 +876,15 @@
 "%@ · the command-line tool was not found" = "%@ · 找不到命令行工具";
 "%@ · it did not go through; check the tool is signed in" = "%@ · 没有发送成功，请检查工具是否已登录";
 "%@ · it did not answer in time" = "%@ · 没有及时响应";
+
+"Detailed card" = "详细额度卡";
+"On this Mac" = "本机用量";
+"7 days" = "7 天";
+"31 days" = "31 天";
+"Costs are estimates at API prices." = "金额按 API 价格估算。";
+"Whole account" = "整个账号";
+"Couldn't read the history." = "这次没能读到用量记录。";
+"From %@, for the whole account." = "来自 %@，覆盖整个账号。";
+"Adds the plan and when the figures were read." = "加上套餐名和数字的更新时间。";
+"Adds the plan, when the figures were read and the account's usage over the last month." = "加上套餐名、数字的更新时间，以及整个账号最近一个月的用量。";
+"Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "加上套餐名、数字的更新时间；打开「Token 消耗」后，还会显示本机最近的用量。";

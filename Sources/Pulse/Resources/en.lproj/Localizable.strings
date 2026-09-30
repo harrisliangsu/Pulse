@@ -876,3 +876,15 @@
 "%@ · the command-line tool was not found" = "%@ · the command-line tool was not found";
 "%@ · it did not go through; check the tool is signed in" = "%@ · it did not go through; check the tool is signed in";
 "%@ · it did not answer in time" = "%@ · it did not answer in time";
+
+"Detailed card" = "Detailed card";
+"On this Mac" = "On this Mac";
+"7 days" = "7 days";
+"31 days" = "31 days";
+"Costs are estimates at API prices." = "Costs are estimates at API prices.";
+"Whole account" = "Whole account";
+"Couldn't read the history." = "Couldn't read the history.";
+"From %@, for the whole account." = "From %@, for the whole account.";
+"Adds the plan and when the figures were read." = "Adds the plan and when the figures were read.";
+"Adds the plan, when the figures were read and the account's usage over the last month." = "Adds the plan, when the figures were read and the account's usage over the last month.";
+"Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity.";

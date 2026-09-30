@@ -23,6 +23,17 @@ History and the two bugs that taught this: [../decisions/panel-frame.md](../deci
 
 On the card, the window’s name has the top row to itself; spent and reset pair on the line below the bar. Sharing the top line fails when a limit is scoped to a model group.
 
+### Detailed card
+
+Switched on per account (`AppSettings.detailedCards`; [settings.md](settings.md#provider-panes)). It keeps everything the compact card has and adds: the plan beside the title and "Updated …" under it (live readings only — a stale one keeps its footnote); and, on the first account of any provider with a history (`Provider.cardHistory`), a usage section — today / 7 days / 31 days as tokens, a static 31-day chart with today lit, the top model, and a line saying where the figures are from.
+
+The history has three sources (`CardHistorySource`), and the section says which: **On this Mac** for Claude Code's and Codex's transcripts and for every Token spend agent that borrows a provider's mark (Kimi CLI, Grok, OpenCode, Cursor, Command Code, Copilot; Antigravity's three and Devin's two agents added up day by day, `UsageLedger.adding`) — read only with Token spend on, priced at API rates with "≈" under each figure; **Whole account** for Z.ai and Zhipu, the statistics their consoles chart, asked with the stored key the way the account's settings pane asks them, and never priced — so the money line is left out entirely rather than drawn blank. A statistics request that fails says so ("Couldn't read the history.") rather than showing an empty month. `CardHistoryTests`.
+
+- **Nothing is added to the limit rows.** A first version put a tick on each bar where the window's clock was, with "56% of the window gone · 2h 11m left" under it. The countdown repeated the reset beside it; the line was cut, and the tick alone then meant nothing to the person it was for — a mark that needs explaining is not information. The window-clock arc on the ring (`showsWindowClock`) is where that comparison lives, for those who want it.
+- **The chart is static.** The panel never becomes key, so the Token spend pane's hover readout would not fire here.
+- **The ledger is read off the card** (`CardLedgers`): on selection, at most every five minutes per provider — which for Z.ai and Zhipu is one statistics request per five minutes of looking, no more — in a task not tied to the view — a sweep down the rail would cancel a view task at the next ring, and the reader hands a cancelled caller an empty ledger that would be stored as "no history".
+- **Budget:** `PanelMetrics.showsDetailedCard` is true while *any* account's card is detailed, and `DetailCardLayout.height` then adds the header's second line and the whole activity section (each part drawn at a named height, so budget and drawing cannot drift). One frame serves every ring. Only the app's own `AppSettings` writes the metric (`drivesPanelMetrics`), so a test's instance cannot resize the frame another test is measuring.
+
 ## Dock, float, displays
 
 `PanelPlacement`: `update(dock:)` changes placement **and** asks the window to move (`onChange` → `placePanel`). `record(...)` only stores; drag uses it because the window already moved. Settings picking a position must not use the store-only path (content mirrored, window stayed, rail stranded).

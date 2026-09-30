@@ -76,10 +76,43 @@ enum DetailCardLayout {
     static var maximumHeight: CGFloat { height(forWindows: 6, footnote: true) }
 
     static func height(forWindows count: Int, footnote: Bool = false) -> CGFloat {
-        padding * 2
+        let detailed = PanelMetrics.showsDetailedCard
+        return padding * 2
             + headerHeight
+            + (detailed ? headerLineSpacing + footnoteHeight : 0)
             + CGFloat(count) * (contentSpacing + rowHeight)
             + (footnote ? contentSpacing + footnoteHeight : 0)
+            // Budgeted whether or not this account has a history to show:
+            // the frame is one size for every card.
+            + (detailed ? contentSpacing + activityHeight : 0)
+    }
+
+    // MARK: Detailed card
+
+    /// Between the title and the "updated" line under it.
+    static var headerLineSpacing: CGFloat { 4 * PanelMetrics.scale }
+
+    /// Between the parts of the activity section.
+    static var activitySpacing: CGFloat { 10 * PanelMetrics.scale }
+    /// A column's label, its token count and its estimated cost.
+    static var figureLabelHeight: CGFloat { 13 * PanelMetrics.scale }
+    static var figureValueHeight: CGFloat { 17 * PanelMetrics.scale }
+    static var figureFontSize: CGFloat { 14 * PanelMetrics.scale }
+    static var figuresHeight: CGFloat { unpricedFiguresHeight + 2 * PanelMetrics.scale + figureLabelHeight }
+    /// Label and count only, where nothing carries a price.
+    static var unpricedFiguresHeight: CGFloat { figureLabelHeight + 2 * PanelMetrics.scale + figureValueHeight }
+    static var chartHeight: CGFloat { 30 * PanelMetrics.scale }
+
+    /// The whole activity section: rule, heading, figures, chart, top model,
+    /// the line saying what the money is. Each part is drawn at the height
+    /// named here, so the budget and the drawing cannot drift.
+    static var activityHeight: CGFloat {
+        1
+            + activitySpacing + figureLabelHeight
+            + activitySpacing + figuresHeight
+            + activitySpacing + chartHeight
+            + activitySpacing + rowTextLineHeight
+            + activitySpacing + footnoteHeight
     }
 
     /// Rendered line height of the "as of …" line under the limits.
@@ -105,6 +138,13 @@ struct UsageDetailCard: View {
     /// Codex's limit reset credits, when its switch is on and it has been
     /// asked. Nil draws no row at all.
     var resetCredits: CodexResetCredits?
+    /// The detailed card: the plan, how far through each window the clock is
+    /// and the account's recent activity. Set per account.
+    var isDetailed = false
+    /// What this Mac's records say about the account, for the detailed card.
+    /// Nil draws no section: Token spend is off, or this account keeps no
+    /// records here.
+    var spend: Spend?
     /// Where the pointer's tip should sit along the side facing the rail,
     /// measured from the card's own top or leading edge. The card gets pushed
     /// around by the panel's own edges (see
@@ -184,6 +224,11 @@ struct UsageDetailCard: View {
                 Text(footnote)
                     .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
                     .foregroundStyle(.primary.opacity(0.4))
+            }
+
+            if isDetailed, let spend {
+                ActivitySection(spend: spend, provider: usage.provider)
+                    .transition(Self.rowTransition)
             }
         }
         .padding(DetailCardLayout.padding)
@@ -298,6 +343,15 @@ struct UsageDetailCard: View {
     /// The card's line under a limit, for the menu bar's list too.
     static func resetDescription(_ window: UsageWindow) -> String { resetText(window) }
 
+    /// "Updated 3 min ago".
+    static func updatedText(_ date: Date, now: Date = Date()) -> String {
+        if now.timeIntervalSince(date) < 60 { return .localized("Updated just now") }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = LocalizationSource.locale
+        formatter.unitsStyle = .short
+        return .localized("Updated \(formatter.localizedString(for: date, relativeTo: now))")
+    }
+
     private static func resetText(_ window: UsageWindow) -> String {
         // **Whichever happens first.** Credits lapsing before a reset hands
         // the allowance back are the thing to know; after it, the reset is.
@@ -353,18 +407,42 @@ struct UsageDetailCard: View {
         // for the length of the fade read as a smudge. Stacked so the outgoing
         // one keeps no room in the row while it leaves.
         ZStack(alignment: .leading) {
-            HStack(spacing: 8) {
-                LobeIconView(provider: usage.provider, size: DetailCardLayout.headerIconSize)
-                    .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: DetailCardLayout.headerLineSpacing) {
+                HStack(spacing: 8) {
+                    LobeIconView(provider: usage.provider, size: DetailCardLayout.headerIconSize)
+                        .foregroundStyle(.primary)
 
-                Text(localized: "\(title ?? usage.provider.displayName) Usage")
-                    // One line, always. The card's height is worked out from
-                    // `DetailCardLayout` before SwiftUI lays anything out, so a
-                    // header that wrapped would make the card taller than the
-                    // window budgeted for it and get sliced off against the edge.
-                    .lineLimit(1)
-                    .font(.system(size: DetailCardLayout.titleFontSize, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary)
+                    Text(localized: "\(title ?? usage.provider.displayName) Usage")
+                        // One line, always. The card's height is worked out from
+                        // `DetailCardLayout` before SwiftUI lays anything out, so a
+                        // header that wrapped would make the card taller than the
+                        // window budgeted for it and get sliced off against the edge.
+                        .lineLimit(1)
+                        .font(.system(size: DetailCardLayout.titleFontSize, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .layoutPriority(1)
+
+                    // The plan as the provider names it. It gives way to the
+                    // title, which is what says whose card this is.
+                    if isDetailed, let plan = usage.plan, !plan.isEmpty {
+                        Spacer(minLength: 0)
+                        Text(verbatim: plan)
+                            .lineLimit(1)
+                            .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .medium, design: .rounded))
+                            .foregroundStyle(.primary.opacity(0.5))
+                    }
+                }
+
+                // How fresh the figures are. A stale reading says so in the
+                // footnote instead, in stronger words.
+                if isDetailed, case .live = usage.state, let observed = usage.observedAt {
+                    Text(verbatim: Self.updatedText(observed))
+                        .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                        .foregroundStyle(.primary.opacity(0.4))
+                        .lineLimit(1)
+                        // Level with the title, not the icon.
+                        .padding(.leading, DetailCardLayout.headerIconSize + 8)
+                }
             }
             .id("\(usage.id)|\(title ?? "")")
             .transition(Self.headerTransition)
@@ -383,6 +461,182 @@ struct UsageDetailCard: View {
             insertion: .opacity.animation(.easeOut(duration: 0.1)),
             removal: .opacity.animation(.easeOut(duration: 0.06))
         )
+    }
+}
+
+extension UsageDetailCard {
+    /// What the detailed card can say about an account's recent activity.
+    enum Spend: Equatable {
+        /// The records are being read; the last figures, if any, are not in yet.
+        case reading
+        /// Read, and nothing in them.
+        case empty
+        /// Asked of the provider, which did not answer.
+        case failed
+        case ledger(UsageLedger)
+    }
+}
+
+/// The detailed card's last section: the account's recent usage, from this
+/// Mac's records at the Token spend pane's prices, or — for Z.ai and Zhipu —
+/// from the statistics the provider publishes for the whole account.
+///
+/// **Tokens lead, money follows.** The tokens are counted; the money is those
+/// counts at API prices, which a subscription does not pay — so it is the
+/// smaller, dimmer line, marked as approximate, and the section says so. A
+/// provider's own statistics carry no money at all, so they show none.
+private struct ActivitySection: View {
+    let spend: UsageDetailCard.Spend
+    let provider: Provider
+
+    /// The provider's figures rather than this Mac's: headed and footed as
+    /// such, and never priced.
+    private var isAccountWide: Bool { provider.cardHistory == .accountStatistics }
+
+    /// The chart's span, and the longest of the three figures.
+    private static let span = 31
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DetailCardLayout.activitySpacing) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.12))
+                .frame(height: 1)
+
+            Text(isAccountWide ? String.localized("Whole account") : String.localized("On this Mac"))
+                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.5))
+                .frame(height: DetailCardLayout.figureLabelHeight)
+
+            switch spend {
+            case .reading:
+                message(String.localized("Reading local records…"))
+            case .empty:
+                message(String.localized("No history yet"))
+            case .failed:
+                message(String.localized("Couldn't read the history."))
+            case .ledger(let ledger):
+                figures(ledger)
+                DaysChart(days: ledger.recent(Self.span))
+                    .frame(height: DetailCardLayout.chartHeight)
+                topModel(ledger)
+                Text(isAccountWide
+                    ? String.localized("From \(provider.displayName), for the whole account.")
+                    : String.localized("Costs are estimates at API prices."))
+                    .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                    .foregroundStyle(.primary.opacity(0.4))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(height: DetailCardLayout.footnoteHeight)
+            }
+        }
+    }
+
+    private func message(_ text: String) -> some View {
+        Text(verbatim: text)
+            .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+            .foregroundStyle(.primary.opacity(0.45))
+            .frame(height: DetailCardLayout.rowTextLineHeight)
+    }
+
+    private func figures(_ ledger: UsageLedger) -> some View {
+        let today = ledger.today
+        let week = ledger.total(overLast: 7)
+        let month = ledger.total(overLast: Self.span)
+        // No money line at all where there is no money anywhere — a provider's
+        // own statistics, or nothing priced — rather than a blank band under
+        // the figures. One priced column keeps the line on all three, level.
+        let priced = !isAccountWide && month.cost > 0
+        return HStack(alignment: .top, spacing: 8) {
+            figure(String.localized("Today"), tokens: today?.tokens ?? 0, cost: today?.cost ?? 0, priced: priced)
+            figure(String.localized("7 days"), tokens: week.tokens, cost: week.cost, priced: priced)
+            figure(String.localized("31 days"), tokens: month.tokens, cost: month.cost, priced: priced)
+        }
+        .frame(height: priced ? DetailCardLayout.figuresHeight : DetailCardLayout.unpricedFiguresHeight, alignment: .top)
+    }
+
+    /// **No money line for work nobody priced.** A day spent entirely on a
+    /// model with no published price costs something; "$0.00" would say it
+    /// cost nothing.
+    private func figure(_ label: String, tokens: Int, cost: Double, priced: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 2 * PanelMetrics.scale) {
+            Text(verbatim: label)
+                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.45))
+                .frame(height: DetailCardLayout.figureLabelHeight)
+            Text(verbatim: TokenCount.short(tokens))
+                .font(.system(size: DetailCardLayout.figureFontSize, weight: .semibold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.primary)
+                .frame(height: DetailCardLayout.figureValueHeight)
+            if priced {
+                Text(verbatim: cost > 0 ? "≈ " + AccountUsageCard.money(cost) : " ")
+                    .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.primary.opacity(0.45))
+                    .frame(height: DetailCardLayout.figureLabelHeight)
+            }
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(String.localized("\(TokenCount.short(tokens)) tokens"))
+    }
+
+    @ViewBuilder
+    private func topModel(_ ledger: UsageLedger) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(localized: "Top model")
+                .foregroundStyle(.primary.opacity(0.45))
+            Spacer(minLength: 0)
+            if let top = ledger.topModel(overLast: Self.span) {
+                // A model id can run to thirty characters; its middle is the
+                // part that says least.
+                Text(verbatim: "\(top.name) · \(Int((top.share * 100).rounded()))%")
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .truncationMode(.middle)
+            } else {
+                Text(verbatim: "—")
+                    .foregroundStyle(.primary.opacity(0.45))
+            }
+        }
+        .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+        .lineLimit(1)
+        .frame(height: DetailCardLayout.rowTextLineHeight)
+    }
+}
+
+/// A month of days as bars, today's lit. Static: the card is on a panel that
+/// never becomes key, where a hover readout would not fire — the Token spend
+/// pane is where a chart is read closely.
+private struct DaysChart: View {
+    let days: [LedgerDay]
+
+    var body: some View {
+        GeometryReader { proxy in
+            let peak = max(days.map(\.tokens).max() ?? 1, 1)
+            let count = max(days.count, 1)
+            let spacing = max(proxy.size.width / CGFloat(count) * 0.3, 1.5)
+            let width = max((proxy.size.width - spacing * CGFloat(count - 1)) / CGFloat(count), 1)
+
+            HStack(alignment: .bottom, spacing: spacing) {
+                ForEach(days) { day in
+                    let isToday = Calendar.current.isDateInToday(day.date)
+                    Capsule()
+                        .fill(Color.primary.opacity(isToday ? 0.9 : (day.tokens > 0 ? 0.32 : 0.12)))
+                        // A day with any work keeps a visible stub, so a quiet
+                        // day reads as quiet rather than as missing.
+                        .frame(
+                            width: width,
+                            height: day.tokens > 0
+                                ? max(proxy.size.height * CGFloat(day.tokens) / CGFloat(peak), width)
+                                : min(width, 2)
+                        )
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String.localized("Tokens per day"))
     }
 }
 

@@ -57,8 +57,13 @@
 
 ### Hover Details & Smart Forecasting
 - **Complete Limit Breakdown**: Hover over any ring to reveal a detailed card showing every reported quota pool, reset countdowns, and current window status.
+- **Detailed Card (Optional, per account)**: Switch it on for the accounts you watch closely. The card adds the plan, when the figures were read, and the account's recent usage — today, 7 days and 31 days of tokens, a 31-day chart and the model doing most of the work — for every service Pulse has a history for: z.ai and Zhipu from their own account statistics, and Claude Code, Codex, Kimi Code, Grok, OpenCode, Cursor, Devin, Antigravity, Command Code and Copilot from this Mac's records with Token spend on.
 - **Burn-Rate Forecast (Optional)**: When you turn it on, projects whether your current pace will outlast the quota window and shows an estimated time-to-exhaustion (ETA) when risk is detected. Off by default.
 - **Pin Primary Window**: Pin whichever limit matters most to the ring, or let Pulse automatically track the one closest to exhaustion.
+
+<p align="center">
+  <img src="Docs/detailed-card.webp" width="620" alt="The same Codex card, compact and detailed">
+</p>
 
 ### Native, Fluid & Non-Intrusive
 - **Flexible Edge Docking**: Dock to the left, right, or top of your screen (above the menu bar), or float freely anywhere.

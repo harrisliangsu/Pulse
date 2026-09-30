@@ -32,6 +32,9 @@ struct FloatingUsagePanelView: View {
     /// anything visible on a 48pt circle and costs one view invalidation.
     @State private var minute = Date()
 
+    /// This Mac's records for the detailed card, read as its cards open.
+    @State private var cardLedgers = CardLedgers()
+
 
     var body: some View {
         // The rail is pinned to the trailing edge of a spacer that fills the
@@ -121,6 +124,9 @@ struct FloatingUsagePanelView: View {
                             showsRemaining: settings.showsRemaining,
                             showsForecast: settings.showsForecast,
                             resetCredits: selected.account == AccountKey(.codex) ? store.codexResetCredits : nil,
+                            isDetailed: settings.showsDetailedCard(for: selected.account),
+                            spend: showsSpend(for: selected.account)
+                                ? cardLedgers.spend(for: selected.account.provider) : nil,
                             pointerCenter: pointerCentre(for: index)
                         )
                         .fixedSize()
@@ -183,6 +189,13 @@ struct FloatingUsagePanelView: View {
             .onChange(of: placement.isDragging) { _, dragging in
                 if dragging { deselect() }
             }
+            // The detailed card's history, read when a card that shows it opens.
+            .onChange(of: selectedSlot) {
+                if let account = selectedUsage?.account, showsSpend(for: account),
+                   let source = account.provider.cardHistory {
+                    cardLedgers.read(account.provider, from: source)
+                }
+            }
             .onChange(of: isNotchHeld) { _, held in
                 if !held && placement.notch != nil { pointerMoved(pointerPoint) }
             }
@@ -226,7 +239,7 @@ struct FloatingUsagePanelView: View {
             // change. The last one is easy to forget and changes the rail's
             // *thickness*, so leaving it out draws the rings at one size in a
             // berth built for the other.
-            .id("\(settings.language.rawValue)-\(settings.panelSize.rawValue)-\(settings.topRailShowsPercentages)-\(settings.sideRailShowsPercentages)-\(settings.railSpacing.rawValue)-\(settings.labelAboveRing)-\(settings.showsForecast)-\(settings.usesRoundEnds)")
+            .id("\(settings.language.rawValue)-\(settings.panelSize.rawValue)-\(settings.topRailShowsPercentages)-\(settings.sideRailShowsPercentages)-\(settings.railSpacing.rawValue)-\(settings.labelAboveRing)-\(settings.showsForecast)-\(settings.detailedCards.isEmpty)-\(settings.usesRoundEnds)")
     }
 
     /// Whether the rail is drawn out in full.
@@ -388,6 +401,17 @@ struct FloatingUsagePanelView: View {
     /// The same across the panel's other axis, which only a rail lying along
     /// the top ever uses.
     private var railLeading: CGFloat { placement.railLeading }
+
+    /// Whether the card shows this account's recent usage: its detailed card,
+    /// for a provider with a history (`cardHistory`), on the first account —
+    /// the one the records belong to. This Mac's records need Token spend on;
+    /// a provider's own statistics are asked as its settings pane asks them.
+    private func showsSpend(for account: AccountKey) -> Bool {
+        guard settings.showsDetailedCard(for: account), account.isPrimary,
+              let source = account.provider.cardHistory
+        else { return false }
+        return !source.readsThisMac || settings.readsTokenSpend
+    }
 
     private var selectedUsage: ProviderUsage? {
         entries.first { $0.id == selectedSlot }?.usage

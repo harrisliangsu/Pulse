@@ -1635,6 +1635,23 @@ struct SettingsView: View {
 
                 SettingsRowDivider()
 
+                // The history half only where it can appear, and said the way
+                // it will: this Mac's records need Token spend, a provider's
+                // own statistics do not.
+                SettingsRow(
+                    String.localized("Detailed card"),
+                    subtitle: Self.detailedCardSubtitle(account.isPrimary ? provider.cardHistory : nil)
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.showsDetailedCard(for: account) },
+                        set: { settings.setShowsDetailedCard($0, for: account) }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
+
+                SettingsRowDivider()
+
                 SettingsRow(
                     String.localized("Animated mark"),
                     subtitle: String.localized("Draw a bot that reacts to this account instead of the provider's logo.")
@@ -2070,6 +2087,17 @@ struct SettingsView: View {
         modelSpend = selectedModel.map { name in
             ModelSpendSummary.of(scoped, named: name, overLast: span, now: now, calendar: calendar)
         } ?? ModelSpendSummary()
+    }
+
+    static func detailedCardSubtitle(_ history: CardHistorySource?) -> String {
+        switch history {
+        case nil:
+            String.localized("Adds the plan and when the figures were read.")
+        case .accountStatistics:
+            String.localized("Adds the plan, when the figures were read and the account's usage over the last month.")
+        case .transcripts, .agents:
+            String.localized("Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity.")
+        }
     }
 
     private func loadHistory() async {

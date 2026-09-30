@@ -876,3 +876,15 @@
 "%@ · the command-line tool was not found" = "%@ · コマンドラインツールが見つかりません";
 "%@ · it did not go through; check the tool is signed in" = "%@ · 送信できませんでした。ツールにサインインしているか確認してください";
 "%@ · it did not answer in time" = "%@ · 時間内に応答がありませんでした";
+
+"Detailed card" = "詳細カード";
+"On this Mac" = "この Mac での利用";
+"7 days" = "7 日間";
+"31 days" = "31 日間";
+"Costs are estimates at API prices." = "金額は API 価格での推定です。";
+"Whole account" = "アカウント全体";
+"Couldn't read the history." = "利用履歴を読み取れませんでした。";
+"From %@, for the whole account." = "%@ から取得した、アカウント全体の数値です。";
+"Adds the plan and when the figures were read." = "プラン名と数値の更新時刻を加えます。";
+"Adds the plan, when the figures were read and the account's usage over the last month." = "プラン名と数値の更新時刻に加えて、アカウント全体の直近 1 か月の利用量を表示します。";
+"Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "プラン名と数値の更新時刻を加えます。「トークン使用量」がオンなら、この Mac での最近の利用も表示します。";
