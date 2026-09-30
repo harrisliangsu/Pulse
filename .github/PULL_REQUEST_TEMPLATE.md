@@ -1,8 +1,8 @@
 ## Related issue
 
-Closes #
+Link an issue if there is one (for example, `Closes #123`), or write “Not required: small bug fix / documentation / translation”.
 
-Required: an issue a maintainer has labelled `accepted`, bug fixes included. A PR without one, or a third open PR from the same person, is closed automatically. See CONTRIBUTING.md → Pull requests.
+New features and major refactors require an issue a maintainer has labelled `accepted`. Small bug fixes, documentation and translations can be submitted directly. Missing links and more than two open PRs receive a reminder; this workflow leaves your PR open. See CONTRIBUTING.md → Pull requests.
 
 ## Problem
 
@@ -22,7 +22,7 @@ List anything not tested, known failures, or environments not covered.
 
 ## Checklist
 
-- [ ] This PR is linked to an issue labelled `accepted`.
+- [ ] This is a small bug fix, documentation or translation, or it links to an issue labelled `accepted` for a new feature or major refactor.
 - [ ] I searched existing issues and pull requests for duplicates.
 - [ ] The change is focused and contains no unrelated work.
 - [ ] I updated the relevant documentation.
