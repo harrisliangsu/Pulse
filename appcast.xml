@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.10</title>
+            <pubDate>Wed, 30 Sep 2026 01:30:52 -0000</pubDate>
+            <sparkle:version>1.4.10</sparkle:version>
+            <sparkle:shortVersionString>1.4.10</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.10</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.10</h2><ul><li><strong>标题只剩模板前缀的 issue 会自动关闭。</strong> 新建 issue 时，标题会预先填上 <code>[Bug]</code>、<code>[Feature]</code>、<code>[Provider]</code> 或 <code>[Question]</code>，表单没法要求前缀后面必须再写字。去掉这些前缀后如果一个字都没有，issue 会被自动关闭，并留下中英两句说明，请重新开一个、在前缀后面写清楚是什么事。四个模板里都写明了这一点。仓库维护者不受这条限制。</li><li><strong>同步上游 qunqin24/Pulse</strong>（本仓库尚未合入的一个提交）。本仓库版本为 <strong>1.4.10</strong>。<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。</li><li><strong>保留本仓库特有能力：</strong> 环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.10">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.10/Pulse-1.4.10.zip"
+                       length="12379175"
+                       type="application/octet-stream"
+                       sparkle:edSignature="ekDhtGERcV236vDcnimhYhQkICI0CrxwpnsCVVXrtkUUCFl258/G3QsI7yDYAbbcl+dcd0/+PTWWyUkvD87oDQ==" />
+        </item>
+        <item>
             <title>1.4.9</title>
             <pubDate>Tue, 29 Sep 2026 11:01:36 -0000</pubDate>
             <sparkle:version>1.4.9</sparkle:version>
