@@ -5,36 +5,44 @@
 <h1 align="center">Pulse</h1>
 
 <p align="center">
-  <b>軽量でエレガントな、画面端に置く macOS 向け AI コーディング利用枠モニター。</b><br>
-  Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Grok などの上限と残量をリアルタイムに把握。
+  <b>使用量のページを開かなくても、Claude Code・Codex・Cursor の残りがわかる。</b><br>
+  画面の端に置いておくだけで、AI コーディングの利用枠がひと目でわかる、無料・オープンソースの macOS アプリ。
 </p>
 
 <p align="center">
-  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/qunqin24/Pulse?color=black" alt="最新リリース"></a>
-  <img src="https://img.shields.io/badge/macOS-14.0%2B%20Sonoma-333333?logo=apple" alt="macOS 14+">
-  <a href="https://github.com/qunqin24/Pulse/actions/workflows/ci.yml"><img src="https://github.com/qunqin24/Pulse/actions/workflows/ci.yml/badge.svg" alt="CI ビルド"></a>
-  <img src="https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white" alt="Swift 6.0">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="ライセンス"></a>
-  <a href="https://github.com/qunqin24/Pulse/stargazers"><img src="https://img.shields.io/github/stars/qunqin24/Pulse?color=black" alt="GitHub スター"></a>
-  <a href="https://github.com/qunqin24/Pulse/releases"><img src="https://img.shields.io/github/downloads/qunqin24/Pulse/total?color=black" alt="ダウンロード数"></a>
-  <a href="https://github.com/qunqin24/Pulse/issues"><img src="https://img.shields.io/github/issues/qunqin24/Pulse?color=black" alt="オープンな Issue"></a>
-  <a href="https://github.com/qunqin24/Pulse/commits/main"><img src="https://img.shields.io/github/last-commit/qunqin24/Pulse?color=black" alt="最終コミット"></a>
+  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/badge/%E3%83%80%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%89-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS 版 Pulse をダウンロード"></a>
 </p>
 
 <p align="center">
-  <sub><b>macOS 14 Sonoma 以降</b> · Apple Silicon と Intel のユニバーサル · <a href="README.md"><b>English</b></a> · <a href="README.zh-CN.md"><b>简体中文</b></a> · <a href="README.zh-Hant.md"><b>繁體中文</b></a> · <b>日本語</b> · <a href="README.ko.md"><b>한국어</b></a></sub>
+  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/qunqin24/Pulse?label=%E6%9C%80%E6%96%B0%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9&color=black" alt="最新リリース"></a>
+  <a href="https://github.com/qunqin24/Pulse/releases"><img src="https://img.shields.io/github/downloads/qunqin24/Pulse/total?label=%E3%83%80%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%89%E6%95%B0&color=black" alt="ダウンロード数"></a>
+  <a href="https://github.com/qunqin24/Pulse/stargazers"><img src="https://img.shields.io/github/stars/qunqin24/Pulse?label=%E3%82%B9%E3%82%BF%E3%83%BC&color=black" alt="GitHub スター"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9-Apache%202.0-blue" alt="Apache 2.0 ライセンス"></a>
 </p>
 
 <p align="center">
-  <img src="Docs/demo.gif" width="340" alt="画面端に貼り付いた Pulse のフローティングレール">
+  <sub><b>macOS 14 Sonoma 以降</b> · Apple シリコンと Intel に対応 · <a href="README.md"><b>English</b></a> · <a href="README.zh-CN.md"><b>简体中文</b></a> · <a href="README.zh-Hant.md"><b>繁體中文</b></a> · <b>日本語</b> · <a href="README.ko.md"><b>한국어</b></a></sub>
 </p>
 
-Pulse は画面の端にすっと収まる、控えめなフローティングモニターです。各サービスが報告する残量をそのまま表示します——使うのはその製品自身のクライアント経路で、Pulse のサーバーではありません——あなたがすでに持っているログインをそのまま使い、何も送り返しません。画面に出る使用率は、すべてサービス自身が報告した数字です。
+<p align="center">
+  <img src="Docs/demo.gif" height="400" alt="画面の端に寄せた Pulse のフローティングレール">
+  &nbsp;&nbsp;
+  <img src="Docs/panel.webp" height="400" alt="リングにポインタを乗せると、すべての上限とリセット時刻を並べたカードが開きます">
+</p>
 
-**1.2.0 の新機能：** プロバイダのロゴの代わりに使えるアニメーションマーク。そのアカウントの状態に反応する小さなボットで、性格・形・色を選べます。[リリースノート](https://github.com/qunqin24/Pulse/releases/tag/v1.2.0)。
+- **77 のサービスをひと目で**——Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Kiro、Grok、DeepSeek、Kimi Code など。それぞれに専用のリングがあります。
+- **Pulse のアカウントもサーバーもなし**——いまお使いのログインをそのまま使い、何も送り返しません。
+- **表示するのは実際の数字だけ**——使用率はすべてサービス自身が報告した値です。数少ない推定値にはそう明記し、サービスが数字を出さないときは、推測せずにそのことを表示します。
+- **ネイティブで控えめ**——Swift と SwiftUI 製で、macOS 26 では Liquid Glass。画面の左・右・上に寄せられ、使っていないときは細い線に畳まれます。メニューバーだけで使うこともできます。
+
+**最近の追加：** メニューバーでの使用量表示とアカウントごとのダッシュボード、リセット後に利用枠を自動で始める機能、動くボットのマーク。[更新内容](https://github.com/qunqin24/Pulse/releases/latest)。
 
 <p align="center">
-  <img src="Docs/bot-mark.gif" width="340" alt="Pulse のアニメーションマーク：各リングのボットがそのアカウントの状態に反応します">
+  <img src="Docs/bot-mark.gif" width="300" alt="Pulse のアニメーションマーク：各リングのボットがそのアカウントの状態に反応します">
+</p>
+
+<p align="center">
+  <sub>Pulse のおかげで突然の上限を避けられたなら、⭐ をもらえると、ほかの人にも見つけてもらいやすくなります。</sub>
 </p>
 
 ---
@@ -78,8 +86,6 @@ Pulse は画面の端にすっと収まる、控えめなフローティング�
 - **プライバシー第一**：Pulse はあなたの Mac 上で、あなた自身のログインのもとで動きます。接続先は三つだけで、ここに挙げたものがすべてです——すでに使っているプロバイダ、トークン消費ペインの公開モデル価格を取得する [models.dev](https://models.dev)、そしてアプリの更新を確認する GitHub/Sparkle。プロバイダへのリクエスト、サインイン時のトークン交換、models.dev は「設定」›「ネットワークと更新」で選んだプロキシを使い、手動プロキシは対応するヘルパープロセスにも渡されます。Sparkle のアップデート確認は常に macOS のシステムプロキシ設定に従います。
 
 <p align="center">
-  <img src="Docs/panel.webp" height="300" alt="レールの隣に開く使用量の詳細カード">
-  &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="Docs/settings.webp" height="300" alt="Pulse の設定">
 </p>
 

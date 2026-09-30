@@ -5,36 +5,44 @@
 <h1 align="center">Pulse</h1>
 
 <p align="center">
-  <b>A lightweight, elegant screen-edge monitor for your AI coding allowances.</b><br>
-  Real-time remaining quotas and rate limits for Claude Code, Codex, Cursor, GitHub Copilot, Antigravity, Grok, and more.
+  <b>Know how much Claude Code, Codex and Cursor you have left — without opening a single usage page.</b><br>
+  A free, open-source macOS monitor that sits on the edge of your screen and shows every AI coding limit at a glance.
 </p>
 
 <p align="center">
-  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/qunqin24/Pulse?color=black" alt="Latest Release"></a>
-  <img src="https://img.shields.io/badge/macOS-14.0%2B%20Sonoma-333333?logo=apple" alt="macOS 14+">
-  <a href="https://github.com/qunqin24/Pulse/actions/workflows/ci.yml"><img src="https://github.com/qunqin24/Pulse/actions/workflows/ci.yml/badge.svg" alt="CI Build"></a>
-  <img src="https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white" alt="Swift 6.0">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="License"></a>
-  <a href="https://github.com/qunqin24/Pulse/stargazers"><img src="https://img.shields.io/github/stars/qunqin24/Pulse?color=black" alt="GitHub Stars"></a>
+  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/badge/Download-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download Pulse for macOS"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/qunqin24/Pulse?color=black" alt="Latest release"></a>
   <a href="https://github.com/qunqin24/Pulse/releases"><img src="https://img.shields.io/github/downloads/qunqin24/Pulse/total?color=black" alt="Downloads"></a>
-  <a href="https://github.com/qunqin24/Pulse/issues"><img src="https://img.shields.io/github/issues/qunqin24/Pulse?color=black" alt="Open Issues"></a>
-  <a href="https://github.com/qunqin24/Pulse/commits/main"><img src="https://img.shields.io/github/last-commit/qunqin24/Pulse?color=black" alt="Last Commit"></a>
+  <a href="https://github.com/qunqin24/Pulse/stargazers"><img src="https://img.shields.io/github/stars/qunqin24/Pulse?color=black" alt="GitHub stars"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="Apache 2.0 license"></a>
 </p>
 
 <p align="center">
-  <sub><b>macOS 14 Sonoma or newer</b> · Apple Silicon & Intel Universal · <b>English</b> · <a href="README.zh-CN.md"><b>简体中文</b></a> · <a href="README.zh-Hant.md"><b>繁體中文</b></a> · <a href="README.ja.md"><b>日本語</b></a> · <a href="README.ko.md"><b>한국어</b></a></sub>
+  <sub><b>macOS 14 Sonoma or newer</b> · Apple Silicon & Intel · <b>English</b> · <a href="README.zh-CN.md"><b>简体中文</b></a> · <a href="README.zh-Hant.md"><b>繁體中文</b></a> · <a href="README.ja.md"><b>日本語</b></a> · <a href="README.ko.md"><b>한국어</b></a></sub>
 </p>
 
 <p align="center">
-  <img src="Docs/demo.gif" width="340" alt="Pulse floating rail docked against the screen edge">
+  <img src="Docs/demo.gif" height="400" alt="Pulse floating rail docked against the screen edge">
+  &nbsp;&nbsp;
+  <img src="Docs/panel.webp" height="400" alt="Hovering a ring opens a card with every limit and its reset">
 </p>
 
-Pulse is an unobtrusive floating monitor that docks neatly along the edge of your screen. It shows remaining allowance from the figures each service reports — using that product's own client routes, not a Pulse server — signed in as you already are, with nothing reported back. Every percentage on screen is a figure the service itself reported.
+- **Seventy-seven services at a glance** — Claude Code, Codex, Cursor, GitHub Copilot, Antigravity, Kiro, Grok, DeepSeek, Kimi Code and many more, each as its own ring.
+- **No Pulse account, no Pulse server** — it uses the logins you already have, and nothing is sent back.
+- **Real numbers only** — every usage percentage is the one the service itself reported. The few estimates are marked as such, and where a service reports nothing, Pulse says so instead of guessing.
+- **Native and quiet** — Swift and SwiftUI, Liquid Glass on macOS 26. Dock it left, right or along the top, let it fold to a sliver when idle, or keep it in the menu bar.
 
-**New in 1.2.0:** an optional animated mark in place of a provider's logo — a small bot that reacts to what that account is doing, with its own personality, shape and colour. [Release notes](https://github.com/qunqin24/Pulse/releases/tag/v1.2.0).
+**Recently added:** usage in the menu bar with a dashboard for each account, starting usage windows after a reset, and animated bot marks. [What's new](https://github.com/qunqin24/Pulse/releases/latest).
 
 <p align="center">
-  <img src="Docs/bot-mark.gif" width="340" alt="Pulse animated marks: a bot in each ring reacting to what that account is doing">
+  <img src="Docs/bot-mark.gif" width="300" alt="Pulse animated marks: a bot in each ring reacting to what that account is doing">
+</p>
+
+<p align="center">
+  <sub>If Pulse has saved you from a surprise rate limit, a ⭐ helps other people find it.</sub>
 </p>
 
 ---
@@ -78,8 +86,6 @@ Pulse is an unobtrusive floating monitor that docks neatly along the edge of you
 - **Privacy First**: Pulse runs on your Mac under your own provider logins. It makes three kinds of connection and they are all listed here: the providers you already use, [models.dev](https://models.dev) for public model prices in the token-spend pane, and GitHub/Sparkle for app updates. Provider requests, sign-in exchanges and models.dev use the proxy chosen under Settings › Network and refresh; supported helper processes receive the same manual proxy. Sparkle update checks always follow macOS system proxy settings.
 
 <p align="center">
-  <img src="Docs/panel.webp" height="300" alt="Detailed usage card beside rail">
-  &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="Docs/settings.webp" height="300" alt="Pulse Settings">
 </p>
 

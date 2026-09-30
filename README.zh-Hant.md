@@ -5,36 +5,44 @@
 <h1 align="center">Pulse</h1>
 
 <p align="center">
-  <b>輕巧優雅的 macOS 螢幕邊緣 AI 編碼額度監視器。</b><br>
-  即時掌握 Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Grok 等多平台的剩餘額度與速率限制。
+  <b>不用逐一打開用量頁面，就知道 Claude Code、Codex、Cursor 還剩多少額度。</b><br>
+  免費開源的 macOS 小工具，貼在螢幕邊緣，所有 AI 程式設計額度一眼看完。
 </p>
 
 <p align="center">
-  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/qunqin24/Pulse?color=black" alt="最新版本"></a>
-  <img src="https://img.shields.io/badge/macOS-14.0%2B%20Sonoma-333333?logo=apple" alt="macOS 14+">
-  <a href="https://github.com/qunqin24/Pulse/actions/workflows/ci.yml"><img src="https://github.com/qunqin24/Pulse/actions/workflows/ci.yml/badge.svg" alt="建置狀態"></a>
-  <img src="https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white" alt="Swift 6.0">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/授權-Apache%202.0-blue" alt="開源授權"></a>
-  <a href="https://github.com/qunqin24/Pulse/stargazers"><img src="https://img.shields.io/github/stars/qunqin24/Pulse?label=%E6%98%9F%E6%A8%99&color=black" alt="GitHub 星標"></a>
+  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BC%89-000000?style=for-the-badge&logo=apple&logoColor=white" alt="下載 macOS 版 Pulse"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/qunqin24/Pulse?label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC&color=black" alt="最新版本"></a>
   <a href="https://github.com/qunqin24/Pulse/releases"><img src="https://img.shields.io/github/downloads/qunqin24/Pulse/total?label=%E4%B8%8B%E8%BC%89%E6%AC%A1%E6%95%B8&color=black" alt="下載次數"></a>
-  <a href="https://github.com/qunqin24/Pulse/issues"><img src="https://img.shields.io/github/issues/qunqin24/Pulse?label=%E5%95%8F%E9%A1%8C&color=black" alt="待處理問題"></a>
-  <a href="https://github.com/qunqin24/Pulse/commits/main"><img src="https://img.shields.io/github/last-commit/qunqin24/Pulse?label=%E6%9C%80%E8%BF%91%E6%8F%90%E4%BA%A4&color=black" alt="最近提交"></a>
+  <a href="https://github.com/qunqin24/Pulse/stargazers"><img src="https://img.shields.io/github/stars/qunqin24/Pulse?label=%E6%98%9F%E8%99%9F&color=black" alt="GitHub 星號"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/%E6%8E%88%E6%AC%8A-Apache%202.0-blue" alt="Apache 2.0 授權"></a>
 </p>
 
 <p align="center">
-  <sub><b>macOS 14 Sonoma 或以上版本</b> · Apple 晶片與 Intel 通用 · <a href="README.md"><b>English</b></a> · <a href="README.zh-CN.md"><b>简体中文</b></a> · <b>繁體中文</b> · <a href="README.ja.md"><b>日本語</b></a> · <a href="README.ko.md"><b>한국어</b></a></sub>
+  <sub><b>macOS 14 Sonoma 或更新版本</b> · Apple 晶片與 Intel 通用 · <a href="README.md"><b>English</b></a> · <a href="README.zh-CN.md"><b>简体中文</b></a> · <b>繁體中文</b> · <a href="README.ja.md"><b>日本語</b></a> · <a href="README.ko.md"><b>한국어</b></a></sub>
 </p>
 
 <p align="center">
-  <img src="Docs/demo.gif" width="340" alt="貼在螢幕邊緣的 Pulse 浮動膠囊">
+  <img src="Docs/demo.gif" height="400" alt="貼在螢幕邊緣的 Pulse 懸浮膠囊">
+  &nbsp;&nbsp;
+  <img src="Docs/panel.webp" height="400" alt="指標移到圓環上，會打開一張卡片，列出每項額度與重置時間">
 </p>
 
-Pulse 是一個停靠在螢幕邊緣的小巧懸浮監視器。它顯示各服務自己回報的剩餘額度——走的是該產品自己的用戶端通道，而不是 Pulse 的伺服器——用你已有的登入狀態，不回傳任何東西。畫面上的每個百分比，都來自服務商自己回報的數字。
+- **77 個服務，一眼看完**——Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Kiro、Grok、DeepSeek、Kimi Code 等等，每個都有自己的圓環。
+- **沒有 Pulse 帳號，也沒有 Pulse 伺服器**——直接使用你已有的登入，不回傳任何東西。
+- **只顯示真實數字**——每個用量百分比都是服務商自己回報的。少數估算會明確標示；服務商沒有提供數字時，Pulse 會直接說明，不去猜測。
+- **原生、安靜**——以 Swift 與 SwiftUI 撰寫，macOS 26 上是 Liquid Glass。可以停靠在左側、右側或頂端，閒置時收成一條細線，也可以只待在選單列裡。
 
-**1.2.0 新功能：** 可選的動畫標記——用一個會隨該帳號狀態反應的小機器人取代供應商圖示，人格、形狀與顏色都可以自行設定。[版本說明](https://github.com/qunqin24/Pulse/releases/tag/v1.2.0)。
+**最近新增：** 在選單列顯示用量，並附上每個帳號的面板；額度重置後自動開始新視窗；會動的小機器人標記。[更新說明](https://github.com/qunqin24/Pulse/releases/latest)。
 
 <p align="center">
-  <img src="Docs/bot-mark.gif" width="340" alt="Pulse 動畫標記：每個環裡的小機器人會隨該帳號的狀態反應">
+  <img src="Docs/bot-mark.gif" width="300" alt="Pulse 動畫標記：每個環裡的小機器人會隨該帳號的狀態反應">
+</p>
+
+<p align="center">
+  <sub>如果 Pulse 幫你躲過了一次突如其來的限額，按個 ⭐ 能讓更多人發現它。</sub>
 </p>
 
 ---
@@ -78,8 +86,6 @@ Pulse 是一個停靠在螢幕邊緣的小巧懸浮監視器。它顯示各服�
 - **隱私優先**：Pulse 跑在你自己的 Mac 上，用你自己的登入狀態。它只發起三類連線，這裡列的就是全部——你原本就在使用的服務商、為 Token 用量支出頁取得公開模型價格的 [models.dev](https://models.dev)，以及檢查更新的 GitHub/Sparkle。服務商請求、登入時的權杖交換與 models.dev 會使用「設定 › 網路與重新整理」中選擇的代理，Pulse 也會把手動代理傳給支援的輔助程序。Sparkle 的更新檢查一律跟隨 macOS 系統代理設定。
 
 <p align="center">
-  <img src="Docs/panel.webp" height="300" alt="膠囊旁的用量詳情卡">
-  &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="Docs/settings.webp" height="300" alt="Pulse 設定">
 </p>
 

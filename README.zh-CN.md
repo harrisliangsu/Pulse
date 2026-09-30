@@ -5,20 +5,19 @@
 <h1 align="center">Pulse</h1>
 
 <p align="center">
-  <b>优雅无扰的 macOS 屏幕边缘 AI 编码额度监视器。</b><br>
-  实时掌握 Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Grok 等多平台的限额与剩余用量。
+  <b>不用挨个打开用量页面，就知道 Claude Code、Codex、Cursor 还剩多少额度。</b><br>
+  免费开源的 macOS 小工具，贴在屏幕边上，所有 AI 编程额度一眼看完。
 </p>
 
 <p align="center">
-  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/qunqin24/Pulse?color=black" alt="最新版本"></a>
-  <img src="https://img.shields.io/badge/macOS-14.0%2B%20Sonoma-333333?logo=apple" alt="macOS 14+">
-  <a href="https://github.com/qunqin24/Pulse/actions/workflows/ci.yml"><img src="https://github.com/qunqin24/Pulse/actions/workflows/ci.yml/badge.svg" alt="构建状态"></a>
-  <img src="https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white" alt="Swift 6.0">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/许可-Apache%202.0-blue" alt="开源许可"></a>
-  <a href="https://github.com/qunqin24/Pulse/stargazers"><img src="https://img.shields.io/github/stars/qunqin24/Pulse?label=%E6%98%9F%E6%A0%87&color=black" alt="GitHub 星标"></a>
+  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-000000?style=for-the-badge&logo=apple&logoColor=white" alt="下载 macOS 版 Pulse"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/qunqin24/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/qunqin24/Pulse?label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC&color=black" alt="最新版本"></a>
   <a href="https://github.com/qunqin24/Pulse/releases"><img src="https://img.shields.io/github/downloads/qunqin24/Pulse/total?label=%E4%B8%8B%E8%BD%BD%E9%87%8F&color=black" alt="下载量"></a>
-  <a href="https://github.com/qunqin24/Pulse/issues"><img src="https://img.shields.io/github/issues/qunqin24/Pulse?label=%E9%97%AE%E9%A2%98&color=black" alt="待处理问题"></a>
-  <a href="https://github.com/qunqin24/Pulse/commits/main"><img src="https://img.shields.io/github/last-commit/qunqin24/Pulse?label=%E6%9C%80%E8%BF%91%E6%8F%90%E4%BA%A4&color=black" alt="最近提交"></a>
+  <a href="https://github.com/qunqin24/Pulse/stargazers"><img src="https://img.shields.io/github/stars/qunqin24/Pulse?label=%E6%98%9F%E6%A0%87&color=black" alt="GitHub 星标"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/%E8%AE%B8%E5%8F%AF-Apache%202.0-blue" alt="Apache 2.0 许可"></a>
 </p>
 
 <p align="center">
@@ -26,15 +25,24 @@
 </p>
 
 <p align="center">
-  <img src="Docs/demo.gif" width="340" alt="贴在屏幕边缘的 Pulse 悬浮胶囊">
+  <img src="Docs/demo.gif" height="400" alt="贴在屏幕边缘的 Pulse 悬浮胶囊">
+  &nbsp;&nbsp;
+  <img src="Docs/panel.webp" height="400" alt="指针移到圆环上，会打开一张卡片，列出每项额度和重置时间">
 </p>
 
-Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服务自己上报的剩余额度——走的是该产品自己的客户端通道，而不是 Pulse 的服务器——用你已有的登录态，不回传任何东西。屏幕上的每个百分比，都来自服务商自己报告的数字。
+- **77 个服务，一眼看完**——Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Kiro、Grok、DeepSeek、Kimi Code 等等，每个都有自己的圆环。
+- **没有 Pulse 账号，也没有 Pulse 服务器**——直接用你已有的登录，不回传任何东西。
+- **只显示真实数字**——每个用量百分比都是服务商自己报告的。少数估算会明确标出；服务商没给数字时，Pulse 会直说，不去猜。
+- **原生、安静**——用 Swift 和 SwiftUI 写成，macOS 26 上是液态玻璃。可以停靠在左边、右边或顶部，闲置时收成一条细线，也可以只待在菜单栏里。
 
-**1.2.0 新变化：** 可选的动画标记——用一个会随该账号状态反应的小机器人代替供应商图标，人格、形状和颜色都可以自己设置。[版本说明](https://github.com/qunqin24/Pulse/releases/tag/v1.2.0)。
+**最近新增：** 菜单栏显示用量，并带每个账号的面板；额度重置后自动开始新窗口；会动的小机器人标记。[更新说明](https://github.com/qunqin24/Pulse/releases/latest)。
 
 <p align="center">
-  <img src="Docs/bot-mark.gif" width="340" alt="Pulse 动画标记：每个环里的小机器人会随该账号的状态反应">
+  <img src="Docs/bot-mark.gif" width="300" alt="Pulse 动画标记：每个环里的小机器人会随该账号的状态反应">
+</p>
+
+<p align="center">
+  <sub>如果 Pulse 帮你躲过了一次突如其来的限额，点个 ⭐ 能让更多人发现它。</sub>
 </p>
 
 ---
@@ -78,8 +86,6 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 - **本地优先**：Pulse 跑在你自己的 Mac 上，用你自己的登录态。它只发起三类连接，这里列的就是全部——你已在使用的服务商、为 Token 消耗页取公开模型价格的 [models.dev](https://models.dev)，以及检查更新的 GitHub/Sparkle。服务商请求、登录时的令牌交换和 models.dev 会使用「设置 › 网络与刷新」里选择的代理，Pulse 也会把手动代理传给支持的辅助进程。Sparkle 的更新检查始终跟随 macOS 系统代理设置。
 
 <p align="center">
-  <img src="Docs/panel.webp" height="300" alt="详情卡片">
-  &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="Docs/settings.webp" height="300" alt="Pulse 设置界面">
 </p>
 
