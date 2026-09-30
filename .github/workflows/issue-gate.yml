@@ -1,0 +1,40 @@
+name: Issue gate
+
+# Closes an issue whose title is nothing but the template's prefix ("[Bug]",
+# "[Question]"…). Issue forms prefill that prefix and cannot require anything
+# after it, so this is the only place the rule can be enforced. Maintainers are
+# exempt. Nothing from the issue is run: the script reads its title and nothing
+# else.
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  issues: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const exempt = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+            if (exempt.includes(issue.author_association) || issue.user.type === 'Bot') return;
+
+            // What is left once every leading `[…]` tag is taken off; a title
+            // with no letter or digit in it says nothing.
+            const rest = issue.title.replace(/^(\s*\[[^\]]*\])+/, '');
+            if (/[\p{L}\p{N}]/u.test(rest)) return;
+
+            const { owner, repo } = context.repo;
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issue.number,
+              body: [
+                'Closing automatically: the title is only the template prefix. Please open a new issue with a title that says what it is about, e.g. `[Bug] Codex ring stuck at 0% since 1.6.1`.',
+                '自动关闭：标题只有模板前缀。请重新开一个 issue，在前缀后面写清楚是什么事，例如 `[Question] 两个 Codex 账号要登录两次吗`。',
+              ].join('\n\n'),
+            });
+            await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed', state_reason: 'not_planned' });
+            core.notice(`Closed #${issue.number}: title is only the prefix`);

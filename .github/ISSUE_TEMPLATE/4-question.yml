@@ -10,6 +10,13 @@ body:
   - type: markdown
     attributes:
       value: >
+        **Write the title after `[Question]`.** An issue whose title is only the
+        prefix is closed automatically. Example: "[Question] Do two Codex accounts need two sign-ins?". 标题在 `[Question]` 后面
+        写清楚是什么事，只有前缀的 issue 会被自动关闭。例如：“[Question] 两个 Codex 账号要登录两次吗”。
+
+  - type: markdown
+    attributes:
+      value: >
         If a reading looks wrong, use **Bug report** instead — it asks for the
         version and what the service itself shows, which is what triage needs.
         如果是读数不对，请改用 **Bug report**，那里会问版本和服务方自己的
