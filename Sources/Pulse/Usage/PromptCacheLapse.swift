@@ -29,6 +29,11 @@ struct PromptCacheLapse: Equatable, Sendable {
     let lastRequest: Date
     /// The tier's length: an hour or five minutes.
     let lifetime: TimeInterval
+    /// Whether `lifetime` is a floor the provider guarantees rather than the
+    /// length it keeps a cache — OpenAI's "at least 30 minutes", after which
+    /// the cache may still be there. Said as "at least" wherever it is shown,
+    /// and its end as "may have lapsed", never "expired".
+    var isMinimum = false
 
     var expiresAt: Date { lastRequest.addingTimeInterval(lifetime) }
 
@@ -285,7 +290,7 @@ enum ClaudePromptCache {
         return nil
     }
 
-    private static func date(_ text: String) -> Date? {
+    static func date(_ text: String) -> Date? {
         let precise = ISO8601DateFormatter()
         precise.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return precise.date(from: text) ?? ISO8601DateFormatter().date(from: text)
