@@ -10,6 +10,15 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.11
+
+- **Small fixes no longer need an accepted issue first.** A bug fix, a documentation change, or a translation can be a pull request on its own. A new feature or a large refactor still needs an issue a maintainer has labelled `accepted`. When one person already has two pull requests open, the check posts a reminder and leaves the pull request open.
+- **The README leads with what Pulse saves you.** Each language opens with a download button, the hover card, and four reasons. The badges still point at this repository.
+- **Each account can open a detailed card.** Switch it on in that account’s settings. The card adds the plan and when the figures were read. Where Pulse has a history it also shows today, the last 7 days and the last 31 days of tokens, a month’s chart, and the model doing most of the work. z.ai and Zhipu use their own account statistics. Claude Code, Codex, and every Token spend agent that borrows a provider’s mark use this Mac’s records, and those need Token spend on.
+- **The detailed card adds an estimated value, the cache hit rate, and how long Claude Code’s prompt cache has left.** Each limit gets the estimated-value line the account’s settings pane already had. The usage section shows the cache hit rate, and the settings pane lists it by model. For Claude Code the time left is read from the tier each reply records and counted from the request. With several conversations open, the card names the one about to lapse and Settings lists every conversation. Subagent caches are left out: they are their own and do not make the next message cheaper.
+- **Synced from upstream qunqin24/Pulse** (the four commits this fork had not yet taken). This fork’s version is **1.4.11**. `appcast.xml` is unchanged until this version is tagged.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen’s cookie store; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.10
 
 - **An issue titled with only the template prefix is closed.** New issues start with `[Bug]`, `[Feature]`, `[Provider]`, or `[Question]` already filled in, and the form cannot require any text after that prefix. If nothing is left once those prefixes are removed, the issue is closed, with a short note in both languages asking for a new one whose title says what it is about. Each of the four templates says so. Maintainers are exempt.
