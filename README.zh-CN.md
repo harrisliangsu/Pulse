@@ -5,8 +5,12 @@
 <h1 align="center">Pulse</h1>
 
 <p align="center">
-  <b>优雅无扰的 macOS 屏幕边缘 AI 编码额度监视器。</b><br>
-  实时掌握 Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Grok 等多平台的限额与剩余用量。
+  <b>不用挨个打开用量页面，就知道 Claude Code、Codex、Cursor 还剩多少额度。</b><br>
+  免费开源的 macOS 小工具，贴在屏幕边上，所有 AI 编程额度一眼看完。
+</p>
+
+<p align="center">
+  <a href="https://github.com/harrisliangsu/Pulse/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-000000?style=for-the-badge&logo=apple&logoColor=white" alt="下载 macOS 版 Pulse"></a>
 </p>
 
 <p align="center">
@@ -26,15 +30,24 @@
 </p>
 
 <p align="center">
-  <img src="Docs/demo.gif" width="340" alt="贴在屏幕边缘的 Pulse 悬浮胶囊">
+  <img src="Docs/demo.gif" height="400" alt="贴在屏幕边缘的 Pulse 悬浮胶囊">
+  &nbsp;&nbsp;
+  <img src="Docs/panel.webp" height="400" alt="指针移到圆环上，会打开一张卡片，列出每项额度和重置时间">
 </p>
 
-Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服务自己上报的剩余额度——走的是该产品自己的客户端通道，而不是 Pulse 的服务器——用你已有的登录态，不回传任何东西。屏幕上的每个百分比，都来自服务商自己报告的数字。
+- **77 个服务，一眼看完**——Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Kiro、Grok、DeepSeek、Kimi Code 等等，每个都有自己的圆环。
+- **没有 Pulse 账号，也没有 Pulse 服务器**——直接用你已有的登录，不回传任何东西。
+- **只显示真实数字**——每个用量百分比都是服务商自己报告的。少数估算会明确标出；服务商没给数字时，Pulse 会直说，不去猜。
+- **原生、安静**——用 Swift 和 SwiftUI 写成，macOS 26 上是液态玻璃。可以停靠在左边、右边或顶部，闲置时收成一条细线，也可以只待在菜单栏里。
 
-**1.2.0 新变化：** 可选的动画标记——用一个会随该账号状态反应的小机器人代替供应商图标，人格、形状和颜色都可以自己设置。[版本说明](https://github.com/harrisliangsu/Pulse/releases/tag/v1.2.0)。
+**最近新增：** 菜单栏显示用量，并带每个账号的面板；额度重置后自动开始新窗口；会动的小机器人标记。[更新说明](https://github.com/harrisliangsu/Pulse/releases/latest)。
 
 <p align="center">
-  <img src="Docs/bot-mark.gif" width="340" alt="Pulse 动画标记：每个环里的小机器人会随该账号的状态反应">
+  <img src="Docs/bot-mark.gif" width="300" alt="Pulse 动画标记：每个环里的小机器人会随该账号的状态反应">
+</p>
+
+<p align="center">
+  <sub>如果 Pulse 帮你躲过了一次突如其来的限额，点个 ⭐ 能让更多人发现它。</sub>
 </p>
 
 ---
@@ -49,8 +62,13 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 
 ### 悬停详情卡与智能消耗预测
 - **完整配额清单**：鼠标悬停在圆环上即可弹出详情卡，列出该平台的所有用量池、重置倒计时与生效状态。
+- **详细额度卡（可选，按账号开启）**：给你最常看的账号打开。卡片会加上套餐名和数字的更新时间；本机记录能算出金额时，每条限额下还会给出额度价值推算。凡是 Pulse 拿得到用量记录的服务，还会显示今天、7 天、31 天的 token 用量，附 31 天柱状图、主力模型，缓存命中率（记录里分得清缓存的才显示），Claude Code 还会显示提示缓存还剩多久（按每次回复记下的缓存档位算）：卡片上显示最快过期的那个对话，设置里列出所有对话：z.ai、智谱用的是它们自己的账号统计；Claude Code、Codex、Kimi Code、Grok、OpenCode、Cursor、Devin、Antigravity、Command Code、Copilot 读的是本机记录，需要先打开「Token 消耗」。
 - **消耗速率与耗尽预测（可选）**：开启后会分析当前使用节奏是否足以撑到本轮周期重置，并在存在耗尽风险时给出大致的枯竭时间；默认关闭。
 - **置顶核心配额**：可自由指定将关注的配额钉在圆环主视图，或由系统默认展示最临近用尽的配额。
+
+<p align="center">
+  <img src="Docs/detailed-card.webp" width="620" alt="同一个 Codex 账号的简洁额度卡与详细额度卡">
+</p>
 
 ### 原生丝滑、静默无扰
 - **多位置随心停靠**：可吸附停靠在屏幕左边缘、右边缘或顶部（菜单栏之上），亦可在屏幕任意位置自由悬浮。
@@ -78,8 +96,6 @@ Pulse 是一个停靠在屏幕边缘的小巧悬浮监视器。它展示各服�
 - **本地优先**：Pulse 跑在你自己的 Mac 上，用你自己的登录态。它只发起三类连接，这里列的就是全部——你已在使用的服务商、为 Token 消耗页取公开模型价格的 [models.dev](https://models.dev)，以及检查更新的 GitHub/Sparkle。服务商请求、登录时的令牌交换和 models.dev 会使用「设置 › 网络与刷新」里选择的代理，Pulse 也会把手动代理传给支持的辅助进程。Sparkle 的更新检查始终跟随 macOS 系统代理设置。
 
 <p align="center">
-  <img src="Docs/panel.webp" height="300" alt="详情卡片">
-  &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="Docs/settings.webp" height="300" alt="Pulse 设置界面">
 </p>
 

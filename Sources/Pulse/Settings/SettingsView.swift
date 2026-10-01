@@ -1802,6 +1802,23 @@ struct SettingsView: View {
 
                 SettingsRowDivider()
 
+                // The history half only where it can appear, and said the way
+                // it will: this Mac's records need Token spend, a provider's
+                // own statistics do not.
+                SettingsRow(
+                    String.localized("Detailed card"),
+                    subtitle: Self.detailedCardSubtitle(account.isPrimary ? provider.cardHistory : nil)
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.showsDetailedCard(for: account) },
+                        set: { settings.setShowsDetailedCard($0, for: account) }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
+
+                SettingsRowDivider()
+
                 SettingsRow(
                     String.localized("Animated mark"),
                     subtitle: String.localized("Draw a bot that reacts to this account instead of the provider's logo.")
@@ -2004,6 +2021,13 @@ struct SettingsView: View {
             // which is not this one, so showing them here would report one
             // account's spending under another's name.
             if provider.providesHistory, account.isPrimary {
+                // Live, so ahead of the history: which conversations still
+                // hold a cache, and for how long. Claude Code's logs are the
+                // only ones that say.
+                if provider == .claudeCode, settings.isEnabled(account) {
+                    PromptCacheSessionsGroup()
+                }
+
                 // The estimate is money, and money needs the token split only
                 // a transcript carries. A provider whose history comes from
                 // its own statistics has tokens and nothing to price them
@@ -2063,14 +2087,14 @@ struct SettingsView: View {
 
                         SettingsRow(
                             entry.0.name,
-                            subtitle: String.localized("\(Self.approximateMoney(entry.1.spent)) used so far")
+                            subtitle: String.localized("\(BudgetEstimator.approximate(entry.1.spent)) used so far")
                         ) {
                             // Just what the whole window is worth. The
                             // remainder used to sit here too, but it is only
                             // the other two numbers subtracted — and the
                             // percentage it comes from is already on screen,
                             // in "Current usage" directly above.
-                            Text(Self.approximateMoney(entry.1.full))
+                            Text(BudgetEstimator.approximate(entry.1.full))
                                 .font(.system(size: 13, weight: .medium))
                                 .monospacedDigit()
                         }
@@ -2084,15 +2108,6 @@ struct SettingsView: View {
                     .padding(.horizontal, 4)
             }
         }
-    }
-
-    private static func approximateMoney(_ amount: Double) -> String {
-        let text = amount.formatted(
-            .currency(code: "USD")
-                .precision(.fractionLength(amount >= 100 ? 0 : 2))
-                .locale(LocalizationSource.locale)
-        )
-        return "≈\(text)"
     }
 
     /// What has actually been spent over time, as opposed to how much of the
@@ -2237,6 +2252,17 @@ struct SettingsView: View {
         modelSpend = selectedModel.map { name in
             ModelSpendSummary.of(scoped, named: name, overLast: span, now: now, calendar: calendar)
         } ?? ModelSpendSummary()
+    }
+
+    static func detailedCardSubtitle(_ history: CardHistorySource?) -> String {
+        switch history {
+        case nil:
+            String.localized("Adds the plan and when the figures were read.")
+        case .accountStatistics:
+            String.localized("Adds the plan, when the figures were read and the account's usage over the last month.")
+        case .transcripts, .agents:
+            String.localized("Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity.")
+        }
     }
 
     private func loadHistory() async {

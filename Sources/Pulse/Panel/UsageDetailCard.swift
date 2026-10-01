@@ -56,6 +56,8 @@ enum DetailCardLayout {
             // Left out, a top-docked card with five limits ran 84pt past the
             // window and was sliced flat against its edge.
             + (PanelMetrics.showsForecast ? rowInternalSpacing + rowTextLineHeight : 0)
+            // The detailed card's estimated value, under any limit it can price.
+            + (PanelMetrics.showsDetailedCard ? rowInternalSpacing + rowTextLineHeight : 0)
     }
 
     /// Starting guess for the card's height, used for the very first layout
@@ -99,11 +101,54 @@ enum DetailCardLayout {
     }
 
     static func height(forWindows count: Int, footnote: Bool = false) -> CGFloat {
-        padding * 2
+        let detailed = PanelMetrics.showsDetailedCard
+        return padding * 2
             + headerHeight
+            + (detailed ? headerLineSpacing + footnoteHeight : 0)
             + CGFloat(count) * (contentSpacing + rowHeight)
             + (footnote ? contentSpacing + footnoteHeight : 0)
+            // Budgeted whether or not this account has a history to show:
+            // the frame is one size for every card.
+            + (detailed ? contentSpacing + activityHeight : 0)
     }
+
+    // MARK: Detailed card
+
+    /// Between the title and the "updated" line under it.
+    static var headerLineSpacing: CGFloat { 4 * PanelMetrics.scale }
+
+    /// Between the parts of the activity section.
+    static var activitySpacing: CGFloat { 10 * PanelMetrics.scale }
+    /// A column's label, its token count and its estimated cost.
+    static var figureLabelHeight: CGFloat { 13 * PanelMetrics.scale }
+    static var figureValueHeight: CGFloat { 17 * PanelMetrics.scale }
+    static var figureFontSize: CGFloat { 14 * PanelMetrics.scale }
+    static var figuresHeight: CGFloat { unpricedFiguresHeight + 2 * PanelMetrics.scale + figureLabelHeight }
+    /// Label and count only, where nothing carries a price.
+    static var unpricedFiguresHeight: CGFloat { figureLabelHeight + 2 * PanelMetrics.scale + figureValueHeight }
+    static var chartHeight: CGFloat { 30 * PanelMetrics.scale }
+
+    /// The whole activity section: rule, heading, figures, chart, top model,
+    /// cache hit rate, the prompt cache's lapse, the line saying what the
+    /// money is. Each part is drawn at the height
+    /// named here, so the budget and the drawing cannot drift.
+    static var activityHeight: CGFloat {
+        1
+            + activitySpacing + figureLabelHeight
+            + activitySpacing + figuresHeight
+            + activitySpacing + chartHeight
+            + activitySpacing + rowTextLineHeight
+            + activitySpacing + rowTextLineHeight
+            // The prompt cache's line, and under it — with several
+            // conversations — the name of the one about to lapse.
+            + activitySpacing + rowTextLineHeight + promptCacheNameHeight
+            + activitySpacing + footnoteHeight
+    }
+
+    /// The conversation's name under the prompt cache's line: a gap and one
+    /// footnote-sized line. Budgeted whether or not several conversations are
+    /// running, because the frame is one size for every card.
+    static var promptCacheNameHeight: CGFloat { 2 * PanelMetrics.scale + footnoteHeight }
 
     /// Rendered line height of the "as of …" line under the limits.
     static var footnoteHeight: CGFloat { 13 * PanelMetrics.scale }
@@ -128,6 +173,16 @@ struct UsageDetailCard: View {
     /// Codex's limit reset credits, when its switch is on and it has been
     /// asked. Nil draws no row at all.
     var resetCredits: CodexResetCredits?
+    /// The detailed card: the plan, how far through each window the clock is
+    /// and the account's recent activity. Set per account.
+    var isDetailed = false
+    /// What this Mac's records say about the account, for the detailed card.
+    /// Nil draws no section: Token spend is off, or this account keeps no
+    /// records here.
+    var spend: Spend?
+    /// When each live session's prompt cache lapses, where the logs say. The
+    /// card names the soonest; Settings lists them all.
+    var promptCache: PromptCacheReading?
     /// Where the pointer's tip should sit along the side facing the rail,
     /// measured from the card's own top or leading edge. The card gets pushed
     /// around by the panel's own edges (see
@@ -181,7 +236,8 @@ struct UsageDetailCard: View {
                     // percentage, a reset and a length the provider actually
                     // stated, and `BurnRate` refuses the windows that lack one
                     // rather than being told in advance which they are.
-                    burn: showsForecast ? BurnRate.reading(for: window) : nil
+                    burn: showsForecast ? BurnRate.reading(for: window) : nil,
+                    value: valueText(window)
                 )
                 .transition(Self.rowTransition)
             }
@@ -243,6 +299,11 @@ struct UsageDetailCard: View {
                 Text(footnote)
                     .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
                     .foregroundStyle(.primary.opacity(0.4))
+            }
+
+            if isDetailed, let spend {
+                ActivitySection(spend: spend, provider: usage.provider, promptCache: promptCache)
+                    .transition(Self.rowTransition)
             }
         }
         .padding(DetailCardLayout.padding)
@@ -356,6 +417,27 @@ struct UsageDetailCard: View {
 
     /// The card's line under a limit, for the menu bar's list too.
     static func resetDescription(_ window: UsageWindow) -> String { resetText(window) }
+
+    /// What a limit is worth, on the detailed card: "Estimated value ≈$220 ·
+    /// ≈$101 used". The settings pane's `BudgetEstimate`, from the ledger the
+    /// card already holds — so only where that ledger carries money and its
+    /// quarter-hours, which is this Mac's records and never a provider's own
+    /// statistics. Nil wherever the estimator withholds it.
+    private func valueText(_ window: UsageWindow) -> String? {
+        guard isDetailed, case .ledger(let ledger) = spend,
+              let estimate = BudgetEstimator.estimate(for: window, ledger: ledger)
+        else { return nil }
+        return .localized("Estimated value \(BudgetEstimator.approximate(estimate.full)) · \(BudgetEstimator.approximate(estimate.spent)) used")
+    }
+
+    /// "Updated 3 min ago".
+    static func updatedText(_ date: Date, now: Date = Date()) -> String {
+        if now.timeIntervalSince(date) < 60 { return .localized("Updated just now") }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = LocalizationSource.locale
+        formatter.unitsStyle = .short
+        return .localized("Updated \(formatter.localizedString(for: date, relativeTo: now))")
+    }
 
     private static func resetText(_ window: UsageWindow) -> String {
         // **Whichever happens first.** Credits lapsing before a reset hands
@@ -600,33 +682,58 @@ struct UsageDetailCard: View {
         // for the length of the fade read as a smudge. Stacked so the outgoing
         // one keeps no room in the row while it leaves.
         ZStack(alignment: .leading) {
-            HStack(spacing: 8) {
-                LobeIconView(provider: usage.provider, size: DetailCardLayout.headerIconSize)
-                    .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: DetailCardLayout.headerLineSpacing) {
+                HStack(spacing: 8) {
+                    LobeIconView(provider: usage.provider, size: DetailCardLayout.headerIconSize)
+                        .foregroundStyle(.primary)
 
-                Text(localized: "\(title ?? usage.provider.displayName) Usage")
-                    // One line, always. The card's height is worked out from
-                    // `DetailCardLayout` before SwiftUI lays anything out, so a
-                    // header that wrapped would make the card taller than the
-                    // window budgeted for it and get sliced off against the edge.
-                    .lineLimit(1)
-                    .font(.system(size: DetailCardLayout.titleFontSize, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary)
+                    Text(localized: "\(title ?? usage.provider.displayName) Usage")
+                        // One line, always. The card's height is worked out from
+                        // `DetailCardLayout` before SwiftUI lays anything out, so a
+                        // header that wrapped would make the card taller than the
+                        // window budgeted for it and get sliced off against the edge.
+                        .lineLimit(1)
+                        .font(.system(size: DetailCardLayout.titleFontSize, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .layoutPriority(1)
 
-                Spacer(minLength: 0)
-
-                if let openSettings {
-                    HeaderIconButton(
-                        systemImage: "gearshape",
-                        label: String.localized("Settings…"),
-                        action: openSettings
-                    )
-                    HeaderIconButton(
-                        systemImage: "power",
-                        label: String.localized("Quit Pulse")
-                    ) {
-                        NSApplication.shared.terminate(nil)
+                    // The plan as the provider names it. It gives way to the
+                    // title, which is what says whose card this is. Settings
+                    // and Quit stay at the trailing edge either way.
+                    if isDetailed, let plan = usage.plan, !plan.isEmpty {
+                        Spacer(minLength: 0)
+                        Text(verbatim: plan)
+                            .lineLimit(1)
+                            .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .medium, design: .rounded))
+                            .foregroundStyle(.primary.opacity(0.5))
+                    } else {
+                        Spacer(minLength: 0)
                     }
+
+                    if let openSettings {
+                        HeaderIconButton(
+                            systemImage: "gearshape",
+                            label: String.localized("Settings…"),
+                            action: openSettings
+                        )
+                        HeaderIconButton(
+                            systemImage: "power",
+                            label: String.localized("Quit Pulse")
+                        ) {
+                            NSApplication.shared.terminate(nil)
+                        }
+                    }
+                }
+
+                // How fresh the figures are. A stale reading says so in the
+                // footnote instead, in stronger words.
+                if isDetailed, case .live = usage.state, let observed = usage.observedAt {
+                    Text(verbatim: Self.updatedText(observed))
+                        .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                        .foregroundStyle(.primary.opacity(0.4))
+                        .lineLimit(1)
+                        // Level with the title, not the icon.
+                        .padding(.leading, DetailCardLayout.headerIconSize + 8)
                 }
             }
             .id("\(usage.id)|\(title ?? "")")
@@ -825,6 +932,271 @@ private struct HeaderIconButton: View {
     }
 }
 
+extension UsageDetailCard {
+    /// What the detailed card can say about an account's recent activity.
+    enum Spend: Equatable {
+        /// The records are being read; the last figures, if any, are not in yet.
+        case reading
+        /// Read, and nothing in them.
+        case empty
+        /// Asked of the provider, which did not answer.
+        case failed
+        case ledger(UsageLedger)
+    }
+}
+
+/// The detailed card's last section: the account's recent usage, from this
+/// Mac's records at the Token spend pane's prices, or — for Z.ai and Zhipu —
+/// from the statistics the provider publishes for the whole account.
+///
+/// **Tokens lead, money follows.** The tokens are counted; the money is those
+/// counts at API prices, which a subscription does not pay — so it is the
+/// smaller, dimmer line, marked as approximate, and the section says so. A
+/// provider's own statistics carry no money at all, so they show none.
+private struct ActivitySection: View {
+    let spend: UsageDetailCard.Spend
+    let provider: Provider
+    var promptCache: PromptCacheReading?
+
+    /// The provider's figures rather than this Mac's: headed and footed as
+    /// such, and never priced.
+    private var isAccountWide: Bool { provider.cardHistory == .accountStatistics }
+
+    /// The chart's span, and the longest of the three figures.
+    private static let span = 31
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DetailCardLayout.activitySpacing) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.12))
+                .frame(height: 1)
+
+            Text(isAccountWide ? String.localized("Whole account") : String.localized("On this Mac"))
+                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.5))
+                .frame(height: DetailCardLayout.figureLabelHeight)
+
+            switch spend {
+            case .reading:
+                message(String.localized("Reading local records…"))
+            case .empty:
+                message(String.localized("No history yet"))
+            case .failed:
+                message(String.localized("Couldn't read the history."))
+            case .ledger(let ledger):
+                figures(ledger)
+                DaysChart(days: ledger.recent(Self.span))
+                    .frame(height: DetailCardLayout.chartHeight)
+                topModel(ledger)
+                cacheHitRate(ledger)
+                if let promptCache { PromptCacheRow(reading: promptCache) }
+                Text(isAccountWide
+                    ? String.localized("From \(provider.displayName), for the whole account.")
+                    : String.localized("Costs are estimates at API prices."))
+                    .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                    .foregroundStyle(.primary.opacity(0.4))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .frame(height: DetailCardLayout.footnoteHeight)
+            }
+        }
+    }
+
+    private func message(_ text: String) -> some View {
+        Text(verbatim: text)
+            .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+            .foregroundStyle(.primary.opacity(0.45))
+            .frame(height: DetailCardLayout.rowTextLineHeight)
+    }
+
+    private func figures(_ ledger: UsageLedger) -> some View {
+        let today = ledger.today
+        let week = ledger.total(overLast: 7)
+        let month = ledger.total(overLast: Self.span)
+        // No money line at all where there is no money anywhere — a provider's
+        // own statistics, or nothing priced — rather than a blank band under
+        // the figures. One priced column keeps the line on all three, level.
+        let priced = !isAccountWide && month.cost > 0
+        return HStack(alignment: .top, spacing: 8) {
+            figure(String.localized("Today"), tokens: today?.tokens ?? 0, cost: today?.cost ?? 0, priced: priced)
+            figure(String.localized("7 days"), tokens: week.tokens, cost: week.cost, priced: priced)
+            figure(String.localized("31 days"), tokens: month.tokens, cost: month.cost, priced: priced)
+        }
+        .frame(height: priced ? DetailCardLayout.figuresHeight : DetailCardLayout.unpricedFiguresHeight, alignment: .top)
+    }
+
+    /// **No money line for work nobody priced.** A day spent entirely on a
+    /// model with no published price costs something; "$0.00" would say it
+    /// cost nothing.
+    private func figure(_ label: String, tokens: Int, cost: Double, priced: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 2 * PanelMetrics.scale) {
+            Text(verbatim: label)
+                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.45))
+                .frame(height: DetailCardLayout.figureLabelHeight)
+            Text(verbatim: TokenCount.short(tokens))
+                .font(.system(size: DetailCardLayout.figureFontSize, weight: .semibold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.primary)
+                .frame(height: DetailCardLayout.figureValueHeight)
+            if priced {
+                Text(verbatim: cost > 0 ? "≈" + AccountUsageCard.money(cost) : " ")
+                    .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.primary.opacity(0.45))
+                    .frame(height: DetailCardLayout.figureLabelHeight)
+            }
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(String.localized("\(TokenCount.short(tokens)) tokens"))
+    }
+
+    /// Over the same month as the top model. Absent, not "0%", where the
+    /// records do not sort every token into its kind — a provider's own
+    /// statistics never do.
+    @ViewBuilder
+    private func cacheHitRate(_ ledger: UsageLedger) -> some View {
+        if let rate = ledger.cacheHitRate(overLast: Self.span) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(localized: "Cache hit rate")
+                    .foregroundStyle(.primary.opacity(0.45))
+                Spacer(minLength: 0)
+                Text(verbatim: "\(Int((rate * 100).rounded()))%")
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .monospacedDigit()
+            }
+            .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+            .lineLimit(1)
+            .frame(height: DetailCardLayout.rowTextLineHeight)
+        }
+    }
+
+    @ViewBuilder
+    private func topModel(_ ledger: UsageLedger) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(localized: "Top model")
+                .foregroundStyle(.primary.opacity(0.45))
+            Spacer(minLength: 0)
+            if let top = ledger.topModel(overLast: Self.span) {
+                // A model id can run to thirty characters; its middle is the
+                // part that says least.
+                Text(verbatim: "\(top.name) · \(Int((top.share * 100).rounded()))%")
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .truncationMode(.middle)
+            } else {
+                Text(verbatim: "—")
+                    .foregroundStyle(.primary.opacity(0.45))
+            }
+        }
+        .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+        .lineLimit(1)
+        .frame(height: DetailCardLayout.rowTextLineHeight)
+    }
+}
+
+/// The prompt cache that lapses soonest: "Prompt cache (1 hr) · 38 min left"
+/// for one conversation. For several, "Prompt cache · 3 chats · Soonest in
+/// 10 min" with **the name of that conversation under it** — a countdown
+/// without a name is one the reader cannot act on, and the rest are listed in
+/// Settings. "Expired" once none is alive: the next message then writes its
+/// context to the cache again, at the higher rate.
+///
+/// **The soonest, not the latest.** The one about to lapse is the one worth
+/// a message now; the one just used has an hour either way.
+///
+/// Ticks on its own, every half minute, so a card left open does not hold a
+/// stale countdown — and a conversation that lapses meanwhile drops out of
+/// the count. Gone once the last session is a day old.
+private struct PromptCacheRow: View {
+    let reading: PromptCacheReading
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 30)) { context in
+            let now = context.date
+            let live = reading.alive(at: now)
+            let lapsed = reading.lastLapsed ?? reading.live.map(\.lapse).max { $0.expiresAt < $1.expiresAt }
+            if let urgent = live.first {
+                let soonest = urgent.lapse
+                VStack(alignment: .leading, spacing: 2 * PanelMetrics.scale) {
+                    row(
+                        live.count == 1
+                            ? String.localized("Prompt cache (\(Self.duration(soonest.lifetime)))")
+                            : String.localized("Prompt cache · \("\(live.count)") chats"),
+                        live.count == 1
+                            ? String.localized("\(Self.duration(soonest.expiresAt.timeIntervalSince(now))) left")
+                            : String.localized("Soonest in \(Self.duration(soonest.expiresAt.timeIntervalSince(now)))"),
+                        lapsed: false
+                    )
+                    if live.count > 1 {
+                        Text(verbatim: urgent.displayName ?? String.localized("Untitled conversation"))
+                            .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                            .foregroundStyle(.primary.opacity(0.45))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(height: DetailCardLayout.footnoteHeight, alignment: .leading)
+                    }
+                }
+            } else if let lapsed, now.timeIntervalSince(lapsed.expiresAt) < PromptCacheLapse.staleAfter {
+                row(String.localized("Prompt cache (\(Self.duration(lapsed.lifetime)))"),
+                    String.localized("Expired"), lapsed: true)
+            }
+        }
+    }
+
+    private func row(_ label: String, _ value: String, lapsed: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(verbatim: label)
+                .foregroundStyle(.primary.opacity(0.45))
+            Spacer(minLength: 0)
+            Text(verbatim: value)
+                .foregroundStyle(.primary.opacity(lapsed ? 0.45 : 0.9))
+                .monospacedDigit()
+        }
+        .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+        .lineLimit(1)
+        .frame(height: DetailCardLayout.rowTextLineHeight)
+    }
+
+    private static func duration(_ seconds: TimeInterval) -> String { PromptCacheLapse.duration(seconds) }
+}
+
+/// A month of days as bars, today's lit. Static: the card is on a panel that
+/// never becomes key, where a hover readout would not fire — the Token spend
+/// pane is where a chart is read closely.
+private struct DaysChart: View {
+    let days: [LedgerDay]
+
+    var body: some View {
+        GeometryReader { proxy in
+            let peak = max(days.map(\.tokens).max() ?? 1, 1)
+            let count = max(days.count, 1)
+            let spacing = max(proxy.size.width / CGFloat(count) * 0.3, 1.5)
+            let width = max((proxy.size.width - spacing * CGFloat(count - 1)) / CGFloat(count), 1)
+
+            HStack(alignment: .bottom, spacing: spacing) {
+                ForEach(days) { day in
+                    let isToday = Calendar.current.isDateInToday(day.date)
+                    Capsule()
+                        .fill(Color.primary.opacity(isToday ? 0.9 : (day.tokens > 0 ? 0.32 : 0.12)))
+                        // A day with any work keeps a visible stub, so a quiet
+                        // day reads as quiet rather than as missing.
+                        .frame(
+                            width: width,
+                            height: day.tokens > 0
+                                ? max(proxy.size.height * CGFloat(day.tokens) / CGFloat(peak), width)
+                                : min(width, 2)
+                        )
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String.localized("Tokens per day"))
+    }
+}
+
 /// A figure with no percentage behind it, for a provider that reports one.
 ///
 /// No bar: there is nothing to fill it with. A bar drawn at zero beside a real
@@ -870,6 +1242,8 @@ private struct ProgressMetricRow: View {
     let showsRemaining: Bool
     /// What the rate says about this window, or nil when nothing may be said.
     var burn: BurnRate.Reading?
+    /// The detailed card's estimate of what the window is worth. Nil draws no line.
+    var value: String?
 
     /// "88% Used", or "12% Left" when the figure is counted the other way.
     private var figureLabel: String {
@@ -923,6 +1297,16 @@ private struct ProgressMetricRow: View {
                     .foregroundStyle(.primary.opacity(0.45))
                     .lineLimit(1)
                     .layoutPriority(1)
+            }
+
+            // Dimmer than the reported figures above it: it is the one
+            // number here the provider did not say.
+            if let value {
+                Text(verbatim: value)
+                    .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+                    .foregroundStyle(.primary.opacity(0.45))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
 
             burnLine

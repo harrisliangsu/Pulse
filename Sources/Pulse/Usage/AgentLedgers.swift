@@ -97,6 +97,21 @@ actor AgentLedgers {
         return result
     }
 
+    /// One agent's ledger, for the detailed hover card of the provider whose
+    /// mark it borrows. The same readers and the same cache as `scan`, so the
+    /// card and the Token spend pane cannot count one store two ways.
+    func ledger(for agent: SpendAgent) async -> UsageLedger {
+        let prices = await prices()
+        guard !Task.isCancelled else { return .empty }
+        if let provider = agent.provider {
+            return await transcriptReader.ledger(for: provider, refresh: true, prices: prices)
+        }
+        let read = try? autoreleasepool {
+            try readCached(agent, prices: prices, refresh: false)
+        }
+        return read?.ledger ?? .empty
+    }
+
     private func readCached(_ agent: SpendAgent, prices: [String: ModelPrice], refresh: Bool) throws -> ReadResult {
         let before = Self.stamp(agent, home: home, environment: environment, prices: prices)
         try Task.checkCancellation()
