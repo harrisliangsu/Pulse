@@ -1,15 +1,10 @@
-name: PR gate
+name: PR guidance
 
-# Enforces the two pull-request rules in CONTRIBUTING.md so they do not have to
-# be enforced by hand: a PR from outside the repo must reference an issue a
-# maintainer has labelled `accepted`, and nobody keeps more than two open at
-# once. A PR that breaks either is commented on and closed.
-#
-# `pull_request_target` so the token can comment and close on a fork's PR. That
-# is safe here only because nothing from the PR is checked out or run: the
-# script reads the PR's metadata through the API and nothing else. Keep it that
-# way — adding a checkout of the PR's head to this workflow hands a fork's code
-# a write token.
+# Advisory only: small bug fixes, docs and translations may be submitted directly.
+# Larger changes need an accepted issue; missing links and a busy review queue
+# receive a reminder, never an automatic closure.
+# pull_request_target supplies a token for commenting on fork PRs. Read metadata
+# only: never check out or execute the contributor's code in this workflow.
 on:
   pull_request_target:
     types: [opened, reopened]
@@ -18,8 +13,12 @@ permissions:
   pull-requests: write
   issues: read
 
+concurrency:
+  group: pr-guidance-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
-  gate:
+  guidance:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v7
@@ -30,38 +29,42 @@ jobs:
             if (exempt.includes(pr.author_association) || pr.user.type === 'Bot') return;
 
             const { owner, repo } = context.repo;
-            const guide = `https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md#pull-requests`;
-
-            async function refuse(english, chinese) {
-              await github.rest.issues.createComment({
-                owner, repo, issue_number: pr.number,
-                body: `${english}\n\n${chinese}\n\n${guide}`,
-              });
-              await github.rest.pulls.update({ owner, repo, pull_number: pr.number, state: 'closed' });
-              core.notice(`Closed #${pr.number}: ${english}`);
-            }
-
-            // At most two open at a time. This one counts, so a third is refused.
+            const chinese = /\p{Script=Han}/u.test(pr.body || '');
+            const reminders = [];
             const open = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'open', per_page: 100 });
-            const mine = open.filter(p => p.user.login === pr.user.login);
-            if (mine.length > 2) {
-              return refuse(
-                'Closing automatically: you already have two pull requests open here. Please wait for those to be reviewed before opening another.',
-                '自动关闭：你在这里已经有两个未处理的 PR 了，请等它们审完再开新的。'
-              );
+            if (open.filter(p => p.user.login === pr.user.login).length > 2) {
+              reminders.push(chinese
+                ? '你已有超过两个待审 PR，建议等现有 PR 审完再提交更多，方便维护者逐个处理。这个 PR 会保持开放。'
+                : 'You have more than two PRs awaiting review. Please consider waiting for existing reviews before submitting more, so the maintainer can work through them. This PR will stay open.');
             }
 
-            // Every `#N` in the description, checked for an issue labelled `accepted`.
             const numbers = [...new Set([...(pr.body || '').matchAll(/(?<![\w/])#(\d+)\b/g)].map(m => Number(m[1])))];
+            let accepted = false;
             for (const number of numbers) {
               try {
                 const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: number });
-                if (!issue.pull_request && issue.labels.some(l => (l.name || l) === 'accepted')) return;
+                if (!issue.pull_request && issue.labels.some(l => (l.name || l) === 'accepted')) {
+                  accepted = true;
+                  break;
+                }
               } catch (error) {
-                // A number that is not an issue here is simply not a link.
+                if (error.status !== 404) throw error;
               }
             }
-            return refuse(
-              'Closing automatically: this pull request does not reference an issue labelled `accepted`. Please open an issue describing the problem first; once a maintainer accepts it, open a new PR with `Closes #<issue>` in the description.',
-              '自动关闭：这个 PR 没有关联带 `accepted` 标签的 issue。请先开 issue 描述问题，维护者接受之后，再开新的 PR，并在描述里写上 `Closes #<issue>`。'
-            );
+            if (!accepted) {
+              reminders.push(chinese
+                ? '欢迎直接提交小 bug 修复、文档和翻译，无需先开 Issue。新功能或大重构请先在 Issue 中讨论，等维护者标记 accepted 后，在 PR 描述中关联该 Issue（例如 Closes #123）。如果已经开了 PR，可以在这里补充链接，无需重新提交。这个 PR 会保持开放。'
+                : 'Small bug fixes, documentation and translations are welcome directly, without an issue first. For new features or major refactors, please discuss an issue first and link it here once a maintainer labels it accepted (for example, Closes #123). If this PR is already open, add the link here; you do not need to submit it again. This PR will stay open.');
+            }
+            if (!reminders.length) return;
+
+            // Reopening a PR must not post the same guidance again.
+            const marker = '<!-- pulse-pr-guidance -->';
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: pr.number, per_page: 100 });
+            if (comments.some(comment => comment.user.type === 'Bot' && (comment.body || '').includes(marker))) return;
+
+            const guide = 'https://github.com/' + owner + '/' + repo + '/blob/main/CONTRIBUTING.md#pull-requests';
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: pr.number,
+              body: [marker, ...reminders, guide].join('\n\n'),
+            });

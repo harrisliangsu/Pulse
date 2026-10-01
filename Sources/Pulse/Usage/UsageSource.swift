@@ -454,6 +454,17 @@ enum PanelMetrics {
     }
     static var showsForecast: Bool { lock.withLock { storedForecast } }
 
+    /// Whether any account's card is the detailed one. Here for the
+    /// forecast's reason: the detailed card is taller, and the panel's frame
+    /// is worked out from `DetailCardLayout` before SwiftUI lays anything out.
+    /// One frame serves every ring, so one detailed account sizes it for all.
+    nonisolated(unsafe) private static var storedDetailedCard = false
+
+    static func showDetailedCard(_ shows: Bool) {
+        lock.withLock { storedDetailedCard = shows }
+    }
+    static var showsDetailedCard: Bool { lock.withLock { storedDetailedCard } }
+
 
     static func makeRoom(for accounts: Int) {
         lock.withLock { storedCapacity = max(accounts, 1) }

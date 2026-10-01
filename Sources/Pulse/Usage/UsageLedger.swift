@@ -284,6 +284,62 @@ struct UsageLedger: Sendable, Equatable {
 
     func recent(_ count: Int) -> [LedgerDay] { Array(days.suffix(count)) }
 
+    /// How much of the input over a span was served from the prompt cache:
+    /// cache reads over every input token — fresh, written to the cache, and
+    /// read from it. Output is not input and is left out.
+    ///
+    /// **Only where every token was sorted into its kind.** A source that
+    /// reports a bare total leaves tokens no kind can claim, and dividing
+    /// around them would state a rate for part of the work as though it were
+    /// the whole; so would a store that cannot prove its counts are complete.
+    /// Nil then, and nil with no input at all.
+    func cacheHitRate(overLast count: Int) -> Double? {
+        guard !hasPartialCounts else { return nil }
+        let span = days.suffix(count)
+        let tally = span.reduce(TokenTally()) { $0 + $1.tally }
+        let tokens = span.reduce(0) { $0 + $1.tokens }
+        let input = tally.input + tally.cacheWrite + tally.cacheRead
+        guard input > 0, tally.total == tokens else { return nil }
+        return Double(tally.cacheRead) / Double(input)
+    }
+
+    /// One model's cache hit rate over a span, and how much input it is
+    /// measured over — the order they are listed in.
+    struct ModelCacheRate: Equatable, Sendable {
+        let name: String
+        let rate: Double
+        let inputTokens: Int
+    }
+
+    /// `cacheHitRate` for each model, most input first.
+    ///
+    /// Grouped by **display name**, the way the top model is: several raw ids
+    /// can be one model. A model is left out when any of its tokens in the
+    /// span cannot be vouched for by kind — a day that counted it with no
+    /// split kept (read before the split was), or tokens its source could not
+    /// classify — so no model's rate is worked out over part of its work.
+    func cacheHitRatesByModel(overLast count: Int) -> [ModelCacheRate] {
+        guard !hasPartialCounts else { return [] }
+        var tallies: [String: TokenTally] = [:]
+        var unvouched: Set<String> = []
+        for day in days.suffix(count) {
+            for (raw, tokens) in day.models where tokens > 0 {
+                let name = modelNames[raw] ?? raw
+                guard let tally = day.modelTallies[raw], (day.modelUnclassifiedTokens[raw] ?? 0) == 0 else {
+                    unvouched.insert(name)
+                    continue
+                }
+                tallies[name, default: TokenTally()] = (tallies[name] ?? TokenTally()) + tally
+            }
+        }
+        return tallies.compactMap { name, tally in
+            let input = tally.input + tally.cacheWrite + tally.cacheRead
+            guard !unvouched.contains(name), input > 0 else { return nil }
+            return ModelCacheRate(name: name, rate: Double(tally.cacheRead) / Double(input), inputTokens: input)
+        }
+        .sorted { $0.inputTokens != $1.inputTokens ? $0.inputTokens > $1.inputTokens : $0.name < $1.name }
+    }
+
     /// The heaviest day in a span. Scoped rather than all-time so it sits
     /// beside the other figures on the card without quietly changing the
     /// window they all share.

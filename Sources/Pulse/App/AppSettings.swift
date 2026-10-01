@@ -1065,6 +1065,37 @@ final class AppSettings {
         }
     }
 
+    /// The accounts whose card is the detailed one, by account id: the plan,
+    /// how far through each window the clock is and, with Token spend on,
+    /// what this Mac has put through the account lately.
+    ///
+    /// **Per account, not one switch for the panel.** The detailed card is
+    /// worth its height for the one or two accounts somebody watches closely,
+    /// and noise on the rest.
+    ///
+    /// A `PanelMetrics` entry like the forecast, and for the same reason: the
+    /// detailed card is taller, and the frame is worked out before SwiftUI lays
+    /// anything out. Set before the change is announced, so whoever re-places
+    /// the panel measures the new size.
+    var detailedCards: Set<String> = [] {
+        didSet {
+            guard detailedCards != oldValue else { return }
+            // The app's own settings only: a test's `AppSettings` must not
+            // resize the frame every other test is measuring.
+            if drivesPanelMetrics { PanelMetrics.showDetailedCard(!detailedCards.isEmpty) }
+            UserDefaults.standard.set(detailedCards.sorted(), forKey: Key.detailedCards)
+            onChange?()
+        }
+    }
+
+    func showsDetailedCard(for account: AccountKey) -> Bool {
+        detailedCards.contains(account.id)
+    }
+
+    func setShowsDetailedCard(_ shows: Bool, for account: AccountKey) {
+        if shows { detailedCards.insert(account.id) } else { detailedCards.remove(account.id) }
+    }
+
     /// How the floating rail is drawn: dark, light, follow the Mac, or glass.
     ///
     /// One setting. Glass used to be a separate toggle that overrode Light
@@ -1788,6 +1819,7 @@ final class AppSettings {
         settings.primerRunOutcomes = defaults.dictionary(forKey: Key.primerRunOutcomes) as? [String: String] ?? [:]
         settings.menuBarAccount = defaults.string(forKey: Key.menuBarAccount)
         settings.menuBarStyle = defaults.string(forKey: Key.menuBarStyle).flatMap(MenuBarStyle.init(rawValue:)) ?? .figure
+        settings.detailedCards = Set(defaults.stringArray(forKey: Key.detailedCards) ?? [])
         settings.balanceBases = defaults.dictionary(forKey: Key.balanceBases) as? [String: String] ?? [:]
         settings.balanceBudgets = (defaults.dictionary(forKey: Key.balanceBudgets) as? [String: Double] ?? [:])
             .filter { $0.value.isFinite && $0.value > 0 }
@@ -1804,6 +1836,7 @@ final class AppSettings {
         PanelMetrics.putLabelAboveRing(settings.labelAboveRing)
         PanelMetrics.useRoundEnds(settings.usesRoundEnds)
         PanelMetrics.showForecast(settings.showsForecast)
+        PanelMetrics.showDetailedCard(!settings.detailedCards.isEmpty)
         settings.drivesPanelMetrics = true
         settings.resizeRail()
         return settings
@@ -1868,6 +1901,7 @@ final class AppSettings {
         botPersonas[account.id] = nil
         botColours[account.id] = nil
         botShapes[account.id] = nil
+        detailedCards.remove(account.id)
         splitAccounts.remove(account.id)
         if menuBarAccount == account.id { menuBarAccount = nil }
     }
@@ -1948,6 +1982,7 @@ final class AppSettings {
         static let spentRingColour = "settings.spentRingColour"
         static let dockShowsAlertColor = "settings.dockShowsAlertColor"
         static let showsForecast = "settings.showsForecast"
+        static let detailedCards = "settings.detailedCards"
         static let showsSecondRing = "settings.showsSecondRing"
         static let animatesRingActivity = "settings.animatesRingActivity"
         static let splitAccounts = "settings.splitAccounts"
