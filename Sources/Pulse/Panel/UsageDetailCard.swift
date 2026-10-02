@@ -330,6 +330,7 @@ struct UsageDetailCard: View {
         case .left: .leading
         case .right: .trailing
         case .top: .top
+        case .bottom: .bottom
         }
     }
 
