@@ -7,6 +7,46 @@ shows in the update window — see [Scripts/changelog.py](Scripts/changelog.py).
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.7.0
+
+**中文**
+
+**新功能**
+
+- **详细卡片。** 在账号设置里为某个账号打开「详细卡片」，鼠标移到它的圆环上时，卡片会多显示套餐、更新时间、最近的用量和缓存命中率，以及额度大约值多少钱。Claude Code 和 Codex 还会显示提示缓存还剩多久，多个对话同时进行时显示最紧急的那个。
+- **按模型看用量。** 设置 › Claude Code / Codex 的「用量记录」下新增「模型」卡片：每个模型的用量占比、缓存命中率，以及最近 24 小时每秒输出多少 token；Codex 还有首字延迟。
+- **提示缓存列表。** Claude Code 和 Codex 的设置页列出每个仍有缓存的对话，以及缓存还剩多久。
+- **OpenCode Go 读取官网记录。** 在 OpenCode Go 的设置里读取浏览器的登录状态后，Pulse 会直接从官网控制台读额度和每一次请求的记录，覆盖所有设备，金额是实际扣费。
+- **面板可以横向自由摆放，也可以吸附在屏幕底部。** 原来的「自由」改名「竖向自由」，新增「横向自由」；吸附在底部时面板贴着屏幕最底边，可以放在程序坞两边的空白处。感谢 [@GinWU05](https://github.com/qunqin24/Pulse/issues/70) 提议并实现横向自由摆放。
+
+**改进与修复**
+
+- **Claude Code 的用量不再重复计算。** 继续或分叉一段对话时，新记录会带上一份之前的历史，Pulse 之前把这份复制也算了进去，用量和花费因此偏高，多的可达三成左右。
+- **Claude Code 的输出 token 不再少算。** 一条回复会分几行写进记录，之前只读了第一行，输出少算了约四分之一，额度价值也因此偏低。
+- **额度价值推算更稳、更准。** 只算到读取额度的那一刻；周期开头那段不再漏掉；用量不足 5% 时不显示，避免整数百分比带来的大幅跳动；发现账号在别的设备上也在用时，这个周期不再推算并说明原因。
+- **OpenCode 2 的记录能读到了。** 升级到 OpenCode 2 之后，Token 消耗里看不到新的用量。
+- **Token 消耗在后台读取。** 打开开关后 Pulse 会自动在后台读取并保持更新，打开页面直接显示，关掉设置窗口也不会丢掉。
+- **菜单栏图标换成 Pulse 的标志，菜单里的用量面板改为开关，默认关闭。**
+
+**English**
+
+**New**
+
+- **A detailed card.** Turn on Detailed card for an account in its settings and its hover card adds the plan, when it was updated, recent usage and cache hit rate, and roughly what each limit is worth. Claude Code and Codex also show how long the prompt cache has left — the most urgent conversation when several are running.
+- **Usage by model.** Under Usage history in Claude Code's and Codex's settings, a new Models card shows each model's share, cache hit rate and output tokens per second over the last 24 hours; Codex also shows the wait for the first token.
+- **Prompt cache list.** Claude Code's and Codex's settings list every conversation still holding a cache, and how long it has left.
+- **OpenCode Go from its own console.** Read the browser sign-in in OpenCode Go's settings and Pulse reads the limits and every request straight from the console — every device, with what each request was charged.
+- **Float the panel lying across, or dock it to the bottom of the screen.** Free is now Free upright, beside a new Free across; docked to the bottom the panel sits on the screen's very edge, in the empty space either side of the Dock. Thanks to [@GinWU05](https://github.com/qunqin24/Pulse/issues/70) for proposing and building the lying-across placement.
+
+**Changed and fixed**
+
+- **Claude Code's usage is no longer counted twice.** Resuming or forking a conversation starts a new transcript with a copy of the old history, and Pulse counted the copy too — usage and cost read high, by as much as about a third.
+- **Claude Code's output tokens are no longer undercounted.** A reply is written over several lines and only the first was read, missing about a quarter of the output — and of what each limit is worth.
+- **Steadier, more accurate value estimates.** Spending counts up to when the limit was read; the start of a window is no longer dropped; nothing is shown under 5% used, where whole-number percentages made it swing; and a window being used on another device is not estimated, with the reason shown.
+- **OpenCode 2's usage is read.** After upgrading to OpenCode 2, its new usage was missing from Token spend.
+- **Token spend reads in the background.** With it on, Pulse keeps it up to date and the page opens on figures, even after the settings window was closed.
+- **The menu bar shows Pulse's own mark, and the usage panel in its menu is now a switch, off by default.**
+
 ## 1.6.1
 
 **中文**
