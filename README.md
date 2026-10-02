@@ -33,7 +33,7 @@
 - **Seventy-seven services at a glance** — Claude Code, Codex, Cursor, GitHub Copilot, Antigravity, Kiro, Grok, DeepSeek, Kimi Code and many more, each as its own ring.
 - **No Pulse account, no Pulse server** — it uses the logins you already have, and nothing is sent back.
 - **Real numbers only** — every usage percentage is the one the service itself reported. The few estimates are marked as such, and where a service reports nothing, Pulse says so instead of guessing.
-- **Native and quiet** — Swift and SwiftUI, Liquid Glass on macOS 26. Dock it left, right or along the top, let it fold to a sliver when idle, or keep it in the menu bar.
+- **Native and quiet** — Swift and SwiftUI, Liquid Glass on macOS 26. Dock it left, right, along the top or along the bottom beside the Dock, let it fold to a sliver when idle, or keep it in the menu bar.
 
 **Recently added:** usage in the menu bar with a dashboard for each account, starting usage windows after a reset, and animated bot marks. [What's new](https://github.com/qunqin24/Pulse/releases/latest).
 
@@ -66,7 +66,7 @@
 </p>
 
 ### Native, Fluid & Non-Intrusive
-- **Flexible Edge Docking**: Dock to the left, right, or top of your screen (above the menu bar), or float it anywhere, standing upright or lying across.
+- **Flexible Edge Docking**: Dock to the left, right, top (above the menu bar) or bottom of your screen (beside the Dock), or float it anywhere, standing upright or lying across.
 - **Multi-Monitor Native**: Drag Pulse to any secondary display; it remembers screen placement and gracefully returns if disconnected. Turn on **Follow the active display** and the single rail moves itself to whichever screen your pointer is on.
 - **Auto-Collapse**: Automatically folds into a razor-thin sliver when idle to eliminate distraction, glowing red only when quota runs critically low.
 - **Opt-In Notifications**: You choose which ones to switch on. Get told when a limit passes 75/80/90/95%, when the provider says it is spent, when a window you were warned about comes back, and when several checks in a row fail so the panel is quietly showing older figures, and — for the services that sell prepaid credit — when the balance falls under a figure you set. Each thing is said once: a limit already past the line when you switch this on is mentioned straight away, and again when it resets or gets worse.
