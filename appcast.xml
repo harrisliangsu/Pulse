@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.12</title>
+            <pubDate>Fri, 02 Oct 2026 01:37:08 -0000</pubDate>
+            <sparkle:version>1.4.12</sparkle:version>
+            <sparkle:shortVersionString>1.4.12</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.12</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.12</h2><ul><li><strong>Codex 的提示缓存按 OpenAI 公布的保底时间计时。</strong> GPT-5.6 及之后的模型，详细卡片和设置里会显示缓存至少还剩多久，从最后一次碰到缓存的请求起算。保底时间过了，这一行写「可能已过期」。更早的模型官方没给时长，不计时。</li><li><strong>同步上游 qunqin24/Pulse</strong>（本仓库尚未合入的一个提交）。本仓库版本为 <strong>1.4.12</strong>。<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.12">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.12/Pulse-1.4.12.zip"
+                       length="12699328"
+                       type="application/octet-stream"
+                       sparkle:edSignature="Tu5/gV+o58Vrx5Oq14qfLgcujz84fMvZf3YceU+xTJfFkCYxB2iGQM0y4KqglJcjyKqqiEc6u47JL8bLfGnEAQ==" />
+        </item>
+        <item>
             <title>1.4.11</title>
             <pubDate>Thu, 01 Oct 2026 01:36:44 -0000</pubDate>
             <sparkle:version>1.4.11</sparkle:version>
