@@ -41,7 +41,7 @@ final class CardLedgers {
     private(set) var failed: Set<Provider> = []
     @ObservationIgnored private var readAt: [Provider: Date] = [:]
     /// When each live session's prompt cache lapses, for the providers whose
-    /// logs say (Claude Code). Read on every opening, not on `lifetime`: one
+    /// logs let it be timed (Claude Code, Codex). Read on every opening, not on `lifetime`: one
     /// new message moves it, and a countdown five minutes behind is wrong.
     private(set) var promptCache: [Provider: PromptCacheReading] = [:]
 
@@ -86,9 +86,9 @@ final class CardLedgers {
     /// The latest session's cache, read off the main thread: a directory
     /// listing and the tail of one file, cheap enough for every card opening.
     func readPromptCache(_ provider: Provider) {
-        guard provider == .claudeCode else { return }
+        guard PromptCacheReading.supports(provider) else { return }
         Task { [weak self] in
-            let reading = await Task.detached(priority: .utility) { ClaudePromptCache.read() }.value
+            let reading = await Task.detached(priority: .utility) { PromptCacheReading.read(for: provider) }.value
             self?.promptCache[provider] = reading
         }
     }
