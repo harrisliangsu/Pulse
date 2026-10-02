@@ -10,6 +10,12 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.12
+
+- **Codex’s prompt cache is timed by OpenAI’s stated floor.** On GPT-5.6 and later, the detailed card and Settings show how long that cache is still guaranteed, worded “at least”, counted from the request that last touched it. When the floor has passed, the line says “May have lapsed”. Earlier models have no stated lifetime and are not timed.
+- **Synced from upstream qunqin24/Pulse** (the one commit this fork had not yet taken). This fork’s version is **1.4.12**. `appcast.xml` is unchanged until this version is tagged.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen’s cookie store; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.11
 
 - **Small fixes no longer need an accepted issue first.** A bug fix, a documentation change, or a translation can be a pull request on its own. A new feature or a large refactor still needs an issue a maintainer has labelled `accepted`. When one person already has two pull requests open, the check posts a reminder and leaves the pull request open.
