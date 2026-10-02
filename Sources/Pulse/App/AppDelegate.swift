@@ -17,7 +17,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Not private for the same reason: the settings pane is the only place
     /// that can report a combination the window server refused.
     let shortcuts = GlobalShortcutMonitor()
-    private lazy var store = UsageStore(settings: settings, alerts: alerts)
+    private lazy var store = UsageStore(settings: settings, alerts: alerts, elsewhere: .shared)
+    /// Reads Token spend in the background while it is on.
+    private lazy var spendWarmer = SpendWarmer(settings: settings)
     /// Which tab the menu bar's menu last had open, kept between openings.
     private let dashboard = MenuDashboardModel()
     /// Starts usage windows after they reset, for the providers switched on.
@@ -132,6 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         controller.contextMenu = { [weak self] in self?.panelMenu() ?? NSMenu() }
         if settings.isPanelVisible { controller.show() }
         store.start()
+        spendWarmer.start()
         primer.start()
         prepareClaudeIfSelected()
     }
@@ -251,9 +254,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         // Only the menu bar's menu: the rail's own menu opens beside the rings
-        // it would be repeating.
-        if menu === statusItem?.menu { addDashboard(to: menu) }
+        // it would be repeating. The dashboard only when it is switched on;
+        // Refresh either way, since it is one plain item and not the detail.
+        if menu === statusItem?.menu {
+            if settings.showsMenuDashboard {
+                addDashboard(to: menu)
+            } else if !settings.needsProviderSelection, !settings.shownAccounts.isEmpty {
+                menu.addItem(refreshItem())
+                menu.addItem(.separator())
+            }
+        }
         populateMenu(menu)
+    }
+
+    private func refreshItem() -> NSMenuItem {
+        let refresh = NSMenuItem(title: .localized("Refresh"), action: #selector(refreshAll), keyEquivalent: "r")
+        refresh.target = self
+        refresh.image = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: nil)
+        return refresh
     }
 
     /// The tabbed view at the top of the menu bar's menu, and the items that
@@ -284,10 +302,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         page.image = NSImage(systemSymbolName: "safari", accessibilityDescription: nil)
         menu.addItem(page)
 
-        let refresh = NSMenuItem(title: .localized("Refresh"), action: #selector(refreshAll), keyEquivalent: "r")
-        refresh.target = self
-        refresh.image = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: nil)
-        menu.addItem(refresh)
+        menu.addItem(refreshItem())
         menu.addItem(.separator())
 
         // The page item names the open tab's provider, and is there only when

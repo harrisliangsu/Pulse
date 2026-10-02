@@ -138,7 +138,10 @@
 "Whether each limit lasts its window, on the card." = "Whether each limit lasts its window, on the card.";
 "Counts down instead of up, figure and ring together." = "Counts down instead of up, figure and ring together.";
 "Swaps the two, wherever the panel is." = "Swaps the two, wherever the panel is.";
-"Only when the panel is docked to the top." = "Only when the panel is docked to the top.";
+"When the panel lies across: docked to the top or bottom, or free." = "When the panel lies across: docked to the top or bottom, or free.";
+"Bottom" = "Bottom";
+"Figures beside the rings" = "Figures beside the rings";
+"Only when the panel lies free across. A thinner, longer panel." = "Only when the panel lies free across. A thinner, longer panel.";
 "Drag it anywhere; near an edge it snaps on." = "Drag it anywhere; near an edge it snaps on.";
 "Right" = "Right";
 
@@ -255,10 +258,11 @@
 "Busiest day" = "Busiest day";
 "Next expires in %@" = "Next expires in %@";
 "Top model" = "Top model";
-"%@ · %@ of tokens" = "%@ · %@ of tokens";
 "Estimated value" = "Estimated value";
 "%@ used so far" = "%@ used so far";
-"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out." = "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out.";
+"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. Windows with too little use to extrapolate from are left out." = "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. Windows with too little use to extrapolate from are left out.";
+"Also used somewhere this Mac's logs can't see" = "Also used somewhere this Mac's logs can't see";
+"Not estimated" = "Not estimated";
 
 /* Adaptive refresh */
 "2 to 30 minutes as needed. Now: %@ minutes." = "2 to 30 minutes as needed. Now: %@ minutes.";
@@ -891,7 +895,17 @@
 "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity.";
 "Estimated value %@ · %@ used" = "Estimated value %@ · %@ used";
 "Cache hit rate" = "Cache hit rate";
-"Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out." = "Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out.";
+"Models" = "Model";
+"Share" = "Share";
+"Cache hit" = "Cache hit";
+"Tokens/s" = "Tokens/s";
+"First token" = "First token";
+"Share and cache hit cover the last 31 days." = "Share and cache hit cover the last 31 days.";
+"Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply." = "Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply.";
+"Too few replies in the last 24 hours to time." = "Too few replies in the last 24 hours to time.";
+"First token is Codex's own measure of how long a turn waited for it." = "First token is Codex's own measure of how long a turn waited for it.";
+"Claude Code doesn't record when the first token arrived, so there's no latency." = "Claude Code doesn't record when the first token arrived, so there's no latency.";
+"%@ s" = "%@ s";
 "Prompt cache (%@)" = "Prompt cache (%@)";
 "%@ left" = "%@ left";
 "Expired" = "Expired";
@@ -910,3 +924,18 @@
 "No conversation is within its guaranteed cache time" = "No conversation is within its guaranteed cache time";
 "Kept at least %@" = "Kept at least %@";
 "The latest one's guaranteed time ended at %@." = "The latest one's guaranteed time ended at %@.";
+"Usage panel in the menu" = "Usage panel in the menu";
+"Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend." = "Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend.";
+"OpenCode console" = "OpenCode console";
+"Account request log" = "Account request log";
+"Kept. The detailed card reads every request on the account with it." = "Kept. The detailed card reads every request on the account with it.";
+"No OpenCode console session found. Sign in at opencode.ai first." = "No OpenCode console session found. Sign in at opencode.ai first.";
+"Costs as %@ charged them, for the whole account." = "Costs as %@ charged them, for the whole account.";
+"The console session has expired. Read it again in Settings." = "The console session has expired. Read it again in Settings.";
+"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac.";
+"Turn on Detailed card above to see the request log on the card." = "Turn on Detailed card above to see the request log on the card.";
+"Read from %@ · workspace %@." = "Read from %@ · workspace %@.";
+"The console turned this session away. Sign in again at opencode.ai, then read it again." = "The console turned this session away. Sign in again at opencode.ai, then read it again.";
+"Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "Read from %@, but the console didn't answer. It will be tried again on the next refresh.";
+"Reading the account's records…" = "Reading the account's records…";
+"From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days.";

@@ -138,7 +138,10 @@
 "Whether each limit lasts its window, on the card." = "各上限が次のリセットまで保つかをカードに表示します。";
 "Counts down instead of up, figure and ring together." = "数値もリングも、使った量ではなく残りを表示します。";
 "Swaps the two, wherever the panel is." = "パネルの位置にかかわらず、パーセントをリングの上に移します。";
-"Only when the panel is docked to the top." = "パネルを画面上部に寄せているときだけ表示します。";
+"When the panel lies across: docked to the top or bottom, or free." = "パネルを横にしているときに表示します：上や下に寄せたとき、または横置きで自由に置いたとき。";
+"Bottom" = "下";
+"Figures beside the rings" = "数値をリングの右に表示";
+"Only when the panel lies free across. A thinner, longer panel." = "横置きで自由に置いているときだけ有効です。パネルは細く、長くなります。";
 "Drag it anywhere; near an edge it snaps on." = "どこへでもドラッグできます。端に近づくと吸い付きます。";
 "Right" = "右";
 
@@ -255,10 +258,11 @@
 "Busiest day" = "最も多かった日";
 "Next expires in %@" = "次は %@ 後に期限切れ";
 "Top model" = "最も使ったモデル";
-"%@ · %@ of tokens" = "%@ · トークンの %@";
 "Estimated value" = "使った分の推定額";
 "%@ used so far" = "今期はここまでで %@";
-"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out." = "これは推定値で、公式が報告した数字ではありません。この Mac が今期に使った金額を、プロバイダが報告する使用率で割って求めています。他のマシンでの作業は数えていないため、値は低めに出ます。使用量が少なく推定できない期間は表示しません。";
+"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. Windows with too little use to extrapolate from are left out." = "報告された数値ではなく推定です。この Mac で期間の開始から使った金額を、提供元が示す使用率で割っています。使用率が上がっているのにこの Mac でほとんど使っていない場合は、別の場所（ほかのコンピュータやウェブサイト）でも使われているため、その期間はリセットまで推定しません。推定できるほど使っていない上限は表示しません。";
+"Also used somewhere this Mac's logs can't see" = "この Mac の記録にない場所でも使われています";
+"Not estimated" = "推定しません";
 
 /* Adaptive refresh */
 "2 to 30 minutes as needed. Now: %@ minutes." = "必要に応じて 2〜30 分で調整します。現在は %@ 分。";
@@ -891,7 +895,17 @@
 "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "プラン名と数値の更新時刻を加えます。「トークン使用量」がオンなら、この Mac での最近の利用も表示します。";
 "Estimated value %@ · %@ used" = "上限の推定価値 %@ · 今期 %@ 使用";
 "Cache hit rate" = "キャッシュヒット率";
-"Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out." = "過去 31 日間の入力のうち、プロンプトキャッシュから読み出した分の割合です。種類を区別できないトークンが記録に含まれるモデルは表示しません。";
+"Models" = "モデル";
+"Share" = "割合";
+"Cache hit" = "キャッシュヒット";
+"Tokens/s" = "トークン/秒";
+"First token" = "最初のトークン";
+"Share and cache hit cover the last 31 days." = "割合とキャッシュヒットは過去 31 日間です。";
+"Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply." = "割合とキャッシュヒットは過去 31 日間、トークン/秒は過去 24 時間のみで、リクエストを送ってから返信を書き終えるまでで計ります。";
+"Too few replies in the last 24 hours to time." = "過去 24 時間の返信が少ないため、速度はまだ表示しません。";
+"First token is Codex's own measure of how long a turn waited for it." = "最初のトークンは Codex 自身が計測した、各ターンで最初のトークンが届くまでの時間です。";
+"Claude Code doesn't record when the first token arrived, so there's no latency." = "Claude Code は最初のトークンが届いた時刻を記録しないため、待ち時間はありません。";
+"%@ s" = "%@ 秒";
 "Prompt cache (%@)" = "プロンプトキャッシュ（%@）";
 "%@ left" = "残り %@";
 "Expired" = "期限切れ";
@@ -910,3 +924,18 @@
 "No conversation is within its guaranteed cache time" = "保証時間内のキャッシュがある会話はありません";
 "Kept at least %@" = "最低 %@ 保持";
 "The latest one's guaranteed time ended at %@." = "直近の会話の保証時間は %@ に終わりました。";
+"Usage panel in the menu" = "メニューに使用量パネルを表示";
+"Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend." = "メニューバーのアイコンを開くと、上部に全アカウントの概要と、アカウントごとの上限・プラン・費用のタブを表示します。";
+"OpenCode console" = "OpenCode コンソール";
+"Account request log" = "アカウントのリクエスト記録";
+"Kept. The detailed card reads every request on the account with it." = "保存済みです。詳細カードはこれを使ってアカウントのすべてのリクエストを読み取ります。";
+"No OpenCode console session found. Sign in at opencode.ai first." = "OpenCode コンソールのセッションが見つかりません。先に opencode.ai でサインインしてください。";
+"Costs as %@ charged them, for the whole account." = "金額は %@ の実際の請求額で、アカウント全体のものです。";
+"The console session has expired. Read it again in Settings." = "コンソールのセッションが切れました。設定で読み取り直してください。";
+"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode のコンソールが 30 日間保持するリクエスト記録です。アカウントのすべてのデバイス・すべてのアプリからのリクエストと、それぞれの費用が含まれます。キーが未設定か拒否されたときは、プランの上限もこれで読み取ります。Pulse はコンソールのサインイン用 Cookie だけを、この Mac に暗号化して保存します。";
+"Turn on Detailed card above to see the request log on the card." = "上の「詳細カード」をオンにすると、カードにリクエスト記録が表示されます。";
+"Read from %@ · workspace %@." = "%@ から読み取りました · ワークスペース「%@」。";
+"The console turned this session away. Sign in again at opencode.ai, then read it again." = "コンソールがこのセッションを受け付けませんでした。opencode.ai でサインインし直してから、もう一度読み取ってください。";
+"Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "%@ から読み取りましたが、コンソールが応答しませんでした。次の更新時にもう一度試します。";
+"Reading the account's records…" = "アカウントの記録を読み取り中…";
+"From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "%@ のアカウント全体のリクエスト記録で、すべてのデバイスとそれを使うすべてのアプリを含みます。金額は各リクエストの実際の請求額です。記録は 30 日間保持されます。";

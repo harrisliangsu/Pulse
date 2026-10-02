@@ -382,7 +382,12 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// data (it covers every machine) and the poorer (one token total per
     /// model, so nothing can be priced), which is what `UsageLedger.Origin`
     /// exists to keep straight.
-    var providesHistory: Bool { keepsLocalTranscripts || self == .zai || self == .glmCoding }
+    /// OpenCode Go joins them once its console session is kept: the console's
+    /// request log is the account's own record, priced as charged.
+    var providesHistory: Bool {
+        keepsLocalTranscripts || self == .zai || self == .glmCoding
+            || (self == .openCodeGo && OpenCodeConsole.hasSession)
+    }
 
     /// Whether the route to this provider's figures is a choice.
     ///

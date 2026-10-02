@@ -43,6 +43,15 @@ actor AgentLedgers {
         var notes: [SpendAgent: [String]] = [:]
     }
 
+    /// The last finished scan, kept while Token spend is on so the pane opens
+    /// on figures instead of a spinner (`SpendWarmer` keeps it current).
+    ///
+    /// **One snapshot, replaced, never a second copy.** The memory work on the
+    /// readers was about peaks during a read; a finished snapshot is ledgers,
+    /// not transcripts, and the floating panel's cards already hold the same
+    /// kind of thing. Dropped the moment Token spend is switched off.
+    private var kept: (snapshot: Snapshot, at: Date)?
+
     private let home: URL
     private let environment: [String: String]
     private let cacheDirectory: URL?
@@ -65,9 +74,16 @@ actor AgentLedgers {
             ? .shared : UsageLedgerReader(home: home, cacheDirectory: cacheDirectory)
     }
 
+    /// The last finished scan and when it finished, if Token spend is on and
+    /// one has.
+    func keptSnapshot() -> (snapshot: Snapshot, at: Date)? { kept }
+
+    /// Lets the kept scan go — Token spend was switched off.
+    func forget() { kept = nil }
+
     /// Runs in the caller's task: cancelling the pane propagates into the
     /// synchronous file/row loops. No detached worker can outlive that task.
-    /// The actor keeps no second copy of a finished scan after the pane closes.
+    /// A scan that finishes replaces the kept one (`keptSnapshot()`).
     func scan(
         refresh: Bool = false,
         progress: @MainActor @Sendable (Progress) -> Void = { _ in }
@@ -95,6 +111,7 @@ actor AgentLedgers {
             }
             try Task.checkCancellation()
         }
+        kept = (result, Date())
         return result
     }
 

@@ -39,7 +39,11 @@ struct SettingsView: View {
     /// other than the most recent one.
     @State private var historyReads: [Provider: ZaiUsageService.HistoryRead] = [:]
     @State private var codexAccount: CodexAccountUsage?
+    /// Bumped when OpenCode Go's console session is read or removed, which
+    /// changes whether the pane has a history to show — and asks for it.
+    @State private var consoleRevision = 0
     @State private var loadingHistory: Provider?
+    @State private var historyReadID = UUID()
     /// The key field's contents. Seeded from the store when the pane opens;
     /// the store is a file, not something SwiftUI can observe.
     @State private var apiKey = ""
@@ -592,7 +596,7 @@ struct SettingsView: View {
 
                 SettingsRow(
                     String.localized("Percentages on top"),
-                    subtitle: String.localized("Only when the panel is docked to the top.")
+                    subtitle: String.localized("When the panel lies across: docked to the top or bottom, or free.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { settings.topRailShowsPercentages },
@@ -601,6 +605,21 @@ struct SettingsView: View {
                     .labelsHidden()
                     .toggleStyle(.switch)
                     .disabled(!settings.isPanelVisible)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Figures beside the rings"),
+                    subtitle: String.localized("Only when the panel lies free across. A thinner, longer panel.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.freeAcrossFiguresBeside },
+                        set: { settings.freeAcrossFiguresBeside = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible || !settings.topRailShowsPercentages)
                 }
 
                 SettingsRowDivider()
@@ -798,6 +817,7 @@ struct SettingsView: View {
                     )) {
                         Text(localized: "Left").tag(PanelDock.edge(.left))
                         Text(localized: "Top").tag(PanelDock.edge(.top))
+                        Text(localized: "Bottom").tag(PanelDock.edge(.bottom))
                         Text(localized: "Free across").tag(PanelDock.floating(.horizontal))
                         Text(localized: "Free upright").tag(PanelDock.floating(.vertical))
                         Text(localized: "Right").tag(PanelDock.edge(.right))
@@ -1037,6 +1057,24 @@ struct SettingsView: View {
                         .fixedSize()
                     }
                 }
+
+                SettingsRowDivider()
+
+                // Its own switch, apart from the figure beside the icon: one
+                // is a glance, the other a sit-down, and either can be wanted
+                // alone. Greyed out with the icon hidden, like the figure.
+                SettingsRow(
+                    String.localized("Usage panel in the menu"),
+                    subtitle: String.localized("Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.showsMenuDashboard },
+                        set: { settings.showsMenuDashboard = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
+                .disabled(settings.hidesMenuBarIcon)
             }
 
             SettingsGroup(String.localized("Shortcuts")) {
@@ -1858,6 +1896,12 @@ struct SettingsView: View {
             // transcripts belong to whichever account the CLI is signed in to,
             // which is not this one, so showing them here would report one
             // account's spending under another's name.
+            // OpenCode Go's request log is behind the console's session, a
+            // second credential beside the key.
+            if provider == .openCodeGo, account.isPrimary, settings.isEnabled(account) {
+                OpenCodeConsoleGroup(store: store, settings: settings) { consoleRevision += 1 }
+            }
+
             if provider.providesHistory, account.isPrimary {
                 // Live, so ahead of the history: which conversations still
                 // hold a cache, and for how long — where the logs let it be
@@ -1913,33 +1957,48 @@ struct SettingsView: View {
     @ViewBuilder
     private func estimatedValue(for account: AccountKey) -> some View {
         let ledger = ledgers[account.provider] ?? .empty
-        let estimates = store.usage(for: account).windows.compactMap { window in
-            BudgetEstimator.estimate(for: window, ledger: ledger).map { (window, $0) }
+        let usage = store.usage(for: account)
+        // A window seen spent off this Mac keeps its row, saying why there is
+        // no figure — a value that quietly vanished would read as a bug.
+        let entries: [(UsageWindow, BudgetEstimate?)] = usage.windows.compactMap { window in
+            if store.usedElsewhere(window, account: account) { return (window, nil) }
+            return BudgetEstimator.estimate(for: window, ledger: ledger, observedAt: usage.observedAt).map { (window, $0) }
         }
 
-        if !estimates.isEmpty {
+        if !entries.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 SettingsGroup(String.localized("Estimated value")) {
-                    ForEach(Array(estimates.enumerated()), id: \.element.0.id) { index, entry in
+                    ForEach(Array(entries.enumerated()), id: \.element.0.id) { index, entry in
                         if index > 0 { SettingsRowDivider() }
 
-                        SettingsRow(
-                            entry.0.name,
-                            subtitle: String.localized("\(BudgetEstimator.approximate(entry.1.spent)) used so far")
-                        ) {
-                            // Just what the whole window is worth. The
-                            // remainder used to sit here too, but it is only
-                            // the other two numbers subtracted — and the
-                            // percentage it comes from is already on screen,
-                            // in "Current usage" directly above.
-                            Text(BudgetEstimator.approximate(entry.1.full))
-                                .font(.system(size: 13, weight: .medium))
-                                .monospacedDigit()
+                        if let estimate = entry.1 {
+                            SettingsRow(
+                                entry.0.name,
+                                subtitle: String.localized("\(BudgetEstimator.approximate(estimate.spent)) used so far")
+                            ) {
+                                // Just what the whole window is worth. The
+                                // remainder used to sit here too, but it is only
+                                // the other two numbers subtracted — and the
+                                // percentage it comes from is already on screen,
+                                // in "Current usage" directly above.
+                                Text(BudgetEstimator.approximate(estimate.full))
+                                    .font(.system(size: 13, weight: .medium))
+                                    .monospacedDigit()
+                            }
+                        } else {
+                            SettingsRow(
+                                entry.0.name,
+                                subtitle: String.localized("Also used somewhere this Mac's logs can't see")
+                            ) {
+                                Text(localized: "Not estimated")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
 
-                Text(localized: "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out.")
+                Text(localized: "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. Windows with too little use to extrapolate from are left out.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1956,7 +2015,8 @@ struct SettingsView: View {
             AccountUsageCard(
                 provider: account.provider,
                 ledger: ledger,
-                credits: account.provider == .codex ? codexAccount : nil
+                credits: account.provider == .codex ? codexAccount : nil,
+                isReading: loadingHistory == account.provider
             )
         } else {
             SettingsGroup(String.localized("Usage history")) {
@@ -1983,7 +2043,7 @@ struct SettingsView: View {
     /// sentence on screen is about to describe a read that no longer applies.
     private var historyKey: String {
         guard case .account(let account) = pane else { return "\(pane)" }
-        return "\(account.id)|\(settings.isEnabled(account))"
+        return "\(account.id)|\(settings.isEnabled(account))|\(consoleRevision)"
     }
 
     /// One task owns opening, enabling and manual rescans. Leaving, disabling
@@ -2025,6 +2085,22 @@ struct SettingsView: View {
         case .scan(let nextID, let force):
             id = nextID
             refresh = force
+        }
+
+        // **The background read's scan first.** With Token spend on,
+        // `SpendWarmer` keeps one; the pane opens on it, and reads again
+        // behind the figures only when it is a few minutes old — no spinner,
+        // no progress row, nothing cleared. Rescan still reads from scratch.
+        var quiet = false
+        if !refresh, let kept = await AgentLedgers.shared.keptSnapshot() {
+            guard !Task.isCancelled, spendRead.complete(kept.snapshot, for: id) else { return }
+            recomputeSpend()
+            guard Date().timeIntervalSince(kept.at) >= SpendWarmer.paneFreshness else {
+                spendRead.finish(id)
+                return
+            }
+            quiet = true
+        } else {
             clearSpendSummaries()
         }
 
@@ -2039,7 +2115,7 @@ struct SettingsView: View {
         let result: AgentLedgers.Snapshot
         do {
             result = try await AgentLedgers.shared.scan(refresh: refresh) { progress in
-                guard spendRead.isCurrent(id), !Task.isCancelled else { return }
+                guard !quiet, spendRead.isCurrent(id), !Task.isCancelled else { return }
                 spendProgress = progress
             }
         } catch {
@@ -2096,7 +2172,7 @@ struct SettingsView: View {
         switch history {
         case nil:
             String.localized("Adds the plan and when the figures were read.")
-        case .accountStatistics:
+        case .accountStatistics, .accountLogs:
             String.localized("Adds the plan, when the figures were read and the account's usage over the last month.")
         case .transcripts, .agents:
             String.localized("Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity.")
@@ -2104,6 +2180,9 @@ struct SettingsView: View {
     }
 
     private func loadHistory() async {
+        let readID = UUID()
+        historyReadID = readID
+        loadingHistory = nil
         // History is per provider — it is read from that CLI's transcripts,
         // which do not say which account was signed in at the time.
         guard case .account(let account) = pane else { return }
@@ -2116,15 +2195,39 @@ struct SettingsView: View {
         }
 
         loadingHistory = provider
-        // Only if it is still ours. `saveKey` starts an unstructured reload
-        // that no pane switch cancels, so a returning older read would
-        // otherwise drop the spinner the *current* pane is showing and let it
-        // fall through to a sentence about an account nothing has read yet.
-        defer { if loadingHistory == provider { loadingHistory = nil } }
+        // `saveKey` can start a replacement without cancelling its predecessor.
+        // A read id fences both progress and cleanup, even for the same provider.
+        defer { if historyReadID == readID { loadingHistory = nil } }
 
         // Asked of the provider rather than scanned off disk. Their own
         // statistics cover the whole account, so there is nothing local to
         // read and nothing to cache between panes.
+        // OpenCode Go's comes from the console's request log, the same read
+        // the detailed card makes and shares.
+        if provider == .openCodeGo {
+            guard let cookie = APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot) else {
+                ledgers[provider] = .empty
+                historyReads[provider] = .notConfigured
+                return
+            }
+            let requestKey = historyKey
+            let read = await OpenCodeConsoleHistory.shared.ledger(cookie: cookie) { ledger in
+                guard historyReadID == readID, historyKey == requestKey else { return }
+                ledgers[provider] = ledger
+                historyReads[provider] = .answered(ledger)
+            }
+            guard !Task.isCancelled, historyReadID == readID, historyKey == requestKey else { return }
+            switch read {
+            case .answered(let ledger):
+                ledgers[provider] = ledger
+                historyReads[provider] = .answered(ledger)
+            case .signedOut, .failed:
+                ledgers[provider] = .empty
+                historyReads[provider] = .failed
+            }
+            return
+        }
+
         if provider == .zai || provider == .glmCoding {
             let key = APIKeyStore.key(for: provider)
             let read = await ZaiUsageService(provider: provider, enteredKey: key).history()

@@ -12,11 +12,14 @@ import SwiftUI
 struct PromptCacheSessionsGroup: View {
     let provider: Provider
     @State private var reading: PromptCacheReading?
+    /// Whose conversations `reading` holds.
+    @State private var readFor: Provider?
 
     /// A reading to start from, for a preview; the pane reads its own.
     init(provider: Provider, reading: PromptCacheReading? = nil) {
         self.provider = provider
         _reading = State(initialValue: reading)
+        _readFor = State(initialValue: reading == nil ? nil : provider)
     }
 
     /// Codex's times are a floor OpenAI guarantees, and are worded as one.
@@ -38,10 +41,16 @@ struct PromptCacheSessionsGroup: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 4)
         }
-        .task {
+        // **Keyed by provider.** Moving from Claude Code's pane to Codex's
+        // keeps this view where it is, so a bare `.task` neither restarted
+        // nor let go of the reading — Codex's pane listed Claude Code's
+        // conversations under Codex's footnote.
+        .task(id: provider) {
+            if readFor != provider { reading = nil }
             while !Task.isCancelled {
                 let provider = provider
                 reading = await Task.detached(priority: .utility) { PromptCacheReading.read(for: provider) }.value
+                readFor = provider
                 try? await Task.sleep(for: .seconds(30))
             }
         }

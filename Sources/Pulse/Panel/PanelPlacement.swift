@@ -9,9 +9,10 @@ import SwiftUI
 /// whichever half of the screen the rail is sitting in, so the card always
 /// unfolds towards the roomier side rather than off the edge of the display.
 ///
-/// `bottom` is only ever that second kind: a horizontal rail standing free in
-/// the lower half of the screen, whose card opens upwards. Nothing docks to
-/// the bottom of the screen — the Dock lives there.
+/// `bottom` is both kinds: a rail fused to the screen's bottom edge — the
+/// physical one, level with the Dock, so it can sit in the empty stretch
+/// either side of it — and a horizontal rail standing free in the lower half
+/// of the screen. Either way its card opens upwards.
 enum PanelEdge: String, Sendable {
     case left
     case right
@@ -380,7 +381,10 @@ final class PanelPlacement {
     /// it goes to the display's physical edge. On a Mac with a notch that is
     /// as far as the notch allows and no further. When `notch` is available,
     /// the surface starts at the physical top and the rings sit below it.
-    func layout(in visible: CGRect, topEdge: CGFloat, panel: CGSize, rail: CGSize) -> Layout {
+    /// - Parameter bottomEdge: the screen's own bottom, below the Dock — where
+    ///   a bottom-docked rail stands. `visible` stops above the Dock across
+    ///   the whole width, though the Dock fills only the middle of it.
+    func layout(in visible: CGRect, topEdge: CGFloat, bottomEdge: CGFloat? = nil, panel: CGSize, rail: CGSize) -> Layout {
         // Along the top the free coordinate is the horizontal one, and the
         // panel hangs *down* from the rail instead of being centred on it,
         // because that is the only direction the card can unfold into.
@@ -401,6 +405,25 @@ final class PanelPlacement {
             return Layout(
                 frame: CGRect(x: windowX, y: windowY, width: panel.width, height: panel.height),
                 railOrigin: CGPoint(x: railX, y: railTopY)
+            )
+        }
+
+        // Along the bottom the rail stands on the screen's own edge, beside
+        // the Dock rather than above it, and the window stands up from it:
+        // the card can only unfold upwards.
+        if case .edge(.bottom) = dock {
+            let floor = bottomEdge ?? visible.minY
+            let railX = min(
+                max(visible.minX + CGFloat(horizontalRatio) * max(visible.width - rail.width, 0), visible.minX),
+                max(visible.maxX - rail.width, visible.minX)
+            )
+            let windowX = min(
+                max(railX + rail.width / 2 - panel.width / 2, visible.minX),
+                max(visible.maxX - panel.width, visible.minX)
+            )
+            return Layout(
+                frame: CGRect(x: windowX, y: floor, width: panel.width, height: panel.height),
+                railOrigin: CGPoint(x: railX, y: floor + rail.height)
             )
         }
 

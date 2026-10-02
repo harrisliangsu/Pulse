@@ -94,10 +94,16 @@ final class UsageStore {
     /// Watches live readings for a limit turning over, so the rail's mark can
     /// celebrate one. Independent of the alert rules; see `ResetWatch`.
     private let resetWatch = ResetWatch()
+    /// Whether a limit is being spent where this Mac's logs cannot see, which
+    /// takes the value estimate off it. The app's own; previews and tests
+    /// pass none, so they neither read the real transcripts nor write the file.
+    let elsewhere: ElsewhereWatch?
 
-    init(settings: AppSettings, alerts: UsageAlerts? = nil, activity: AgentActivityMonitor = AgentActivityMonitor()) {
+    init(settings: AppSettings, alerts: UsageAlerts? = nil, activity: AgentActivityMonitor = AgentActivityMonitor(),
+         elsewhere: ElsewhereWatch? = nil) {
         self.settings = settings
         self.activity = activity
+        self.elsewhere = elsewhere
         networkProxy = settings.networkProxy
         self.alerts = alerts
         codex = CodexUsageService(server: appServer)
@@ -179,6 +185,14 @@ final class UsageStore {
 
     /// Picks up a key that was just entered, or one that changed.
     func loadAPIKeys() {
+        OpenCodeConsole.refreshSession()
+        // Read the console's log ahead of being asked, so the first card is
+        // not the one that waits half a minute for the month. Incremental and
+        // shared with the card, so a warm-up that finds it fresh costs a page.
+        if settings.isEnabled(AccountKey(.openCodeGo)),
+           let cookie = APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot) {
+            Task.detached(priority: .utility) { _ = await OpenCodeConsoleHistory.shared.ledger(cookie: cookie) }
+        }
         apiKeys = Dictionary(
             uniqueKeysWithValues: Provider.builtIn
                 .filter { $0.keepsOwnCredential && settings.isEnabled(AccountKey($0)) }
@@ -441,7 +455,10 @@ final class UsageStore {
 
         // Read here rather than inside the services, which stay free of
         // storage concerns.
-        let openCode = OpenCodeGoUsageService(enteredKey: apiKeys[.openCodeGo])
+        let openCode = OpenCodeGoUsageService(
+            enteredKey: apiKeys[.openCodeGo],
+            consoleCookie: APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot)
+        )
         let kimi = KimiCodeUsageService(enteredKey: apiKeys[.kimiCode])
         let ollama = OllamaCloudUsageService(cookie: apiKeys[.ollamaCloud])
         let xiaomi = XiaomiMiMoUsageService(cookie: apiKeys[.xiaomiMiMo])
@@ -765,7 +782,10 @@ final class UsageStore {
         // A provider's own pane in Settings is reachable while it is switched
         // off, so its key will not be in the launch-time cache.
         let key = provider.keepsOwnCredential ? (apiKeys[provider] ?? APIKeyStore.key(for: provider)) : nil
-        let openCode = OpenCodeGoUsageService(enteredKey: key)
+        let openCode = OpenCodeGoUsageService(
+            enteredKey: key,
+            consoleCookie: provider == .openCodeGo ? APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot) : nil
+        )
         let kimi = KimiCodeUsageService(enteredKey: key)
         let ollama = OllamaCloudUsageService(cookie: key)
         let xiaomi = XiaomiMiMoUsageService(cookie: key)
@@ -1037,6 +1057,7 @@ final class UsageStore {
         // Before the alert rules, and regardless of whether they are on: the
         // mark's celebration is not a notification.
         resetWatch.observe(fetched, as: account)
+        elsewhere?.observe(fetched, as: account)
         guard let alerts else { return }
         // Both: the panel shows the reconciled reading, and the alert rules
         // need the answer the service actually gave — `reconciled` swaps a
@@ -1073,6 +1094,11 @@ final class UsageStore {
             alerts.observe(reading, raw: reading, as: account)
         }
         if needsRefresh { refresh() }
+    }
+
+    /// Whether this window's current cycle has been seen spent off this Mac.
+    func usedElsewhere(_ window: UsageWindow, account: AccountKey) -> Bool {
+        elsewhere?.usedElsewhere(window, account: account) ?? false
     }
 
     func usage(for account: AccountKey) -> ProviderUsage {

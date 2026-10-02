@@ -328,6 +328,8 @@ enum PanelMetrics {
     /// inside its item, and the hit testing has to agree with the drawing to
     /// within a point or a click lands beside the ring it appears to be on.
     nonisolated(unsafe) private static var storedLabelAboveRing = false
+    /// `AppSettings.freeAcrossFiguresBeside`, for `DockLayout.labelsBeside`.
+    nonisolated(unsafe) private static var storedFreeAcrossBeside = false
     nonisolated(unsafe) private static var storedForecast = false
 
     /// Whether the rail's ends are half circles rather than softened corners.
@@ -378,6 +380,12 @@ enum PanelMetrics {
     static func putLabelAboveRing(_ above: Bool) {
         lock.withLock { storedLabelAboveRing = above }
     }
+
+    static func putFreeAcrossFiguresBeside(_ beside: Bool) {
+        lock.withLock { storedFreeAcrossBeside = beside }
+    }
+
+    static var freeAcrossFiguresBeside: Bool { lock.withLock { storedFreeAcrossBeside } }
 
     static func useRoundEnds(_ uses: Bool) {
         lock.withLock { storedRoundEnds = uses }

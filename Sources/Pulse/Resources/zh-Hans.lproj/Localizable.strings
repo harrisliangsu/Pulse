@@ -138,7 +138,10 @@
 "Whether each limit lasts its window, on the card." = "在额度卡中预估每条限额能否用到下次重置。";
 "Counts down instead of up, figure and ring together." = "百分比与圆环改为显示剩余量，而非已用量。";
 "Swaps the two, wherever the panel is." = "将百分比移到圆环上方，各停靠位置均生效。";
-"Only when the panel is docked to the top." = "吸附在屏幕顶部时显示百分比。";
+"When the panel lies across: docked to the top or bottom, or free." = "面板横着放时显示百分比：吸附在顶部、底部，或横向自由摆放。";
+"Bottom" = "下";
+"Figures beside the rings" = "百分比放在圆环右边";
+"Only when the panel lies free across. A thinner, longer panel." = "只在横向自由摆放时生效。面板会更细、更长。";
 "Drag it anywhere; near an edge it snaps on." = "可拖动到任意位置，靠近边缘时自动吸附。";
 "Right" = "右侧";
 
@@ -255,10 +258,11 @@
 "Busiest day" = "单日最多";
 "Next expires in %@" = "最近一张 %@ 后过期";
 "Top model" = "主力模型";
-"%@ · %@ of tokens" = "%@ · 占 %@";
 "Estimated value" = "额度价值推算";
 "%@ used so far" = "本轮已用 %@";
-"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out." = "这是推算值，不是官方报告的数字：用本机在这一轮里已经花掉的钱，除以官方报告的已用百分比得出。其他设备上的用量统计不到，会让这个数字偏低。用量太少、推算不可靠的窗口不会显示。";
+"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. Windows with too little use to extrapolate from are left out." = "这是推算，不是官方数字：用这台 Mac 自周期开始以来的花费，除以官方报告的已用百分比。如果百分比在涨、这台 Mac 却没怎么花钱，说明账号也在别处使用（另一台电脑或网页），这个周期就不再推算，等重置后再说。用量太少、无从推算的额度不列出。";
+"Also used somewhere this Mac's logs can't see" = "在这台 Mac 的日志之外也有用量";
+"Not estimated" = "不推算";
 
 /* Adaptive refresh */
 "2 to 30 minutes as needed. Now: %@ minutes." = "2–30 分钟自动调整，当前 %@ 分钟。";
@@ -891,7 +895,17 @@
 "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "加上套餐名、数字的更新时间；打开「Token 消耗」后，还会显示本机最近的用量。";
 "Estimated value %@ · %@ used" = "价值推算 %@ · 已用 %@";
 "Cache hit rate" = "缓存命中率";
-"Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out." = "最近 31 天里，从提示缓存读取的输入占全部输入的比例。记录里有 token 分不清类别的模型不列出。";
+"Models" = "模型";
+"Share" = "占比";
+"Cache hit" = "缓存命中";
+"Tokens/s" = "token/秒";
+"First token" = "首字延迟";
+"Share and cache hit cover the last 31 days." = "占比和缓存命中按最近 31 天计算。";
+"Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply." = "占比和缓存命中按最近 31 天计算；token/秒只看最近 24 小时，从发出请求算到回复写完。";
+"Too few replies in the last 24 hours to time." = "最近 24 小时的回复太少，暂不显示速度。";
+"First token is Codex's own measure of how long a turn waited for it." = "首字延迟由 Codex 自己测量，是每轮等到第一个 token 的时间。";
+"Claude Code doesn't record when the first token arrived, so there's no latency." = "Claude Code 不记录第一个 token 到达的时间，所以没有延迟。";
+"%@ s" = "%@ 秒";
 "Prompt cache (%@)" = "提示缓存（%@）";
 "%@ left" = "还剩 %@";
 "Expired" = "已过期";
@@ -910,3 +924,18 @@
 "No conversation is within its guaranteed cache time" = "当前没有对话还在缓存保底时间内";
 "Kept at least %@" = "至少保留 %@";
 "The latest one's guaranteed time ended at %@." = "最近一个对话的保底时间已在 %@ 结束。";
+"Usage panel in the menu" = "菜单里显示用量面板";
+"Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend." = "点开菜单栏图标时，顶部显示所有账号的概览，每个账号还有自己的标签页，列出限额、套餐和花费。";
+"OpenCode console" = "OpenCode 控制台";
+"Account request log" = "账号请求记录";
+"Kept. The detailed card reads every request on the account with it." = "已保存。详细额度卡会用它读取账号的每一次请求。";
+"No OpenCode console session found. Sign in at opencode.ai first." = "没有找到 OpenCode 控制台的登录。请先在 opencode.ai 登录。";
+"Costs as %@ charged them, for the whole account." = "金额为 %@ 实际计费，覆盖整个账号。";
+"The console session has expired. Read it again in Settings." = "控制台登录已失效，请到设置里重新读取。";
+"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode 控制台保留 30 天的请求记录：账号下所有设备、所有应用的每一次请求，以及每次的花费。没有设置密钥、或密钥被拒绝时，也会用它读取套餐额度。Pulse 只保存控制台的登录 Cookie，加密存放在这台 Mac 上。";
+"Turn on Detailed card above to see the request log on the card." = "在上方打开「详细额度卡」，就能在卡片上看到请求记录。";
+"Read from %@ · workspace %@." = "已从 %@ 读取 · 工作区「%@」。";
+"The console turned this session away. Sign in again at opencode.ai, then read it again." = "控制台没有接受这个登录。请在 opencode.ai 重新登录后再读取。";
+"Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "已从 %@ 读取，但控制台没有响应，下次刷新时会再试。";
+"Reading the account's records…" = "正在读取账号记录…";
+"From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "来自 %@ 的账号请求记录，覆盖所有设备和所有使用它的应用，金额为每次请求的实际计费。记录保留 30 天。";

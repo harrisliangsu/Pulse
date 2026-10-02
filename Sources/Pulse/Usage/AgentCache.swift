@@ -12,8 +12,10 @@ import Foundation
 /// and the price table, not by the store root's own size and date.
 enum AgentCache {
     /// Also versions reader semantics: a valid old shape can contain totals
-    /// from the old pricing, source-precedence or rewind rules.
-    private static let version = 8
+    /// from the old pricing, source-precedence or rewind rules. 9: OpenCode 2
+    /// writes to new tables, and an 8 cache of a store that has not changed
+    /// since holds none of it.
+    private static let version = 9
 
     /// Whether the stores' real inputs, and the money behind their cost, are
     /// the same as when the ledger was kept.

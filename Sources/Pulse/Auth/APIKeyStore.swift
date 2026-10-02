@@ -14,9 +14,12 @@ enum APIKeyStore {
         PulseStorage.directory.appending(path: "keys.dat")
     }
 
-    static func key(for provider: Provider) -> String? {
+    /// `slot` names a second credential a provider can hold beside its key —
+    /// OpenCode Go's console session, which reads the account's request logs
+    /// while the key reads its limits. Nil is the provider's own key.
+    static func key(for provider: Provider, slot: String? = nil) -> String? {
         guard
-            let stored = load()[provider.rawValue],
+            let stored = load()[entry(provider, slot)],
             let opened = LocalSecrets.open(stored, purpose: Self.purpose),
             let key = String(data: opened, encoding: .utf8),
             !key.isEmpty
@@ -27,7 +30,7 @@ enum APIKeyStore {
 
     /// Stores a key, or removes it when the field is cleared.
     @discardableResult
-    static func setKey(_ key: String?, for provider: Provider) -> Bool {
+    static func setKey(_ key: String?, for provider: Provider, slot: String? = nil) -> Bool {
         // A file that exists but won't decode is not an empty one. Treating it
         // as empty meant saving one provider's key silently threw away every
         // other provider's — and said it had succeeded.
@@ -36,12 +39,19 @@ enum APIKeyStore {
 
         if let trimmed, !trimmed.isEmpty {
             guard let sealed = LocalSecrets.seal(Data(trimmed.utf8), purpose: Self.purpose) else { return false }
-            keys[provider.rawValue] = sealed
+            keys[entry(provider, slot)] = sealed
         } else {
-            keys[provider.rawValue] = nil
+            keys[entry(provider, slot)] = nil
         }
 
         return save(keys)
+    }
+
+    /// The file's key for a credential. A slot is joined with `#`, which no
+    /// provider's raw value contains, so a slot can never read another
+    /// provider's key.
+    private static func entry(_ provider: Provider, _ slot: String?) -> String {
+        slot.map { "\(provider.rawValue)#\($0)" } ?? provider.rawValue
     }
 
     /// Distinct from the account logins' purpose, so a box from one store can

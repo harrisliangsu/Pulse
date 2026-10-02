@@ -31,12 +31,13 @@ struct BudgetEstimate: Sendable, Equatable {
 
 enum BudgetEstimator {
     /// Below this the percentage is too coarse to divide by. The providers
-    /// report whole numbers, so at 2% used the true figure is somewhere
-    /// between 1.5% and 2.5% and the answer carries about a quarter either
-    /// way — wide, but it is labelled an estimate and a quarter either way
-    /// still tells you whether a window is worth ten dollars or a thousand.
-    /// Below 2% it stops meaning anything at all.
-    static let minimumUsed = 0.02
+    /// report whole numbers, so at p% used the true figure is anywhere in a
+    /// point around p and the answer moves by up to 1/p — and it moves as a
+    /// **sawtooth**: the spend climbs while the percentage holds, then the
+    /// percentage ticks and the figure drops. At 2% that was half the figure
+    /// (a five-hour window read ≈$129 that could as well be ≈$200), which is
+    /// noise, not an estimate. At 5% it is a tenth.
+    static let minimumUsed = 0.05
     /// And below this there isn't enough money in play to be worth reporting.
     static let minimumSpend = 0.20
 
@@ -52,9 +53,15 @@ enum BudgetEstimator {
         return "≈\(text)"
     }
 
+    /// - Parameter observedAt: when the percentage was read. The spend is
+    ///   counted **up to that moment**, not to now: the percentage does not
+    ///   move between readings while the logs do, and counting what was spent
+    ///   since the last reading against the old percentage set the figure
+    ///   high by however much work the refresh interval held.
     static func estimate(
         for window: UsageWindow,
         ledger: UsageLedger,
+        observedAt: Date?,
         now: Date = Date()
     ) -> BudgetEstimate? {
         guard
@@ -70,13 +77,15 @@ enum BudgetEstimator {
         else { return nil }
 
         let opened = resets.addingTimeInterval(-Double(window.windowSeconds))
-        guard opened < now else { return nil }
+        // Read inside this window, or the percentage is another window's.
+        let read = min(observedAt ?? now, now)
+        guard opened < read, read < resets else { return nil }
 
         // Logs that begin after the window did would only show part of the
         // spending, and the shortfall lands straight in the answer.
         guard let firstLogged = ledger.slots.first?.start, firstLogged <= opened else { return nil }
 
-        let spent = ledger.spend(since: opened).cost
+        let spent = ledger.cost(from: opened, to: read)
         guard spent >= minimumSpend else { return nil }
 
         let full = spent / window.usedFraction

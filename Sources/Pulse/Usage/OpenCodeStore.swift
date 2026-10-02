@@ -20,6 +20,17 @@ import SQLite3
 ///               "reasoning": 72, "cache": { "write": 0, "read": 1024 } } }
 /// ```
 ///
+/// **OpenCode 2 moved both tables.** Messages go to
+/// `session_message(id, session_id, type, seq, time_created, time_updated, data)`
+/// and sessions to `session_v2`; the upgrade copied the history across under
+/// the same ids and stopped writing `message` (on the Mac this was found on,
+/// `message` ended 2026-09-19 and every request since was missing). A 2 row's
+/// role is the `type` column, not a `role` in `data`, and its model is
+/// `"model": { "id": "gpt-6.1-sol", "providerID": "openai" }` rather than
+/// `modelID`. Both tables are read — the new one first, then any old row the
+/// copy did not carry — and a message id is counted once. A store without the
+/// new tables (OpenCode 1, Kilo CLI) reads exactly as before.
+///
 /// **Its own `cost` is ignored.** It is whatever OpenCode's own table said at
 /// the time, is zero for a plan it has no rate for, and would put two
 /// differently-sourced figures in one total. Everything here is priced from
@@ -46,18 +57,25 @@ enum OpenCodeStore {
         var sessionSlots: [String: [String: (tokens: Int, cost: Double, unpriced: Int)]] = [:]
         let calendar = Calendar.current
 
-        Self.each(handle, "SELECT session_id, data FROM message") { statement in
+        var seen: Set<String> = []
+        let rows: (OpaquePointer?) -> Void = { statement in
             guard
-                let sessionText = sqlite3_column_text(statement, 0),
-                let dataText = sqlite3_column_text(statement, 1)
+                let sessionText = sqlite3_column_text(statement, 1),
+                let dataText = sqlite3_column_text(statement, 2)
             else { return }
+            // A row without an id (a store with no `id` column) cannot have
+            // been copied, so it is never a repeat.
+            if let idText = sqlite3_column_text(statement, 0),
+               !seen.insert(String(cString: idText)).inserted { return }
 
             let session = String(cString: sessionText)
             let json = Data(String(cString: dataText).utf8)
             guard
                 let root = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
-                root["role"] as? String == "assistant",
-                let model = root["modelID"] as? String,
+                // OpenCode 2 states the role in its own column, selected as
+                // the fourth; OpenCode 1 in the message.
+                (sqlite3_column_text(statement, 3).map { String(cString: $0) } ?? root["role"] as? String) == "assistant",
+                let model = root["modelID"] as? String ?? (root["model"] as? [String: Any])?["id"] as? String,
                 let counts = root["tokens"] as? [String: Any],
                 let at = Self.date(in: root)
             else { return }
@@ -94,6 +112,9 @@ enum OpenCodeStore {
                 perSession[session] = (tally, cost, unpriced, at, at)
             }
         }
+        Self.each(handle, "SELECT id, session_id, data, type FROM session_message WHERE type = 'assistant'", rows)
+        let hasIDs = Self.columns(handle, "message").contains("id")
+        Self.each(handle, "SELECT \(hasIDs ? "id" : "NULL"), session_id, data, NULL FROM message", rows)
 
         guard !buckets.isEmpty else { return .empty }
 
@@ -127,17 +148,30 @@ enum OpenCodeStore {
         var directory: String?
     }
 
+    /// OpenCode 2's `session_v2` first, then `session` for any it lacks.
     private static func sessions(_ handle: OpaquePointer?) -> [String: Session] {
         var rows: [String: Session] = [:]
-        each(handle, "SELECT id, slug, title, directory FROM session") { statement in
+        let read: (OpaquePointer?) -> Void = { statement in
             guard let id = sqlite3_column_text(statement, 0) else { return }
-            rows[String(cString: id)] = Session(
+            let key = String(cString: id)
+            guard rows[key] == nil else { return }
+            rows[key] = Session(
                 slug: sqlite3_column_text(statement, 1).map { String(cString: $0) },
                 title: sqlite3_column_text(statement, 2).map { String(cString: $0) },
                 directory: sqlite3_column_text(statement, 3).map { String(cString: $0) }
             )
         }
+        each(handle, "SELECT id, slug, title, directory FROM session_v2", read)
+        each(handle, "SELECT id, slug, title, directory FROM session", read)
         return rows
+    }
+
+    private static func columns(_ handle: OpaquePointer?, _ table: String) -> Set<String> {
+        var names: Set<String> = []
+        each(handle, "PRAGMA table_info(\(table))") { statement in
+            if let name = sqlite3_column_text(statement, 1) { names.insert(String(cString: name)) }
+        }
+        return names
     }
 
     /// Read-only and in place, the same way Pulse reads every other

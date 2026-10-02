@@ -21,7 +21,7 @@ Accounts the stored rail does not mention are appended **in name order**, not in
 | `.kiro` | Kiro | `kiro` | Borrow Kiro CLI login through ACP | no | native ACP | no | Kiro CLI data or app exists |
 | `.antigravity` | Antigravity | `antigravity` | Loopback language server while the app is open | no | one, named | no | `Antigravity.app` |
 | `.cursor` | Cursor | `cursor` | Cookie built from the editor’s stored token | no (deliberate) | one, named | no | Cursor `state.vscdb` exists |
-| `.openCodeGo` | OpenCode Go | `opencode` | Pasted key, else OpenCode’s `auth.json` | no | pasted / found key | no | OpenCode `auth.json` exists |
+| `.openCodeGo` | OpenCode Go | `opencode` | Pasted key, else OpenCode’s `auth.json`; the console's browser session as a second credential (limits without a key, and the request log) | no | pasted / found key | no | OpenCode `auth.json` exists |
 | `.kimiCode` | Kimi Code | `kimi` | Pasted key | no | pasted key | no | none — stays off until switched on |
 | `.ollamaCloud` | Ollama Cloud | `ollama` | Browser session cookie (not an API key) | no | session | no | none |
 | `.zai` | z.ai | `zai` | Pasted key | no | pasted key | no | none |

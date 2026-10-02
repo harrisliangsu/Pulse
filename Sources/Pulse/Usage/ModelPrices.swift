@@ -356,7 +356,9 @@ enum PulseStorage {
     private static let superseded = [
         "ledger-claudeCode.json",   // day buckets, before quarter-hours
         "ledger-codex.json",
-        "model-prices.json"         // before model display names were kept
+        "model-prices.json",        // before model display names were kept
+        "ledger-4-claudeCode.json", // first-line output counts, no reply timings
+        "ledger-4-codex.json"
     ]
 
     static func removeSupersededFiles() {

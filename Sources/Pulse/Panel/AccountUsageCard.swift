@@ -16,49 +16,83 @@ struct AccountUsageCard: View {
     let ledger: UsageLedger
     /// Codex only, and only when its app server answered.
     var credits: CodexAccountUsage?
+    var isReading = false
 
     /// Roughly a month, which is the span most of the figures cover.
     private static let span = 31
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(localized: "Usage history")
-                .font(.system(size: 13, weight: .semibold))
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Text(localized: "Usage history")
+                        .font(.system(size: 13, weight: .semibold))
+                    if isReading {
+                        ProgressView().controlSize(.small)
+                        Text(localized: "Reading…")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 .padding(.leading, 4)
 
-            VStack(alignment: .leading, spacing: 0) {
-                if let credits, credits.availableResetCredits > 0 || credits.nextExpiringCredit != nil {
-                    resetCredits(credits)
-                    Divider()
-                }
+                VStack(alignment: .leading, spacing: 0) {
+                    if let credits, credits.availableResetCredits > 0 || credits.nextExpiringCredit != nil {
+                        resetCredits(credits)
+                        Divider()
+                    }
 
-                figures
+                    figures
 
-                if ledger.days.count > 1 {
-                    DailyTokensChart(days: ledger.recent(Self.span))
-                        .frame(height: 58)
+                    if ledger.days.count > 1 {
+                        DailyTokensChart(days: ledger.recent(Self.span))
+                            .frame(height: 58)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 10)
+                    }
+
+                    if let credits, credits.lifetimeTokens > ledger.allTime.tokens {
+                        Divider()
+                        line(
+                            String.localized("Account total"),
+                            String.localized("\(TokenCount.short(credits.lifetimeTokens)) tokens")
+                        )
+                        .font(.system(size: 11))
                         .padding(.horizontal, 16)
-                        .padding(.bottom, 10)
+                        .padding(.vertical, 12)
+                    }
                 }
+                .usageCard()
 
-                Divider()
-
-                summary
-
-                if !cacheRates.isEmpty {
-                    Divider()
-                    cacheHitRates
+                if ledger.hasPartialCounts {
+                    Text(localized: "Counts may be incomplete.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
                 }
-            }
-            .background(.background)
-            .clipShape(.rect(cornerRadius: 10, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(.separator.opacity(0.5), lineWidth: 1)
-                    .allowsHitTesting(false)
+                footnote
             }
 
-            footnote
+            // **A card of its own.** The table is about models, not days, and
+            // under the chart it read as more of the same history.
+            if !modelRows.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(localized: "Models")
+                        .font(.system(size: 13, weight: .semibold))
+                        .padding(.leading, 4)
+
+                    modelTable
+                        .usageCard()
+
+                    if let tableNote {
+                        Text(tableNote)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 4)
+                    }
+                }
+            }
         }
     }
 
@@ -155,7 +189,9 @@ struct AccountUsageCard: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
-            if ledger.origin == .localTranscripts {
+            // Money where there is money: this Mac's logs priced at API rates,
+            // or a provider's own log of what it charged.
+            if ledger.origin == .localTranscripts || ledger.origin == .providerLogs {
                 Text(Self.money(cost))
                     .font(.system(size: 17, weight: .semibold))
                     .monospacedDigit()
@@ -173,95 +209,139 @@ struct AccountUsageCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: - Summary
+    // MARK: - Models
 
-    /// The two things that don't fit the grid: which model did the work, and —
-    /// for Codex, which knows — what the account has done across every
-    /// machine, not just this one.
-    private var summary: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if let top = ledger.topModel(overLast: Self.span) {
-                // The percent sign is baked into the value rather than left in
-                // the key: a bare `%` next to a placeholder is a malformed
-                // printf conversion, and Foundation formats these values.
-                line(
-                    String.localized("Top model"),
-                    String.localized("\(top.name) · \("\(Int((top.share * 100).rounded()))%") of tokens")
-                )
-            }
+    /// One model's line in the table: its share of the month's tokens, its
+    /// cache hit rate over the same month, and its speed and first-token wait
+    /// over the last day. A figure the records cannot give is nil.
+    private struct ModelRow: Identifiable {
+        let name: String
+        let share: Double?
+        let cacheRate: Double?
+        let speed: Double?
+        let firstToken: TimeInterval?
+        var id: String { name }
+    }
 
-            if let credits, credits.lifetimeTokens > ledger.allTime.tokens {
-                line(
-                    String.localized("Account total"),
-                    String.localized("\(TokenCount.short(credits.lifetimeTokens)) tokens")
-                )
-            }
+    private var speeds: [UsageLedger.ModelSpeed] {
+        ledger.outputSpeedsByModel(since: Date().addingTimeInterval(-UsageLedger.speedSpan))
+    }
+
+    /// Every model with tokens this month, most first, and any timed in the
+    /// last day that somehow has none.
+    private var modelRows: [ModelRow] {
+        let rates = Dictionary(ledger.cacheHitRatesByModel(overLast: Self.span).map { ($0.name, $0.rate) }) { first, _ in first }
+        let timed = Dictionary(speeds.map { ($0.name, $0) }) { first, _ in first }
+        let shares = ledger.modelShares(overLast: Self.span)
+        var rows = shares.map {
+            ModelRow(name: $0.name, share: $0.share, cacheRate: rates[$0.name],
+                     speed: timed[$0.name]?.tokensPerSecond, firstToken: timed[$0.name]?.firstToken)
         }
-        .font(.system(size: 11))
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        let listed = Set(shares.map(\.name))
+        rows += speeds.filter { !listed.contains($0.name) }.map {
+            ModelRow(name: $0.name, share: nil, cacheRate: rates[$0.name], speed: $0.tokensPerSecond, firstToken: $0.firstToken)
+        }
+        return rows
     }
 
-    // MARK: - Cache hit rate
-
-    private var cacheRates: [UsageLedger.ModelCacheRate] {
-        ledger.cacheHitRatesByModel(overLast: Self.span)
+    /// The readers that time replies (`ReplyTiming`).
+    private static func timesReplies(_ provider: Provider) -> Bool {
+        provider == .claudeCode || provider == .codex
     }
 
-    /// How much of each model's input was read from the prompt cache, over
-    /// the same month as the figures above: the whole account's rate beside
-    /// the heading, each model on its own line under it.
-    ///
-    /// **Every model with records, not only the top one.** The rate differs
-    /// by model — a long agent session on one re-reads its context, a quick
-    /// question on another does not — and the account's single figure hides
-    /// which is which.
-    private var cacheHitRates: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(localized: "Cache hit rate")
-                    .font(.system(size: 12, weight: .semibold))
-                Spacer(minLength: 0)
-                if let overall = ledger.cacheHitRate(overLast: Self.span) {
-                    Text(verbatim: Self.percent(overall))
-                        .font(.system(size: 12, weight: .semibold))
-                        .monospacedDigit()
-                }
+    /// **One table, not a section per measure.** Share, cache hit rate and
+    /// speed are all facts about a model; stacked as three lists they named
+    /// every model three times, each list under its own paragraph. A column
+    /// with nothing in it for any model is left out rather than filled with
+    /// dashes, and the explanations sit under the card with the others.
+    private var modelTable: some View {
+        let rows = modelRows
+        let showsCache = rows.contains { $0.cacheRate != nil }
+        let showsSpeed = rows.contains { $0.speed != nil }
+        let showsWait = rows.contains { $0.firstToken != nil }
+        let columns = 2 + (showsCache ? 1 : 0) + (showsSpeed ? 1 : 0) + (showsWait ? 1 : 0)
+
+        return Grid(alignment: .trailing, horizontalSpacing: 18, verticalSpacing: 7) {
+            GridRow {
+                // The card is titled for it; the names need no heading.
+                Text(verbatim: "")
+                    .gridColumnAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text(localized: "Share")
+                if showsCache { Text(localized: "Cache hit") }
+                if showsSpeed { Text(localized: "Tokens/s") }
+                if showsWait { Text(localized: "First token") }
             }
+            .font(.system(size: 11))
+            .foregroundStyle(.secondary)
 
-            ForEach(cacheRates, id: \.name) { model in
-                HStack(spacing: 10) {
-                    Text(verbatim: model.name)
-                        .foregroundStyle(.secondary)
+            Divider().gridCellColumns(columns)
+
+            ForEach(rows) { row in
+                GridRow {
+                    Text(verbatim: row.name)
                         .lineLimit(1)
                         .truncationMode(.middle)
-                        .frame(width: 150, alignment: .leading)
-                    GeometryReader { proxy in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(.quaternary)
-                            Capsule().fill(.tint)
-                                .frame(width: proxy.size.width * min(max(model.rate, 0), 1))
-                        }
-                    }
-                    .frame(height: 5)
-                    Text(verbatim: Self.percent(model.rate))
-                        .monospacedDigit()
-                        .frame(width: 36, alignment: .trailing)
+                    cell(row.share.map(Self.percent))
+                    if showsCache { cell(row.cacheRate.map(Self.percent)) }
+                    if showsSpeed { cell(row.speed.map(Self.speed)) }
+                    if showsWait { cell(row.firstToken.map(Self.seconds)) }
                 }
-                .font(.system(size: 11))
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(model.name)
-                .accessibilityValue(Self.percent(model.rate))
+                .font(.system(size: 12))
             }
 
-            Text(localized: "Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out.")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 2)
+            // The account's own rate, which is not the average of the lines
+            // above: each model weighs what it read.
+            if showsCache, rows.count > 1, let overall = ledger.cacheHitRate(overLast: Self.span) {
+                Divider().gridCellColumns(columns)
+                GridRow {
+                    Text(localized: "All models")
+                    Text(verbatim: "")
+                    cell(Self.percent(overall))
+                    if showsSpeed { Text(verbatim: "") }
+                    if showsWait { Text(verbatim: "") }
+                }
+                .font(.system(size: 12, weight: .semibold))
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+
+    /// A figure, or a faint dash where this model has none.
+    private func cell(_ text: String?) -> some View {
+        Text(verbatim: text ?? "–")
+            .monospacedDigit()
+            .foregroundStyle(text == nil ? .tertiary : .primary)
+    }
+
+    private static func speed(_ tokensPerSecond: Double) -> String {
+        tokensPerSecond.formatted(.number.precision(.fractionLength(0)))
+    }
+
+    private static func seconds(_ value: TimeInterval) -> String {
+        String.localized("\(value.formatted(.number.precision(.fractionLength(1)))) s")
+    }
+
+    /// What the table's columns measure and over what span — said once, under
+    /// the card, in place of a paragraph under each list.
+    private var tableNote: String? {
+        guard !modelRows.isEmpty else { return nil }
+        guard Self.timesReplies(provider) else {
+            return String.localized("Share and cache hit cover the last 31 days.")
+        }
+        var sentences = [String.localized("Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply.")]
+        if speeds.isEmpty {
+            sentences.append(String.localized("Too few replies in the last 24 hours to time."))
+        } else if provider == .codex {
+            sentences.append(String.localized("First token is Codex's own measure of how long a turn waited for it."))
+        } else {
+            sentences.append(String.localized("Claude Code doesn't record when the first token arrived, so there's no latency."))
+        }
+        // Chinese and Japanese run sentences together; the rest put a space.
+        let language = LocalizationSource.locale.language.languageCode?.identifier
+        let note = sentences.joined(separator: language == "zh" || language == "ja" ? "" : " ")
+        return note
     }
 
     private static func percent(_ rate: Double) -> String {
@@ -290,6 +370,10 @@ struct AccountUsageCard: View {
                 // A different provenance needs different words: this one is
                 // the account's, not this Mac's, and it carries no money.
                 Text(localized: "Reported by \(provider.displayName) for the whole account, so it covers every machine you use it on. It counts tokens only — the figures behind it cannot be turned into a cost.")
+            } else if ledger.origin == .providerLogs {
+                // The account's own log, and the money is what was charged —
+                // the one history here that is a bill rather than an estimate.
+                Text(localized: "From \(provider.displayName)'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days.")
             } else {
                 Text(localized: "Counted from this Mac's \(provider.displayName) logs and priced at the published API rates from models.dev. Your plan is a subscription, so this is what the same work would cost through the API — not what you were charged.")
             }
@@ -330,6 +414,20 @@ struct AccountUsageCard: View {
             return calendar
         }()
         return formatter
+    }
+}
+
+private extension View {
+    /// The settings cards' own surface: the window's background, rounded,
+    /// with a hairline.
+    func usageCard() -> some View {
+        background(.background)
+            .clipShape(.rect(cornerRadius: 10, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(.separator.opacity(0.5), lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
     }
 }
 

@@ -138,7 +138,10 @@
 "Whether each limit lasts its window, on the card." = "각 한도가 다음 초기화까지 버틸지 카드에 표시합니다.";
 "Counts down instead of up, figure and ring together." = "수치와 링 모두 쓴 양이 아니라 남은 양을 보여 줍니다.";
 "Swaps the two, wherever the panel is." = "패널 위치와 상관없이 백분율을 링 위로 옮깁니다.";
-"Only when the panel is docked to the top." = "패널을 화면 위쪽에 붙였을 때만 표시합니다.";
+"When the panel lies across: docked to the top or bottom, or free." = "패널을 가로로 두었을 때 표시합니다: 위나 아래에 붙였거나 가로로 자유롭게 두었을 때.";
+"Bottom" = "아래";
+"Figures beside the rings" = "수치를 링 오른쪽에 표시";
+"Only when the panel lies free across. A thinner, longer panel." = "가로로 자유롭게 두었을 때만 적용됩니다. 패널이 더 가늘고 길어집니다.";
 "Drag it anywhere; near an edge it snaps on." = "어디로든 끌 수 있으며, 가장자리에 가까워지면 달라붙습니다.";
 "Right" = "오른쪽";
 
@@ -255,10 +258,11 @@
 "Busiest day" = "가장 많이 쓴 날";
 "Next expires in %@" = "가장 이른 만료가 %@ 후";
 "Top model" = "가장 많이 쓴 모델";
-"%@ · %@ of tokens" = "%@ · 토큰의 %@";
 "Estimated value" = "사용분 추정 금액";
 "%@ used so far" = "이번 주기에 %@ 사용";
-"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out." = "제공업체가 보고한 값이 아니라 추정치입니다. 이 Mac이 이번 주기에 쓴 금액을 제공업체가 알려 준 사용률로 나눈 값입니다. 다른 기기에서 한 작업은 세지 않으므로 값이 낮게 나옵니다. 사용량이 너무 적어 추정할 수 없는 주기는 표시하지 않습니다.";
+"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. Windows with too little use to extrapolate from are left out." = "보고된 수치가 아니라 추정치입니다. 이 Mac에서 기간이 시작된 뒤 쓴 금액을 제공업체가 알려 주는 사용률로 나눈 값입니다. 사용률이 오르는데 이 Mac에서는 거의 쓰지 않았다면 다른 곳(다른 컴퓨터나 웹사이트)에서도 쓰고 있는 것이므로, 그 기간은 초기화될 때까지 추정하지 않습니다. 추정하기에 사용량이 너무 적은 한도는 표시하지 않습니다.";
+"Also used somewhere this Mac's logs can't see" = "이 Mac의 기록 밖에서도 사용되고 있습니다";
+"Not estimated" = "추정하지 않음";
 
 /* Adaptive refresh */
 "2 to 30 minutes as needed. Now: %@ minutes." = "필요에 따라 2~30분으로 조절합니다. 현재 %@분.";
@@ -891,7 +895,17 @@
 "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "요금제 이름과 숫자를 읽은 시각을 더하고, '토큰 사용량'을 켜면 이 Mac의 최근 사용량도 표시합니다.";
 "Estimated value %@ · %@ used" = "한도 추정 가치 %@ · 이번 주기 %@ 사용";
 "Cache hit rate" = "캐시 적중률";
-"Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out." = "최근 31일 동안 전체 입력 중 프롬프트 캐시에서 읽은 입력의 비율입니다. 기록에서 토큰 종류를 구분할 수 없는 모델은 표시하지 않습니다.";
+"Models" = "모델";
+"Share" = "비중";
+"Cache hit" = "캐시 적중";
+"Tokens/s" = "토큰/초";
+"First token" = "첫 토큰";
+"Share and cache hit cover the last 31 days." = "비중과 캐시 적중은 최근 31일 기준입니다.";
+"Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply." = "비중과 캐시 적중은 최근 31일, 토큰/초는 최근 24시간만 보며 요청을 보낸 때부터 답변이 끝날 때까지로 잽니다.";
+"Too few replies in the last 24 hours to time." = "최근 24시간 동안의 답변이 적어 아직 속도를 표시하지 않습니다.";
+"First token is Codex's own measure of how long a turn waited for it." = "첫 토큰은 Codex가 직접 잰, 각 턴에서 첫 토큰이 오기까지 걸린 시간입니다.";
+"Claude Code doesn't record when the first token arrived, so there's no latency." = "Claude Code는 첫 토큰이 도착한 시각을 기록하지 않아 지연 시간이 없습니다.";
+"%@ s" = "%@초";
 "Prompt cache (%@)" = "프롬프트 캐시(%@)";
 "%@ left" = "%@ 남음";
 "Expired" = "만료됨";
@@ -910,3 +924,18 @@
 "No conversation is within its guaranteed cache time" = "보장 시간 안에 캐시가 남은 대화가 없습니다";
 "Kept at least %@" = "최소 %@ 유지";
 "The latest one's guaranteed time ended at %@." = "가장 최근 대화의 보장 시간은 %@에 끝났습니다.";
+"Usage panel in the menu" = "메뉴에 사용량 패널 표시";
+"Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend." = "메뉴 막대 아이콘을 열면 위쪽에 모든 계정의 개요와, 계정별 한도·요금제·비용 탭을 보여 줍니다.";
+"OpenCode console" = "OpenCode 콘솔";
+"Account request log" = "계정 요청 기록";
+"Kept. The detailed card reads every request on the account with it." = "저장됨. 자세한 카드가 이것으로 계정의 모든 요청을 읽습니다.";
+"No OpenCode console session found. Sign in at opencode.ai first." = "OpenCode 콘솔 세션을 찾지 못했습니다. 먼저 opencode.ai에 로그인하세요.";
+"Costs as %@ charged them, for the whole account." = "금액은 %@가 실제로 청구한 것으로, 계정 전체 기준입니다.";
+"The console session has expired. Read it again in Settings." = "콘솔 세션이 만료되었습니다. 설정에서 다시 읽어 주세요.";
+"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode 콘솔이 30일 동안 보관하는 요청 기록입니다. 계정의 모든 기기와 모든 앱에서 보낸 요청과 각 요청의 비용이 들어 있습니다. 키가 없거나 거부되면 요금제 한도도 이것으로 읽습니다. Pulse는 콘솔 로그인 쿠키만 이 Mac에 암호화해 보관합니다.";
+"Turn on Detailed card above to see the request log on the card." = "위의 '자세한 카드'를 켜면 카드에서 요청 기록을 볼 수 있습니다.";
+"Read from %@ · workspace %@." = "%@에서 읽음 · 워크스페이스 '%@'.";
+"The console turned this session away. Sign in again at opencode.ai, then read it again." = "콘솔이 이 세션을 받아들이지 않았습니다. opencode.ai에 다시 로그인한 뒤 다시 읽어 주세요.";
+"Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "%@에서 읽었지만 콘솔이 응답하지 않았습니다. 다음 새로 고침 때 다시 시도합니다.";
+"Reading the account's records…" = "계정 기록을 읽는 중…";
+"From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "%@의 계정 전체 요청 기록으로, 모든 기기와 이를 쓰는 모든 앱이 포함됩니다. 금액은 요청마다 실제로 청구된 것입니다. 기록은 30일 동안 보관됩니다.";

@@ -130,6 +130,9 @@ struct FloatingUsagePanelView: View {
                                 ? cardLedgers.spend(for: selected.account.provider) : nil,
                             promptCache: showsSpend(for: selected.account)
                                 ? cardLedgers.promptCache[selected.account.provider] : nil,
+                            usedElsewhere: Set(selected.windows.filter {
+                                store.usedElsewhere($0, account: selected.account)
+                            }.map(\.id)),
                             pointerCenter: pointerCentre(for: index)
                         )
                         .fixedSize()
@@ -243,7 +246,7 @@ struct FloatingUsagePanelView: View {
             // change. The last one is easy to forget and changes the rail's
             // *thickness*, so leaving it out draws the rings at one size in a
             // berth built for the other.
-            .id("\(settings.language.rawValue)-\(settings.panelSize.rawValue)-\(settings.topRailShowsPercentages)-\(settings.sideRailShowsPercentages)-\(settings.railSpacing.rawValue)-\(settings.labelAboveRing)-\(settings.showsForecast)-\(settings.detailedCards.isEmpty)-\(settings.usesRoundEnds)")
+            .id("\(settings.language.rawValue)-\(settings.panelSize.rawValue)-\(settings.topRailShowsPercentages)-\(settings.sideRailShowsPercentages)-\(settings.railSpacing.rawValue)-\(settings.labelAboveRing)-\(settings.freeAcrossFiguresBeside)-\(settings.showsForecast)-\(settings.detailedCards.isEmpty)-\(settings.usesRoundEnds)")
     }
 
     /// Whether the rail is drawn out in full.
@@ -386,7 +389,9 @@ struct FloatingUsagePanelView: View {
     /// The panel's own extent along that axis, which is what the card is
     /// clamped inside.
     private var panelAlong: CGFloat {
-        let panel = FloatingPanelController.Layout.size(for: placement.edge, notchSize: placement.notch?.size)
+        let panel = FloatingPanelController.Layout.size(
+            for: placement.edge, notchSize: placement.notch?.size, docked: placement.isDocked
+        )
         return placement.edge.isVertical ? panel.height : panel.width
     }
 
@@ -437,7 +442,7 @@ struct FloatingUsagePanelView: View {
     /// offset, advancing one item plus one gap each time.
     private func ringCentre(for index: Int) -> CGFloat {
         DockLayout.firstRingAlong(docked: placement.isDocked, on: placement.edge.axis)
-            + CGFloat(index) * DockLayout.ringStep(on: placement.edge.axis)
+            + CGFloat(index) * DockLayout.ringStep(on: placement.edge.axis, docked: placement.isDocked)
     }
 
     /// The card's own extent along that same axis: its height beside the rail,
@@ -641,7 +646,9 @@ struct FloatingUsagePanelView: View {
         // stopping at the card's own edge, so the gap the pointer crosses
         // between the rail and the card is covered too. The slack along it
         // keeps the boundary from feeling like a trip wire at the card's edge.
-        let panel = FloatingPanelController.Layout.size(for: edge, notchSize: placement.notch?.size)
+        let panel = FloatingPanelController.Layout.size(
+            for: edge, notchSize: placement.notch?.size, docked: placement.isDocked
+        )
         let start = railAlong + cardPadding(for: index) - PanelHitArea.slack
         let length = cardAlong + PanelHitArea.slack * 2
 
@@ -726,11 +733,11 @@ enum PanelHitArea {
         // Includes the selected ring's 1.06 scale and a small amount of pointer
         // forgiveness without reaching the percentage label beneath it.
         let radius = DockLayout.ringDiameter / 2 * 1.08
-        let across = DockLayout.ringCentreAcross(on: edge.axis)
+        let across = DockLayout.ringCentreAcross(on: edge.axis, docked: docked)
 
         for (index, slot) in slots.enumerated() {
             let along = DockLayout.firstRingAlong(docked: docked, on: edge.axis)
-                + CGFloat(index) * DockLayout.ringStep(on: edge.axis)
+                + CGFloat(index) * DockLayout.ringStep(on: edge.axis, docked: docked)
             let centre = edge.isVertical
                 ? CGPoint(x: rail.minX + across, y: rail.minY + along)
                 : CGPoint(x: rail.minX + along, y: rail.minY + across)
@@ -762,8 +769,8 @@ enum PanelHitArea {
         case .top:
             return CGRect(x: rail.midX - hit.width / 2, y: rail.minY, width: hit.width, height: hit.height)
                 .insetBy(dx: -slack, dy: 0)
-        // Nothing docks to the bottom, so this is never asked for; the rail's
-        // own lower edge is the only answer that stays inside it.
+        // Docked to the bottom: the sliver lies along the screen's bottom
+        // edge, the rail's own lower edge.
         case .bottom:
             return CGRect(x: rail.midX - hit.width / 2, y: rail.maxY - hit.height, width: hit.width, height: hit.height)
                 .insetBy(dx: -slack, dy: 0)

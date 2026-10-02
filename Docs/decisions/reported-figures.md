@@ -20,6 +20,6 @@ Codex per-turn `last_token_usage` summed ~6% high on one long session vs differe
 
 Trailing burn-rate samples vs cumulative: on one bursty five-hour window the trailing estimate ranged over a factor of **24**, cumulative 9–13. Trailing needed storage, sampling, reset detection. Pace as a number (“8% in reserve” under “20% used”) was read as *8% left*. Usage burstiness (historical, three days of transcripts): 3% of five-minute slots had any activity; busiest six times the median. Anything that reads as precise is wrong.
 
-Estimate withheld under 2% used, logs starting after the window, model-scoped windows (a 2%-used Fable window priced at ten thousand dollars because the money had gone through Opus).
+Estimate withheld under 5% used (whole-number percentages swing a 2% figure by half), logs starting after the window, model-scoped windows (a 2%-used Fable window priced at ten thousand dollars because the money had gone through Opus).
 
 Current rules: [../refresh-and-data.md](../refresh-and-data.md).
