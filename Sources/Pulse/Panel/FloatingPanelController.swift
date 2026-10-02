@@ -406,6 +406,9 @@ final class FloatingPanelController {
             rail: railSize
         )
 
+        placement.cardRoom = PanelPlacement.cardRoom(
+            edge: edge, railOrigin: layout.railOrigin, rail: railSize, in: screen.visibleFrame
+        )
         panel.applyLevel(for: placement.dock)
         panel.setFrame(layout.frame, display: true)
         // **Measured against the frame the window actually got**, not the one
@@ -750,6 +753,9 @@ private final class FloatingPanel: NSPanel {
             bottomEdge: screen.frame.minY,
             panel: landingPanel,
             rail: landingRail
+        )
+        placement.cardRoom = PanelPlacement.cardRoom(
+            edge: placement.edge, railOrigin: layout.railOrigin, rail: landingRail, in: visible
         )
         applyLevel(for: dock)
         setFrame(layout.frame, display: true)

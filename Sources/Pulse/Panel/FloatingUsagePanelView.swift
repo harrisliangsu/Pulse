@@ -133,7 +133,8 @@ struct FloatingUsagePanelView: View {
                             usedElsewhere: Set(selected.windows.filter {
                                 store.usedElsewhere($0, account: selected.account)
                             }.map(\.id)),
-                            pointerCenter: pointerCentre(for: index)
+                            pointerCenter: pointerCentre(for: index),
+                            maxHeight: placement.cardRoom
                         )
                         .fixedSize()
                         .background(

@@ -175,7 +175,67 @@ struct UsageDetailCard: View {
     /// Where red begins, so the card's bars agree with the rail's rings.
     @Environment(\.usageWarningThreshold) private var warningThreshold
 
+    /// The tallest the card may be, pointer included, or nil for no limit —
+    /// the room between the rail and the screen's edge on the side it opens
+    /// to, for a rail lying across (`PanelPlacement.cardRoom`).
+    var maxHeight: CGFloat?
+    /// The card's contents at their own height, measured inside the scroll
+    /// view so a limited card knows whether it has to scroll at all.
+    @State private var naturalHeight: CGFloat?
+
     var body: some View {
+        bounded
+        // Room for the pointer on the side facing the rail. The shape below
+        // covers the whole frame, body and pointer together.
+        .padding(Self.pointerSide(for: edge), DetailCardLayout.pointerWidth)
+        // **Inside the card, never ahead of it.** Switching between two cards
+        // of different heights keeps this one view and swaps its rows: the
+        // outline grows on the panel's spring, but a row the new card adds is
+        // laid out at its final place at once, so it stood outside a card
+        // that had not reached it yet — the text arriving before the card.
+        // Masked to the same outline, the card uncovers it as it grows.
+        // The content only: the surface keeps its own edge, where glass
+        // draws a rim this would cut.
+        .mask { bubble }
+        // The card follows the rail's surface: a glass capsule beside a solid
+        // black card reads as two different components, not one panel.
+        .background(LiquidBubbleSurface(bubble: bubble, usesGlass: usesGlass))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(String.localized("\(title ?? usage.provider.displayName) usage details"))
+    }
+
+    /// The contents, scrolling **only when the screen cannot hold them**.
+    ///
+    /// A rail lying across opens its card into one half of the screen, and
+    /// near the middle that half can be shorter than a tall card — a detailed
+    /// card with a forecast and many limits on a 13" display was 95pt taller
+    /// than the room below the rail, and its foot was cut off by the screen.
+    /// Turning the card the other way does not help there: the rail already
+    /// opens it to the roomier half. So it scrolls, inside the same outline.
+    /// The window keeps its size; only the card is shorter.
+    @ViewBuilder
+    private var bounded: some View {
+        if let limit = maxHeight.map({ $0 - DetailCardLayout.pointerWidth }),
+           limit < DetailCardLayout.maximumHeight {
+            let natural = naturalHeight ?? min(DetailCardLayout.estimatedHeight, limit)
+            ScrollView(.vertical) {
+                content.background(
+                    GeometryReader { proxy in
+                        Color.clear.onChange(of: proxy.size.height, initial: true) { _, height in
+                            naturalHeight = height
+                        }
+                    }
+                )
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollDisabled(natural <= limit)
+            .frame(width: DetailCardLayout.width, height: max(min(natural, limit), 0))
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: DetailCardLayout.contentSpacing) {
             header
 
@@ -253,23 +313,6 @@ struct UsageDetailCard: View {
         }
         .padding(DetailCardLayout.padding)
         .frame(width: DetailCardLayout.width, alignment: .leading)
-        // Room for the pointer on the side facing the rail. The shape below
-        // covers the whole frame, body and pointer together.
-        .padding(Self.pointerSide(for: edge), DetailCardLayout.pointerWidth)
-        // **Inside the card, never ahead of it.** Switching between two cards
-        // of different heights keeps this one view and swaps its rows: the
-        // outline grows on the panel's spring, but a row the new card adds is
-        // laid out at its final place at once, so it stood outside a card
-        // that had not reached it yet — the text arriving before the card.
-        // Masked to the same outline, the card uncovers it as it grows.
-        // The content only: the surface keeps its own edge, where glass
-        // draws a rim this would cut.
-        .mask { bubble }
-        // The card follows the rail's surface: a glass capsule beside a solid
-        // black card reads as two different components, not one panel.
-        .background(LiquidBubbleSurface(bubble: bubble, usesGlass: usesGlass))
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(String.localized("\(title ?? usage.provider.displayName) usage details"))
     }
 
     /// The soonest available credit's expiry, with the year: a credit can

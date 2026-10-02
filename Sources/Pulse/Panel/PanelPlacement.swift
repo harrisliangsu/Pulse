@@ -150,6 +150,23 @@ final class PanelPlacement {
     /// Present only while attached to a physical notch; never persisted.
     var notch: CGRect?
 
+    /// How tall a card may be on the side it opens to, for a rail lying
+    /// across: from the rail to the screen's usable edge, less the gap. Nil
+    /// down a side, where the card slides along the rail instead. Set where
+    /// the panel is placed, never persisted (`UsageDetailCard.maxHeight`).
+    var cardRoom: CGFloat?
+
+    /// The room a card has beyond a lying rail whose top-left is `railOrigin`.
+    static func cardRoom(edge: PanelEdge, railOrigin: CGPoint, rail: CGSize, in visible: CGRect) -> CGFloat? {
+        let room: CGFloat
+        switch edge {
+        case .top: room = (railOrigin.y - rail.height) - visible.minY
+        case .bottom: room = visible.maxY - railOrigin.y
+        case .left, .right: return nil
+        }
+        return max(room - DetailCardLayout.horizontalGap, 0)
+    }
+
     /// Which display the rail was left on, as `PanelScreen` names them.
     ///
     /// The two ratios are fractions of one screen's usable area, so they say

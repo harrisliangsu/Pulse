@@ -53,3 +53,23 @@ struct BottomDockTests {
         }
     }
 }
+
+/// The room a card has beyond a rail lying across, which is what limits it
+/// and makes it scroll when the screen cannot hold it.
+@Suite("Card room")
+struct CardRoomTests {
+    private let visible = CGRect(x: 0, y: 72, width: 1470, height: 855)
+    private let rail = CGSize(width: 400, height: 64)
+
+    @Test("Below a rail it is down to the visible bottom, above one up to the visible top, less the gap; none down a side")
+    func room() {
+        // Rail top at y 600: its bottom is 536, 464 above the Dock's line.
+        let below = PanelPlacement.cardRoom(edge: .top, railOrigin: CGPoint(x: 0, y: 600), rail: rail, in: visible)
+        #expect(below == 600 - 64 - 72 - DetailCardLayout.horizontalGap)
+        let above = PanelPlacement.cardRoom(edge: .bottom, railOrigin: CGPoint(x: 0, y: 600), rail: rail, in: visible)
+        #expect(above == 72 + 855 - 600 - DetailCardLayout.horizontalGap)
+        #expect(PanelPlacement.cardRoom(edge: .left, railOrigin: .zero, rail: rail, in: visible) == nil)
+        // Never negative, whatever the rail is doing.
+        #expect(PanelPlacement.cardRoom(edge: .top, railOrigin: CGPoint(x: 0, y: 80), rail: rail, in: visible) == 0)
+    }
+}
