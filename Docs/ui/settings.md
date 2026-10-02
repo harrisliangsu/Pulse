@@ -31,7 +31,7 @@ While Liquid Glass is on, the caption still says to drag the panel by a ring. Th
 | Sidebar section | Pane | Holds |
 |---|---|---|
 | Panel | **Appearance** | Size, Spacing, Round ends, Liquid Glass (+ Transparency), Ring activity animation |
-| Panel | **Rings and figures** | *Figures*: percentages at the side / on top (any rail lying across: docked to the top or bottom, or free), figures beside the rings (free across only, off by default; needs percentages on top), figure above the ring, show what's left, forecast. *Rings*: second limit, time until reset, time ring direction, turn red at, alert colour when docked |
+| Panel | **Rings and figures** | *Figures*: percentages at the side / across (*Percentages across*: any rail lying across — docked to the top or bottom, or free), figures beside the rings (free across only, off by default; needs percentages across), figure above the ring, show what's left, forecast. *Rings*: second limit, time until reset, time ring direction, turn red at, alert colour when docked |
 | Panel | **Position and behavior** | Show floating panel, hide in full screen, hide until pointed at, position (Left, Top, Bottom, Free across, Free upright, Right — a segmented control sized to its labels, since that many segments truncate under `controlWidth`), follow the active display; **Order** |
 | Panel | Token spend | unchanged |
 | Application | **General** | Open at login, hide menu bar icon; Shortcuts; Language |

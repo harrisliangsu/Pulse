@@ -394,6 +394,13 @@ struct FreeLyingRailProportionTests {
         PanelMetrics.showTopPercentages(true)
 
         PanelMetrics.putFreeAcrossFiguresBeside(false)
+        // Where the hit test puts a ring is where the drawing does: the
+        // stacked item centred in the free rail's own thickness, behind its
+        // own padding — not the top dock's.
+        if !DockLayout.labelLeads {
+            #expect(DockLayout.ringCentreAcross(on: .horizontal, docked: false)
+                == DockLayout.crossPadding(on: .horizontal, docked: false) + DockLayout.ringDiameter / 2)
+        }
         let docked = DockLayout.thickness(on: .horizontal, docked: true)
         let dockedStep = DockLayout.ringStep(on: .horizontal, docked: true)
         #expect(DockLayout.thickness(on: .horizontal, docked: false) == docked + 8 * PanelMetrics.scale)

@@ -350,10 +350,20 @@ struct UsageLedger: Sendable, Equatable {
     /// opened in. Work inside a quarter-hour is taken as even, which is an
     /// approximation; leaving it out or counting it whole is a worse one.
     func cost(from start: Date, to end: Date) -> Double {
+        share(from: start, to: end) { $0.cost }
+    }
+
+    /// The tokens in the same span, the same way — priced or not, which is
+    /// what tells "nothing happened here" from "nothing here has a price".
+    func tokens(from start: Date, to end: Date) -> Double {
+        share(from: start, to: end) { Double($0.tokens) }
+    }
+
+    private func share(from start: Date, to end: Date, of value: (Slot) -> Double) -> Double {
         let quarter: TimeInterval = 15 * 60
         return slots.reduce(0) { total, slot in
             let overlap = min(slot.start.addingTimeInterval(quarter), end).timeIntervalSince(max(slot.start, start))
-            return overlap > 0 ? total + slot.cost * min(overlap / quarter, 1) : total
+            return overlap > 0 ? total + value(slot) * min(overlap / quarter, 1) : total
         }
     }
 
@@ -730,25 +740,47 @@ actor UsageLedgerReader {
 
             // A log file is rewritten only by being appended to, so size and
             // modification date together are enough to know nothing changed.
-            let entry: FileCache.Entry
             if let known = cache.files.removeValue(forKey: key), known.stamp == stamp {
-                entry = known
+                fresh[key] = known
             } else {
                 let scanned = autoreleasepool { parse(file, provider: provider) }
                 guard !Task.isCancelled else { return ([:], [:], [:]) }
-                entry = FileCache.Entry(
+                fresh[key] = FileCache.Entry(
                     stamp: stamp, days: scanned.days, title: scanned.title, cwd: scanned.cwd,
-                    timings: scanned.timings
+                    timings: scanned.timings, replies: scanned.replies
                 )
             }
+        }
 
-            fresh[key] = entry
-            for (day, models) in entry.days {
+        // Each reply once, for the file it appeared in first — the original
+        // conversation, not a resumed or forked copy of its history. Files are
+        // taken oldest work first, then by path, so the choice is stable.
+        let ordered = fresh.sorted { lhs, rhs in
+            let left = lhs.value.firstSlot ?? "", right = rhs.value.firstSlot ?? ""
+            return left != right ? left < right : lhs.key < rhs.key
+        }
+        var claimed: Set<String> = []
+        var counted: [String: FileCache.Entry] = [:]
+        for (key, entry) in ordered {
+            guard !Task.isCancelled else { return ([:], [:], [:]) }
+            var days = entry.days
+            var fileTimings = entry.timings ?? [:]
+            for (id, reply) in entry.replies ?? [:] where claimed.insert(id).inserted {
+                days[reply.slot, default: [:]][reply.model] = (days[reply.slot]?[reply.model] ?? TokenTally()) + reply.tally
+                if let timing = reply.timing {
+                    fileTimings[reply.slot, default: [:]][reply.model] =
+                        (fileTimings[reply.slot]?[reply.model] ?? ReplyTiming()) + timing
+                }
+            }
+            counted[key] = FileCache.Entry(
+                stamp: entry.stamp, days: days, title: entry.title, cwd: entry.cwd, timings: fileTimings
+            )
+            for (day, models) in days {
                 for (model, tally) in models {
                     buckets[day, default: [:]][model] = (buckets[day]?[model] ?? TokenTally()) + tally
                 }
             }
-            for (day, models) in entry.timings ?? [:] {
+            for (day, models) in fileTimings {
                 for (model, timing) in models {
                     timings[day, default: [:]][model] = (timings[day]?[model] ?? ReplyTiming()) + timing
                 }
@@ -757,7 +789,9 @@ actor UsageLedgerReader {
 
         cache.files = fresh
         cache.save(for: provider, directory: cacheDirectory)
-        return (buckets, timings, fresh)
+        // The sessions are cut from the counted entries, so a resumed
+        // conversation's row holds only what was done in it.
+        return (buckets, timings, counted)
     }
 
     /// One row per transcript, priced the same way the days are.
@@ -894,6 +928,44 @@ actor UsageLedgerReader {
         var cwd: String?
         /// Timed replies by quarter-hour and then model (`ReplyTiming`).
         var timings: [String: [String: ReplyTiming]] = [:]
+        /// Claude Code's replies by message id, kept apart from `days` so that
+        /// `scan` can count each **once across files** (`ScannedReply`).
+        var replies: [String: ScannedReply] = [:]
+
+        /// `days` with the replies folded in — one file's own figures.
+        var allDays: [String: [String: TokenTally]] {
+            var days = days
+            for reply in replies.values {
+                days[reply.slot, default: [:]][reply.model] = (days[reply.slot]?[reply.model] ?? TokenTally()) + reply.tally
+            }
+            return days
+        }
+
+        /// `timings` with the replies' own folded in.
+        var allTimings: [String: [String: ReplyTiming]] {
+            var timings = timings
+            for reply in replies.values {
+                guard let timing = reply.timing else { continue }
+                timings[reply.slot, default: [:]][reply.model] = (timings[reply.slot]?[reply.model] ?? ReplyTiming()) + timing
+            }
+            return timings
+        }
+    }
+
+    /// One Claude Code reply: where it landed, on which model, what it cost
+    /// in tokens, and how long it took where that could be timed.
+    ///
+    /// **Kept by message id because a reply can be in more than one file.**
+    /// Resuming or forking a conversation starts a new transcript that opens
+    /// with a copy of the old one's history — the same message ids at the same
+    /// times. Added up file by file, every resumed session counted its history
+    /// again: on the Mac this was found on, 1,768 replies sat in two or more
+    /// files and 28% of the tokens counted were copies.
+    struct ScannedReply: Codable, Sendable, Equatable {
+        let slot: String
+        let model: String
+        let tally: TokenTally
+        var timing: ReplyTiming?
     }
 
     // Internal for the on-disk streaming/cancellation regression fixtures.
@@ -953,10 +1025,10 @@ actor UsageLedgerReader {
         // **A reply is written over several lines**, one per content block,
         // each carrying the usage so far — the output count climbs to the
         // last. Kept by message id with the last line's counts, which also
-        // absorbs the repeats retries and resumed sessions write (within a
-        // file, which is where they happen). Keeping the first line's, as
-        // this did, missed about a quarter of the output.
-        var replies: [String: (slot: String, model: String, tally: TokenTally)] = [:]
+        // absorbs the repeats retries write within a file; copies in other
+        // files are `scan`'s to drop (`ScannedReply`). Keeping the first
+        // line's, as this did, missed about a quarter of the output.
+        var replies: [String: ScannedReply] = [:]
         var clock = ReplyClock()
 
         lines.forEachLine { line in
@@ -1026,16 +1098,15 @@ actor UsageLedgerReader {
                 return
             }
             // Placed at its first line, counted at its last.
-            replies[id] = (replies[id]?.slot ?? slot, model, tally)
-            clock.reply(id, model: model, slot: replies[id]?.slot ?? slot, output: tally.output, at: at)
+            let placed = replies[id]?.slot ?? slot
+            replies[id] = ScannedReply(slot: placed, model: model, tally: tally)
+            clock.reply(id, model: model, slot: placed, output: tally.output, at: at)
         }
         clock.finish()
 
-        for reply in replies.values where reply.tally.total > 0 {
-            days[reply.slot, default: [:]][reply.model] = (days[reply.slot]?[reply.model] ?? TokenTally()) + reply.tally
-        }
+        for (id, timing) in clock.timings { replies[id]?.timing = timing }
         scanned.days = days
-        scanned.timings = clock.timings
+        scanned.replies = replies.filter { $0.value.tally.total > 0 }
         return scanned
     }
 
@@ -1047,7 +1118,8 @@ actor UsageLedgerReader {
     /// hundred replies here); the next request still waits for the reply to
     /// end.
     private struct ReplyClock {
-        private(set) var timings: [String: [String: ReplyTiming]] = [:]
+        /// By message id, so the timing travels with its reply (`ScannedReply`).
+        private(set) var timings: [String: ReplyTiming] = [:]
         private var pending: Date?
         private var open: (id: String, model: String, slot: String, sent: Date?, finished: Date, output: Int)?
         private var lastFinished: Date?
@@ -1077,7 +1149,7 @@ actor UsageLedgerReader {
             lastFinished = reply.finished
             guard let sent = reply.sent,
                   let timing = ReplyTiming(output: reply.output, from: sent, to: reply.finished) else { return }
-            timings[reply.slot, default: [:]][reply.model] = (timings[reply.slot]?[reply.model] ?? ReplyTiming()) + timing
+            timings[reply.id] = timing
         }
     }
 
@@ -1326,6 +1398,14 @@ private struct FileCache: Codable {
         var cwd: String?
         /// Optional for the same reason; `ledger-5` is what makes it present.
         var timings: [String: [String: ReplyTiming]]?
+        /// Claude Code's replies by id (`ScannedReply`), counted across files
+        /// by `scan`; `ledger-6` is what makes it present.
+        var replies: [String: UsageLedgerReader.ScannedReply]?
+
+        /// The earliest quarter-hour with work in it.
+        var firstSlot: String? {
+            (Array(days.keys) + (replies ?? [:]).values.map(\.slot)).min()
+        }
     }
 
     var files: [String: Entry] = [:]
@@ -1368,6 +1448,11 @@ private struct FileCache: Codable {
         // and the first line's was kept — about a quarter of the output went
         // uncounted. Entries also gained `timings`. Both need every file read
         // once more.
-        (directory ?? PulseStorage.directory).appending(path: "ledger-5-\(provider.rawValue).json")
+        //
+        // **`ledger-6`: a reply counted once across files.** A resumed or
+        // forked conversation's transcript opens with a copy of the old one's
+        // history; entries now keep Claude Code's replies by id so `scan` can
+        // drop the copies.
+        (directory ?? PulseStorage.directory).appending(path: "ledger-6-\(provider.rawValue).json")
     }
 }

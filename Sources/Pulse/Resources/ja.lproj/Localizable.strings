@@ -81,7 +81,7 @@
 "With more than one display, the rail moves to the one the pointer is on." = "ディスプレイが複数あるとき、ポインタのある方へレールが移動します。";
 "Left" = "左";
 "Top" = "上";
-"Percentages on top" = "上にパーセントを表示";
+"Percentages across" = "横置きでパーセントを表示";
 "Turn red at" = "赤にする位置";
 "Where a ring stops being amber. A spent limit is red whatever this says." = "リングが黄から赤に変わる位置です。使い切った上限はこの設定に関係なく赤になります。";
 "Alert colour when docked" = "端に寄せたときの警告色";
@@ -260,7 +260,7 @@
 "Top model" = "最も使ったモデル";
 "Estimated value" = "使った分の推定額";
 "%@ used so far" = "今期はここまでで %@";
-"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. Windows with too little use to extrapolate from are left out." = "報告された数値ではなく推定です。この Mac で期間の開始から使った金額を、提供元が示す使用率で割っています。使用率が上がっているのにこの Mac でほとんど使っていない場合は、別の場所（ほかのコンピュータやウェブサイト）でも使われているため、その期間はリセットまで推定しません。推定できるほど使っていない上限は表示しません。";
+"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. If both are in use at once, the figure reads low. Windows with too little use to extrapolate from are left out." = "報告された数値ではなく推定です。この Mac で期間の開始から使った金額を、提供元が示す使用率で割っています。使用率が上がっているのにこの Mac でほとんど使っていない場合は、別の場所（ほかのコンピュータやウェブサイト）でも使われているため、その期間はリセットまで推定しません。両方で同時に使っている場合、推定は低めになります。推定できるほど使っていない上限は表示しません。";
 "Also used somewhere this Mac's logs can't see" = "この Mac の記録にない場所でも使われています";
 "Not estimated" = "推定しません";
 
@@ -904,7 +904,7 @@
 "Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply." = "割合とキャッシュヒットは過去 31 日間、トークン/秒は過去 24 時間のみで、リクエストを送ってから返信を書き終えるまでで計ります。";
 "Too few replies in the last 24 hours to time." = "過去 24 時間の返信が少ないため、速度はまだ表示しません。";
 "First token is Codex's own measure of how long a turn waited for it." = "最初のトークンは Codex 自身が計測した、各ターンで最初のトークンが届くまでの時間です。";
-"Claude Code doesn't record when the first token arrived, so there's no latency." = "Claude Code は最初のトークンが届いた時刻を記録しないため、待ち時間はありません。";
+"Claude Code doesn't record when the first token arrived, so its wait isn't shown." = "Claude Code は最初のトークンが届いた時刻を記録しないため、待ち時間は表示しません。";
 "%@ s" = "%@ 秒";
 "Prompt cache (%@)" = "プロンプトキャッシュ（%@）";
 "%@ left" = "残り %@";

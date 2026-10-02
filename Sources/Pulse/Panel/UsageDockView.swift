@@ -279,7 +279,7 @@ enum DockLayout {
             ? ringDiameter
             : (showsPercentages(on: axis) ? itemHeight : ringDiameter)
         let lead = axis == .horizontal ? ringOffsetInItem(on: axis) : 0
-        return (thickness(on: axis) - item) / 2 + lead + ringDiameter / 2
+        return (thickness(on: axis, docked: docked) - item) / 2 + lead + ringDiameter / 2
     }
 
     /// How far along the rail the first ring's centre sits, and the step from

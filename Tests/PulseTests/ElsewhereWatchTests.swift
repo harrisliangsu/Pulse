@@ -16,8 +16,8 @@ struct ElsewhereWatchTests {
                              state: .live, plan: nil, creditBalance: nil)
     }
 
-    private static func watch(localCost: Double) -> ElsewhereWatch {
-        ElsewhereWatch(file: nil, localCost: { _, _, _ in localCost })
+    private static func watch(localCost: Double, tokens: Double = 0) -> ElsewhereWatch {
+        ElsewhereWatch(file: nil, localCost: { _, _, _ in (localCost, tokens) })
     }
 
     private static func settle() async {
@@ -59,5 +59,7 @@ struct ElsewhereWatchTests {
         #expect(ElsewhereWatch.spentElsewhere(rise: 0.02, localCost: 0))
         #expect(!ElsewhereWatch.spentElsewhere(rise: 0.01, localCost: 0))
         #expect(!ElsewhereWatch.spentElsewhere(rise: 0.05, localCost: 1))
+        // Work here on a model with no price — or before prices were fetched.
+        #expect(!ElsewhereWatch.spentElsewhere(rise: 0.05, localCost: 0, localTokens: 40_000))
     }
 }

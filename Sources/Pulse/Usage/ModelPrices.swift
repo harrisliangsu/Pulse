@@ -358,7 +358,9 @@ enum PulseStorage {
         "ledger-codex.json",
         "model-prices.json",        // before model display names were kept
         "ledger-4-claudeCode.json", // first-line output counts, no reply timings
-        "ledger-4-codex.json"
+        "ledger-4-codex.json",
+        "ledger-5-claudeCode.json", // a resumed session's copied history counted again
+        "ledger-5-codex.json"
     ]
 
     static func removeSupersededFiles() {

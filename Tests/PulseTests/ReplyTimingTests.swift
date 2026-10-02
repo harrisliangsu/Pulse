@@ -30,13 +30,41 @@ struct ReplyTimingTests {
         let scanned = await UsageLedgerReader(cacheDirectory: URL.temporaryDirectory)
             .parseClaudeCode(Data(lines.joined(separator: "\n").utf8))
 
-        let output = scanned.days.values.flatMap(\.values).reduce(0) { $0 + $1.output }
+        let output = scanned.allDays.values.flatMap(\.values).reduce(0) { $0 + $1.output }
         #expect(output == 500 + 300 + 40)
-        let timing = scanned.timings.values.flatMap(\.values).reduce(ReplyTiming(), +)
+        let timing = scanned.allTimings.values.flatMap(\.values).reduce(ReplyTiming(), +)
         #expect(timing.replies == 2)
         #expect(timing.outputTokens == 800)
         #expect(abs(timing.seconds - (10 + 10)) < 0.001)
         #expect(timing.firstTokenTurns == 0)
+    }
+
+    @Test("A reply copied into a resumed session's transcript is counted once, for the original")
+    func resumedCopiesCountOnce() async throws {
+        let root = URL.temporaryDirectory.appending(path: "PulseResumed-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let folder = root.appending(path: ".claude/projects/-Users-me-Code-Pulse")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let history = [
+            Self.claudeLine("user", "2026-09-20T10:00:00.000Z"),
+            Self.claudeLine("assistant", "2026-09-20T10:00:10.000Z", id: "a", output: 500),
+        ]
+        // The original, then a resumed session: the same history, then its own reply.
+        try history.joined(separator: "\n").write(to: folder.appending(path: "original.jsonl"), atomically: true, encoding: .utf8)
+        try (history + [
+            Self.claudeLine("user", "2026-09-21T09:00:00.000Z"),
+            Self.claudeLine("assistant", "2026-09-21T09:00:05.000Z", id: "b", output: 300),
+        ]).joined(separator: "\n").write(to: folder.appending(path: "resumed.jsonl"), atomically: true, encoding: .utf8)
+
+        let cache = root.appending(path: "cache")
+        try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
+        let ledger = await UsageLedgerReader(home: root, cacheDirectory: cache)
+            .ledger(for: .claudeCode, refresh: true, prices: [:])
+        let output = ledger.days.reduce(0) { $0 + $1.tally.output }
+        #expect(output == 500 + 300)
+        let sessions = Dictionary(uniqueKeysWithValues: ledger.sessions.map { ($0.name, $0.tokens) })
+        #expect(sessions["original"] == 10 + 90 + 500)
+        #expect(sessions["resumed"] == 10 + 90 + 300)
     }
 
     @Test("Codex pairs a late count with the reply before the request that preceded it, and keeps its first-token wait")

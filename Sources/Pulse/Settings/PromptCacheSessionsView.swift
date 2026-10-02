@@ -49,7 +49,11 @@ struct PromptCacheSessionsGroup: View {
             if readFor != provider { reading = nil }
             while !Task.isCancelled {
                 let provider = provider
-                reading = await Task.detached(priority: .utility) { PromptCacheReading.read(for: provider) }.value
+                let read = await Task.detached(priority: .utility) { PromptCacheReading.read(for: provider) }.value
+                // A detached read outlives the task that started it; one that
+                // lands after the pane moved to another provider is dropped.
+                guard !Task.isCancelled else { return }
+                reading = read
                 readFor = provider
                 try? await Task.sleep(for: .seconds(30))
             }
@@ -58,6 +62,7 @@ struct PromptCacheSessionsGroup: View {
 
     @ViewBuilder
     private func content(at now: Date) -> some View {
+        let reading = readFor == provider ? reading : nil
         let live = (reading?.live ?? []).filter { $0.lapse.expiresAt > now }
         if reading == nil {
             SettingsRow(String.localized("Reading local records…")) {

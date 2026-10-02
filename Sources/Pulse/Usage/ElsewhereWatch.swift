@@ -40,14 +40,15 @@ final class ElsewhereWatch {
     private(set) var cycles: [String: Date] = [:]
     @ObservationIgnored private var last: [String: Point] = [:]
     @ObservationIgnored private let file: URL?
-    @ObservationIgnored private let localCost: @Sendable (Provider, Date, Date) async -> Double
+    @ObservationIgnored private let localCost: @Sendable (Provider, Date, Date) async -> (cost: Double, tokens: Double)
 
     static let shared = ElsewhereWatch(file: PulseStorage.directory.appending(path: "used-elsewhere.json"))
 
     init(
         file: URL?,
-        localCost: @escaping @Sendable (Provider, Date, Date) async -> Double = { provider, start, end in
-            await UsageLedgerReader.shared.ledger(for: provider, refresh: true).cost(from: start, to: end)
+        localCost: @escaping @Sendable (Provider, Date, Date) async -> (cost: Double, tokens: Double) = { provider, start, end in
+            let ledger = await UsageLedgerReader.shared.ledger(for: provider, refresh: true)
+            return (ledger.cost(from: start, to: end), ledger.tokens(from: start, to: end))
         }
     ) {
         self.file = file
@@ -59,9 +60,17 @@ final class ElsewhereWatch {
     }
 
     /// Whether the rise between two readings had nothing on this Mac behind it.
-    nonisolated static func spentElsewhere(rise: Double, localCost: Double) -> Bool {
-        rise >= minimumRise - 1e-9 && localCost < quietSpend
+    /// **Tokens as well as money.** A model with no published price spends
+    /// nothing in dollars however hard it works, and a first launch offline
+    /// has no prices at all — measured in money alone, a day's real work here
+    /// read as somebody else's.
+    nonisolated static func spentElsewhere(rise: Double, localCost: Double, localTokens: Double = 0) -> Bool {
+        rise >= minimumRise - 1e-9 && localCost < quietSpend && localTokens < quietTokens
     }
+
+    /// Fewer tokens than this in the span is no work at all: a single request
+    /// re-reads its whole context, tens of thousands of tokens.
+    nonisolated static let quietTokens = 1_000.0
 
     /// Takes a live reading in. Only the providers whose spending Pulse reads
     /// from this Mac's transcripts, and only account-wide windows — the ones
@@ -85,8 +94,8 @@ final class ElsewhereWatch {
             let provider = account.provider
             let from = previous.at.addingTimeInterval(-Self.lag)
             Task { [localCost] in
-                let cost = await localCost(provider, from, observedAt)
-                guard Self.spentElsewhere(rise: rise, localCost: cost) else { return }
+                let local = await localCost(provider, from, observedAt)
+                guard Self.spentElsewhere(rise: rise, localCost: local.cost, localTokens: local.tokens) else { return }
                 self.mark(key, resets: resets)
             }
         }

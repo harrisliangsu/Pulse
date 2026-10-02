@@ -336,15 +336,19 @@ actor OpenCodeConsoleWorkspace {
         case .failure(.failed): return .failed
         case .success(let list):
             guard let first = list.first else { return .failed }
-            var chosen = first
-            if list.count > 1 {
-                for workspace in list where await OpenCodeGoUsageService.hasGoAccess(cookie: cookie, org: workspace.id) {
-                    chosen = workspace
-                    break
-                }
+            guard list.count > 1 else {
+                cached = (cookie, first)
+                return .workspace(first)
             }
-            cached = (cookie, chosen)
-            return .workspace(chosen)
+            for workspace in list where await OpenCodeGoUsageService.hasGoAccess(cookie: cookie, org: workspace.id) {
+                cached = (cookie, workspace)
+                return .workspace(workspace)
+            }
+            // No workspace answered with Go — perhaps none has it, perhaps the
+            // console was unreachable for a moment. The first is used for now
+            // but **not kept**: a blip at launch must not pin the session to
+            // the workspace without the plan until Pulse restarts.
+            return .workspace(first)
         }
     }
 

@@ -203,12 +203,12 @@ struct SpendReadingTests {
         #expect(!AppSettings().readsTokenSpend)
         let scanned = await UsageLedgerReader().parse(file, provider: .codex)
         #expect(scanned.cwd == "/work/project")
-        #expect(scanned.days.values.flatMap { $0.values }.reduce(TokenTally(), +)
+        #expect(scanned.allDays.values.flatMap { $0.values }.reduce(TokenTally(), +)
             == TokenTally(input: 80, cacheRead: 20, output: 10))
         let cache = root.appending(path: "cache")
         try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
         let reader = AgentLedgers(home: root, environment: [:], cacheDirectory: cache, prices: { [:] })
         #expect(try await reader.scan().ledgers[.codex]?.allTime.tokens == 110)
-        #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-5-codex.json").path))
+        #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-6-codex.json").path))
     }
 }

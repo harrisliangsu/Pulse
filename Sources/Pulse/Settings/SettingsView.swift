@@ -595,7 +595,7 @@ struct SettingsView: View {
                 SettingsRowDivider()
 
                 SettingsRow(
-                    String.localized("Percentages on top"),
+                    String.localized("Percentages across"),
                     subtitle: String.localized("When the panel lies across: docked to the top or bottom, or free.")
                 ) {
                     Toggle("", isOn: Binding(
@@ -824,7 +824,7 @@ struct SettingsView: View {
                     }
                     .labelsHidden()
                     .pickerStyle(.segmented)
-                    // Five segments do not fit the usual ceiling without
+                    // Six segments do not fit the usual ceiling without
                     // truncating both free ones, so this one is as wide as
                     // its labels.
                     .fixedSize()
@@ -1998,7 +1998,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Text(localized: "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. Windows with too little use to extrapolate from are left out.")
+                Text(localized: "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. If both are in use at once, the figure reads low. Windows with too little use to extrapolate from are left out.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -2043,7 +2043,13 @@ struct SettingsView: View {
     /// sentence on screen is about to describe a read that no longer applies.
     private var historyKey: String {
         guard case .account(let account) = pane else { return "\(pane)" }
-        return "\(account.id)|\(settings.isEnabled(account))|\(consoleRevision)"
+        // The reading's time too: the value estimate counts spend up to when
+        // the percentage was read, and a ledger read before that is short.
+        // Only where the estimate is this Mac's transcripts — another provider's
+        // history is asked of it, and need not be asked at every refresh.
+        let read = account.provider.keepsLocalTranscripts
+            ? store.usage(for: account).observedAt?.timeIntervalSince1970 ?? 0 : 0
+        return "\(account.id)|\(settings.isEnabled(account))|\(consoleRevision)|\(read)"
     }
 
     /// One task owns opening, enabling and manual rescans. Leaving, disabling
@@ -2092,11 +2098,15 @@ struct SettingsView: View {
         // behind the figures only when it is a few minutes old — no spinner,
         // no progress row, nothing cleared. Rescan still reads from scratch.
         var quiet = false
+        // Reading while the kept scan is asked for: the actor may be busy with
+        // the background read, and an empty pane meanwhile says "nothing yet".
+        isScanningSpend = true
         if !refresh, let kept = await AgentLedgers.shared.keptSnapshot() {
             guard !Task.isCancelled, spendRead.complete(kept.snapshot, for: id) else { return }
             recomputeSpend()
             guard Date().timeIntervalSince(kept.at) >= SpendWarmer.paneFreshness else {
                 spendRead.finish(id)
+                isScanningSpend = false
                 return
             }
             quiet = true
@@ -3671,7 +3681,7 @@ enum SettingsPane: Hashable {
             [.localized("Size"), .localized("Spacing"), .localized("Round ends"),
              .localized("Liquid Glass"), .localized("Transparency"), .localized("Ring activity animation")]
         case .rings:
-            [.localized("Percentages at the side"), .localized("Percentages on top"),
+            [.localized("Percentages at the side"), .localized("Percentages across"), .localized("Figures beside the rings"),
              .localized("Figure above the ring"), .localized("Show what's left"), .localized("Forecast"),
              .localized("Second limit inside the ring"), .localized("Time until reset"),
              .localized("Time ring direction"), .localized("Turn red at"), .localized("Alert colour when docked")]

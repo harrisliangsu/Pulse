@@ -55,7 +55,7 @@ Historical snapshot, not a contract. When this page and the code disagree, the c
 | 位置 | 事实 |
 |---|---|
 | `AppSettings.removeAccount` 1604–1627 | 注释写 “everything stored against it”。实现只清 `pinnedWindows`、`sources`、`ringTints`、`sessionBrowsers`。`balanceBases`、`balanceBudgets`、`lowBalanceAlerts`、`botMarks`、`botPersonas`、`botShapes`、`botColours`、`serverAddresses` 仍按 `account.id` 存取。 |
-| `Provider` 与 `SpendAgent` | `Provider.builtIn` 77 个环；`SpendAgent` 54 个 case。名字重叠，`sourceID` 与 inventory id 不同（`claude` 对 `claudeCode`）。Claude Code 与 Codex 走 `UsageLedgerReader` 与 `ledger-5-*.json`；其余走 `AgentLedgers`、`AgentCache` version 8，以及 5 个 legacy store。 |
+| `Provider` 与 `SpendAgent` | `Provider.builtIn` 77 个环；`SpendAgent` 54 个 case。名字重叠，`sourceID` 与 inventory id 不同（`claude` 对 `claudeCode`）。Claude Code 与 Codex 走 `UsageLedgerReader` 与 `ledger-6-*.json`；其余走 `AgentLedgers`、`AgentCache` version 8，以及 5 个 legacy store。 |
 | `ProviderUsage.Unavailability` | 约 60 个 case。Ollama、Xiaomi、Qoder、StepFun 各有 missing / expired / no-plan 专名；profiled 侧已有共享的 `sessionMissing`、`sessionExpired`、`noPlan`。每个新 case 同时进入 `message` 与 `AlertMemory.standing` 的三分。 |
 | 手写用量解析，无 fixture | `Tests/PulseTests` 下没有 Cursor、Grok、Grok Bot、MiniMax、Kimi Code、OpenCode Go、Ollama Cloud 的用量套件。`CopilotLogReaderTests` 测的是 spend。`OpenCodeReviewReaderTests` 不是 OpenCode Go 的用量解析。`OllamaCloudClient` 用 `XMLDocument`、XPath 与 “% used” 正则。 |
 | Panel 输入路径 | `PointerEntryReporter`（只报 enter）+ `PanelPointerWatcher` 每 0.15s + `ActiveDisplayFollower` 每 0.25s + `FloatingPanel.sendEvent` + `PanelHitArea`。无 `.onHover`，无 global/local event monitor。`PointerEntryReporter.swift:14` 仍写面板在卡片打开时会 resize。`UsageDockView.swift:430` 仍写 berth 不参与 hit testing；`PanelSurface` 当前是可命中的。 |

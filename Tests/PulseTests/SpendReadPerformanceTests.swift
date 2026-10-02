@@ -46,7 +46,7 @@ struct SpendReadPerformanceTests {
         let elapsed = start.duration(to: .now)
         #expect(scanned.title == "Benchmark")
         #expect(scanned.cwd == "/synthetic/project")
-        #expect(scanned.days.values.flatMap { $0.values }.reduce(TokenTally(), +)
+        #expect(scanned.allDays.values.flatMap { $0.values }.reduce(TokenTally(), +)
             == TokenTally(input: rowCount * 80, cacheRead: rowCount * 20, output: rowCount * 10))
         var usage = rusage()
         getrusage(RUSAGE_SELF, &usage)

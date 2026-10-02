@@ -649,9 +649,19 @@ private final class FloatingPanel: NSPanel {
         // there. Just above the Dock, short of that, it lies across and
         // stands free with its card opening up; with the Dock hidden the two
         // lines meet and docking wins.
+        //
+        // **Staying docked there is the rail's, not the pointer's.** A ring is
+        // held 32pt or more above the screen's bottom — more with figures — so
+        // the pointer rule would lift a bottom rail off on the first sideways
+        // frame. The top has the menu bar's height in hand for the same slack;
+        // the bottom has nothing, so a docked rail stays while its own bottom
+        // is within reach of the edge.
+        let railBottom = pointer.y - grab.height
+        let staysOnBottom = placement.dock == .edge(.bottom)
+            && railBottom - screen.frame.minY <= PanelPlacement.dockDistance
         let dock: PanelDock = if visible.maxY - pointer.y <= PanelPlacement.dockDistance {
             .edge(.top)
-        } else if pointer.y - screen.frame.minY <= PanelPlacement.dockDistance {
+        } else if staysOnBottom || pointer.y - screen.frame.minY <= PanelPlacement.dockDistance {
             .edge(.bottom)
         } else if pointer.y - visible.minY <= PanelPlacement.dockDistance {
             .floating(.horizontal)

@@ -9,6 +9,8 @@ import Foundation
 actor OpenCodeConsoleHistory {
     static let shared = OpenCodeConsoleHistory(file: PulseStorage.directory.appending(path: "opencode-console-log.json"))
     static let freshness: TimeInterval = 60
+    /// How far behind the last read the next one starts (`rangesToRead`).
+    static let tailOverlap: TimeInterval = 15 * 60
 
     typealias Progress = @MainActor @Sendable (UsageLedger) -> Void
     typealias Resolve = @Sendable (String) async -> OpenCodeConsole.Resolved
@@ -104,6 +106,7 @@ actor OpenCodeConsoleHistory {
         }
 
         let ranges = rangesToRead(now: now)
+        let wasComplete = complete
         complete = false
         let fetch = self.fetch
         let result = await OpenCodeConsolePager.read(ranges: ranges, retryDelay: retryDelay, fetch: { range, cursor in
@@ -111,8 +114,10 @@ actor OpenCodeConsoleHistory {
         }, receive: { page in
             await self.receive(page, cookie: cookie, now: now)
         })
-        guard !Task.isCancelled else { return .failed }
-        if case .signedOut = result.outcome { return .signedOut }
+        // Nothing was settled: what was whole stays whole, so the next read
+        // takes the tail rather than walking the month again.
+        guard !Task.isCancelled else { complete = wasComplete; return .failed }
+        if case .signedOut = result.outcome { complete = wasComplete; return .signedOut }
 
         pending = result.pending
         complete = result.complete
@@ -135,7 +140,10 @@ actor OpenCodeConsoleHistory {
         // Use the last attempted upper bound even on an empty account. The
         // pending intervals describe its holes independently of the new tail.
         let latest = checkedThrough ?? items.values.map(\.date).max() ?? horizon
-        ranges.insert(.init(since: max(horizon, min(latest, now).addingTimeInterval(-60)), until: now), at: 0)
+        // The log is placed by when a request **started**, and its counts are
+        // only known once it ends: a request still running at the last read
+        // began before it. Fifteen minutes back covers the longest of them.
+        ranges.insert(.init(since: max(horizon, min(latest, now).addingTimeInterval(-Self.tailOverlap)), until: now), at: 0)
         return ranges
     }
 

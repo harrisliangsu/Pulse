@@ -35,7 +35,7 @@ struct OpenCodeConsoleHistoryTests {
         _ = await reader.ledger(cookie: "org", now: now.addingTimeInterval(120))
         let requests = await server.requests
         #expect(requests.count == 2)
-        #expect(requests.last?.range.since == now.addingTimeInterval(-60))
+        #expect(requests.last?.range.since == now.addingTimeInterval(-OpenCodeConsoleHistory.tailOverlap))
     }
 
     @Test("A saved partial scan retries its holes; overlap with known ids cannot hide missing history")
@@ -57,7 +57,7 @@ struct OpenCodeConsoleHistoryTests {
         let second = try ConsoleTestData.ledger(await reader.ledger(cookie: "org", now: now.addingTimeInterval(120)))
         #expect(second.hasPartialCounts)
         let retries = await server.requests.dropFirst(before)
-        #expect(retries.allSatisfy { $0.range.until <= boundary || $0.range.since >= now.addingTimeInterval(-60) })
+        #expect(retries.allSatisfy { $0.range.until <= boundary || $0.range.since >= now.addingTimeInterval(-OpenCodeConsoleHistory.tailOverlap) })
         await server.fail(until: nil)
         let final = try ConsoleTestData.ledger(await reader.ledger(cookie: "org", now: now.addingTimeInterval(240)))
         #expect(!final.hasPartialCounts)
@@ -95,7 +95,7 @@ struct OpenCodeConsoleHistoryTests {
         #expect(!result.hasPartialCounts)
         #expect(result.allTime.tokens == rows.count * 1_020)
         #expect(await server.requests.count == 1)
-        #expect(await server.requests.first?.range.since == rows[0].date.addingTimeInterval(-60))
+        #expect(await server.requests.first?.range.since == rows[0].date.addingTimeInterval(-OpenCodeConsoleHistory.tailOverlap))
     }
 
     @Test("A cache from a different workspace never appears in progress or totals")
