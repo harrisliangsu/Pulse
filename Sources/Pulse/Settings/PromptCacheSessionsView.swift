@@ -1,19 +1,25 @@
 import SwiftUI
 
-/// Every Claude Code conversation whose prompt cache is still alive, soonest
-/// to lapse first, each with the time it has left.
+/// Every Claude Code or Codex conversation whose prompt cache is still alive
+/// — for Codex, still inside OpenAI's guaranteed thirty minutes — soonest to
+/// lapse first, each with the time it has left.
 ///
 /// The detailed card names only the soonest; this is where the rest are. Read
 /// again every half minute while the pane is open — a directory listing and
 /// the tails of the files written in the last hour — and counted down in
 /// between, so a conversation that lapses drops off without waiting for a read.
 struct PromptCacheSessionsGroup: View {
+    let provider: Provider
     @State private var reading: PromptCacheReading?
 
     /// A reading to start from, for a preview; the pane reads its own.
-    init(reading: PromptCacheReading? = nil) {
+    init(provider: Provider, reading: PromptCacheReading? = nil) {
+        self.provider = provider
         _reading = State(initialValue: reading)
     }
+
+    /// Codex's times are a floor OpenAI guarantees, and are worded as one.
+    private var isFloor: Bool { provider == .codex }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -23,7 +29,9 @@ struct PromptCacheSessionsGroup: View {
                 }
             }
 
-            Text(localized: "Read from Claude Code's own records: each reply says whether it cached for an hour or five minutes, and a cache lasts that long from the last request that used it. That is the time if nothing before it has changed — switching model, changing tools or compacting starts a new cache. Subagents keep caches of their own and are not listed.")
+            Text(isFloor
+                ? String.localized("Read from Codex's own records: the model each request used, and when it was sent. On GPT-5.6 and later, OpenAI keeps a cache available for at least 30 minutes after it was last used, and may keep it longer — so this is the time it is guaranteed, not when it ends. Earlier models have no stated lifetime and are not listed. Under heavy traffic a request can still miss within this time.")
+                : String.localized("Read from Claude Code's own records: each reply says whether it cached for an hour or five minutes, and a cache lasts that long from the last request that used it. That is the time if nothing before it has changed — switching model, changing tools or compacting starts a new cache. Subagents keep caches of their own and are not listed."))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -31,7 +39,8 @@ struct PromptCacheSessionsGroup: View {
         }
         .task {
             while !Task.isCancelled {
-                reading = await Task.detached(priority: .utility) { ClaudePromptCache.read() }.value
+                let provider = provider
+                reading = await Task.detached(priority: .utility) { PromptCacheReading.read(for: provider) }.value
                 try? await Task.sleep(for: .seconds(30))
             }
         }
@@ -46,7 +55,9 @@ struct PromptCacheSessionsGroup: View {
             }
         } else if live.isEmpty {
             SettingsRow(
-                String.localized("No conversation is holding a cache"),
+                isFloor
+                    ? String.localized("No conversation is within its guaranteed cache time")
+                    : String.localized("No conversation is holding a cache"),
                 subtitle: lapsedLine(now: now)
             ) { EmptyView() }
         } else {
@@ -56,7 +67,9 @@ struct PromptCacheSessionsGroup: View {
                     session.title ?? session.project ?? String.localized("Untitled conversation"),
                     subtitle: subtitle(session)
                 ) {
-                    Text(verbatim: String.localized("\(PromptCacheLapse.duration(session.lapse.expiresAt.timeIntervalSince(now))) left"))
+                    Text(verbatim: isFloor
+                        ? String.localized("At least \(PromptCacheLapse.duration(session.lapse.expiresAt.timeIntervalSince(now))) left")
+                        : String.localized("\(PromptCacheLapse.duration(session.lapse.expiresAt.timeIntervalSince(now))) left"))
                         .font(.system(size: 13, weight: .medium))
                         .monospacedDigit()
                         // Red in its last five minutes: a message now still
@@ -72,7 +85,9 @@ struct PromptCacheSessionsGroup: View {
     private func subtitle(_ session: PromptCacheSession) -> String {
         var parts: [String] = []
         if session.title != nil, let project = session.project { parts.append(project) }
-        parts.append(String.localized("\(PromptCacheLapse.duration(session.lapse.lifetime)) cache"))
+        parts.append(isFloor
+            ? String.localized("Kept at least \(PromptCacheLapse.duration(session.lapse.lifetime))")
+            : String.localized("\(PromptCacheLapse.duration(session.lapse.lifetime)) cache"))
         parts.append(String.localized("Last used \(Self.time(session.lapse.lastRequest))"))
         return parts.joined(separator: " · ")
     }
@@ -81,7 +96,9 @@ struct PromptCacheSessionsGroup: View {
         guard let lapsed = reading?.lastLapsed ?? reading?.live.map(\.lapse).max(by: { $0.expiresAt < $1.expiresAt }),
               now.timeIntervalSince(lapsed.expiresAt) < PromptCacheLapse.staleAfter
         else { return nil }
-        return String.localized("The latest one's cache lapsed at \(Self.time(lapsed.expiresAt)).")
+        return isFloor
+            ? String.localized("The latest one's guaranteed time ended at \(Self.time(lapsed.expiresAt)).")
+            : String.localized("The latest one's cache lapsed at \(Self.time(lapsed.expiresAt)).")
     }
 
     private static func time(_ date: Date) -> String {

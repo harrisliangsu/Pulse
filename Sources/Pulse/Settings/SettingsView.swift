@@ -2022,10 +2022,10 @@ struct SettingsView: View {
             // account's spending under another's name.
             if provider.providesHistory, account.isPrimary {
                 // Live, so ahead of the history: which conversations still
-                // hold a cache, and for how long. Claude Code's logs are the
-                // only ones that say.
-                if provider == .claudeCode, settings.isEnabled(account) {
-                    PromptCacheSessionsGroup()
+                // hold a cache, and for how long — where the logs let it be
+                // timed (Claude Code's tier, Codex's model).
+                if PromptCacheReading.supports(provider), settings.isEnabled(account) {
+                    PromptCacheSessionsGroup(provider: provider)
                 }
 
                 // The estimate is money, and money needs the token split only
