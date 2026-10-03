@@ -56,6 +56,10 @@ final class CardLedgers {
     /// What each ledger was read from. A source that has changed since — a
     /// console session read or removed in Settings — is read again at once.
     @ObservationIgnored private var readFrom: [Provider: CardHistorySource] = [:]
+    /// What else the ledger was read with, where the source alone does not
+    /// say: DeepSeek's sign-in and the currency its money follows. A new
+    /// sign-in, another account's, or another currency is read again at once.
+    @ObservationIgnored private var readWith: [Provider: String] = [:]
     /// When each live session's prompt cache lapses, for the providers whose
     /// logs let it be timed (Claude Code, Codex). Read on every opening, not on `lifetime`: one
     /// new message moves it, and a countdown five minutes behind is wrong.
@@ -83,10 +87,11 @@ final class CardLedgers {
     /// — which would be stored as "no history". Run to the end instead; the
     /// readers' own caches make the next one cheap.
     func read(_ provider: Provider, from source: CardHistorySource) {
-        let fresh = readFrom[provider] == source
+        let with = Self.inputs(for: provider)
+        let fresh = readFrom[provider] == source && readWith[provider] == with
             && (readAt[provider].map { Date().timeIntervalSince($0) < Self.lifetime } ?? false)
         guard !fresh, !reading.contains(provider) else { return }
-        if readFrom[provider] != source {
+        if readFrom[provider] != source || readWith[provider] != with {
             // Another source's figures are not this one's to stand in for.
             ledgers[provider] = nil
             failed.remove(provider)
@@ -94,6 +99,7 @@ final class CardLedgers {
         }
         reading.insert(provider)
         readFrom[provider] = source
+        readWith[provider] = with
         Task { [weak self] in
             let outcome = await Self.ledger(for: provider, from: source)
             guard let self else { return }
@@ -111,6 +117,12 @@ final class CardLedgers {
             self.readAt[provider] = Date()
             self.reading.remove(provider)
         }
+    }
+
+    private static func inputs(for provider: Provider) -> String {
+        guard provider == .deepSeek else { return "" }
+        let token = DeepSeekConsole.keptToken.map { String($0.hashValue) } ?? ""
+        return "\(token)|\(AppSettings.storedDeepSeekCurrency ?? "")"
     }
 
     /// The latest session's cache, read off the main thread: a directory

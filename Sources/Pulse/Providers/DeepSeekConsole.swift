@@ -81,6 +81,14 @@ enum DeepSeekConsole {
         return found.token
     }
 
+    /// The same, off the caller's thread — a LevelDB per browser profile —
+    /// with the in-memory flag brought up to date.
+    static func renewed(replacing refused: String) async -> String? {
+        let renewed = await Task.detached(priority: .utility) { renewedFromBrowser(replacing: refused) }.value
+        if renewed != nil { refreshSession() }
+        return renewed
+    }
+
     // MARK: - The replies
 
     /// Every console route answers `{code, msg, data: {biz_code, biz_msg,
@@ -111,13 +119,16 @@ enum DeepSeekConsole {
 
         init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()
-            if let number = try? container.decode(Double.self) {
-                value = number
+            let read: Double? = if let number = try? container.decode(Double.self) {
+                number
             } else if let text = try? container.decode(String.self) {
-                value = Double(text.trimmingCharacters(in: .whitespaces))
+                Double(text.trimmingCharacters(in: .whitespaces))
             } else {
-                value = nil
+                nil
             }
+            // "nan", "inf" and absurd sizes parse as Doubles too, and turning
+            // one into an Int traps: such a figure is absent, not a crash.
+            value = read.flatMap { $0.isFinite && abs($0) < 1e15 ? $0 : nil }
         }
     }
 
@@ -212,7 +223,9 @@ enum DeepSeekConsole {
         guard let (data, response) = try? await NetworkSession.shared.data(for: request) else { return .failure(.failed) }
         switch (response as? HTTPURLResponse)?.statusCode {
         case 200: break
-        case 401, 403: return .failure(.signedOut)
+        // Only 401. A refused token answers 200 with a 400xx code; a 403 is
+        // the WAF in front of the console, which a new sign-in cannot fix.
+        case 401: return .failure(.signedOut)
         default: return .failure(.failed)
         }
         guard let envelope = try? JSONDecoder().decode(Envelope<Body>.self, from: data) else { return .failure(.failed) }
@@ -271,11 +284,15 @@ enum DeepSeekConsole {
     /// money in it, else the first at all.
     static func currency(of cost: Cost, preferring preferred: String?) -> Cost.Purse? {
         let purses = (cost.data ?? []).filter { !($0.currency ?? "").isEmpty }
-        if let preferred, let chosen = purses.first(where: { $0.currency == preferred }) { return chosen }
-        let spent = purses.first { purse in
+        let hasMoney = { (purse: Cost.Purse) in
             (purse.series ?? []).contains { ($0.buckets ?? []).contains { ($0.cost?.value ?? 0) > 0 } }
         }
-        return spent ?? purses.first
+        // The ring's currency, unless nothing was charged in it and something
+        // was in another — zeroes in yuan beside tokens paid in dollars would
+        // say the work was free.
+        let chosen = preferred.flatMap { code in purses.first { $0.currency == code } }
+        if let chosen, hasMoney(chosen) { return chosen }
+        return purses.first(where: hasMoney) ?? chosen ?? purses.first
     }
 
     /// Day buckets into ledger days, every day of the thirty present so the
@@ -289,7 +306,11 @@ enum DeepSeekConsole {
         amount: Amount, cost: Cost, preferring preferred: String?,
         now: Date, calendar: Calendar = .current
     ) -> UsageLedger {
-        let day = { (time: Double) in calendar.startOfDay(for: Date(timeIntervalSince1970: time)) }
+        // A bucket's middle, not its start: the buckets follow the offset in
+        // force *now*, so across a daylight-saving change a day's start sits
+        // an hour off local midnight — and an hour early is the day before.
+        let half = (amount.bucket.flatMap { $0 > 0 ? $0 : nil } ?? 86_400) / 2
+        let day = { (time: Double) in calendar.startOfDay(for: Date(timeIntervalSince1970: time + half)) }
 
         var tallies: [Date: [String: TokenTally]] = [:]
         for series in amount.series ?? [] {
@@ -335,7 +356,9 @@ enum DeepSeekConsole {
         }
 
         var ledger = UsageLedger(
-            origin: .providerLogs,
+            // No money came back at all: the tokens alone, and no "$0.00"
+            // claiming the work was free.
+            origin: purse == nil ? .providerStatistics : .providerLogs,
             currency: purse?.currency,
             days: days,
             earliest: days.first { $0.tokens > 0 || $0.cost != 0 }?.date,
@@ -355,6 +378,15 @@ enum DeepSeekConsole {
     /// here may call the account spent.
     static func balance(token: String) async -> Result<DeepSeekUsageService.Reply, Failure> {
         await get("/api/v0/users/get_user_summary", token: token, as: Summary.self).map(reply(from:))
+    }
+
+    /// The balance, renewing a refused token from the browser once — the
+    /// refresh loop is what notices an expired sign-in first when no key is
+    /// set, and it should not wait for a history read to mend it.
+    static func balanceRenewing(token: String) async -> Result<DeepSeekUsageService.Reply, Failure> {
+        let first = await balance(token: token)
+        guard case .failure(.signedOut) = first, let renewed = await renewed(replacing: token) else { return first }
+        return await balance(token: renewed)
     }
 
     static func reply(from summary: Summary) -> DeepSeekUsageService.Reply {
@@ -391,12 +423,15 @@ actor DeepSeekConsoleHistory {
 
     static let freshFor: TimeInterval = 60
 
-    private var last: (token: String, currency: String?, at: Date, ledger: UsageLedger)?
+    private var last: (token: String, currency: String?, at: Date, read: OpenCodeConsole.Read)?
     private var running: (token: String, currency: String?, task: Task<OpenCodeConsole.Read, Never>)?
 
     func ledger(token: String, currency: String?, now: Date = Date()) async -> OpenCodeConsole.Read {
+        // Any outcome, not only an answer: a refused token asked again at
+        // every settings change would cost two requests and a browser scan
+        // each time.
         if let last, last.token == token, last.currency == currency, now.timeIntervalSince(last.at) < Self.freshFor {
-            return .answered(last.ledger)
+            return last.read
         }
         if let running, running.token == token, running.currency == currency { return await running.task.value }
 
@@ -404,7 +439,7 @@ actor DeepSeekConsoleHistory {
         running = (token, currency, task)
         let read = await task.value
         if running?.task == task { running = nil }
-        if case .answered(let ledger) = read { last = (token, currency, Date(), ledger) }
+        last = (token, currency, Date(), read)
         return read
     }
 
@@ -412,16 +447,12 @@ actor DeepSeekConsoleHistory {
     /// console turned the kept one away.
     private static func read(token: String, currency: String?) async -> OpenCodeConsole.Read {
         let first = await DeepSeekConsole.ledger(token: token, currency: currency)
-        guard case .signedOut = first else { return first }
-        let renewed = await Task.detached(priority: .utility) {
-            DeepSeekConsole.renewedFromBrowser(replacing: token)
-        }.value
-        guard let renewed else { return first }
-        DeepSeekConsole.refreshSession()
+        guard case .signedOut = first, let renewed = await DeepSeekConsole.renewed(replacing: token) else { return first }
         return await DeepSeekConsole.ledger(token: renewed, currency: currency)
     }
 
     func forget() {
         last = nil
+        running = nil
     }
 }

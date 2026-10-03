@@ -48,8 +48,13 @@ struct DeepSeekUsageService: Sendable {
 
     func fetch() async -> ProviderUsage {
         guard let key = enteredKey.flatMap({ $0.isEmpty ? nil : $0 }) else {
-            if let console = await fromConsole() { return console }
-            return .unavailable(.deepSeek, reason: .apiKeyMissing)
+            switch await fromConsole() {
+            case .read(let usage): return usage
+            // The console sign-in is the only credential, and it has lapsed:
+            // say so, rather than asking for a key nobody needs.
+            case .signedOut: return .unavailable(.deepSeek, reason: .sessionExpired)
+            case .none: return .unavailable(.deepSeek, reason: .apiKeyMissing)
+            }
         }
 
         var request = URLRequest(url: Self.endpoint)
@@ -66,23 +71,35 @@ struct DeepSeekUsageService: Sendable {
         // The console stands in only for a key route that did not answer.
         if case .unavailable(let reason) = keyed.state,
            [.apiKeyRefused, .unreachable, .serverError, .unreadableReply].contains(reason),
-           let console = await fromConsole() {
+           case .read(let console) = await fromConsole() {
             return console
         }
         return keyed
     }
 
-    /// The balance out of the console's wallets, or nil when no console token
-    /// is kept or the console did not answer — the key route's own reason is
-    /// the one worth showing then.
-    private func fromConsole() async -> ProviderUsage? {
-        guard let token = consoleToken, !token.isEmpty,
-              case .success(let reply) = await DeepSeekConsole.balance(token: token)
-        else { return nil }
-        var usage = reading(reply)
-        guard case .live = usage.state else { return nil }
-        usage.origin = .webSession
-        return usage
+    private enum ConsoleBalance {
+        case read(ProviderUsage)
+        case signedOut
+        /// No console token kept, or the console did not answer — the key
+        /// route's own reason is the one worth showing then.
+        case none
+    }
+
+    /// The balance out of the console's wallets, renewing a refused sign-in
+    /// from the browser once.
+    private func fromConsole() async -> ConsoleBalance {
+        guard let token = consoleToken, !token.isEmpty else { return .none }
+        switch await DeepSeekConsole.balanceRenewing(token: token) {
+        case .success(let reply):
+            var usage = reading(reply)
+            guard case .live = usage.state else { return .none }
+            usage.origin = .webSession
+            return .read(usage)
+        case .failure(.signedOut):
+            return .signedOut
+        case .failure(.failed):
+            return .none
+        }
     }
 
     private func reading(data: Data, status: Int?) -> ProviderUsage {

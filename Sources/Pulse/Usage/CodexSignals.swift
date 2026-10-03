@@ -26,8 +26,14 @@ import Foundation
 /// lower reasoning effort, or a smaller context window than the settings in
 /// force when it started was changed by something other than the user.
 /// Sessions written before 0.144 record no such event — a `/model` there is
-/// indistinguishable from a silent switch — so they are not judged at all.
-/// Sub-agent turns (`root_turn_id` ≠ `turn_id`) are Codex's own and skipped.
+/// indistinguishable from a silent switch — so they are not judged at all;
+/// nor is a newer one with none applied, nor Codex's own helpers (sessions
+/// with a `source` or `parent_thread_id`, turns whose `root_turn_id` is
+/// another's, the `auto-review` model).
+///
+/// **A fork copies its parent first**, every copied line stamped with the
+/// moment of the fork; those lines are skipped, or a month-old response would
+/// be counted twice and dated today.
 /// All of it is request-side: what Codex asked for, not what the server ran.
 struct CodexSignals: Sendable, Equatable {
     /// One model's responses over the span.
@@ -64,8 +70,11 @@ struct CodexSignals: Sendable, Equatable {
         let kind: Kind
         let date: Date
         let session: String
+        /// Its place in the session, so two changes written in the same
+        /// instant are still two rows.
+        var order = 0
 
-        var id: String { "\(session)|\(date.timeIntervalSince1970)|\(kind)" }
+        var id: String { "\(session)|\(order)" }
     }
 
     var truncation: [Truncation] = []
@@ -133,6 +142,7 @@ actor CodexSignalReader {
         var byModel: [String: CodexSignals.Truncation] = [:]
 
         for file in files(modifiedSince: since) {
+            if Task.isCancelled { break }
             guard let facts = facts(for: file) else { continue }
             if let since, let last = facts.lastDate, last < since { continue }
             signals.sessions += 1
@@ -183,6 +193,9 @@ actor CodexSignalReader {
         let stamp = Stamp(size: size, modified: modified)
         if let kept = cache[file.path], kept.stamp == stamp { return kept.facts }
         let facts = Self.parse(LogLines(at: file), session: file.lastPathComponent)
+        // A cancelled read stops yielding lines, so what came back is a part
+        // of the file — kept, it would stand for the whole until it changed.
+        guard !Task.isCancelled else { return nil }
         cache[file.path] = (stamp, facts)
         return facts
     }
@@ -207,6 +220,12 @@ actor CodexSignalReader {
         var previous: (model: String?, effort: String?) = (nil, nil)
         var subTurns: Set<String> = []
         var window: (size: Int, model: String?)?
+        var appliedAny = false
+        var isOwnSession = false
+        /// A fork starts by copying the session it came from, every copied
+        /// line stamped with the moment of the fork; those are the parent's
+        /// responses and settings, counted in the parent's own file.
+        var replayUntil: Date?
 
         lines.forEachLine { line in
             guard wanted.contains(where: { line.range(of: $0) != nil }),
@@ -215,11 +234,23 @@ actor CodexSignalReader {
             let payload = root["payload"] as? [String: Any] ?? [:]
             let date = (root["timestamp"] as? String).flatMap(Self.date)
             if let date { facts.lastDate = max(facts.lastDate ?? date, date) }
+            let type = root["type"] as? String
+            if type != "session_meta", let replayUntil, let date, date <= replayUntil { return }
 
-            switch root["type"] as? String {
+            switch type {
             case "session_meta":
+                // A resumed session writes its header again; only the first
+                // says what the session is.
+                window = nil
+                guard version == nil else { return }
                 version = (payload["cli_version"] as? String).flatMap(Self.version)
                 facts.isJudged = version.map { $0 >= CodexSignals.firstJudgedVersion } ?? false
+                // Codex's own helpers (a guardian, a sub-agent) run on models
+                // Codex picks, not the user.
+                if payload["source"] is [String: Any] || payload["parent_thread_id"] is String { isOwnSession = true }
+                if payload["forked_from_id"] is String, let date {
+                    replayUntil = date.addingTimeInterval(Self.replayWindow)
+                }
 
             case "turn_context":
                 let ran = payload["model"] as? String
@@ -229,10 +260,11 @@ actor CodexSignalReader {
                 let effort = payload["effort"] as? String
                     ?? ((payload["collaboration_mode"] as? [String: Any])?["settings"] as? [String: Any])?["reasoning_effort"] as? String
                 let asked = (model: atStart.model ?? previous.model, effort: atStart.effort ?? previous.effort)
-                if let ran, let wanted = asked.model, ran != wanted, !isCodexsOwn(ran) {
+                let ownModel = ran.map(isCodexsOwn) ?? false
+                if let ran, let wanted = asked.model, ran != wanted, !ownModel, !isCodexsOwn(wanted) {
                     facts.changes.append(.init(kind: .model(asked: wanted, ran: ran), date: date, session: session))
                 }
-                if let effort, let wanted = asked.effort,
+                if let effort, let wanted = asked.effort, !ownModel,
                    let have = efforts.firstIndex(of: effort), let want = efforts.firstIndex(of: wanted), have < want {
                     facts.changes.append(.init(kind: .effort(asked: wanted, ran: effort), date: date, session: session))
                 }
@@ -247,6 +279,7 @@ actor CodexSignalReader {
                     }
                     atStart = applied
                 case "thread_settings_applied":
+                    appliedAny = true
                     let settings = payload["thread_settings"] as? [String: Any] ?? [:]
                     applied = (settings["model"] as? String ?? applied.model,
                                settings["reasoning_effort"] as? String ?? applied.effort)
@@ -279,8 +312,22 @@ actor CodexSignalReader {
                 return
             }
         }
+
+        // Judged only where the user's own changes are on record: a session
+        // with none applied is compared turn to turn alone, and could not
+        // tell a `/model` from a swap. Codex's helpers are not the user's.
+        facts.isJudged = facts.isJudged && appliedAny && !isOwnSession
+        if facts.isJudged {
+            for index in facts.changes.indices { facts.changes[index].order = index }
+        } else {
+            facts.changes = []
+        }
         return facts
     }
+
+    /// How long after a fork's header its copied history is still being
+    /// written: measured, every copied line carries the fork's own moment.
+    static let replayWindow: TimeInterval = 2
 
     private static func int(_ value: Any?) -> Int? {
         (value as? Int) ?? (value as? NSNumber)?.intValue

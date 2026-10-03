@@ -974,4 +974,4 @@
 "Reasoning: %@ lowered to %@" = "Reasoning: %@ lowered to %@";
 "Context: %@ cut to %@" = "Context: %@ cut to %@";
 "Checked %@ sessions: the model, reasoning and context you chose were never changed." = "Checked %@ sessions: the model, reasoning and context you chose were never changed.";
-"%@ older sessions (Codex before 0.144) can't be checked." = "%@ older sessions (Codex before 0.144) can't be checked.";
+"%@ other sessions can't be checked: older than Codex 0.144, or run by Codex itself." = "%@ other sessions can't be checked: older than Codex 0.144, or run by Codex itself.";

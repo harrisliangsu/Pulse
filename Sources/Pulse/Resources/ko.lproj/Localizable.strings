@@ -974,4 +974,4 @@
 "Reasoning: %@ lowered to %@" = "추론 수준: %@에서 %@(으)로 낮아짐";
 "Context: %@ cut to %@" = "컨텍스트: %@에서 %@(으)로 줄어듦";
 "Checked %@ sessions: the model, reasoning and context you chose were never changed." = "세션 %@개를 확인했습니다. 고른 모델, 추론 수준, 컨텍스트가 바뀐 적이 없습니다.";
-"%@ older sessions (Codex before 0.144) can't be checked." = "오래된 세션 %@개(Codex 0.144 이전)는 판단할 수 없습니다.";
+"%@ other sessions can't be checked: older than Codex 0.144, or run by Codex itself." = "그 밖의 세션 %@개는 판단할 수 없습니다: Codex 0.144 이전이거나 Codex가 직접 실행한 세션입니다.";

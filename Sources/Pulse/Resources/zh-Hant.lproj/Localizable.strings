@@ -974,4 +974,4 @@
 "Reasoning: %@ lowered to %@" = "推理強度：%@ 被降到 %@";
 "Context: %@ cut to %@" = "上下文：%@ 被縮到 %@";
 "Checked %@ sessions: the model, reasoning and context you chose were never changed." = "檢查了 %@ 個工作階段，你選的模型、推理強度和上下文都沒被換過。";
-"%@ older sessions (Codex before 0.144) can't be checked." = "另有 %@ 個舊工作階段（Codex 0.144 之前）無法判斷。";
+"%@ other sessions can't be checked: older than Codex 0.144, or run by Codex itself." = "另有 %@ 個工作階段無法判斷：來自 Codex 0.144 之前，或是 Codex 自己開的子任務。";

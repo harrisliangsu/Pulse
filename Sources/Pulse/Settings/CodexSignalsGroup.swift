@@ -166,14 +166,15 @@ struct CodexSignalsGroup: View {
 
     /// How many sessions were looked at — and, when nothing was found, that
     /// nothing was changed in them — and how many could not be: Codex before
-    /// 0.144 writes down none of the user's own changes.
+    /// 0.144 writes down none of the user's own changes, and Codex's own
+    /// helpers run on models it picks.
     private static func checked(_ signals: CodexSignals, clean: Bool) -> String {
         let judged = clean
             ? String.localized("Checked \(count(signals.judgedSessions)) sessions: the model, reasoning and context you chose were never changed.")
             : String.localized("Checked \(count(signals.judgedSessions)) sessions.")
         let older = signals.sessions - signals.judgedSessions
         guard older > 0 else { return judged }
-        return judged + " " + String.localized("\(count(older)) older sessions (Codex before 0.144) can't be checked.")
+        return judged + " " + String.localized("\(count(older)) other sessions can't be checked: older than Codex 0.144, or run by Codex itself.")
     }
 
     // MARK: - Formatting

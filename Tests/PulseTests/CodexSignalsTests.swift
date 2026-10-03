@@ -7,7 +7,7 @@ import Testing
 /// sessions in the shape Codex writes — field names only, no transcript.
 @Suite("Codex signs")
 struct CodexSignalsTests {
-    private static func line(_ type: String, _ payload: String, at seconds: Int = 0) -> String {
+    fileprivate static func line(_ type: String, _ payload: String, at seconds: Int = 0) -> String {
         let stamp = Date(timeIntervalSince1970: 1_790_000_000 + Double(seconds))
             .formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true))
         return #"{"timestamp":"\#(stamp)","type":"\#(type)","payload":\#(payload)}"#
@@ -116,7 +116,8 @@ struct CodexSignalsTests {
     func contextWindow() {
         let facts = Self.parse([
             Self.meta("0.146.0"),
-            Self.started("t1", at: 1), Self.context("t1", model: "gpt-6-sol", at: 1),
+            Self.started("t1", at: 1), Self.applied(model: "gpt-6-sol", at: 1),
+            Self.context("t1", model: "gpt-6-sol", at: 1),
             Self.count(reasoning: 10, total: 10, window: 272_000, at: 2),
             Self.count(reasoning: 10, total: 20, window: 128_000, at: 3),
         ])
@@ -159,6 +160,58 @@ struct CodexSignalsTests {
         #expect(!codex.isSuspicious)
         #expect(signals.truncation.first?.model == "gpt-5.5")
         #expect(signals.sessions == 1)
+    }
+
+    @Test("A session with no settings on record, or one of Codex's helpers, is not judged")
+    func unjudged() {
+        let swap = [
+            Self.started("t1", at: 1), Self.context("t1", model: "gpt-6-sol", at: 1),
+            Self.started("t2", at: 2), Self.context("t2", model: "gpt-5.6-luna", at: 2),
+        ]
+        let none = Self.parse([Self.meta("0.146.0")] + swap)
+        #expect(!none.isJudged)
+        #expect(none.changes.isEmpty)
+        let helper = Self.parse([
+            Self.line("session_meta", #"{"id":"s","cli_version":"0.146.0","source":{"subagent":{"other":"guardian"}}}"#),
+            Self.applied(model: "gpt-6-sol", at: 0),
+        ] + swap)
+        #expect(!helper.isJudged)
+        #expect(helper.changes.isEmpty)
+    }
+
+    @Test("A fork's copy of its parent is skipped; its own work after the copy counts")
+    func forkReplay() {
+        let facts = Self.parse([
+            Self.line("session_meta", #"{"id":"f","cli_version":"0.146.0","forked_from_id":"p"}"#, at: 100),
+            // The parent's history, copied at the moment of the fork.
+            Self.context("old", model: "gpt-5.5", at: 100),
+            Self.count(reasoning: 516, total: 1_000, at: 100),
+            Self.count(reasoning: 516, total: 2_000, at: 101),
+            // The fork's own turn.
+            Self.started("new", at: 160), Self.applied(model: "gpt-6-sol", at: 160),
+            Self.context("new", model: "gpt-6-sol", at: 160),
+            Self.count(reasoning: 700, total: 3_000, at: 170),
+        ])
+        #expect(facts.responses.map(\.model) == ["gpt-6-sol"])
+        #expect(facts.responses.map(\.reasoning) == [700])
+        #expect(facts.isJudged)
+    }
+
+    @Test("A cancelled read keeps nothing, so the next read sees the whole file")
+    func cancelledRead() async throws {
+        let root = URL.temporaryDirectory.appending(path: "PulseCodexCancel-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        var lines = [Self.meta("0.120.0"), Self.context("a", model: "gpt-5.5", at: 1)]
+        for index in 0..<50 { lines.append(Self.count(reasoning: 600, total: (index + 1) * 10, at: 2 + index)) }
+        try lines.joined(separator: "\n").write(to: root.appending(path: "rollout-a.jsonl"), atomically: true, encoding: .utf8)
+
+        let reader = CodexSignalReader(roots: [root])
+        let cancelled = Task { await reader.read(since: nil) }
+        cancelled.cancel()
+        _ = await cancelled.value
+        let whole = await reader.read(since: nil)
+        #expect(whole.truncation.first?.responses == 50)
     }
 
     @Test("Versions read with or without a pre-release tag")

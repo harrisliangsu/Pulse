@@ -398,11 +398,13 @@ struct AccountUsageCard: View {
         // The price lists are in dollars, so the figure is in dollars whatever
         // the reader's own currency is — hence a fixed code rather than the
         // locale's. A console that charges in another (DeepSeek's yuan) says so.
-        amount.formatted(
-            .currency(code: currency ?? "USD")
-                .precision(.fractionLength(amount >= 1000 ? 0 : 2))
-                .locale(LocalizationSource.locale)
-        )
+        let style = FloatingPointFormatStyle<Double>.Currency(code: currency ?? "USD")
+            .locale(LocalizationSource.locale)
+        // A positive amount under a cent is not free: "¥0.00" would say it was.
+        if amount > 0, amount < 0.01 {
+            return String.localized("< \(0.01.formatted(style.precision(.fractionLength(2))))")
+        }
+        return amount.formatted(style.precision(.fractionLength(amount >= 1000 ? 0 : 2)))
     }
 
     /// Built per call rather than kept around: it has to follow the language

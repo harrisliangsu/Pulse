@@ -122,9 +122,32 @@ struct DeepSeekConsoleTests {
                  {"currency":"CNY","series":[{"model":"m","buckets":[{"time":0,"cost":"2"}]}]}]}
         """)
         #expect(DeepSeekConsole.currency(of: cost, preferring: nil)?.currency == "CNY")
-        #expect(DeepSeekConsole.currency(of: cost, preferring: "USD")?.currency == "USD")
+        // Nothing was charged in dollars: zeroes there would call the work free.
+        #expect(DeepSeekConsole.currency(of: cost, preferring: "USD")?.currency == "CNY")
         #expect(DeepSeekConsole.currency(of: cost, preferring: "EUR")?.currency == "CNY")
         #expect(DeepSeekConsole.currency(of: .init(data: []), preferring: nil) == nil)
+
+        let both = try Self.decode(DeepSeekConsole.Cost.self, """
+        {"data":[{"currency":"CNY","series":[{"model":"m","buckets":[{"time":0,"cost":"2"}]}]},
+                 {"currency":"USD","series":[{"model":"m","buckets":[{"time":0,"cost":"1"}]}]}]}
+        """)
+        #expect(DeepSeekConsole.currency(of: both, preferring: "USD")?.currency == "USD")
+    }
+
+    @Test("No money in the reply is tokens only, never a zero bill; bad numbers are absent, not a crash")
+    func noMoney() throws {
+        let amount = try Self.decode(DeepSeekConsole.Amount.self, """
+        {"bucket":86400,"series":[{"model":"m","buckets":[
+          {"time":\(Int(Self.day(0))),"usage":{"PROMPT_CACHE_HIT_TOKEN":"nan","PROMPT_CACHE_MISS_TOKEN":"1e30","RESPONSE_TOKEN":"inf"}},
+          {"time":\(Int(Self.day(-1))),"usage":{"PROMPT_CACHE_HIT_TOKEN":0,"PROMPT_CACHE_MISS_TOKEN":10,"RESPONSE_TOKEN":5}}]}]}
+        """)
+        let ledger = DeepSeekConsole.ledger(
+            amount: amount, cost: .init(data: []), preferring: nil, now: Self.now, calendar: Self.calendar
+        )
+        #expect(ledger.origin == .providerStatistics)
+        #expect(ledger.currency == nil)
+        #expect(ledger.days.last?.tokens == 0)
+        #expect(ledger.days[28].tokens == 15)
     }
 
     @Test("The wallets become the key route's reply: topped up plus granted, per currency")
