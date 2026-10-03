@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>en</language>
         <item>
+            <title>1.7.1</title>
+            <pubDate>Sat, 03 Oct 2026 08:27:15 -0000</pubDate>
+            <sparkle:version>1.7.1</sparkle:version>
+            <sparkle:shortVersionString>1.7.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/qunqin24/Pulse/releases/tag/v1.7.1</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.7.1</h2><p><strong>中文</strong></p><p><strong>新功能</strong></p><ul><li><strong>Codex 降智迹象。</strong> 设置 › Codex 最下面新增「降智迹象」，只读本机的 Codex 记录，不发任何请求：每个模型有多少长回复的推理恰好停在 516、1,034、1,552 等位置（像被强行掐断，超过 5% 标为「疑似降智」），以及有没有哪一轮在你没改设置的情况下被换了模型、调低了推理强度或缩短了上下文。这些只是迹象，不是定论——Codex 不会记录服务器实际用了哪个模型。</li><li><strong>DeepSeek 读取官网用量。</strong> 在 DeepSeek 设置的「DeepSeek 控制台」里点「读取」，Pulse 会从浏览器（Chrome、Edge、Brave、Arc 等）的登录状态读取整个账号最近 30 天的用量：每天的花费和 Token、各模型占比和缓存命中率，金额用账号自己的币种。没有填 API Key 时也能用它读余额。</li></ul><p><strong>改进与修复</strong></p><ul><li><strong>横放面板时，「百分比放在圆环右边」和「数字显示在圆环上方」同时打开，百分比不再跑到圆环左边；打开「距离重置的时间」时，数字也不再贴着外圈。</strong> 感谢 <a href="https://github.com/qunqin24/Pulse/issues/73">@tyrival</a> 反馈。</li><li><strong>卡片在屏幕放不下时可以滚动。</strong> 面板横放在屏幕中间附近时，展开的卡片不会再被屏幕边缘截掉。</li></ul><p><strong>English</strong></p><p><strong>New</strong></p><ul><li><strong>Signs of a weaker Codex model.</strong> A new Signs of a weaker model section at the bottom of Codex&#x27;s settings reads this Mac&#x27;s Codex records and sends nothing: for each model, how many long replies had their reasoning stop at exactly 516, 1,034, 1,552 and so on — as if cut off; over 5% is marked Possibly weakened — and whether any turn ran on a different model, lower reasoning or a smaller context without you changing the settings. These are signs, not proof: Codex doesn&#x27;t record which model the server actually used.</li><li><strong>DeepSeek usage from its console.</strong> Press Read under DeepSeek console in DeepSeek&#x27;s settings and Pulse uses your browser&#x27;s sign-in (Chrome, Edge, Brave, Arc and other Chromium browsers) to read the whole account&#x27;s last 30 days: spend and tokens per day, each model&#x27;s share and cache hit rate, in the account&#x27;s own currency. It also reads the balance when no API key is set.</li></ul><p><strong>Changed and fixed</strong></p><ul><li><strong>Lying across, with Figures beside the rings and Figure above the ring both on, the percentage no longer jumps to the left of the ring; with Time until reset on, figures no longer crowd the outer arc.</strong> Thanks to <a href="https://github.com/qunqin24/Pulse/issues/73">@tyrival</a> for the report.</li><li><strong>A card scrolls when the screen cannot hold it.</strong> With the panel lying across near the middle of the screen, an open card is no longer cut off at the screen&#x27;s edge.</li></ul><p><a href="https://github.com/qunqin24/Pulse/releases/tag/v1.7.1">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/qunqin24/Pulse/releases/download/v1.7.1/Pulse-1.7.1.zip"
+                       length="12951393"
+                       type="application/octet-stream"
+                       sparkle:edSignature="bCRDBBYr6jbeAUgSLrs6XU70aQU3Pz4ZqanQSqSGFtnWVKBZQEVYJh1XD2lUPuYT/JcT8I9Tmqm6LCbOOOFGCw==" />
+        </item>
+        <item>
             <title>1.7.0</title>
             <pubDate>Fri, 02 Oct 2026 16:40:12 -0000</pubDate>
             <sparkle:version>1.7.0</sparkle:version>
