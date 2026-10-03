@@ -939,3 +939,13 @@
 "Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "%@ から読み取りましたが、コンソールが応答しませんでした。次の更新時にもう一度試します。";
 "Reading the account's records…" = "アカウントの記録を読み取り中…";
 "From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "%@ のアカウント全体のリクエスト記録で、すべてのデバイスとそれを使うすべてのアプリを含みます。金額は各リクエストの実際の請求額です。記録は 30 日間保持されます。";
+
+"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days." = "%@ のコンソールが記録したアカウント全体の使用量で、すべてのキーとすべてのデバイスを含みます。金額は日ごとの実際の請求額です。Pulse は直近 30 日分を読み取ります。";
+"DeepSeek console" = "DeepSeek コンソール";
+"Account usage" = "アカウントの使用量";
+"Kept. The usage history below and the detailed card read the whole account with it." = "保存済みです。下の使用履歴と詳細カードは、これを使ってアカウント全体を読み取ります。";
+"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac." = "DeepSeek のコンソールが記録するアカウントの使用量です。すべてのキー・すべてのデバイスの日ごとの使用量と、実際の請求額が含まれます。キーが未設定か拒否されたときは、残高もこれで読み取ります。Pulse はコンソールのサインイン情報だけを、この Mac に暗号化して保存します。";
+"Reads Chrome, Edge, Brave, Arc and other Chromium browsers." = "Chrome、Edge、Brave、Arc などの Chromium 系ブラウザから読み取ります。";
+"No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc." = "Chromium 系ブラウザが見つかりません。Chrome、Edge、Brave、Arc のいずれかで platform.deepseek.com にサインインしてください。";
+"No DeepSeek console sign-in found. Sign in at platform.deepseek.com first." = "DeepSeek コンソールのサインインが見つかりません。先に platform.deepseek.com でサインインしてください。";
+"The console turned this sign-in away. Sign in again at platform.deepseek.com, then read it again." = "コンソールがこのサインインを受け付けませんでした。platform.deepseek.com でサインインし直してから、もう一度読み取ってください。";

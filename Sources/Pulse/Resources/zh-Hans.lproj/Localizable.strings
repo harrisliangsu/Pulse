@@ -939,3 +939,13 @@
 "Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "已从 %@ 读取，但控制台没有响应，下次刷新时会再试。";
 "Reading the account's records…" = "正在读取账号记录…";
 "From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "来自 %@ 的账号请求记录，覆盖所有设备和所有使用它的应用，金额为每次请求的实际计费。记录保留 30 天。";
+
+"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days." = "来自 %@ 控制台的账号用量，覆盖所有密钥和所有设备，金额为每天的实际计费。Pulse 读取最近 30 天。";
+"DeepSeek console" = "DeepSeek 控制台";
+"Account usage" = "账号用量";
+"Kept. The usage history below and the detailed card read the whole account with it." = "已保存。下方的用量记录和详细额度卡会用它读取整个账号。";
+"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac." = "DeepSeek 控制台记录的账号用量：所有密钥、所有设备，按天统计，以及实际计费。没有设置密钥、或密钥被拒绝时，也会用它读取余额。Pulse 只保存控制台的登录信息，加密存放在这台 Mac 上。";
+"Reads Chrome, Edge, Brave, Arc and other Chromium browsers." = "可从 Chrome、Edge、Brave、Arc 等 Chromium 浏览器读取。";
+"No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc." = "没有找到 Chromium 浏览器。请在 Chrome、Edge、Brave 或 Arc 中登录 platform.deepseek.com。";
+"No DeepSeek console sign-in found. Sign in at platform.deepseek.com first." = "没有找到 DeepSeek 控制台的登录。请先在 platform.deepseek.com 登录。";
+"The console turned this sign-in away. Sign in again at platform.deepseek.com, then read it again." = "控制台没有接受这个登录。请在 platform.deepseek.com 重新登录后再读取。";

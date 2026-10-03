@@ -1901,6 +1901,10 @@ struct SettingsView: View {
             if provider == .openCodeGo, account.isPrimary, settings.isEnabled(account) {
                 OpenCodeConsoleGroup(store: store, settings: settings) { consoleRevision += 1 }
             }
+            // DeepSeek's usage is behind its console's sign-in in the same way.
+            if provider == .deepSeek, account.isPrimary, settings.isEnabled(account) {
+                DeepSeekConsoleGroup(store: store, settings: settings) { consoleRevision += 1 }
+            }
 
             if provider.providesHistory, account.isPrimary {
                 // Live, so ahead of the history: which conversations still
@@ -2049,7 +2053,9 @@ struct SettingsView: View {
         // history is asked of it, and need not be asked at every refresh.
         let read = account.provider.keepsLocalTranscripts
             ? store.usage(for: account).observedAt?.timeIntervalSince1970 ?? 0 : 0
-        return "\(account.id)|\(settings.isEnabled(account))|\(consoleRevision)|\(read)"
+        // DeepSeek's money follows the currency the ring follows.
+        let currency = account.provider == .deepSeek ? settings.deepSeekCurrency ?? "" : ""
+        return "\(account.id)|\(settings.isEnabled(account))|\(consoleRevision)|\(read)|\(currency)"
     }
 
     /// One task owns opening, enabling and manual rescans. Leaving, disabling
@@ -2226,6 +2232,26 @@ struct SettingsView: View {
                 ledgers[provider] = ledger
                 historyReads[provider] = .answered(ledger)
             }
+            guard !Task.isCancelled, historyReadID == readID, historyKey == requestKey else { return }
+            switch read {
+            case .answered(let ledger):
+                ledgers[provider] = ledger
+                historyReads[provider] = .answered(ledger)
+            case .signedOut, .failed:
+                ledgers[provider] = .empty
+                historyReads[provider] = .failed
+            }
+            return
+        }
+
+        if provider == .deepSeek {
+            guard let token = DeepSeekConsole.keptToken else {
+                ledgers[provider] = .empty
+                historyReads[provider] = .notConfigured
+                return
+            }
+            let requestKey = historyKey
+            let read = await DeepSeekConsoleHistory.shared.ledger(token: token, currency: settings.deepSeekCurrency)
             guard !Task.isCancelled, historyReadID == readID, historyKey == requestKey else { return }
             switch read {
             case .answered(let ledger):

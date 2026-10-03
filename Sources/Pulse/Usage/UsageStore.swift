@@ -186,12 +186,19 @@ final class UsageStore {
     /// Picks up a key that was just entered, or one that changed.
     func loadAPIKeys() {
         OpenCodeConsole.refreshSession()
+        DeepSeekConsole.refreshSession()
         // Read the console's log ahead of being asked, so the first card is
         // not the one that waits half a minute for the month. Incremental and
         // shared with the card, so a warm-up that finds it fresh costs a page.
         if settings.isEnabled(AccountKey(.openCodeGo)),
            let cookie = APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot) {
             Task.detached(priority: .utility) { _ = await OpenCodeConsoleHistory.shared.ledger(cookie: cookie) }
+        }
+        if settings.isEnabled(AccountKey(.deepSeek)), let token = DeepSeekConsole.keptToken {
+            let currency = settings.deepSeekCurrency
+            Task.detached(priority: .utility) {
+                _ = await DeepSeekConsoleHistory.shared.ledger(token: token, currency: currency)
+            }
         }
         apiKeys = Dictionary(
             uniqueKeysWithValues: Provider.builtIn
@@ -481,7 +488,8 @@ final class UsageStore {
             enteredKey: apiKeys[.deepSeek],
             basis: settings.deepSeekBasis,
             budget: settings.deepSeekBudget,
-            currency: settings.deepSeekCurrency
+            currency: settings.deepSeekCurrency,
+            consoleToken: DeepSeekConsole.keptToken
         )
         let sub2api = Sub2APIUsageService(
             enteredKey: apiKeys[.sub2api],
@@ -803,7 +811,8 @@ final class UsageStore {
             enteredKey: key,
             basis: settings.deepSeekBasis,
             budget: settings.deepSeekBudget,
-            currency: settings.deepSeekCurrency
+            currency: settings.deepSeekCurrency,
+            consoleToken: DeepSeekConsole.keptToken
         )
         let sub2api = Sub2APIUsageService(
             enteredKey: key, address: settings.serverAddress(for: account)

@@ -939,3 +939,13 @@
 "Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "%@에서 읽었지만 콘솔이 응답하지 않았습니다. 다음 새로 고침 때 다시 시도합니다.";
 "Reading the account's records…" = "계정 기록을 읽는 중…";
 "From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "%@의 계정 전체 요청 기록으로, 모든 기기와 이를 쓰는 모든 앱이 포함됩니다. 금액은 요청마다 실제로 청구된 것입니다. 기록은 30일 동안 보관됩니다.";
+
+"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days." = "%@ 콘솔이 기록한 계정 전체 사용량으로, 모든 키와 모든 기기가 포함됩니다. 금액은 날짜별 실제 청구액입니다. Pulse는 최근 30일을 읽습니다.";
+"DeepSeek console" = "DeepSeek 콘솔";
+"Account usage" = "계정 사용량";
+"Kept. The usage history below and the detailed card read the whole account with it." = "저장됨. 아래 사용 기록과 자세한 카드가 이것으로 계정 전체를 읽습니다.";
+"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac." = "DeepSeek 콘솔이 기록하는 계정 사용량입니다. 모든 키와 모든 기기의 날짜별 사용량과 실제 청구액이 들어 있습니다. 키가 없거나 거부되면 잔액도 이것으로 읽습니다. Pulse는 콘솔 로그인 정보만 이 Mac에 암호화해 보관합니다.";
+"Reads Chrome, Edge, Brave, Arc and other Chromium browsers." = "Chrome, Edge, Brave, Arc 등 Chromium 브라우저에서 읽습니다.";
+"No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc." = "Chromium 브라우저를 찾지 못했습니다. Chrome, Edge, Brave 또는 Arc에서 platform.deepseek.com에 로그인하세요.";
+"No DeepSeek console sign-in found. Sign in at platform.deepseek.com first." = "DeepSeek 콘솔 로그인을 찾지 못했습니다. 먼저 platform.deepseek.com에 로그인하세요.";
+"The console turned this sign-in away. Sign in again at platform.deepseek.com, then read it again." = "콘솔이 이 로그인을 받아들이지 않았습니다. platform.deepseek.com에 다시 로그인한 뒤 다시 읽어 주세요.";

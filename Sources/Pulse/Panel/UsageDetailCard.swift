@@ -428,9 +428,10 @@ struct UsageDetailCard: View {
     /// docs give the amounts and the console's meters count them in
     /// micro-cents — so dividing this Mac's spend by a percentage would put a
     /// guess beside a figure the provider already publishes, and could
-    /// disagree with it.
+    /// disagree with it. **Nor for DeepSeek**, whose ring is a balance: it is
+    /// money already, in the account's own currency, not a limit to price.
     nonisolated static func estimatesValue(for provider: Provider) -> Bool {
-        provider != .openCodeGo
+        provider != .openCodeGo && provider != .deepSeek
     }
 
     /// "Updated 3 min ago".
@@ -595,6 +596,12 @@ private struct ActivitySection: View {
     }
 
     /// Money the provider charged, not money worked out from a price list.
+    /// What the money is counted in, where the ledger says (DeepSeek's yuan).
+    private var currency: String? {
+        if case .ledger(let ledger) = spend { return ledger.currency }
+        return nil
+    }
+
     private var isCharged: Bool {
         if case .ledger(let ledger) = spend { return ledger.origin == .providerLogs }
         return false
@@ -686,7 +693,7 @@ private struct ActivitySection: View {
                 .frame(height: DetailCardLayout.figureValueHeight)
             if priced {
                 // "≈" for an estimate; what the provider charged is stated.
-                Text(verbatim: cost > 0 ? (isCharged ? "" : "≈") + AccountUsageCard.money(cost) : " ")
+                Text(verbatim: cost > 0 ? (isCharged ? "" : "≈") + AccountUsageCard.money(cost, currency: currency) : " ")
                     .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded).monospacedDigit())
                     .foregroundStyle(.primary.opacity(0.45))
                     .frame(height: DetailCardLayout.figureLabelHeight)

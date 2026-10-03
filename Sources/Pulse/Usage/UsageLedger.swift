@@ -240,6 +240,11 @@ struct UsageLedger: Sendable, Equatable {
 
     var origin: Origin = .localTranscripts
 
+    /// What the money is counted in. Nil is dollars — the price lists and
+    /// OpenCode's console are — and DeepSeek's console charges a CNY account
+    /// in yuan, which a dollar sign would misstate by seven times.
+    var currency: String?
+
     /// Whether some of this work has only session- or report-level timing, so
     /// the hour profile cannot be trusted.
     ///

@@ -939,3 +939,13 @@
 "Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "Read from %@, but the console didn't answer. It will be tried again on the next refresh.";
 "Reading the account's records…" = "Reading the account's records…";
 "From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days.";
+
+"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days." = "From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days.";
+"DeepSeek console" = "DeepSeek console";
+"Account usage" = "Account usage";
+"Kept. The usage history below and the detailed card read the whole account with it." = "Kept. The usage history below and the detailed card read the whole account with it.";
+"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac." = "The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac.";
+"Reads Chrome, Edge, Brave, Arc and other Chromium browsers." = "Reads Chrome, Edge, Brave, Arc and other Chromium browsers.";
+"No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc." = "No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc.";
+"No DeepSeek console sign-in found. Sign in at platform.deepseek.com first." = "No DeepSeek console sign-in found. Sign in at platform.deepseek.com first.";
+"The console turned this sign-in away. Sign in again at platform.deepseek.com, then read it again." = "The console turned this sign-in away. Sign in again at platform.deepseek.com, then read it again.";

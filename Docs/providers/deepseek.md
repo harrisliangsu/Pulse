@@ -4,7 +4,7 @@
 |---|---|---|---|
 | `.deepSeek` | DeepSeek | `https://api.deepseek.com` | `deepseek` |
 
-Service: [`../../Sources/Pulse/Providers/DeepSeekUsageService.swift`](../../Sources/Pulse/Providers/DeepSeekUsageService.swift). The denominator modes and the watched mark: [`../../Sources/Pulse/Providers/DeepSeekBalanceBasis.swift`](../../Sources/Pulse/Providers/DeepSeekBalanceBasis.swift).
+Service: [`../../Sources/Pulse/Providers/DeepSeekUsageService.swift`](../../Sources/Pulse/Providers/DeepSeekUsageService.swift). The web console (usage history, and the balance without a key): [`../../Sources/Pulse/Providers/DeepSeekConsole.swift`](../../Sources/Pulse/Providers/DeepSeekConsole.swift), Settings group [`DeepSeekConsoleGroup`](../../Sources/Pulse/Settings/DeepSeekConsoleGroup.swift). The denominator modes and the watched mark: [`../../Sources/Pulse/Providers/DeepSeekBalanceBasis.swift`](../../Sources/Pulse/Providers/DeepSeekBalanceBasis.swift).
 
 ## Verified against a live account
 
@@ -32,13 +32,18 @@ Status handling is the ordinary one: `401`/`403` → `.apiKeyRefused`, `429` →
 
 ## Credential
 
-A key pasted into Settings, kept encrypted on this Mac by `APIKeyStore`. There is nothing to borrow — DeepSeek's key lives on its web console and no CLI on this Mac stores one. The chooser offers it unchecked, without a detected hint; selecting it still requires entering a key in Settings.
+Two, each in its own slot of `APIKeyStore`, so neither replaces the other:
+
+1. **A key pasted into Settings** (`deepSeek`). There is nothing to borrow — DeepSeek's key lives on its web console and no CLI on this Mac stores one. It reads the balance, and wins whenever it answers.
+2. **The console's sign-in** (`deepSeek#console`), read from a Chromium browser in Settings › DeepSeek › **DeepSeek console** ([below](#the-console-usage-history-and-a-balance-without-a-key)). It reads the usage history, and the balance when there is no key or the key route came back `.apiKeyRefused` / `.unreachable` / `.serverError` / `.unreadableReply` — reading `origin = .webSession`.
+
+The chooser offers DeepSeek unchecked, without a detected hint.
 
 ## There is no allowance, so the ring has no denominator
 
 *Since generalized:* these three modes are now every API account's rule — see `BalanceRing` and [README.md](README.md#subscriptions-and-api-accounts). DeepSeek keeps its own settings (`deepSeekBasis`, `deepSeekBudget`) and its own mark file, and makes its window through the same `BalanceRing.window`.
 
-**This is the first provider Pulse carries that reports no percentage at all.** The reply says how much money is left and stops. There is no quota, no window, no reset, and no spend-history endpoint anywhere in the API. Every other provider reports at least one fraction.
+**This is the first provider Pulse carries that reports no percentage at all.** The reply says how much money is left and stops. There is no quota, no window, no reset, and no spend-history endpoint anywhere in the API (the history Pulse shows comes from the web console, with its own sign-in — [below](#the-console-usage-history-and-a-balance-without-a-key)). Every other provider reports at least one fraction.
 
 A ring needs a denominator, and there are exactly three places one can come from — which is why `DeepSeekBasis` has exactly three cases and the user picks between them in DeepSeek's settings pane.
 
@@ -113,33 +118,35 @@ DeepSeek's own flag for "this balance can no longer pay for a call". Nothing els
 
 Prepaid credit is **not a limit**: there is no ceiling to reach and no window to turn over. `.spend` made the row read "Spend limit", which put the word *limit* on something that has none. `reportsLength` is false and `resetsAt` is nil, always — the seconds exist only to sort the row. `--json` reports the kind as `balance`.
 
-## No usage history — investigated, and not for want of an endpoint
+## The console: usage history, and a balance without a key
 
-**Do not dig this up again.** Checked 2026-09-10 against `main.b50d812fde.js`, the console's own bundle.
+*Until 2026-10-03 this section said "no usage history" — the routes were known and the credential was out of reach, because it lives in `localStorage` and Pulse read only cookies. `ChromiumLocalStorage` (written for Devin) removed that obstacle.*
 
-The console's charts — daily spend, request counts, token breakdown, split by model or by API key — are real endpoints on `platform.deepseek.com`, and their shapes are known:
+**The credential.** The console's routes want `Authorization: Bearer <userToken>`, its own login token; an API key is refused (`40003`). The token is in **`localStorage`** for `https://platform.deepseek.com`, key `userToken`, wrapped by the console's storage class — `{"value":"<token>","__version":"0"}`, with `"value":null` once signed out (`DeepSeekConsole.token(fromStorage:)`). Settings › **DeepSeek console** › **Read** finds it in the first Chromium browser that has one, default first, with **no keychain prompt** (`localStorage` is not encrypted), and keeps it in `deepSeek#console`. Whether one is kept is cached in memory (`DeepSeekConsole.hasSession`, refreshed in `UsageStore.loadAPIKeys`), because the detailed card asks every frame. When the console turns the kept token away, the browser is read once more and a **different** token found there replaces it (`DeepSeekConsoleHistory`); the same token, or none, is a sign-out, and the card says to read it again in Settings. Safari and Firefox are not read: neither keeps `localStorage` in a LevelDB.
 
-| Route | Shape |
+**The envelope.** Every route answers HTTP 200 with `{code, msg, data: {biz_code, biz_msg, biz_data}}` — **including a refused token**: `{"code":40002,"msg":"Missing Token"}`, `{"code":40003,"msg":"Authorization Failed (invalid token)"}`. A `code` in 40000–40099 is a sign-out, any other non-zero `code` or `biz_code` a failure (`DeepSeekConsole.outcome`). Reachable without a browser: the console's pages sit behind an AWS WAF challenge, its `/api/` routes do not (checked with curl, 2026-10-03).
+
+**Routes** (shapes from the console's bundle, `main.417f9e6095.js` and its chunks, 2026-10-03; the page's own requests to them seen answering 200 on a signed-in account):
+
+| Route | Shape (`biz_data`) |
 |---|---|
-| `GET /api/v0/usage/by_api_key/cost?start=&end=&tz=` | `data.biz_data { start, end, bucket, models, data: [{ currency, series: [{ api_key, model, buckets: [{ time, cost }] }] }] }` |
-| `GET /api/v0/usage/by_api_key/amount?start=&end=&tz=` | `series: [{ api_key, model, buckets: [{ time, usage: { PROMPT_CACHE_HIT_TOKEN, PROMPT_CACHE_MISS_TOKEN, RESPONSE_TOKEN, REQUEST } }] }]` |
-| `GET /api/v0/usage/export`, `/api/v0/users/get_user_summary` | not mapped |
+| `GET /api/v0/usage/by_api_key/amount?start=&end=&tz=` | `{start, end, bucket, models, series: [{api_key, model, buckets: [{time, usage: {PROMPT_CACHE_HIT_TOKEN, PROMPT_CACHE_MISS_TOKEN, RESPONSE_TOKEN, REQUEST}}]}]}` |
+| `GET /api/v0/usage/by_api_key/cost?start=&end=&tz=` | `{start, end, bucket, models, data: [{currency, series: [{api_key, model, buckets: [{time, cost}]}]}]}` |
+| `GET /api/v0/users/get_user_summary` | `{normal_wallets: [{balance, currency, token_estimation}], bonus_wallets: […], total_costs: [{currency, amount}], monthly_usage, total_usage, current_token, total_available_token_estimation}` |
 
-`start`/`end` are epoch seconds, `tz` a seconds offset. That is richer than anything Pulse shows today — it separates cache-hit from cache-miss tokens.
+`start`/`end` are seconds; `tz` is the zone offset in seconds, **a whole number of hours** — the console floors it and moves the remainder into `start`/`end`, and `DeepSeekConsole.range` does the same, so a +5:30 reader gets the console's own buckets. `time` is a bucket's start in seconds; `bucket` is its length (86,400 for days; the console treats under a day as hours). The token counts are numbers (the console adds them); `cost` and the wallet balances go into the console's decimal type, so they are decoded as **either a number or a string** (`DeepSeekConsole.Figure`), and absent is nil, never zero.
 
-**The credential is what stops it.** These want `Authorization: Bearer <userToken>`, the console's own login token, and an API key is refused outright:
+**The history** is the console's own "last 30 days" — today and the twenty-nine before, `start` = local midnight 29 days ago, `end` = tomorrow's midnight, which is the request the page itself makes. Amount and cost are asked together; the series are per key and model, and **every key is added up**, so it is the whole account. Per day and model: cache-miss input → `input`, cache hits → `cacheRead`, response → `output`; DeepSeek writes no cache, so `cacheWrite` is 0. The card's per-model cache hit rate falls out of that. `REQUEST` is not kept — nothing on the card shows a request count. The ledger is `origin = .providerLogs` (whole account, priced as charged, no "≈"), with **no quarter-hour slots** and `hasAggregateTiming`: a day bucket does not say when in the day the work ran, so nothing per-hour or per-window is drawn from it. The card's footnote names the console and the 30 days.
 
-```
-$ curl -H "Authorization: Bearer sk-…" \
-    "https://platform.deepseek.com/api/v0/usage/by_api_key/cost?start=…&end=…&tz=28800"
-{"code":40003,"msg":"Authorization Failed (invalid token)","data":null}
-```
+**Money is in the account's own currency.** `UsageLedger.currency` exists for this — every other history is in dollars — and both money figures on the cards (`AccountUsageCard.money(_:currency:)`) follow it, so a CNY account reads ¥ and not $. The cost reply is per currency and the two cannot be added: the ledger carries one — the reader's choice for the ring (`deepSeekCurrency`), else the first the reply lists with any money in it, else the first. Tokens are counted whichever currency paid for them.
 
-`userToken` lives in **`localStorage`**, not a cookie — the bundle's storage class is a thin wrapper over `localStorage.getItem/setItem`. That is the whole problem. Pulse reads browser *cookies* for Ollama Cloud and Cursor ([authentication.md](authentication.md)); localStorage is a per-origin store in Chrome's LevelDB (locked while Chrome runs) or WebKit's sqlite, and reading it is both more invasive and far more brittle than anything here does today.
+**The balance without a key** comes from the summary's wallets: per currency, `normal_wallets` is topped up, `bonus_wallets` granted, their sum the total — handed to the key route's own rule as a `Reply`, so the ring, the marks and the alerts are the same whichever credential answered. The summary states no `is_available`, so a console reading can **never** be marked spent. `token_estimation` is the console's guess at tokens left and is not shown.
 
-The remaining option is asking the user to paste the token out of devtools, which is an ugly setup step for a credential of unknown lifetime — a feature that would fail silently the day it expires. So: no history for DeepSeek. `providesHistory` is false and stays false until DeepSeek exposes usage to an API key.
+**Reads.** `DeepSeekConsoleHistory` shares one read between the card, Settings and the warm-up `UsageStore.loadAPIKeys` starts while DeepSeek is on and a sign-in is kept, and reuses an answer for 60 seconds; the card keeps its own five minutes on top (`CardLedgers.lifetime`). Two requests a read — not paged, unlike OpenCode's log.
 
-Noted in passing: `/api/v0/users/set_alert_bound` is DeepSeek's own low-balance alert, server-side. Pulse's [Warn me below](#warn-me-below) is the local equivalent and does not touch it.
+**Verified** against a live account on 2026-10-03 only as far as the console's own page goes: signed in, `/usage` asked exactly the range above (`start=1788451200&end=1791043200&tz=28800`, 4 Sep–4 Oct at +08:00) and both routes answered 200, alongside the summary; the page then read ¥1.31, 592 requests, 1,419,424 tokens for the 30 days across `deepseek-flash`, `deepseek-v4-flash` and `deepseek-v4-pro`. The response bodies could not be captured, so the decoders are written to the bundle's mapping rather than to a captured reply, and `DeepSeekConsoleTests` uses synthetic fixtures in that shape. The same account was then read through Pulse (Settings › DeepSeek console › Read, from Chrome) and its figures matched the page's.
+
+Not read: `/api/v0/usage/export` (a spreadsheet), `/users/get_api_keys`, `/api/v0/users/set_alert_bound` (DeepSeek's own server-side low-balance alert; Pulse's [Warn me below](#warn-me-below) is the local equivalent and does not touch it).
 
 ## Currencies
 

@@ -71,6 +71,7 @@ struct CardHistoryTests {
     /// OpenCode Go states what each limit is worth; there is nothing to estimate.
     @Test func noValueEstimateWhereTheProviderStatesTheAllowance() {
         #expect(!UsageDetailCard.estimatesValue(for: .openCodeGo))
+        #expect(!UsageDetailCard.estimatesValue(for: .deepSeek))
         #expect(UsageDetailCard.estimatesValue(for: .claudeCode))
         #expect(UsageDetailCard.estimatesValue(for: .codex))
     }

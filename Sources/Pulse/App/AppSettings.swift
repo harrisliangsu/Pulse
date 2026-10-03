@@ -168,6 +168,12 @@ final class AppSettings {
         }
     }
 
+    /// The same choice read straight from the defaults, for a reader off the
+    /// main actor (the detailed card's DeepSeek history, whose money follows it).
+    nonisolated static var storedDeepSeekCurrency: String? {
+        UserDefaults.standard.string(forKey: Key.deepSeekCurrency)
+    }
+
     /// Which Qoder site the saved session belongs to.
     ///
     /// `qoder.com` and `qoder.com.cn` are two sign-ins on two hosts, and a

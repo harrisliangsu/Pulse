@@ -192,7 +192,7 @@ struct AccountUsageCard: View {
             // Money where there is money: this Mac's logs priced at API rates,
             // or a provider's own log of what it charged.
             if ledger.origin == .localTranscripts || ledger.origin == .providerLogs {
-                Text(Self.money(cost))
+                Text(Self.money(cost, currency: ledger.currency))
                     .font(.system(size: 17, weight: .semibold))
                     .monospacedDigit()
 
@@ -370,6 +370,10 @@ struct AccountUsageCard: View {
                 // A different provenance needs different words: this one is
                 // the account's, not this Mac's, and it carries no money.
                 Text(localized: "Reported by \(provider.displayName) for the whole account, so it covers every machine you use it on. It counts tokens only — the figures behind it cannot be turned into a cost.")
+            } else if ledger.origin == .providerLogs, provider == .deepSeek {
+                // Day by day, not request by request, and Pulse asks for the
+                // console's own "last 30 days".
+                Text(localized: "From \(provider.displayName)'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days.")
             } else if ledger.origin == .providerLogs {
                 // The account's own log, and the money is what was charged —
                 // the one history here that is a bill rather than an estimate.
@@ -390,12 +394,12 @@ struct AccountUsageCard: View {
 
     // MARK: - Formatting
 
-    static func money(_ amount: Double) -> String {
-        // Both providers publish their rates in dollars, so the figure is in
-        // dollars whatever the reader's own currency is — hence a fixed code
-        // rather than the locale's.
+    static func money(_ amount: Double, currency: String? = nil) -> String {
+        // The price lists are in dollars, so the figure is in dollars whatever
+        // the reader's own currency is — hence a fixed code rather than the
+        // locale's. A console that charges in another (DeepSeek's yuan) says so.
         amount.formatted(
-            .currency(code: "USD")
+            .currency(code: currency ?? "USD")
                 .precision(.fractionLength(amount >= 1000 ? 0 : 2))
                 .locale(LocalizationSource.locale)
         )

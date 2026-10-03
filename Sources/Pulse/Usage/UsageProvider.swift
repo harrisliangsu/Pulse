@@ -383,10 +383,13 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// model, so nothing can be priced), which is what `UsageLedger.Origin`
     /// exists to keep straight.
     /// OpenCode Go joins them once its console session is kept: the console's
-    /// request log is the account's own record, priced as charged.
+    /// request log is the account's own record, priced as charged. DeepSeek
+    /// likewise once its console's sign-in is kept: the console's day-by-day
+    /// usage, charged in the account's own currency.
     var providesHistory: Bool {
         keepsLocalTranscripts || self == .zai || self == .glmCoding
             || (self == .openCodeGo && OpenCodeConsole.hasSession)
+            || (self == .deepSeek && DeepSeekConsole.hasSession)
     }
 
     /// Whether the route to this provider's figures is a choice.

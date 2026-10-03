@@ -15,8 +15,9 @@ enum CardHistorySource: Equatable, Sendable {
     /// (editor, IDE, CLI) and Devin two, added up.
     case agents([SpendAgent])
     case accountStatistics
-    /// OpenCode's console log of every request, read with the console
-    /// session kept in Settings: the whole account, priced as charged.
+    /// A console's own record of the account, read with the console sign-in
+    /// kept in Settings — OpenCode's request log, DeepSeek's daily usage: the
+    /// whole account, priced as charged.
     case accountLogs
 
     /// Whether this Mac's records are read, which only Token spend allows.
@@ -30,6 +31,9 @@ extension Provider {
         // The console's log once its session is kept — every machine, and
         // what was charged — and this Mac's OpenCode records until then.
         if self == .openCodeGo, OpenCodeConsole.hasSession { return .accountLogs }
+        // DeepSeek's console usage once its sign-in is kept. No local
+        // records stand in before that: nothing on this Mac logs it.
+        if self == .deepSeek, DeepSeekConsole.hasSession { return .accountLogs }
         let agents = SpendAgent.allCases.filter { $0.iconProvider == self && $0.provider == nil }
         return agents.isEmpty ? nil : .agents(agents)
     }
@@ -134,6 +138,9 @@ final class CardLedgers {
             case .notConfigured, .notAsked: return .answered(.empty)
             case .failed: return .failed
             }
+        case .accountLogs where provider == .deepSeek:
+            guard let token = DeepSeekConsole.keptToken else { return .signedOut }
+            return await DeepSeekConsoleHistory.shared.ledger(token: token, currency: AppSettings.storedDeepSeekCurrency)
         case .accountLogs:
             guard let cookie = APIKeyStore.key(for: provider, slot: OpenCodeConsole.slot) else { return .signedOut }
             return await OpenCodeConsoleHistory.shared.ledger(cookie: cookie)
