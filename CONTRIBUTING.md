@@ -4,7 +4,7 @@ Pulse is a macOS menu-bar app. There is no linter; there is a test target (`swif
 
 ## Workflow
 
-1. Small bug fixes, documentation and translations can be submitted directly as a pull request. For new features or major refactors, open an issue first and wait for a maintainer to label it `accepted` before starting the implementation. Acceptance of the problem does not automatically approve a particular implementation. See [Pull requests](#pull-requests).
+1. All contributions can be submitted directly as a pull request, including new features and major refactors. No issue or prior approval is required before implementation or submission. See [Pull requests](#pull-requests).
 2. Read the **topic doc** for the area you are changing ([Docs/README.md](Docs/README.md)). If the change is about *why* something is the way it is, also read the linked decision.
 3. Change code and the **authoritative topic doc in the same patch**. Do not leave CLAUDE.md as a second source of truth, and do not grow it with new architecture.
 4. Run the verification that area needs ([Docs/development.md](Docs/development.md), [Docs/build-from-source.md](Docs/build-from-source.md)). At minimum, a Swift 6 warning-clean build if you touched Swift, and `./Scripts/check-localization.sh` if you touched user-visible strings.
@@ -18,16 +18,16 @@ An issue's title says what it is about, after the template's prefix. `.github/wo
 
 ## Pull requests
 
-Small, focused contributions are welcome. Review is one person's time, so discussing larger changes first helps keep that work useful.
+Focused contributions are welcome. Discussion in an issue is optional; you can describe the problem and proposed solution in the PR itself.
 
-- **Small bug fixes, documentation and translations may be submitted directly.** An existing issue is helpful but not required.
-- **New features and major refactors need an issue labelled `accepted`** before implementation. Link it in the PR description (for example, `Closes #123`). If you already opened a PR, discuss the scope and add the accepted issue link to that PR; there is no need to submit it again.
+- **All contributions may be submitted directly**, including bug fixes, documentation, translations, new features and major refactors. No issue, label or prior approval is required before implementation or submission.
+- **Link an existing issue if there is one** (for example, `Closes #123`). An issue is optional.
 - **Aim for at most two open PRs per person.** If you have more, consider waiting for existing reviews before opening another. This is review guidance, not an automatic closure rule.
 - **Show the problem and the evidence for a bug fix.** Describe what happened and what should happen. A small fix found while reading code is welcome with a reproducible example or a regression test that fails before the fix and passes after it. State whether the evidence comes from real use or a synthetic test; UI and input claims still need the appropriate evidence described below.
 - **One PR does one thing.** Do not carry another PR's commits, and do not bundle a refactor with a fix.
 - **Screenshots for the review go in the PR description**, not in the repository (`Docs/images/` is for pictures the docs use).
 
-`.github/workflows/pr-gate.yml` posts a reminder when an outside PR has no accepted issue link or its author has more than two open PRs. It leaves the PR open so the author can clarify the scope or add a link. It does not classify changes or replace human review. Maintainers and bots are exempt.
+`.github/workflows/pr-gate.yml` posts a reminder only when an outside contributor has more than two open PRs. It leaves the PR open and does not require an issue link or prior approval. Maintainers and bots are exempt. All PRs still receive human review.
 
 ## Authoritative docs vs this file
 
