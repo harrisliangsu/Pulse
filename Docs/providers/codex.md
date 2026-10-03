@@ -73,6 +73,25 @@ Settings can also show the account’s real lifetime total from `account/usage/r
 
 Codex’s `input_tokens` **includes** cached tokens; `cached_input_tokens` is the subset. Session usage is a **running total** — difference it, do not sum per-turn `last_token_usage` (measured 6% high on one long session). Shared ledger rules: [`../refresh-and-data.md`](../refresh-and-data.md).
 
+## Signs of a weaker model
+
+Settings › Codex › **Signs of a weaker model** (`CodexSignals`, `CodexSignalReader`, `CodexSignalsGroup`). Requested 2026-10-03 after community tools claiming to detect a "nerfed" Codex; what each does and why only this much is taken:
+
+| Tool | What it reads | Taken? |
+|---|---|---|
+| [codex-routing-detector](https://github.com/darkdarkcocoa/codex-routing-detector) | `response.model` from a WebSocket trace of a probe it sends (≈12–16k tokens), or a TLS-intercepting proxy | **No** — sends on the user's behalf, or sits in their traffic |
+| [is-gpt-nerfed](https://github.com/kiyoakii/is-gpt-nerfed) + [ModelTrace](https://github.com/xqy2006/ModelTrace) | rollout settings (passive); a random-integer fingerprint from forked probes (active) | The passive half only |
+| 516 / `518n−2` ([openai/codex#30364](https://github.com/openai/codex/issues/30364), [codexcomp](https://github.com/dzshzx/codexcomp)) | `reasoning_output_tokens` per response | **Yes** |
+| [Codexshitdetector](https://github.com/pikapikaspeedup/Codexshitdetector) | first response of a turn has reasoning > 0 ⇒ "downgraded" | **No** — no evidence offered, and on this Mac 80–100% of every model's turns qualify |
+
+**What cannot be known.** Which model the server ran is never on disk: `codex-rs` reads it from an `openai-model` header and its mismatch warning (`ModelReroute`) is transient in `rollout/src/policy.rs`; `~/.codex/logs_2.sqlite` held none of it either (checked). So the group says **signs**, and the footnote says so.
+
+**Reasoning cut off.** Per response: `event_msg` `token_count` → `info.last_token_usage.reasoning_output_tokens`, under the model of the latest `turn_context`. Codex writes the same count more than once; a repeat of `total_token_usage` is dropped. The tag names the consequence the reader cares about, "possibly weakened", not the mechanism; the row's subtitle says the mechanism plainly ("had their reasoning cut off"). A response is on the lattice when `reasoning ≥ 516` and `(reasoning + 2) % 518 == 0`; chance puts about 1 in 518 there. Per model: the share of responses that reached 516 and stopped on it. **Too few to tell** under 20 such responses; **Possibly weakened** at ≥ 5% (25× chance) with at least 5 hits. Codex's own reviewer (`codex-auto-review`) is left out. On this Mac, all sessions (2026-10-03): gpt-5.5 126/279, gpt-5.6-sol 30/270, gpt-5.4 10/33 flagged; every `-codex` model 0 — the issue's finding, reproduced.
+
+**Settings quietly lowered.** From Codex **0.144** every change the user makes is written as `event_msg` `thread_settings_applied` (`thread_settings.model`, `.reasoning_effort`), and it takes effect at the **next** `task_started` — a change made while a turn runs is applied after that turn's `turn_context` (measured: judging against the latest event instead flagged two such turns falsely). A turn is a change when its `turn_context.model` differs from, or its `effort` ranks below (`none < minimal < low < medium < high < xhigh`), the settings in force at its start (or the previous turn's, where none was applied); or when `model_context_window` shrinks under the same model. Sub-agent turns (`root_turn_id` ≠ `turn_id`) are skipped. **Sessions before 0.144 are not judged**: they record no change at all, so a `/model` there looks exactly like a silent switch — on this Mac 20 such "changes" in old sessions, all ordinary switches. On the 89 judged sessions here, none. All of this is what Codex *asked for*, not what the server ran.
+
+**Reading.** `~/.codex/sessions` and `~/.codex/archived_sessions`, `rollout-*.jsonl`, files older than the period skipped by modification time; only lines naming one of five event types are decoded. Each file's facts are kept in memory against its size and modification time. Measured here: 318 files, 454 MB, 1.4 s for all, 0.03 s for 30 days. `CodexSignalsTests` uses synthetic sessions.
+
 ## First run
 
 Presence of `~/.codex`, never its contents.
