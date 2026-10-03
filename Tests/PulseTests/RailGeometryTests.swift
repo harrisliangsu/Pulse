@@ -43,8 +43,12 @@ struct RailGeometryTests {
             PanelMetrics.putFreeAcrossFiguresBeside(beside)
         }
 
+        let clock = PanelMetrics.showsWindowClock
+        defer { PanelMetrics.showWindowClock(clock) }
         for round in [false, true] {
             for (shows, besideRings) in [(false, false), (true, false), (true, true)] {
+                // The time arc moves every figure further off (issue #73).
+                PanelMetrics.showWindowClock(round)
                 PanelMetrics.useRoundEnds(round)
                 PanelMetrics.showTopPercentages(shows)
                 PanelMetrics.putFreeAcrossFiguresBeside(besideRings)
@@ -408,6 +412,20 @@ struct FreeLyingRailProportionTests {
 
         PanelMetrics.putFreeAcrossFiguresBeside(true)
         #expect(DockLayout.thickness(on: .horizontal, docked: false) == DockLayout.thickness(on: .vertical))
+        // Beside means right of the ring, even with figures set above
+        // (issue #73): the ring leads its item.
+        let above = PanelMetrics.labelAboveRing
+        PanelMetrics.putLabelAboveRing(true)
+        #expect(DockLayout.firstRingAlong(docked: false, on: .horizontal)
+            == DockLayout.endPadding(docked: false) + DockLayout.ringDiameter / 2)
+        PanelMetrics.putLabelAboveRing(above)
+        // The time arc moves a figure 5pt further from its ring.
+        let clock = PanelMetrics.showsWindowClock
+        PanelMetrics.showWindowClock(false)
+        let plain = DockLayout.ringToTextSpacing
+        PanelMetrics.showWindowClock(true)
+        #expect(DockLayout.ringToTextSpacing == plain + 5 * PanelMetrics.scale)
+        PanelMetrics.showWindowClock(clock)
         #expect(DockLayout.thickness(on: .horizontal, docked: true) == docked)
         #expect(DockLayout.ringStep(on: .horizontal, docked: true) == dockedStep)
         // The window is budgeted for the longer and the thicker of the rails.

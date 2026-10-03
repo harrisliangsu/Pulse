@@ -883,10 +883,18 @@ final class AppSettings {
     /// Unlike the other panel settings this changes nothing about the layout —
     /// the arc is drawn in the margin the rail already has around a ring — so
     /// it needs no `PanelMetrics` entry and nothing has to be re-measured.
+    ///
+    /// **It moves the figures.** The arc is drawn 5pt outside the ring's own
+    /// edge, so a figure at the usual distance sat on it (issue #73); with
+    /// the arc on, figures stand that much further off and the rail is longer.
+    /// So it goes to `PanelMetrics` before the change is announced, like
+    /// `labelAboveRing`.
     var showsWindowClock: Bool {
         didSet {
             guard showsWindowClock != oldValue else { return }
+            PanelMetrics.showWindowClock(showsWindowClock)
             UserDefaults.standard.set(showsWindowClock, forKey: Key.showsWindowClock)
+            onChange?()
         }
     }
 
@@ -928,9 +936,8 @@ final class AppSettings {
     /// on these rings means how close the limit is, and that does not change
     /// because the number was flipped. So a nearly empty ring is still red.
     ///
-    /// Like `showsWindowClock` this changes nothing about the layout: "100%"
-    /// is the widest either way round, so no `PanelMetrics` entry and nothing
-    /// to re-measure.
+    /// This changes nothing about the layout: "100%" is the widest either
+    /// way round, so no `PanelMetrics` entry and nothing to re-measure.
     var showsRemaining: Bool {
         didSet {
             guard showsRemaining != oldValue else { return }
@@ -1731,6 +1738,7 @@ final class AppSettings {
         PanelMetrics.showSidePercentages(settings.sideRailShowsPercentages)
         PanelMetrics.putLabelAboveRing(settings.labelAboveRing)
         PanelMetrics.putFreeAcrossFiguresBeside(settings.freeAcrossFiguresBeside)
+        PanelMetrics.showWindowClock(settings.showsWindowClock)
         PanelMetrics.useRoundEnds(settings.usesRoundEnds)
         PanelMetrics.showForecast(settings.showsForecast)
         PanelMetrics.showDetailedCard(!settings.detailedCards.isEmpty)

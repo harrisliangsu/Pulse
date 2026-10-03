@@ -381,6 +381,16 @@ enum PanelMetrics {
         lock.withLock { storedLabelAboveRing = above }
     }
 
+    /// `AppSettings.showsWindowClock`: the arc outside the ring pushes the
+    /// figures further off (`DockLayout.ringToTextSpacing`).
+    nonisolated(unsafe) private static var storedWindowClock = false
+
+    static func showWindowClock(_ shows: Bool) {
+        lock.withLock { storedWindowClock = shows }
+    }
+
+    static var showsWindowClock: Bool { lock.withLock { storedWindowClock } }
+
     static func putFreeAcrossFiguresBeside(_ beside: Bool) {
         lock.withLock { storedFreeAcrossBeside = beside }
     }

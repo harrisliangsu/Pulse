@@ -47,7 +47,13 @@ enum DockLayout {
     static var ringDiameter: CGFloat { 36 * PanelMetrics.scale }
     static var ringLineWidth: CGFloat { 4 * PanelMetrics.scale }
     /// Gap between a ring and the percent label beneath it.
-    static var ringToTextSpacing: CGFloat { 6 * PanelMetrics.scale }
+    ///
+    /// Further with the time-until-reset arc on: it is drawn 5pt outside the
+    /// ring's edge (`UsageRingView.clockGap` + its stroke), and a figure at
+    /// the usual 6pt sat on it — under the ring, beside it, across or down a
+    /// side (issue #73). The extra keeps the same clear gap from the arc as
+    /// from a ring without one.
+    static var ringToTextSpacing: CGFloat { (PanelMetrics.showsWindowClock ? 11 : 6) * PanelMetrics.scale }
     static var percentFontSize: CGFloat { 13 * PanelMetrics.scale }
     /// Rendered line height of the percent label, and its width at "100%".
     ///
@@ -294,8 +300,10 @@ enum DockLayout {
         // as the label, and the label is the wider of the two.
         // Beside, the ring leads its item — or follows the label, when the
         // label is set to come first.
+        // Beside, the ring leads its item: the setting that put the figure
+        // there says *right* of the ring, so "above" does not move it left.
         let intoItem = if labelsBeside(on: axis, docked: docked) {
-            (labelLeads ? percentTextWidth + ringToTextSpacing : 0) + ringDiameter / 2
+            ringDiameter / 2
         } else if axis == .vertical {
             ringOffsetInItem(on: axis) + ringDiameter / 2
         } else {
@@ -660,11 +668,13 @@ private struct UsageDockItem: View {
             ? AnyLayout(HStackLayout(spacing: DockLayout.ringToTextSpacing))
             : AnyLayout(VStackLayout(spacing: DockLayout.ringToTextSpacing))
         layout {
-            if DockLayout.labelLeads { sizedLabel }
+            if DockLayout.labelLeads && !labelBeside { sizedLabel }
 
             ring
 
-            if !DockLayout.labelLeads { sizedLabel }
+            // Beside, always after the ring: the switch that put it there
+            // says *right* of the ring (issue #73).
+            if !DockLayout.labelLeads || labelBeside { sizedLabel }
         }
         .contentShape(.rect)
         .background {
@@ -720,10 +730,7 @@ private struct UsageDockItem: View {
     @ViewBuilder
     private var sizedLabel: some View {
         if labelBeside {
-            percentLabel.frame(
-                width: DockLayout.percentTextWidth,
-                alignment: DockLayout.labelLeads ? .trailing : .leading
-            )
+            percentLabel.frame(width: DockLayout.percentTextWidth, alignment: .leading)
         } else {
             percentLabel
         }
