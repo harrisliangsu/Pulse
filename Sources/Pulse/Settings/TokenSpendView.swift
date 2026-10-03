@@ -50,6 +50,7 @@ struct TokenSpendView: View {
     let hasReadLimitations: Bool
     @Binding var span: SpendSpan
     let isLoading: Bool
+    var isSummarizing = false
     let refresh: () -> Void
 
     /// Which column the day table is sorted by. Its own state rather than a
@@ -120,7 +121,11 @@ struct TokenSpendView: View {
             // The span picker stays in every view, so narrowing the window
             // while looking at one agent or one model does not throw the reader
             // back out.
-            if let modelFocus {
+            if isSummarizing {
+                ProgressView()
+                    .controlSize(.small)
+                    .frame(maxWidth: .infinity)
+            } else if let modelFocus {
                 if modelSummary.isEmpty {
                     nothingForModel(modelFocus)
                 } else {

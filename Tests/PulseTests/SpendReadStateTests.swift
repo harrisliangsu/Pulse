@@ -34,12 +34,15 @@ struct SpendReadStateTests {
         #expect(completed)
         #expect(finished)
 
+        let snapshotID = try #require(state.snapshotID)
+
         for _ in 0..<3 {
             #expect(state.prepare(request(selected: false)) == .retain)
             #expect(state.prepare(request()) == .retain)
             #expect(state.snapshot?.ledgers[.codex]?.allTime.tokens == 100)
             #expect(state.snapshot?.ledgers[.workBuddy]?.allTime.tokens == 0)
             #expect(state.snapshot?.notes[.workBuddy] == ["unreadable record"])
+            #expect(state.snapshotID == snapshotID)
         }
     }
 
@@ -69,6 +72,7 @@ struct SpendReadStateTests {
         #expect(away != released)
         #expect(state.prepare(released) == .release)
         #expect(state.snapshot == nil)
+        #expect(state.snapshotID == nil)
         #expect(state.prepare(request(selected: false)) == .retain)
         let reopened = try scan(state.prepare(request()))
         #expect(!reopened.refresh, "A new window/enabling may still use the disk cache")

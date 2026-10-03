@@ -39,11 +39,12 @@ enum DevinCLIStore {
         var perSession: [String: (tokens: Int, cost: Double, unpriced: Int, start: Date, end: Date)] = [:]
         var sessionSlots: [String: [String: (tokens: Int, cost: Double, unpriced: Int)]] = [:]
 
+        var lookup = ModelPriceLookup(prices)
         Self.eachUsage(handle) { session, model, at, tally in
             let key = UsageLedgerReader.slotKey(for: at)
             buckets[key, default: [:]][model] = (buckets[key]?[model] ?? TokenTally()) + tally
 
-            let price = ModelPrices.price(for: model, in: prices)
+            let price = lookup.price(for: model)
             let cost = price.map { tally.cost(at: $0) } ?? 0
             let unpriced = price == nil ? tally.total : 0
 

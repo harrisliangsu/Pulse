@@ -298,6 +298,7 @@ struct SpendSummary: Equatable, Sendable {
         var hasPartial = false
 
         for (agent, ledger) in ledgers {
+            guard !Task.isCancelled else { return SpendSummary() }
             // A ledger that cannot be priced has no place in a combined cost.
             // Local records and imported ones can be; a provider's own
             // statistics carry one total per model and no money.
@@ -311,6 +312,7 @@ struct SpendSummary: Equatable, Sendable {
             var agentUnpriced = 0
 
             for day in window {
+                guard !Task.isCancelled else { return SpendSummary() }
                 agentTokens += day.tokens
                 agentCost += day.cost
                 agentUnpriced += day.unpricedTokens
@@ -332,6 +334,7 @@ struct SpendSummary: Equatable, Sendable {
             // Bucketed by the hour their start falls in: a bucket never
             // straddles one.
             for slot in ledger.slots where cutoff.map({ slot.start >= $0 }) ?? true {
+                guard !Task.isCancelled else { return SpendSummary() }
                 guard slot.tokens > 0 else { continue }
                 hourTokens[calendar.component(.hour, from: slot.start), default: 0] += slot.tokens
             }
@@ -344,6 +347,7 @@ struct SpendSummary: Equatable, Sendable {
             // are what make the window exact, and they are priced, so the
             // money is a sum rather than a proportion guessed from the total.
             for session in ledger.sessions {
+                guard !Task.isCancelled else { return SpendSummary() }
                 guard let windowed = Self.window(session, cutoff: cutoff) else { continue }
 
                 // The row carries the span's portion, so the list and the
@@ -447,11 +451,13 @@ struct SpendSummary: Equatable, Sendable {
 
         summary.sessions.sort { $0.session.end > $1.session.end }
         let knownProjects = Set(projectMetadata.values)
+        let projectNames = UsageProject.displayNames(for: knownProjects)
+        let nameCounts = projectMetadata.values.reduce(into: [String: Int]()) { $0[$1.name, default: 0] += 1 }
         summary.projects = projectTokens
             .map { id, tokens in
                 let metadata = projectMetadata[id]!
-                var name = UsageProject.displayName(for: metadata, among: knownProjects)
-                if let agent = id.agent, projectMetadata.keys.contains(where: { $0 != id && projectMetadata[$0]?.name == name }) {
+                var name = projectNames[metadata] ?? metadata.name
+                if let agent = id.agent, (nameCounts[name] ?? 0) > (metadata.name == name ? 1 : 0) {
                     name += " · " + agent.displayName
                 }
                 return Project(

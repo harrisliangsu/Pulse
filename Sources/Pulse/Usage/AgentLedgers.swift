@@ -228,9 +228,9 @@ actor AgentLedgers {
         // Every catalog client, from its family's normalized records.
         default:
             guard !stores.isEmpty else { return ReadResult(ledger: .empty, notes: []) }
-            let records = AgentRecordReaders.records(client: agent.sourceID, roots: stores)
+            let read = AgentRecordReaders.read(client: agent.sourceID, roots: stores)
             let ledger = AgentUsageLedger.build(
-                records,
+                read.records,
                 prices: prices,
                 namespace: agent.rawValue,
                 vendor: agent.priceVendor,
@@ -244,7 +244,7 @@ actor AgentLedgers {
             // and is left to the zero-record list instead. Only a source that
             // does report counts can have a decode limit worth stating.
             let notes = agent.reportsTokenCounts
-                ? AgentRecordReaders.notes(client: agent.sourceID, roots: stores)
+                ? read.notes
                 : []
             return ReadResult(ledger: ledger, notes: notes)
         }

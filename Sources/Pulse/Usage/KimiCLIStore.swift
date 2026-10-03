@@ -21,6 +21,7 @@ import Foundation
 /// deliberately one no price list can match.
 enum KimiCLIStore {
     static func ledger(at root: URL, prices: [String: ModelPrice]) -> UsageLedger {
+        var lookup = ModelPriceLookup(prices)
         var buckets: [String: [String: TokenTally]] = [:]
         var sessions: [UsageLedger.Session] = []
 
@@ -60,7 +61,7 @@ enum KimiCLIStore {
                 last = max(last ?? at, at)
 
                 let key = UsageLedgerReader.slotKey(for: at)
-                let price = ModelPrices.price(for: model, in: prices)
+                let price = lookup.price(for: model)
                 let money = price.map { tally.cost(at: $0) } ?? 0
                 let unpriced = price == nil ? tally.total : 0
                 buckets[key, default: [:]][model] = (buckets[key]?[model] ?? TokenTally()) + tally

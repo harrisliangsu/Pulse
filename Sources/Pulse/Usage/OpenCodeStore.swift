@@ -58,6 +58,7 @@ enum OpenCodeStore {
         let calendar = Calendar.current
 
         var seen: Set<String> = []
+        var lookup = ModelPriceLookup(prices)
         let rows: (OpaquePointer?) -> Void = { statement in
             guard
                 let sessionText = sqlite3_column_text(statement, 1),
@@ -89,7 +90,7 @@ enum OpenCodeStore {
             )
             guard tally.total > 0 else { return }
 
-            let price = ModelPrices.price(for: model, in: prices, vendor: vendor)
+            let price = lookup.price(for: model, vendor: vendor)
             let cost = price.map { tally.cost(at: $0) } ?? 0
             let unpriced = price == nil ? tally.total : 0
             let key = UsageLedgerReader.slotKey(for: at)

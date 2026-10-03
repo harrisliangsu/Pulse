@@ -220,34 +220,33 @@ actor ModelPrices {
         in table: [String: ModelPrice],
         vendor: String? = nil
     ) -> ModelPrice? {
-        if let price = firstParty(model, table) { return price }
+        if let price = table[model] { return price }
+        return resolve(for: model, vendor: vendor, exact: { table[$0] }, folded: { lowered in
+            table.first(where: { $0.key.lowercased() == lowered })?.value
+        })
+    }
+
+    /// Shared by single lookups and the indexed, scan-local lookup. The order
+    /// is significant: every first-party spelling precedes every vendor rate.
+    static func resolve(
+        for model: String, vendor: String?,
+        exact: (String) -> ModelPrice?, folded: (String) -> ModelPrice?
+    ) -> ModelPrice? {
+        if let price = exact(model) ?? folded(model.lowercased()) { return price }
+        let candidates = aliases(for: model)
+        for candidate in candidates {
+            if let price = exact(candidate) ?? folded(candidate.lowercased()) { return price }
+        }
 
         // Only now, and only for the vendor asked about: the plan the tokens
         // were bought on is the last word, never the first.
         guard let vendor else { return nil }
-        if let exact = table[vendorKey(vendor, model)] { return exact }
+        if let price = exact(vendorKey(vendor, model)) { return price }
         let lowered = vendorKey(vendor, model).lowercased()
-        if let match = table.first(where: { $0.key.lowercased() == lowered })?.value { return match }
-        for candidate in aliases(for: model) {
-            if let match = table[vendorKey(vendor, candidate)] { return match }
+        if let price = folded(lowered) { return price }
+        for candidate in candidates {
+            if let price = exact(vendorKey(vendor, candidate)) { return price }
         }
-        return nil
-    }
-
-    private static func firstParty(_ model: String, _ table: [String: ModelPrice]) -> ModelPrice? {
-        if let exact = table[model] { return exact }
-
-        // MiniMax writes `MiniMax-M3` and the agents that call it write
-        // `minimax-m3`. Case is the only difference.
-        let lowered = model.lowercased()
-        if let match = table.first(where: { $0.key.lowercased() == lowered })?.value { return match }
-
-        for candidate in aliases(for: model) {
-            if let match = table[candidate] { return match }
-            let folded = candidate.lowercased()
-            if let match = table.first(where: { $0.key.lowercased() == folded })?.value { return match }
-        }
-
         return nil
     }
 

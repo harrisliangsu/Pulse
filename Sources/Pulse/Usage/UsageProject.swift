@@ -48,6 +48,19 @@ struct UsageProject: Hashable, Codable, Sendable {
     }
 
     /// Extend only ambiguous directory names, using the shortest distinct suffix.
+    static func displayNames(for projects: Set<UsageProject>) -> [UsageProject: String] {
+        let groups = Dictionary(grouping: projects, by: \.name)
+        var names: [UsageProject: String] = [:]
+        for group in groups.values {
+            guard !Task.isCancelled else { return [:] }
+            let peers = Set(group)
+            for project in group {
+                names[project] = displayName(for: project, among: peers)
+            }
+        }
+        return names
+    }
+
     static func displayName(for project: UsageProject, among projects: Set<UsageProject>) -> String {
         let peers = projects.filter { $0 != project && $0.name == project.name }
         guard !peers.isEmpty else { return project.name }

@@ -152,6 +152,7 @@ struct ModelSpendSummary: Equatable, Sendable {
         var partial = false
 
         for (agent, ledger) in ledgers {
+            guard !Task.isCancelled else { return ModelSpendSummary(name: name) }
             // A ledger that cannot be priced has no place here: a provider's
             // own statistics report one total per model and no categories.
             guard ledger.origin.supportsTokenSpend else { continue }
@@ -166,6 +167,7 @@ struct ModelSpendSummary: Equatable, Sendable {
             var ledgerSlotTokens: [Date: [String: Int]] = [:]
 
             for day in ledger.days {
+                guard !Task.isCancelled else { return ModelSpendSummary(name: name) }
                 if let cutoff, day.date < cutoff { continue }
                 for (rawID, tokens) in day.models
                 where tokens > 0 && (ledger.modelNames[rawID] ?? rawID) == name {
@@ -235,6 +237,7 @@ struct ModelSpendSummary: Equatable, Sendable {
             // detail contributes nothing here — and then the reconciliation
             // below fails, which is the point.
             for slot in ledger.slots {
+                guard !Task.isCancelled else { return ModelSpendSummary(name: name) }
                 if let cutoff, slot.start < cutoff { continue }
                 for (rawID, modelTally) in slot.models
                 where (ledger.modelNames[rawID] ?? rawID) == name {
@@ -305,6 +308,7 @@ struct ModelSpendSummary: Equatable, Sendable {
         let last = max(today, dayTokens.keys.max() ?? today)
         var cursor = min(first, last)
         while cursor <= last {
+            guard !Task.isCancelled else { return ModelSpendSummary(name: name) }
             let tokens = dayTokens[cursor] ?? 0
             let tally: TokenTally?
             if tokens == 0 {

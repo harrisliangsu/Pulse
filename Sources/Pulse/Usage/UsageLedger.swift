@@ -649,6 +649,7 @@ actor UsageLedgerReader {
         var dayModelTallies: [Date: [String: TokenTally]] = [:]
         var dayModelCosts: [Date: [String: TokenCost]] = [:]
         var dayTally: [Date: TokenTally] = [:]
+        var lookup = ModelPriceLookup(prices)
 
         for (key, models) in buckets {
             guard !Task.isCancelled else { return .empty }
@@ -668,7 +669,7 @@ actor UsageLedgerReader {
                     (dayModelTallies[day]?[model] ?? TokenTally()) + tally
                 dayTally[day, default: TokenTally()] = (dayTally[day] ?? TokenTally()) + tally
 
-                if let price = ModelPrices.price(for: model, in: prices, vendor: vendor) {
+                if let price = lookup.price(for: model, vendor: vendor) {
                     let money = tally.costBreakdown(at: price)
                     cost += money.total
                     dayModelCosts[day, default: [:]][model, default: TokenCost()] =
@@ -737,6 +738,7 @@ actor UsageLedgerReader {
         var buckets: Buckets = [:]
         var timings: [String: [String: ReplyTiming]] = [:]
         var fresh: [String: FileCache.Entry] = [:]
+        var changed = false
 
         for file in Self.logFiles(for: provider, home: home) {
             guard !Task.isCancelled else { return ([:], [:], [:]) }
@@ -748,6 +750,7 @@ actor UsageLedgerReader {
             if let known = cache.files.removeValue(forKey: key), known.stamp == stamp {
                 fresh[key] = known
             } else {
+                changed = true
                 let scanned = autoreleasepool { parse(file, provider: provider) }
                 guard !Task.isCancelled else { return ([:], [:], [:]) }
                 fresh[key] = FileCache.Entry(
@@ -760,13 +763,12 @@ actor UsageLedgerReader {
         // Each reply once, for the file it appeared in first — the original
         // conversation, not a resumed or forked copy of its history. Files are
         // taken oldest work first, then by path, so the choice is stable.
-        let ordered = fresh.sorted { lhs, rhs in
-            let left = lhs.value.firstSlot ?? "", right = rhs.value.firstSlot ?? ""
-            return left != right ? left < right : lhs.key < rhs.key
+        let ordered = fresh.map { (key: $0.key, entry: $0.value, first: $0.value.firstSlot ?? "") }.sorted { lhs, rhs in
+            lhs.first != rhs.first ? lhs.first < rhs.first : lhs.key < rhs.key
         }
         var claimed: Set<String> = []
         var counted: [String: FileCache.Entry] = [:]
-        for (key, entry) in ordered {
+        for (key, entry, _) in ordered {
             guard !Task.isCancelled else { return ([:], [:], [:]) }
             var days = entry.days
             var fileTimings = entry.timings ?? [:]
@@ -792,8 +794,12 @@ actor UsageLedgerReader {
             }
         }
 
-        cache.files = fresh
-        cache.save(for: provider, directory: cacheDirectory)
+        // Entries left in the old cache are deleted files. Repricing unchanged
+        // transcripts does not change this raw-token cache or warrant a write.
+        if changed || !cache.files.isEmpty {
+            cache.files = fresh
+            cache.save(for: provider, directory: cacheDirectory)
+        }
         // The sessions are cut from the counted entries, so a resumed
         // conversation's row holds only what was done in it.
         return (buckets, timings, counted)
@@ -810,6 +816,7 @@ actor UsageLedgerReader {
         prices: [String: ModelPrice]
     ) -> [UsageLedger.Session] {
         var sessions: [UsageLedger.Session] = []
+        var lookup = ModelPriceLookup(prices)
 
         for (path, entry) in files {
             guard !Task.isCancelled else { return [] }
@@ -831,7 +838,7 @@ actor UsageLedgerReader {
                 for (model, tally) in models {
                     tokens += tally.total
                     slotTokens += tally.total
-                    if let price = ModelPrices.price(for: model, in: prices) {
+                    if let price = lookup.price(for: model) {
                         let money = tally.cost(at: price)
                         cost += money
                         slotCost += money
@@ -1409,7 +1416,10 @@ private struct FileCache: Codable {
 
         /// The earliest quarter-hour with work in it.
         var firstSlot: String? {
-            (Array(days.keys) + (replies ?? [:]).values.map(\.slot)).min()
+            let day = days.keys.min()
+            let reply = replies?.values.lazy.map(\.slot).min()
+            if let day, let reply { return min(day, reply) }
+            return day ?? reply
         }
     }
 

@@ -139,6 +139,8 @@ struct SettingsView: View {
     /// The provider whose window starter is waiting on the risk confirmation.
     @State private var confirmingStarter: Provider?
     @State private var modelSpend = ModelSpendSummary()
+    @State private var spendSummaryCache = SpendSummaryCache()
+    @State private var displayedSpendRequest: SpendSummaryCache.Request?
 
     var body: some View {
         NavigationSplitView {
@@ -321,6 +323,7 @@ struct SettingsView: View {
                                         set: { settings.spendSpan = $0 }
                                     ),
                                     isLoading: isScanningSpend,
+                                    isSummarizing: spendSummaryIsPending,
                                     refresh: { spendRescan += 1 }
                                 )
                             }
@@ -341,12 +344,10 @@ struct SettingsView: View {
                 // Only an initial visit or Rescan reads; changing the span
                 // re-adds up what is already in memory.
                 // **Two tasks, because they cost different things.** Reading
-                // every agent's store is seconds on a cold launch; adding the
-                // numbers up again for a different span is microseconds. Keyed
-                // together, changing the span put the spinner back on screen
-                // and made a cached read look like a rescan.
+                // stores and summarizing their cached ledgers have independent
+                // lifetimes. Changing the span must not start another scan.
                 .task(id: spendLoadKey) { await loadSpend() }
-                .onChange(of: spendKey) { _, _ in recomputeSpend() }
+                .task(id: spendSummaryRequest) { await recomputeSpend() }
                 // A model opened under one agent means nothing under another,
                 // so changing the agent drops back out of the model.
                 .onChange(of: spendFocus) { _, _ in selectedModel = nil }
@@ -2078,9 +2079,21 @@ struct SettingsView: View {
     }
 
     /// What the *figures* depend on, which is read back out of what was loaded.
-    private var spendKey: String {
-        guard case .spend = pane, settings.readsTokenSpend else { return "-" }
-        return "\(settings.spendSpan.rawValue)|\(spendFocus?.rawValue ?? "")|\(selectedModel ?? "")"
+    private var spendSummaryRequest: SpendSummaryCache.Request? {
+        guard case .spend = pane, settings.readsTokenSpend, navigation.isWindowVisible,
+              let snapshot = spendRead.snapshotID else { return nil }
+        let calendar = Calendar.current
+        return SpendSummaryCache.Request(
+            window: .init(snapshot: snapshot, days: settings.spendSpan.days,
+                          today: calendar.startOfDay(for: Date()), calendar: calendar,
+                          language: settings.language.rawValue),
+            agent: spendFocus, model: selectedModel
+        )
+    }
+
+    private var spendSummaryIsPending: Bool {
+        guard let request = spendSummaryRequest else { return false }
+        return displayedSpendRequest.map { !request.canDisplay($0) } ?? true
     }
 
     /// Every agent's ledger, added up.
@@ -2115,7 +2128,6 @@ struct SettingsView: View {
         isScanningSpend = true
         if !refresh, let kept = await AgentLedgers.shared.keptSnapshot() {
             guard !Task.isCancelled, spendRead.complete(kept.snapshot, for: id) else { return }
-            recomputeSpend()
             guard Date().timeIntervalSince(kept.at) >= SpendWarmer.paneFreshness else {
                 spendRead.finish(id)
                 isScanningSpend = false
@@ -2145,10 +2157,11 @@ struct SettingsView: View {
         }
         guard !Task.isCancelled, settings.readsTokenSpend, navigation.isWindowVisible,
               pane == .spend, spendRead.complete(result, for: id) else { return }
-        recomputeSpend()
     }
 
     private func clearSpendSummaries() {
+        spendSummaryCache = SpendSummaryCache()
+        displayedSpendRequest = nil
         spend = SpendSummary()
         focusedSpend = SpendSummary()
         modelSpend = ModelSpendSummary()
@@ -2163,31 +2176,22 @@ struct SettingsView: View {
     /// screen first where there is one** — so a model opened from an agent's
     /// list reports that agent's work in it and never the other agents' same
     /// model. Nothing here reads a store: it is arithmetic over what was
-    /// already loaded, which is why opening a model costs no spinner.
+    /// already loaded, performed on the summary cache's actor.
     ///
     /// **One `now` and one calendar for all three.** Asked separately, a recompute
     /// that happens to straddle midnight can put the combined total on one day
     /// and the model on the next, so the drill-down no longer adds up to the row
     /// it was opened from.
-    private func recomputeSpend() {
-        guard settings.readsTokenSpend else { return }
-        let span = settings.spendSpan.days
-        let now = Date()
-        let calendar = Calendar.current
-        // The agent's ledgers, or all of them when no agent is open. Counted
-        // once and shared, so the agent summary and the model summary below
-        // cannot end up filtered differently.
-        let scoped = spendFocus.map { agent in
-            spendLedgers.filter { $0.key == agent }
-        } ?? spendLedgers
-
-        spend = SpendSummary.of(spendLedgers, overLast: span, now: now, calendar: calendar)
-        focusedSpend = spendFocus == nil
-            ? SpendSummary()
-            : SpendSummary.of(scoped, overLast: span, now: now, calendar: calendar)
-        modelSpend = selectedModel.map { name in
-            ModelSpendSummary.of(scoped, named: name, overLast: span, now: now, calendar: calendar)
-        } ?? ModelSpendSummary()
+    private func recomputeSpend() async {
+        guard let request = spendSummaryRequest else { return }
+        // The view task owns cancellation. A result from an earlier model,
+        // span or snapshot may finish, but cannot replace the current figures.
+        guard let result = try? await spendSummaryCache.summaries(for: request, ledgers: spendLedgers),
+              !Task.isCancelled, spendSummaryRequest == request else { return }
+        spend = result.overview
+        focusedSpend = result.agent
+        modelSpend = result.model
+        displayedSpendRequest = request
     }
 
     static func detailedCardSubtitle(_ history: CardHistorySource?) -> String {

@@ -10,6 +10,8 @@ There was no test target until 2026-09-07. What prompted one was not a policy: t
 
 ## What is covered
 
+Performance-cache regressions: `ModelPriceLookupTests` (alias/vendor precedence and price-snapshot isolation), `LedgerCacheWriteTests` (unchanged repricing does not rewrite the raw cache; edits/deletions persist), `SpendSummaryCacheTests` (scope/snapshot/calendar-window invalidation and cancellation), and the cached-tail cases in `AgentActivityTests` (grace expiration and changed/new/deleted files). These are synthetic production-code checks, not whole-app profiling or real pointer-input verification.
+
 | Suite | Covers |
 |---|---|
 | `AlertMemoryTests` | Every notification rule: thresholds, spent, resets, the failure streak, the stale-age gate, and the low-balance line — said once, re-armed by a top-up, said again when the line moves, and never from a stale reading or a balance with no figure behind it. [notifications.md](notifications.md) |

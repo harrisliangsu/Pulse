@@ -424,6 +424,7 @@ struct RailEntry: Identifiable, Equatable {
 /// place. They are one thing: a single berth whose size and outline are
 /// animated, with the rings fading in once it has opened enough to hold them.
 struct UsageDockView: View {
+    @State private var tintCache = BotMarkTint.DealCache()
     let entries: [RailEntry]
     /// Where the pointer is in the panel's coordinates, or nil when it is off
     /// the panel. The marks' eyes follow it.
@@ -570,11 +571,11 @@ struct UsageDockView: View {
         // rings are actually in — the rail shows enabled accounts, so who sits
         // next to whom is not knowable from `Provider.allCases`.
         // Only when something is actually drawing a mark: the deal tries
-        // forty stride-and-rotation combinations, which is cheap but not free,
+        // 272 stride-and-rotation combinations, which is cheap but not free,
         // and a rail of logos has no use for the answer.
         let botTints = entries.contains(where: \.showsBotMark)
-            ? BotMarkTint.deal(over: entries.map(\.usage.provider),
-                               chosen: entries.map(\.botColour))
+            ? tintCache.deal(over: entries.map(\.usage.provider),
+                             chosen: entries.map(\.botColour))
             : []
         // Dealt by position so the ring beside this one is a different
         // character; a chosen persona simply wins over the deal.

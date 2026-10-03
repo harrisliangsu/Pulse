@@ -1100,6 +1100,9 @@ struct StructuredLogReadersTests {
         #expect(!StructuredLogReaders.notes(client: "dsh", roots: roots).isEmpty)
 
         // A plain JSONL that is malformed is not a compression failure.
+        let combined = AgentRecordReaders.read(client: "dsh", roots: roots)
+        #expect(combined.records.isEmpty)
+        #expect(!combined.notes.isEmpty)
         let plainHome = try makeStore()
         defer { cleanup(plainHome) }
         let plainRoots = StructuredLogReaders.inputs(
@@ -1111,6 +1114,7 @@ struct StructuredLogReadersTests {
             to: plainDirectory.appending(path: "session.jsonl"), atomically: true, encoding: .utf8
         )
         #expect(StructuredLogReaders.notes(client: "dsh", roots: plainRoots).isEmpty)
+        #expect(AgentRecordReaders.read(client: "dsh", roots: plainRoots).notes.isEmpty)
     }
 
     @Test("A compressed transcript past the decode ceiling is a surfaced failure")

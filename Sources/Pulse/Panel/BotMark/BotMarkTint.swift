@@ -16,6 +16,24 @@ import SwiftUI
 /// green ring is two colours disagreeing. If that reads badly on a real rail,
 /// the fix is this table, not the ring.
 enum BotMarkTint {
+    /// One rail's latest deal, keyed only by the inputs that change its colours.
+    /// Pointer, activity and quota updates can reuse it without another search.
+    @MainActor
+    final class DealCache {
+        private var providers: [Provider] = []
+        private var chosen: [Color?] = []
+        private var colours: [Color] = []
+
+        func deal(over providers: [Provider], chosen: [Color?]) -> [Color] {
+            if self.providers != providers || self.chosen != chosen {
+                colours = BotMarkTint.deal(over: providers, chosen: chosen)
+                self.providers = providers
+                self.chosen = chosen
+            }
+            return colours
+        }
+    }
+
     /// Brand colours, for the providers that have one.
     ///
     /// Nil is not "unknown", it is **monochrome by design** — OpenAI, Cursor,
@@ -98,7 +116,7 @@ enum BotMarkTint {
 
         // Walking the wheel with a stride coprime to its size visits every
         // colour exactly once, so the rail cannot repeat one. Which stride and
-        // where it starts are the only freedom there is, and there are forty
+        // where it starts are the only freedom there is, and there are 272
         // of those — few enough to simply try them all and keep the one whose
         // worst neighbouring pair is furthest apart. Greedy choice was tried
         // first and ran out of colours near the end of a long rail, which is
@@ -176,8 +194,7 @@ enum BotMarkTint {
     private static let paletteSize = 17
 
     /// The wheel, solved once: evenly spaced hues, each at the same
-    /// luminance. `dealt(at:)` is a bisection, and a rail is dealt on every
-    /// pass of the dock's body.
+    /// luminance. `dealt(at:)` is a bisection; the rail keeps its latest deal.
     private static let wheel: [Color] = (0..<paletteSize).map { dealt(at: $0) }
     private static let wheelHues: [Double] = wheel.map(hue(of:))
 
