@@ -7,6 +7,32 @@ shows in the update window — see [Scripts/changelog.py](Scripts/changelog.py).
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.7.1
+
+**中文**
+
+**新功能**
+
+- **Codex 降智迹象。** 设置 › Codex 最下面新增「降智迹象」，只读本机的 Codex 记录，不发任何请求：每个模型有多少长回复的推理恰好停在 516、1,034、1,552 等位置（像被强行掐断，超过 5% 标为「疑似降智」），以及有没有哪一轮在你没改设置的情况下被换了模型、调低了推理强度或缩短了上下文。这些只是迹象，不是定论——Codex 不会记录服务器实际用了哪个模型。
+- **DeepSeek 读取官网用量。** 在 DeepSeek 设置的「DeepSeek 控制台」里点「读取」，Pulse 会从浏览器（Chrome、Edge、Brave、Arc 等）的登录状态读取整个账号最近 30 天的用量：每天的花费和 Token、各模型占比和缓存命中率，金额用账号自己的币种。没有填 API Key 时也能用它读余额。
+
+**改进与修复**
+
+- **横放面板时，「百分比放在圆环右边」和「数字显示在圆环上方」同时打开，百分比不再跑到圆环左边；打开「距离重置的时间」时，数字也不再贴着外圈。** 感谢 [@tyrival](https://github.com/qunqin24/Pulse/issues/73) 反馈。
+- **卡片在屏幕放不下时可以滚动。** 面板横放在屏幕中间附近时，展开的卡片不会再被屏幕边缘截掉。
+
+**English**
+
+**New**
+
+- **Signs of a weaker Codex model.** A new Signs of a weaker model section at the bottom of Codex's settings reads this Mac's Codex records and sends nothing: for each model, how many long replies had their reasoning stop at exactly 516, 1,034, 1,552 and so on — as if cut off; over 5% is marked Possibly weakened — and whether any turn ran on a different model, lower reasoning or a smaller context without you changing the settings. These are signs, not proof: Codex doesn't record which model the server actually used.
+- **DeepSeek usage from its console.** Press Read under DeepSeek console in DeepSeek's settings and Pulse uses your browser's sign-in (Chrome, Edge, Brave, Arc and other Chromium browsers) to read the whole account's last 30 days: spend and tokens per day, each model's share and cache hit rate, in the account's own currency. It also reads the balance when no API key is set.
+
+**Changed and fixed**
+
+- **Lying across, with Figures beside the rings and Figure above the ring both on, the percentage no longer jumps to the left of the ring; with Time until reset on, figures no longer crowd the outer arc.** Thanks to [@tyrival](https://github.com/qunqin24/Pulse/issues/73) for the report.
+- **A card scrolls when the screen cannot hold it.** With the panel lying across near the middle of the screen, an open card is no longer cut off at the screen's edge.
+
 ## 1.7.0
 
 **中文**
