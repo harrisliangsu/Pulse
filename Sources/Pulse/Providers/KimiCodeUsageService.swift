@@ -170,13 +170,14 @@ struct KimiCodeUsageService: Sendable {
     private static func duration(of window: Reply.Window?) -> Int? {
         guard let window, let duration = window.duration, duration > 0 else { return nil }
 
-        return switch window.timeUnit {
-        case "TIME_UNIT_SECOND": duration
-        case "TIME_UNIT_MINUTE": duration * 60
-        case "TIME_UNIT_HOUR": duration * 3_600
-        case "TIME_UNIT_DAY": duration * 86_400
+        let unit: Int? = switch window.timeUnit {
+        case "TIME_UNIT_SECOND": 1
+        case "TIME_UNIT_MINUTE": 60
+        case "TIME_UNIT_HOUR": 3_600
+        case "TIME_UNIT_DAY": 86_400
         default: nil
         }
+        return unit.flatMap { UsageWindow.length(duration, unitSeconds: $0) }
     }
 
     private static func kind(forSeconds seconds: Int) -> UsageWindow.Kind {

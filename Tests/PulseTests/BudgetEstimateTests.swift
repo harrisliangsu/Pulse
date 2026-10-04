@@ -57,4 +57,14 @@ struct BudgetEstimateTests {
             observedAt: Self.opened.addingTimeInterval(-60), now: later
         ) == nil)
     }
+
+    @Test("A window whose length only orders the rows gives no estimate")
+    func unstatedLength() {
+        let ledger = Self.ledger([(0, 1), (Self.quarter, 5)])
+        let later = Self.opened.addingTimeInterval(3600)
+        var window = Self.window(used: 0.5)
+        #expect(BudgetEstimator.estimate(for: window, ledger: ledger, observedAt: later, now: later) != nil)
+        window.reportsLength = false
+        #expect(BudgetEstimator.estimate(for: window, ledger: ledger, observedAt: later, now: later) == nil)
+    }
 }

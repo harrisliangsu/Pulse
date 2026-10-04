@@ -325,6 +325,17 @@ final class UsageStore {
             ?? AdaptiveRefresh.interval(for: signals, isWatched: provider.spendingIsWatchedLocally)
     }
 
+    /// How long the loop's one timer waits: until the soonest primary account
+    /// is due, never under fifteen seconds.
+    ///
+    /// **No primary account is not no cadence.** Added accounts and extensions
+    /// are read on every tick, so a rail of only those still runs on the
+    /// interval the user chose — it fell to the adaptive one, and "every
+    /// minute" waited half an hour while Settings said a minute.
+    nonisolated static func timerWait(primaryWaits: [TimeInterval], fixed: TimeInterval?, adaptive: TimeInterval) -> TimeInterval {
+        max(primaryWaits.min() ?? fixed ?? adaptive, 15)
+    }
+
     /// A second of slack, so a timer that fires a hair early does not skip the
     /// very provider it woke up for and sleep another full interval.
     nonisolated static let dueSlack: TimeInterval = 1
@@ -1139,7 +1150,10 @@ final class UsageStore {
         // A floor on the *timer* rather than on any provider's cadence: with
         // nothing enabled, or with something perpetually due, this is what
         // stops the loop spinning.
-        let wait = max(waits.min() ?? AdaptiveRefresh.interval(for: signals), 15)
+        let wait = Self.timerWait(
+            primaryWaits: waits, fixed: settings.refreshInterval.seconds,
+            adaptive: AdaptiveRefresh.interval(for: signals)
+        )
 
         // **`currentInterval` is the cadence, not the countdown.** Settings
         // renders it as "Now: X minutes" and `isOverdue` multiplies it, and

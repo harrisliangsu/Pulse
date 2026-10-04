@@ -282,7 +282,11 @@ struct OpenCodeGoUsageService: Sendable {
         return [
             window(usage.rolling, id: "rolling", kind: .fiveHour, seconds: 5 * 3_600),
             window(usage.weekly, id: "weekly", kind: .weekly, seconds: 7 * 86_400),
-            window(usage.monthly, id: "monthly", kind: .monthly, seconds: 30 * 86_400),
+            // **A month is not thirty days.** The reply states its reset and
+            // no start, so the length only orders the row; claimed as reported
+            // it set a 28- or 31-day cycle's window clock and burn rate by 30.
+            // The console route already says the same when it has no start.
+            window(usage.monthly, id: "monthly", kind: .monthly, seconds: 30 * 86_400, reportsLength: false),
         ].compactMap { $0 }
     }
 
@@ -297,7 +301,8 @@ struct OpenCodeGoUsageService: Sendable {
         _ reported: Reply.Window?,
         id: String,
         kind: UsageWindow.Kind,
-        seconds: Int
+        seconds: Int,
+        reportsLength: Bool = true
     ) -> UsageWindow? {
         guard let reported, let percent = reported.percent else { return nil }
 
@@ -308,6 +313,7 @@ struct OpenCodeGoUsageService: Sendable {
             usedFraction: min(max(percent / 100, 0), 1),
             windowSeconds: seconds,
             resetsAt: reported.resetsAt.flatMap(Self.date(from:)),
+            reportsLength: reportsLength,
             // The provider's own verdict, not one inferred from the
             // percentage. Anything other than "ok" is treated as spent —
             // erring towards "you're blocked" is the safer way to be wrong.

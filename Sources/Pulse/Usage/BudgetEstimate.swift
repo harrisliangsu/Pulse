@@ -66,6 +66,11 @@ enum BudgetEstimator {
     ) -> BudgetEstimate? {
         guard
             window.windowSeconds > 0,
+            // **A length that only orders the rows is not a period.** Kimi's
+            // weekly allowance states a reset and no length; seven days back
+            // from the reset is a guess at when its spending began, and the
+            // estimate would divide the logs over a span nobody reported.
+            window.reportsLength,
             let resets = window.resetsAt,
             // Account-wide windows only. A limit scoped to one model is spent
             // by that model alone, but the logs' spending for the period is
