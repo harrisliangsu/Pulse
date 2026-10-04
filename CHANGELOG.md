@@ -7,6 +7,32 @@ shows in the update window — see [Scripts/changelog.py](Scripts/changelog.py).
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.7.2
+
+**中文**
+
+**新功能**
+
+- **服务状态。** Codex、Claude Code 和 DeepSeek 的设置页新增「服务状态」，照各自官方状态页的样式显示：每一项现在是否正常、过去 90 天每天一根竖条，以及状态页公布的可用率。Codex 显示 status.openai.com 的 Codex 分组，Claude Code 和 DeepSeek 显示各自状态页上的全部项目。打开设置页时读取，开着时每 5 分钟更新一次。
+- **服务出故障时通知。** 设置 › 通知新增「服务出故障时」，默认关闭。打开后每 5 分钟检查一次你已开启的 Codex、Claude Code、DeepSeek，只在和工具相关的项目（Codex 分组、Claude Code 与 Claude API、DeepSeek 的 API 服务）出故障、变严重或恢复时各通知一次。以各自状态页的公布为准。
+
+**改进与修复**
+
+- **打开「关于」时立即检查更新。** 版本那一行显示的是此刻的结果，不再是上一次定时检查的结果。
+- **更省资源。** 读取各工具的用量记录、汇总 Token 消耗和面板跟随鼠标时，少做了很多重复的工作。
+
+**English**
+
+**New**
+
+- **Service status.** Codex's, Claude Code's and DeepSeek's settings gain a Service status section drawn the way each provider's own status page draws it: whether each part is up now, a bar a day for the last 90 days, and the uptime the page reports. Codex shows status.openai.com's Codex group; Claude Code and DeepSeek show everything on their pages. It is read when the pane opens and every five minutes while it stays open.
+- **Notifications when a service is down.** Settings › Notifications gains When a service is down, off by default. Once on, it checks the Codex, Claude Code and DeepSeek you have switched on every five minutes and notifies once when what the tool runs on (the Codex group, Claude Code and the Claude API, DeepSeek's API services) goes down, gets worse or comes back — as each provider's status page reports it.
+
+**Changed and fixed**
+
+- **Opening About checks for an update right away.** The version row shows the answer now, not whatever the last scheduled check said.
+- **Lighter on your Mac.** Reading each tool's usage records, adding up token spend and following the pointer on the panel all do much less repeated work.
+
 ## 1.7.1
 
 **中文**
