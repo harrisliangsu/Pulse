@@ -75,25 +75,24 @@ struct SpendSummaryCacheTests {
         #expect(result.overview.tokens == 10)
     }
 
-    @Test("A model result can display its parent, but not another model or calendar window")
+    @Test("The figures on screen stay through a new span or snapshot, never into another agent or model")
     func displayScope() {
         let window = SpendSummaryCache.Window(snapshot: UUID(), days: 1, today: today, calendar: calendar, language: "en")
         let old = SpendSummaryCache.Request(window: window, agent: .codex, model: "one")
         let refreshed = SpendSummaryCache.Request(
             window: .init(snapshot: UUID(), days: 1, today: today, calendar: calendar, language: "en"), agent: .codex, model: "one")
         #expect(old != refreshed)
-        #expect(refreshed.canDisplay(old))
-        #expect(!old.canDisplay(.init(window: window, agent: .codex, model: "two")))
-        #expect(!old.canDisplay(.init(window: window, agent: .claudeCode, model: "one")))
+        #expect(refreshed.canKeepShowing(old))
+        // A new span keeps the figures until its own land — no spinner, no
+        // lost scroll position, as when this was main-thread arithmetic.
+        let widened = SpendSummaryCache.Request(
+            window: .init(snapshot: window.snapshot, days: 30, today: today, calendar: calendar, language: "zh-Hans"),
+            agent: .codex, model: "one")
+        #expect(widened.canKeepShowing(old))
+        #expect(!old.canKeepShowing(.init(window: window, agent: .codex, model: "two")))
+        #expect(!old.canKeepShowing(.init(window: window, agent: .claudeCode, model: "one")))
         let parent = SpendSummaryCache.Request(window: window, agent: .codex, model: nil)
-        #expect(parent.canDisplay(old), "Back can immediately render the model list's existing summary")
-        #expect(!old.canDisplay(parent), "A parent result does not contain the newly opened model")
-        var shifted = calendar
-        shifted.timeZone = TimeZone(secondsFromGMT: 3600)!
-        #expect(!old.canDisplay(.init(
-            window: .init(snapshot: window.snapshot, days: 1, today: today, calendar: shifted, language: "en"), agent: .codex, model: "one")))
-        #expect(!old.canDisplay(.init(
-            window: .init(snapshot: window.snapshot, days: 1, today: today, calendar: calendar, language: "zh-Hans"),
-            agent: .codex, model: "one")), "Project-name agent suffixes follow the selected language")
+        #expect(parent.canKeepShowing(old), "Back can immediately render the model list's existing summary")
+        #expect(!old.canKeepShowing(parent), "A parent result does not contain the newly opened model")
     }
 }

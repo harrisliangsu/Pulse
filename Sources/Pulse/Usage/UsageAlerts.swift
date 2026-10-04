@@ -538,15 +538,18 @@ final class UsageAlerts {
         tapHandler = handler
         UNUserNotificationCenter.current().delegate = handler
 
-        Task { await readAuthorization() }
-
-        // Its own clock rather than the refresh pass's, which stretches to
+        // The grant first: `checkServices` does nothing while it is unknown, so
+        // a first tick ahead of it was a wasted one, and an outage already
+        // under way at launch waited five minutes to be said.
+        //
+        // Then its own clock rather than the refresh pass's, which stretches to
         // half an hour while the Mac sits idle — the moment someone comes back
         // to work is when an outage matters most. Each tick returns at once
         // unless the switch is on and a provider with a page is in use. The
         // sleep is on the continuous clock, so a tick due while the Mac slept
         // comes right after it wakes.
         outageTimer = Task { [weak self] in
+            await self?.readAuthorization()
             while !Task.isCancelled {
                 self?.checkServices()
                 try? await Task.sleep(for: ServiceStatus.checkInterval)
@@ -652,32 +655,54 @@ final class UsageAlerts {
 
     /// Asks the status pages of the providers in use whether their service is
     /// down, and says so (`OutageMemory`). Called every `checkInterval` and
-    /// when the setting goes on; one check at a time.
+    /// when the setting is switched; one check at a time, its pages at once.
     ///
     /// **Only providers switched on**: a disabled one is not fetched, and a
-    /// page that can't be read changes nothing.
+    /// page that can't be read changes nothing. What is no longer watched —
+    /// the switch off, a provider off — is forgotten here.
     func checkServices() {
-        guard settings.alertsOnOutage, outageCheck == nil, authorizationRequest == nil,
-              !Self.isSupported || authorization != .notDetermined else { return }
+        guard settings.alertsOnOutage else {
+            forgetOutages(except: [])
+            return
+        }
         let inUse = Set(settings.shownAccounts.compactMap(\.provider.statusPage))
+        forgetOutages(except: inUse)
+        guard outageCheck == nil, authorizationRequest == nil,
+              !Self.isSupported || authorization != .notDetermined else { return }
         let pages = StatusPage.allCases.filter(inUse.contains)
         guard !pages.isEmpty else { return }
 
         outageCheck = Task {
+            let read = await withTaskGroup(of: (StatusPage, [ServiceStatus.Component]?).self) { group in
+                for page in pages {
+                    group.addTask { (page, await ServiceStatus.current(page)) }
+                }
+                var read: [StatusPage: [ServiceStatus.Component]] = [:]
+                for await (page, components) in group { read[page] = components }
+                return read
+            }
             for page in pages {
-                guard let components = await ServiceStatus.current(page) else { continue }
+                guard let components = read[page] else { continue }
                 consider(components.filter(page.notifiesAbout), from: page)
             }
             outageCheck = nil
         }
     }
 
+    private func forgetOutages(except pages: Set<StatusPage>) {
+        var kept = outages
+        kept.keepOnly(pages)
+        guard kept != outages else { return }
+        outages = kept
+        Self.persist(outages, to: outageFile)
+    }
+
     private func consider(_ components: [ServiceStatus.Component], from page: StatusPage) {
         // Switched off while the page was being read.
         guard settings.alertsOnOutage else { return }
         let before = outages
-        let change = outages.changes(in: components)
-        if outages != before { saveOutages() }
+        let change = outages.changes(in: components, on: page)
+        if outages != before { Self.persist(outages, to: outageFile) }
         // Kept up to date whether or not anything can be posted, for the same
         // reason the limits' memory is.
         guard Self.isSupported, !change.isEmpty else { return }
@@ -809,24 +834,16 @@ final class UsageAlerts {
     private static let disk = DispatchQueue(label: "Pulse.alerts", qos: .utility)
 
     private func save() {
-        // Snapshot on the actor, write off it: `AlertMemory` is a value type,
-        // so the queue gets bytes nobody else can be changing underneath it.
-        // The path is snapshotted too — `file` is main-actor isolated with the
-        // rest of this type, and reading it from the queue is the kind of
-        // actor-isolation slip that is a warning here and an error in Xcode.
-        let snapshot = memory
-        let destination = memoryFile
-        Self.disk.async {
-            PulseStorage.prepare()
-            guard let data = try? JSONEncoder().encode(snapshot) else { return }
-            try? data.write(to: destination, options: .atomic)
-        }
+        Self.persist(memory, to: memoryFile)
     }
 
-    private func saveOutages() {
-        let snapshot = outages
-        let destination = outageFile
-        Self.disk.async {
+    /// Snapshot on the actor, write off it: both memories are value types, so
+    /// the queue gets bytes nobody else can be changing underneath it. The
+    /// path is passed in too — the files are main-actor isolated with the rest
+    /// of this type, and reading one from the queue is the kind of
+    /// actor-isolation slip that is a warning here and an error in Xcode.
+    private static func persist<Value: Encodable & Sendable>(_ snapshot: Value, to destination: URL) {
+        disk.async {
             PulseStorage.prepare()
             guard let data = try? JSONEncoder().encode(snapshot) else { return }
             try? data.write(to: destination, options: .atomic)

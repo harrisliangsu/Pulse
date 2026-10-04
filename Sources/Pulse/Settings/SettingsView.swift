@@ -1211,10 +1211,13 @@ struct SettingsView: View {
                         get: { settings.alertsOnOutage },
                         set: {
                             settings.alertsOnOutage = $0
+                            // The status pages, not the readings: an outage
+                            // already under way is said now, and switching off
+                            // forgets what was said. `reconsiderAlerts` would
+                            // refetch every provider for nothing.
                             Task {
-                                if await alerts.requestAuthorizationIfNeeded() {
-                                    store.reconsiderAlerts()
-                                }
+                                _ = await alerts.requestAuthorizationIfNeeded()
+                                alerts.checkServices()
                             }
                         }
                     ))
@@ -2121,7 +2124,7 @@ struct SettingsView: View {
 
     private var spendSummaryIsPending: Bool {
         guard let request = spendSummaryRequest else { return false }
-        return displayedSpendRequest.map { !request.canDisplay($0) } ?? true
+        return displayedSpendRequest.map { !request.canKeepShowing($0) } ?? true
     }
 
     /// Every agent's ledger, added up.

@@ -17,14 +17,19 @@ actor SpendSummaryCache {
         let agent: SpendAgent?
         let model: String?
 
-        /// Every result includes its parent summaries. Returning from a model
-        /// can show that parent immediately, preserving the model-list scroll
-        /// target. Other models, agents and windows must wait for their figures.
-        func canDisplay(_ other: Request) -> Bool {
+        /// Whether `other`'s figures may stay on screen while this request's
+        /// are added up.
+        ///
+        /// The same agent and model, over any span: a new span keeps the old
+        /// figures for the milliseconds its own take, as it did when this was
+        /// arithmetic on the main thread — a spinner there made a span change
+        /// look like a rescan, and dropped the scroll position. Every result
+        /// includes its parent summaries, so returning from a model shows that
+        /// parent at once, keeping the model list's scroll target. A different
+        /// agent or model waits: its screen is another screen, and the old
+        /// figures would read as its own.
+        func canKeepShowing(_ other: Request) -> Bool {
             agent == other.agent && (model == nil || model == other.model)
-                && window.days == other.window.days && window.today == other.window.today
-                && window.calendar == other.window.calendar
-                && window.language == other.window.language
         }
     }
 

@@ -131,9 +131,11 @@ enum AgentActivity {
             // and the newest file is not necessarily the busy one. The filter
             // is the longest grace any verdict can claim, so nothing older is
             // worth opening.
+            // Kept whether or not this pass reaches them: the loop stops at
+            // the first busy session, and a file behind it is no less recent.
+            retained.formUnion(files.recent.map(\.url))
             for file in files.recent {
                 guard !Task.isCancelled else { break }
-                retained.insert(file.url)
                 switch cache.read(file, provider: provider).verdict {
                 case .working(let wait, let at):
                     // Timed from the record's *own* stamp, not the file's.
@@ -156,7 +158,12 @@ enum AgentActivity {
             states[provider] = state
         }
 
-        cache.readings = cache.readings.filter { retained.contains($0.key) }
+        // A cancelled pass only reached some providers; pruning by it would
+        // drop every tail it never got to — a 2 MB Z.ai one among them — and
+        // the next pass would read them all again.
+        if !Task.isCancelled {
+            cache.readings = cache.readings.filter { retained.contains($0.key) }
+        }
         return states
     }
 

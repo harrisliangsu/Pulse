@@ -123,25 +123,28 @@ private struct DayBars: View {
     let palette: StatusPalette
 
     var body: some View {
-        GeometryReader { geometry in
+        // One formatter for all ninety tooltips, made per pass so a language
+        // switch still takes effect at once.
+        let formatter = DateFormatter()
+        formatter.locale = LocalizationSource.locale
+        formatter.setLocalizedDateFormatFromTemplate("yMMMd")
+
+        return GeometryReader { geometry in
             let unit = geometry.size.width / CGFloat(max(days.count * 5 - 2, 1))
             HStack(spacing: unit * 2) {
                 ForEach(Array(days.enumerated()), id: \.offset) { _, day in
                     RoundedRectangle(cornerRadius: palette.barCornerRadius, style: .continuous)
                         .fill(palette.colour(for: day))
                         .frame(width: unit * 3)
-                        .help(Self.tooltip(day))
+                        .help(Self.tooltip(day, formatter))
                 }
             }
         }
     }
 
-    private static func tooltip(_ day: ServiceStatus.Day) -> String {
+    private static func tooltip(_ day: ServiceStatus.Day, _ formatter: DateFormatter) -> String {
         let state = day.state?.title ?? String.localized("No data")
         guard let date = Calendar.current.date(from: day.date) else { return state }
-        let formatter = DateFormatter()
-        formatter.locale = LocalizationSource.locale
-        formatter.setLocalizedDateFormatFromTemplate("yMMMd")
         return "\(formatter.string(from: date)) · \(state)"
     }
 }

@@ -203,7 +203,8 @@ struct ServiceStatus: Equatable, Sendable {
     }
 
     /// The state now and nothing else — one request, for the outage check
-    /// that runs with every refresh pass. Nil when it couldn't be read.
+    /// (`UsageAlerts.checkServices`, every `checkInterval`). Nil when it
+    /// couldn't be read.
     static func current(_ page: StatusPage) async -> [Component]? {
         switch page {
         case .openAI:
@@ -619,6 +620,12 @@ struct ServiceStatus: Equatable, Sendable {
 
         struct Structure: Decodable {
             let items: [Item]
+
+            enum CodingKeys: String, CodingKey { case items }
+
+            init(from decoder: any Decoder) throws {
+                items = try decoder.container(keyedBy: CodingKeys.self).lenient(.items)
+            }
         }
 
         /// Either a group or a component on its own; only groups are read.
@@ -629,6 +636,14 @@ struct ServiceStatus: Equatable, Sendable {
         struct Group: Decodable {
             let name: String
             let components: [GroupComponent]
+
+            enum CodingKeys: String, CodingKey { case name, components }
+
+            init(from decoder: any Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                name = try container.decode(String.self, forKey: .name)
+                components = try container.lenient(.components)
+            }
         }
 
         struct GroupComponent: Decodable {
@@ -715,6 +730,14 @@ struct ServiceStatus: Equatable, Sendable {
         struct Page: Decodable {
             let components: [Component]
             let sections: [Section]?
+
+            enum CodingKeys: String, CodingKey { case components, sections }
+
+            init(from decoder: any Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                components = try container.lenient(.components)
+                sections = try container.lenient(.sections)
+            }
         }
 
         struct Component: Decodable {
@@ -775,7 +798,7 @@ struct ServiceStatus: Equatable, Sendable {
     }
 
     /// One list entry, or nil when it doesn't decode.
-    private struct Lenient<Value: Decodable>: Decodable {
+    fileprivate struct Lenient<Value: Decodable>: Decodable {
         let value: Value?
 
         init(from decoder: any Decoder) throws {
@@ -785,6 +808,12 @@ struct ServiceStatus: Equatable, Sendable {
 
     private struct StatuspageSummary: Decodable {
         let components: [Component]
+
+        enum CodingKeys: String, CodingKey { case components }
+
+        init(from decoder: any Decoder) throws {
+            components = try decoder.container(keyedBy: CodingKeys.self).lenient(.components)
+        }
 
         struct Component: Decodable {
             let id: String
@@ -809,7 +838,8 @@ struct ServiceStatus: Equatable, Sendable {
 
         init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
-            timelines = try container.decode([String: Timeline].self, forKey: .timelines)
+            timelines = try container.decode([String: Lenient<Timeline>].self, forKey: .timelines)
+                .compactMapValues(\.value)
             values = try container.decodeIfPresent([Value].self, forKey: .values) ?? []
             components = try container.decodeIfPresent([String: String].self, forKey: .components) ?? [:]
         }
@@ -842,5 +872,15 @@ struct ServiceStatus: Equatable, Sendable {
             let component: String
             let ninety: Double?
         }
+    }
+}
+
+private extension KeyedDecodingContainer {
+    /// A list read entry by entry: one the page shapes differently — a null
+    /// name on some unrelated component — is skipped rather than taking every
+    /// other component, and so the whole pane and every alert, with it. A
+    /// missing list is empty.
+    func lenient<Element: Decodable>(_ key: Key) throws -> [Element] {
+        (try decodeIfPresent([ServiceStatus.Lenient<Element>].self, forKey: key) ?? []).compactMap(\.value)
     }
 }
