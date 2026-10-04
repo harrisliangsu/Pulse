@@ -102,6 +102,12 @@ enum DevinCLIStore {
         _ database: OpaquePointer?,
         _ consume: (String, String, Date, TokenTally) -> Void
     ) {
+        // **One message, two nodes.** The CLI keeps a message's node and a
+        // sibling under the same parent with the same `message_id` and the
+        // same metrics; read node by node, every reply counted twice (5
+        // messages, 10 metered rows, on the Mac this was found on). A message
+        // is counted once, by its id, or by its request where it has none.
+        var seen: Set<String> = []
         each(database, "SELECT session_id, chat_message, created_at FROM message_nodes") { statement in
             guard
                 let sessionText = sqlite3_column_text(statement, 0),
@@ -118,6 +124,8 @@ enum DevinCLIStore {
                 output: int(metrics["output_tokens"])
             )
             guard tally.total > 0 else { return }
+            let message = (root["message_id"] as? String) ?? (metadata["request_id"] as? String)
+            if let message, !seen.insert(message).inserted { return }
             let seconds = Double(sqlite3_column_int64(statement, 2))
             let at = Date(timeIntervalSince1970: seconds > 10_000_000_000 ? seconds / 1000 : seconds)
             guard at.timeIntervalSince1970 > 0 else { return }

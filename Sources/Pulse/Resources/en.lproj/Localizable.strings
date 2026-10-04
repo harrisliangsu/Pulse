@@ -296,6 +296,7 @@
 "Start Pulse automatically when you log in." = "Start Pulse automatically when you log in.";
 "Waiting for approval in System Settings › General › Login Items." = "Waiting for approval in System Settings › General › Login Items.";
 
+
 /* Menu bar icon */
 "Hide menu bar icon" = "Hide menu bar icon";
 "Remove Pulse from the menu bar; use the panel menu or shortcut to open settings." = "Remove Pulse from the menu bar; use the panel menu or shortcut to open settings.";
@@ -542,15 +543,17 @@
 "Current streak" = "Current streak";
 "Longest streak" = "Longest streak";
 "Peak hour" = "Peak hour";
-"Favourite model" = "Favourite model";
+"Most tokens" = "Most tokens";
 "By kind" = "By kind";
-"Input" = "Input";
-"Sent fresh, not served from the cache." = "Sent fresh, not served from the cache.";
-"Cache write" = "Cache write";
-"Put into the prompt cache to be re-used." = "Put into the prompt cache to be re-used.";
-"Cache read" = "Cache read";
-"Served from the cache, and priced far lower." = "Served from the cache, and priced far lower.";
 "Output" = "Output";
+"Fresh input" = "Fresh input";
+"Sent this time and not read from the cache." = "Sent this time and not read from the cache.";
+"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher.";
+"Read back from the cache, usually at a lower price." = "Read back from the cache, usually at a lower price.";
+"These records carry no cache figures." = "These records carry no cache figures.";
+"Not reported" = "Not reported";
+"Fresh" = "Fresh";
+"Cached" = "Cached";
 "Written back by the model." = "Written back by the model.";
 "By hour" = "By hour";
 "By month" = "By month";
@@ -561,8 +564,6 @@
 "Busiest hour" = "Busiest hour";
 "Day by day" = "Day by day";
 "Date" = "Date";
-"C. read" = "C. read";
-"C. write" = "C. write";
 "Cost" = "Cost";
 "%@ per page" = "%@ per page";
 "%@–%@ of %@" = "%@–%@ of %@";

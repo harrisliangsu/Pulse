@@ -361,8 +361,9 @@ struct CopilotLogReaderTests {
         let run1 = try #require(Self.find(records, "copilot-desktop:desk1:shutdown:e1:gpt-4o"))
         #expect(run1.timestamp == Self.date("2026-09-02T09:00:00Z"))
         // The reported output is kept whole; the run's reasoning is not added
-        // to it, and the run is marked partial instead.
-        #expect(run1.tally == TokenTally(input: 400, cacheWrite: 10, cacheRead: 120, output: 80))
+        // to it, and the run is marked partial instead. The reported input
+        // holds the cache: 400 sent, 120 read and 10 written, 270 fresh.
+        #expect(run1.tally == TokenTally(input: 270, cacheWrite: 10, cacheRead: 120, output: 80))
         #expect(run1.unclassifiedTokens == 0)
         #expect(run1.isPartial)
         #expect(run1.isAggregate)
@@ -375,7 +376,7 @@ struct CopilotLogReaderTests {
         // reasoning tokens are a possible subset and are not added.
         let run2 = try #require(Self.find(records, "copilot-desktop:desk1:shutdown:e2:gpt-4o"))
         #expect(run2.timestamp == Self.date("2026-09-03T10:00:00Z"))
-        #expect(run2.tally == TokenTally(input: 600, cacheWrite: 15, cacheRead: 180, output: 120))
+        #expect(run2.tally == TokenTally(input: 405, cacheWrite: 15, cacheRead: 180, output: 120))
         #expect(run2.isPartial)
 
         // The headless session's first snapshot is not an increment; its tokens
@@ -501,7 +502,10 @@ struct CopilotLogReaderTests {
             Self.find(records, "copilot-vscode:vscode-session-1:1788267600000")
         )
         #expect(firstRecord.model == "gpt-4o")
-        #expect(firstRecord.tally == TokenTally(input: 100, output: 25))
+        // The prompt figure holds the cache with no split beside it: counted,
+        // in no kind.
+        #expect(firstRecord.tally == TokenTally(output: 25))
+        #expect(firstRecord.unclassifiedTokens == 100)
         #expect(firstRecord.sessionID == "vscode-session-1")
         #expect(firstRecord.project == "/Users/me/Code/Pulse")
         #expect(firstRecord.isAggregate == false)
@@ -510,7 +514,8 @@ struct CopilotLogReaderTests {
         let secondRecord = try #require(
             Self.find(records, "copilot-vscode:vscode-session-1:1788267700000")
         )
-        #expect(secondRecord.tally == TokenTally(input: 200, output: 40))
+        #expect(secondRecord.tally == TokenTally(output: 40))
+        #expect(secondRecord.unclassifiedTokens == 200)
 
         // No request was dated at the epoch, and neither untimed request's
         // tokens were counted anywhere.
@@ -539,7 +544,7 @@ struct CopilotLogReaderTests {
 
         let records = Self.records(home)
         #expect(records.count == 2)
-        #expect(records.reduce(0) { $0 + $1.tally.input } == 200)
+        #expect(records.reduce(0) { $0 + $1.unclassifiedTokens } == 200)
         #expect(records.reduce(0) { $0 + $1.tally.output } == 20)
         // The two identities are distinct even though the format's own key
         // collides.
@@ -722,25 +727,28 @@ struct CopilotLogReaderTests {
             records, prices: Self.prices, namespace: "copilot", calendar: Self.calendar
         )
 
-        // 125 (OTEL) + 250 (VS Code) + 465 (desktop) = 840.
-        #expect(ledger.days.reduce(0) { $0 + $1.tokens } == 840)
+        // 125 (OTEL) + 250 (VS Code) + 360 (desktop: 300 sent of which 90
+        // read and 15 written, so 195 fresh, + 90 + 15 + 60) = 735.
+        #expect(ledger.days.reduce(0) { $0 + $1.tokens } == 735)
         #expect(ledger.hasAggregateTiming)
 
         let now = Self.date("2026-09-10T00:00:00Z")
         let summary = SpendSummary.of(
             [.openCode: ledger], overLast: nil, now: now, calendar: Self.calendar
         )
-        #expect(summary.tokens == 840)
+        #expect(summary.tokens == 735)
         #expect(summary.hasAggregateTiming)
         #expect(summary.sessions.count == 3)
-        #expect(abs(summary.cost - 1.902) < 1e-9)
-        #expect(summary.agents.first?.tokens == 840)
+        // VS Code's prompt tokens are in no kind and carry no price.
+        #expect(abs(summary.cost - 1.597) < 1e-9)
+        #expect(summary.agents.first?.tokens == 735)
 
         let model = ModelSpendSummary.of(
             [.openCode: ledger], named: "GPT-4o", overLast: nil, now: now, calendar: Self.calendar
         )
-        #expect(model.tokens == 840)
-        #expect(model.tally == TokenTally(input: 570, cacheWrite: 20, cacheRead: 120, output: 130))
-        #expect(abs((model.cost ?? -1) - 1.902) < 1e-9)
+        #expect(model.tokens == 735)
+        // Part of the model's work has no kind, so it has no split to show.
+        #expect(model.tally == nil)
+        #expect(abs((model.cost ?? -1) - 1.597) < 1e-9)
     }
 }

@@ -8,15 +8,76 @@ struct TokenTally: Codable, Sendable, Equatable {
     var cacheWrite = 0
     var cacheRead = 0
     var output = 0
+    /// The part of `cacheWrite` held for an hour rather than five minutes —
+    /// **inside** `cacheWrite`, not beside it, so it is not in `total`.
+    ///
+    /// Anthropic bills a one-hour write at twice the input rate and a
+    /// five-minute one at 1.25 times; the price list carries only the second.
+    /// Claude Code writes most of its cache for the hour, so pricing every
+    /// write at the five-minute rate put about half the cache-write money
+    /// out of sight. Zero wherever a source does not say.
+    var cacheWrite1h = 0
+    /// Replies whose usage carried no cache field at all — not zero, absent.
+    /// Claude Code pointed at a compatible endpoint that keeps no prompt
+    /// cache writes usage without `cache_read_input_tokens`; its zero hits
+    /// are not a cache that missed (`reportsNoCache`).
+    var repliesWithoutCacheFields = 0
+    /// The same tokens again, for requests whose context — input, cache read
+    /// and cache write of the one request — was over a size, keyed by the
+    /// largest of `contextBoundaries` it passed. A subset of this tally, not
+    /// beside it, kept only where one request is one record (Claude Code's
+    /// replies, Codex's readings), so a long-context tier can be priced
+    /// (`ModelPrice.tier(forBand:)`). Empty everywhere else.
+    var contextBands: [Int: TokenTally] = [:]
+
+    /// The context sizes models.dev prices a tier from that a band is kept
+    /// for: 128K, 200K (Gemini, and Anthropic's models on other providers),
+    /// 256K, and OpenAI's 272K. A tier at a size between two of these is
+    /// applied from the next one up, never early.
+    static let contextBoundaries = [128_000, 200_000, 256_000, 272_000]
+
+    /// This tally, marked as one request whose context was `context` tokens.
+    func request(context: Int) -> TokenTally {
+        guard let band = Self.contextBoundaries.last(where: { context > $0 }) else { return self }
+        var copy = self
+        var plain = self
+        plain.contextBands = [:]
+        copy.contextBands = [band: plain]
+        return copy
+    }
 
     var total: Int { input + cacheWrite + cacheRead + output }
+
+    /// Every reply behind this tally said nothing about the cache, and none
+    /// was read or written: there is no cache figure, not a zero one.
+    var reportsNoCache: Bool { repliesWithoutCacheFields > 0 && cacheRead == 0 && cacheWrite == 0 }
+
+    /// Everything sent that was not read back from the cache: plain input and
+    /// what was written to the cache are the same new content, billed at two
+    /// rates by the services that have a write step and at one by the rest.
+    var fresh: Int { input + cacheWrite }
 
     static func + (lhs: TokenTally, rhs: TokenTally) -> TokenTally {
         TokenTally(
             input: lhs.input + rhs.input,
             cacheWrite: lhs.cacheWrite + rhs.cacheWrite,
             cacheRead: lhs.cacheRead + rhs.cacheRead,
-            output: lhs.output + rhs.output
+            output: lhs.output + rhs.output,
+            cacheWrite1h: lhs.cacheWrite1h + rhs.cacheWrite1h,
+            repliesWithoutCacheFields: lhs.repliesWithoutCacheFields + rhs.repliesWithoutCacheFields,
+            contextBands: lhs.contextBands.merging(rhs.contextBands, uniquingKeysWith: +)
+        )
+    }
+
+    /// The token kinds less another tally's, for taking a band out of the
+    /// whole before the rest is priced at the base rates.
+    private func removing(_ other: TokenTally) -> TokenTally {
+        TokenTally(
+            input: max(input - other.input, 0),
+            cacheWrite: max(cacheWrite - other.cacheWrite, 0),
+            cacheRead: max(cacheRead - other.cacheRead, 0),
+            output: max(output - other.output, 0),
+            cacheWrite1h: max(cacheWrite1h - other.cacheWrite1h, 0)
         )
     }
 
@@ -27,10 +88,28 @@ struct TokenTally: Codable, Sendable, Equatable {
     /// **The split is the only formula.** `cost(at:)` is this breakdown's
     /// total, so a day's money and the per-model money it is built from come
     /// out of one arithmetic instead of two that would eventually disagree.
+    ///
+    /// **A long-context request is priced at its tier, whole.** Each band's
+    /// requests are taken out and priced at the tier their size reached; the
+    /// rest at the base rates.
     func costBreakdown(at price: ModelPrice) -> TokenCost {
-        TokenCost(
+        var rest = self
+        rest.contextBands = [:]
+        var cost = TokenCost()
+        for (band, requests) in contextBands {
+            guard let tier = price.tier(forBand: band) else { continue }
+            rest = rest.removing(requests)
+            cost = cost + requests.flatCost(at: tier.price)
+        }
+        return cost + rest.flatCost(at: price)
+    }
+
+    private func flatCost(at price: ModelPrice) -> TokenCost {
+        let hourWrites = min(max(cacheWrite1h, 0), cacheWrite)
+        return TokenCost(
             input: Double(input) * price.input / 1_000_000,
-            cacheWrite: Double(cacheWrite) * (price.cacheWrite ?? price.input) / 1_000_000,
+            cacheWrite: (Double(cacheWrite - hourWrites) * (price.cacheWrite ?? price.input)
+                + Double(hourWrites) * price.input * Self.hourWriteMultiplier) / 1_000_000,
             cacheRead: Double(cacheRead) * (price.cacheRead ?? price.input) / 1_000_000,
             output: Double(output) * price.output / 1_000_000
         )
@@ -38,6 +117,45 @@ struct TokenTally: Codable, Sendable, Equatable {
 
     func cost(at price: ModelPrice) -> Double {
         costBreakdown(at: price).total
+    }
+
+    /// A one-hour cache write against the plain input rate, as Anthropic
+    /// publishes it. models.dev lists only the five-minute rate.
+    static let hourWriteMultiplier = 2.0
+}
+
+extension TokenTally {
+    private enum CodingKeys: String, CodingKey {
+        case input, cacheWrite, cacheRead, output, cacheWrite1h, repliesWithoutCacheFields, contextBands
+    }
+
+    /// Every field optional on the way in: a cache written before a field
+    /// existed still reads, as zero, rather than failing whole.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            input: try container.decodeIfPresent(Int.self, forKey: .input) ?? 0,
+            cacheWrite: try container.decodeIfPresent(Int.self, forKey: .cacheWrite) ?? 0,
+            cacheRead: try container.decodeIfPresent(Int.self, forKey: .cacheRead) ?? 0,
+            output: try container.decodeIfPresent(Int.self, forKey: .output) ?? 0,
+            cacheWrite1h: try container.decodeIfPresent(Int.self, forKey: .cacheWrite1h) ?? 0,
+            repliesWithoutCacheFields: try container.decodeIfPresent(Int.self, forKey: .repliesWithoutCacheFields) ?? 0,
+            contextBands: try container.decodeIfPresent([Int: TokenTally].self, forKey: .contextBands) ?? [:]
+        )
+    }
+
+    /// Only what is not zero goes out. Every quarter-hour of every model is a
+    /// tally in the transcript cache, and most of its fields — the hour's
+    /// writes, the bands — are empty for most of them.
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        for (key, value) in [
+            (CodingKeys.input, input), (.cacheWrite, cacheWrite), (.cacheRead, cacheRead), (.output, output),
+            (.cacheWrite1h, cacheWrite1h), (.repliesWithoutCacheFields, repliesWithoutCacheFields),
+        ] where value != 0 {
+            try container.encode(value, forKey: key)
+        }
+        if !contextBands.isEmpty { try container.encode(contextBands, forKey: .contextBands) }
     }
 }
 
@@ -262,6 +380,12 @@ struct UsageLedger: Sendable, Equatable {
     /// a token number or a price.
     var hasPartialCounts = false
 
+    /// Whether the records behind this ledger say anything about the prompt
+    /// cache. False for a store with no cache column (`SpendAgent.reportsCacheReads`):
+    /// its zero hits would read as a cache that never hit, so there is no
+    /// cache hit rate to give.
+    var reportsCacheReads = true
+
     var days: [LedgerDay]
     var earliest: Date?
     /// Models seen in the logs that models.dev has no price for.
@@ -376,21 +500,53 @@ struct UsageLedger: Sendable, Equatable {
         days.last.flatMap { Calendar.current.isDateInToday($0.date) ? $0 : nil }
     }
 
-    func total(overLast count: Int) -> (tokens: Int, cost: Double) {
-        days.suffix(count).reduce(into: (0, 0.0)) {
+    /// A span's tokens and money, and how many of the tokens had no price —
+    /// so a span with none priced can say so rather than show `$0.00`.
+    func total(overLast count: Int) -> (tokens: Int, cost: Double, unpriced: Int) {
+        recent(count).reduce(into: (0, 0.0, 0)) {
             $0.0 += $1.tokens
             $0.1 += $1.cost
+            $0.2 += $1.unpricedTokens
         }
     }
 
-    var allTime: (tokens: Int, cost: Double) {
-        days.reduce(into: (0, 0.0)) {
+    var allTime: (tokens: Int, cost: Double, unpriced: Int) {
+        days.reduce(into: (0, 0.0, 0)) {
             $0.0 += $1.tokens
             $0.1 += $1.cost
+            $0.2 += $1.unpricedTokens
         }
     }
 
-    func recent(_ count: Int) -> [LedgerDay] { Array(days.suffix(count)) }
+    /// The money to show for some work, or nil where none of it had a price:
+    /// an unpriced model's work cost something, and `$0.00` says it did not.
+    static func shownCost(_ cost: Double, tokens: Int, unpriced: Int) -> Double? {
+        tokens > 0 && unpriced >= tokens ? nil : cost
+    }
+
+    /// The last `count` **calendar** days, today included, oldest first.
+    ///
+    /// **Not the last `count` entries.** `days` runs from the first record to
+    /// the last and stops there, so its tail is the last days anything was
+    /// used: after a fortnight off, "the last seven days" would have been the
+    /// seven before the break, with their money and their cache rate. Days
+    /// after the last record are filled in as quiet; days before the first are
+    /// left off, so a week-old install does not draw a month of empty bars.
+    func recent(_ count: Int, now: Date = Date()) -> [LedgerDay] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: now)
+        guard count > 0, let first = days.first,
+              let start = calendar.date(byAdding: .day, value: -(count - 1), to: today) else { return [] }
+        let byDate = Dictionary(days.map { (calendar.startOfDay(for: $0.date), $0) }) { kept, _ in kept }
+        var cursor = max(start, calendar.startOfDay(for: first.date))
+        var span: [LedgerDay] = []
+        while cursor <= today {
+            span.append(byDate[cursor] ?? LedgerDay(date: cursor, tokens: 0, cost: 0, unpricedTokens: 0, models: [:]))
+            guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
+            cursor = next
+        }
+        return span
+    }
 
     /// How much of the input over a span was served from the prompt cache:
     /// cache reads over every input token — fresh, written to the cache, and
@@ -402,13 +558,28 @@ struct UsageLedger: Sendable, Equatable {
     /// the whole; so would a store that cannot prove its counts are complete.
     /// Nil then, and nil with no input at all.
     func cacheHitRate(overLast count: Int) -> Double? {
-        guard !hasPartialCounts else { return nil }
-        let span = days.suffix(count)
+        guard !hasPartialCounts, reportsCacheReads else { return nil }
+        let span = recent(count)
         let tally = span.reduce(TokenTally()) { $0 + $1.tally }
         let tokens = span.reduce(0) { $0 + $1.tokens }
-        let input = tally.input + tally.cacheWrite + tally.cacheRead
-        guard input > 0, tally.total == tokens else { return nil }
-        return Double(tally.cacheRead) / Double(input)
+        guard tally.total == tokens else { return nil }
+
+        // **A model that said nothing about the cache is left out of the
+        // rate**, not counted as all misses: its input would sit in the
+        // denominator with no hits possible above it. Where every model is
+        // such a one, there is no rate. Days read before per-model tallies
+        // were kept can only be judged whole.
+        var byModel: [String: TokenTally] = [:]
+        var split = true
+        for day in span {
+            if day.tokens > 0, day.modelTallies.isEmpty { split = false }
+            for (raw, model) in day.modelTallies { byModel[raw] = (byModel[raw] ?? TokenTally()) + model }
+        }
+        let measured = split ? byModel.values.filter { !$0.reportsNoCache }.reduce(TokenTally(), +) : tally
+        guard !measured.reportsNoCache else { return nil }
+        let input = measured.input + measured.cacheWrite + measured.cacheRead
+        guard input > 0 else { return nil }
+        return Double(measured.cacheRead) / Double(input)
     }
 
     /// One model's cache hit rate over a span, and how much input it is
@@ -427,10 +598,10 @@ struct UsageLedger: Sendable, Equatable {
     /// split kept (read before the split was), or tokens its source could not
     /// classify — so no model's rate is worked out over part of its work.
     func cacheHitRatesByModel(overLast count: Int) -> [ModelCacheRate] {
-        guard !hasPartialCounts else { return [] }
+        guard !hasPartialCounts, reportsCacheReads else { return [] }
         var tallies: [String: TokenTally] = [:]
         var unvouched: Set<String> = []
-        for day in days.suffix(count) {
+        for day in recent(count) {
             for (raw, tokens) in day.models where tokens > 0 {
                 let name = modelNames[raw] ?? raw
                 guard let tally = day.modelTallies[raw], (day.modelUnclassifiedTokens[raw] ?? 0) == 0 else {
@@ -442,7 +613,7 @@ struct UsageLedger: Sendable, Equatable {
         }
         return tallies.compactMap { name, tally in
             let input = tally.input + tally.cacheWrite + tally.cacheRead
-            guard !unvouched.contains(name), input > 0 else { return nil }
+            guard !unvouched.contains(name), !tally.reportsNoCache, input > 0 else { return nil }
             return ModelCacheRate(name: name, rate: Double(tally.cacheRead) / Double(input), inputTokens: input)
         }
         .sorted { $0.inputTokens != $1.inputTokens ? $0.inputTokens > $1.inputTokens : $0.name < $1.name }
@@ -498,7 +669,7 @@ struct UsageLedger: Sendable, Equatable {
     /// whole list `topModel` is the head of, grouped by display name.
     func modelShares(overLast count: Int) -> [(name: String, tokens: Int, share: Double)] {
         var totals: [String: Int] = [:]
-        for day in days.suffix(count) {
+        for day in recent(count) {
             for (raw, tokens) in day.models where tokens > 0 { totals[modelNames[raw] ?? raw, default: 0] += tokens }
         }
         let overall = totals.values.reduce(0, +)
@@ -512,14 +683,15 @@ struct UsageLedger: Sendable, Equatable {
     /// beside the other figures on the card without quietly changing the
     /// window they all share.
     func busiestDay(overLast count: Int) -> LedgerDay? {
-        days.suffix(count).max { $0.tokens < $1.tokens }
+        recent(count).max { $0.tokens < $1.tokens }
     }
 
     /// The model most of the work went through, and how much of it. Falls back
     /// to the whole history when the recent window is quiet, so the line
     /// doesn't vanish after a week off.
     func topModel(overLast count: Int) -> (name: String, share: Double)? {
-        let window = days.suffix(count).contains { $0.tokens > 0 } ? Array(days.suffix(count)) : days
+        let recent = recent(count)
+        let window = recent.contains { $0.tokens > 0 } ? recent : days
 
         var totals: [String: Int] = [:]
         for day in window {
@@ -755,24 +927,45 @@ actor UsageLedgerReader {
                 guard !Task.isCancelled else { return ([:], [:], [:]) }
                 fresh[key] = FileCache.Entry(
                     stamp: stamp, days: scanned.days, title: scanned.title, cwd: scanned.cwd,
-                    timings: scanned.timings, replies: scanned.replies
+                    timings: scanned.timings, replies: scanned.replies,
+                    runningTotals: scanned.runningTotals.isEmpty ? nil : scanned.runningTotals
                 )
             }
         }
 
         // Each reply once, for the file it appeared in first — the original
         // conversation, not a resumed or forked copy of its history. Files are
-        // taken oldest work first, then by path, so the choice is stable.
-        let ordered = fresh.map { (key: $0.key, entry: $0.value, first: $0.value.firstSlot ?? "") }.sorted { lhs, rhs in
-            lhs.first != rhs.first ? lhs.first < rhs.first : lhs.key < rhs.key
+        // taken oldest work first, then by name, then by path, so the choice
+        // is stable. A Codex fork goes after every session that is not one:
+        // it can open in the quarter-hour its parent did, and its parent's
+        // readings must already be counted when its copies of them come by.
+        // Codex names a rollout for when it was made, so by name a fork of a
+        // fork still follows the fork it came from.
+        let ordered = fresh.map {
+            (key: $0.key, entry: $0.value, first: $0.value.firstSlot ?? "", fork: $0.value.isFork)
+        }.sorted { lhs, rhs in
+            if lhs.fork != rhs.fork { return !lhs.fork }
+            if lhs.first != rhs.first { return lhs.first < rhs.first }
+            let left = (lhs.key as NSString).lastPathComponent, right = (rhs.key as NSString).lastPathComponent
+            return left != right ? left < right : lhs.key < rhs.key
         }
         var claimed: Set<String> = []
+        var totals: Set<String> = []
         var counted: [String: FileCache.Entry] = [:]
-        for (key, entry, _) in ordered {
+        for (key, entry, _, fork) in ordered {
             guard !Task.isCancelled else { return ([:], [:], [:]) }
             var days = entry.days
-            var fileTimings = entry.timings ?? [:]
-            for (id, reply) in entry.replies ?? [:] where claimed.insert(id).inserted {
+            // A fork's lines carry the instant it was made, not when its work
+            // ran, and its replayed readings are dropped below: its timings
+            // would time nothing real.
+            var fileTimings = fork ? [:] : entry.timings ?? [:]
+            // An original session's totals are claimed before any fork is
+            // read: the forks come after every file that is not one.
+            totals.formUnion(entry.runningTotals ?? [])
+            for (id, reply) in entry.replies ?? [:] {
+                if reply.fromFork == true, let total = reply.runningTotal, totals.contains(total) { continue }
+                guard claimed.insert(id).inserted else { continue }
+                if let total = reply.runningTotal { totals.insert(total) }
                 days[reply.slot, default: [:]][reply.model] = (days[reply.slot]?[reply.model] ?? TokenTally()) + reply.tally
                 if let timing = reply.timing {
                     fileTimings[reply.slot, default: [:]][reply.model] =
@@ -892,29 +1085,31 @@ actor UsageLedgerReader {
     private static func logFiles(for provider: Provider, home: URL) -> [URL] {
         // None of the profiled providers leaves transcripts here either.
         guard let written = provider.handWritten else { return [] }
-        let root: URL? = switch written {
-        case .claudeCode: home.appending(path: ".claude/projects")
-        case .codex: home.appending(path: ".codex/sessions")
+        // Codex moves a session it archives out of `sessions` into
+        // `archived_sessions`; the work in it was still done.
+        let roots: [URL] = switch written {
+        case .claudeCode: [home.appending(path: ".claude/projects")]
+        case .codex: [home.appending(path: ".codex/sessions"), home.appending(path: ".codex/archived_sessions")]
         // Antigravity is an editor and keeps nothing; OpenCode keeps its own
         // store rather than the JSONL these two parsers read.
         case .kiro, .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
              .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
              .volcengine, .commandCode, .deepSeek, .devin, .xiaomiMiMo,
-             .sub2api, .newAPI, .v2ex, .qoder, .stepFun, .pulseExtension: nil
+             .sub2api, .newAPI, .v2ex, .qoder, .stepFun, .pulseExtension: []
         }
 
-        guard let root else { return [] }
-
-        guard let walker = FileManager.default.enumerator(
-            at: root,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else { return [] }
-
         var files: [URL] = []
-        while let file = autoreleasepool(invoking: { walker.nextObject() as? URL }) {
-            guard !Task.isCancelled else { return [] }
-            if file.pathExtension == "jsonl" { files.append(file) }
+        for root in roots {
+            guard let walker = FileManager.default.enumerator(
+                at: root,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles, .skipsPackageDescendants]
+            ) else { continue }
+
+            while let file = autoreleasepool(invoking: { walker.nextObject() as? URL }) {
+                guard !Task.isCancelled else { return [] }
+                if file.pathExtension == "jsonl" { files.append(file) }
+            }
         }
         return files
     }
@@ -940,9 +1135,13 @@ actor UsageLedgerReader {
         var cwd: String?
         /// Timed replies by quarter-hour and then model (`ReplyTiming`).
         var timings: [String: [String: ReplyTiming]] = [:]
-        /// Claude Code's replies by message id, kept apart from `days` so that
+        /// Claude Code's replies by message id, and a Codex fork's readings by
+        /// the running total they reached, kept apart from `days` so that
         /// `scan` can count each **once across files** (`ScannedReply`).
         var replies: [String: ScannedReply] = [:]
+        /// The running totals a Codex session that is not a fork reached,
+        /// which its forks' replayed readings repeat (`parseCodex`).
+        var runningTotals: [String] = []
 
         /// `days` with the replies folded in — one file's own figures.
         var allDays: [String: [String: TokenTally]] {
@@ -978,6 +1177,15 @@ actor UsageLedgerReader {
         let model: String
         let tally: TokenTally
         var timing: ReplyTiming?
+        /// A Codex reading's running total. Every counted reading claims it;
+        /// a reading from a forked rollout is dropped when an earlier file
+        /// already did, because it is the parent's request played back.
+        ///
+        /// **Only a fork's readings are ever dropped this way.** Two unrelated
+        /// sessions can reach the same small total — the same prompt sent
+        /// twice, the window starter's "hi" — and neither is a copy.
+        var runningTotal: String?
+        var fromFork: Bool?
     }
 
     // Internal for the on-disk streaming/cancellation regression fixtures.
@@ -1098,12 +1306,18 @@ actor UsageLedgerReader {
             else { return }
             let slot = slot(of: at)
 
+            let written = int(usage["cache_creation_input_tokens"])
             let tally = TokenTally(
                 input: int(usage["input_tokens"]),
-                cacheWrite: int(usage["cache_creation_input_tokens"]),
+                cacheWrite: written,
                 cacheRead: int(usage["cache_read_input_tokens"]),
-                output: int(usage["output_tokens"])
+                output: int(usage["output_tokens"]),
+                cacheWrite1h: min(int((usage["cache_creation"] as? [String: Any])?["ephemeral_1h_input_tokens"]), written),
+                repliesWithoutCacheFields: usage["cache_read_input_tokens"] == nil
+                    && usage["cache_creation_input_tokens"] == nil ? 1 : 0
             )
+            // One reply is one request; all it was sent is its context.
+            .request(context: int(usage["input_tokens"]) + written + int(usage["cache_read_input_tokens"]))
 
             guard let id = message["id"] as? String else {
                 if tally.total > 0 { days[slot, default: [:]][model] = (days[slot]?[model] ?? TokenTally()) + tally }
@@ -1170,15 +1384,56 @@ actor UsageLedgerReader {
     /// running total only ever climbs, which makes the differences safe to add
     /// up — and it sidesteps the duplicate readings that summing Codex's own
     /// per-turn field would double-count.
+    ///
+    /// **A forked session opens with its parent's running total.** Codex
+    /// Desktop's sub-agents start a new rollout (`session_meta.forked_from_id`)
+    /// whose first reading is the parent's whole total so far, and whose first
+    /// turn (`task_started` with a `rollout-N` id rather than a UUID) replays
+    /// the parent's readings one by one. Differenced from zero, that copy was
+    /// counted as the child's own work: on the Mac this was found on, 21 forks
+    /// added 2.3 billion tokens of their parents' history, most of what Codex
+    /// was said to have used. So a fork's first reading counts only its own
+    /// request, its replayed turn counts nothing, and every counted reading is
+    /// kept by the running total it brought the session to (`ScannedReply`) so
+    /// `scan` counts a reading copied into another file once.
     private func parseCodex(_ lines: LogLines) -> Scanned {
         var scanned = Scanned()
         var days: [String: [String: TokenTally]] = [:]
+        var replies: [String: ScannedReply] = [:]
+        var runningTotals: [String] = []
         var model: String?
         var previous: [String: Int]?
         var clock = CodexReplyClock()
         var lastCountSlot: String?
+        var forked = false
+        var replaying = false
+        // Which session a reading belongs to. A rollout with no header gets
+        // one of its own, so it is never taken for another file's.
+        var session = UUID().uuidString
+        var headed = false
 
         lines.forEachLine { line in
+            // The rollout's own header is its first; any later one is history.
+            if !headed, contains(line, "\"session_meta\""),
+               let root = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
+               root["type"] as? String == "session_meta",
+               let payload = root["payload"] as? [String: Any] {
+                headed = true
+                if let id = payload["id"] as? String, !id.isEmpty { session = id }
+                if let parent = payload["forked_from_id"] as? String, !parent.isEmpty { forked = true }
+            }
+
+            // A turn begins; in a fork, the one Codex calls `rollout-N` is the
+            // parent's history played back.
+            if contains(line, "\"task_started\""),
+               let root = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
+               let payload = root["payload"] as? [String: Any],
+               payload["type"] as? String == "task_started" {
+                let turn = payload["turn_id"] as? String ?? ""
+                replaying = forked && turn.hasPrefix("rollout-")
+                return
+            }
+
             // What a reply's timing needs: when each request went out (a
             // tool's output, or the user's message) and when the model last
             // wrote. Cut out of the line, as Claude Code's are — a tool's
@@ -1249,16 +1504,19 @@ actor UsageLedgerReader {
                 let model
             else { return }
 
-            let current = [
-                "input": int(totals["input_tokens"]),
-                "cached": int(totals["cached_input_tokens"]),
-                "cacheWrite": int(totals["cache_write_input_tokens"]),
-                "output": int(totals["output_tokens"])
-            ]
+            let current = codexCounts(totals)
+            // A fork's first reading is its parent's total plus its own first
+            // request; only the request is the fork's.
+            if previous == nil, forked {
+                let last = ((payload["info"] as? [String: Any])?["last_token_usage"] as? [String: Any])
+                    .map(codexCounts) ?? [:]
+                previous = current.merging(last) { total, own in max(total - own, 0) }
+            }
             let delta = current.reduce(into: [String: Int]()) { result, entry in
                 result[entry.key] = max(entry.value - (previous?[entry.key] ?? 0), 0)
             }
             previous = current
+            guard !replaying else { return }
 
             // Codex counts cached tokens inside its input figure; the price
             // list treats them as two separate rates.
@@ -1268,16 +1526,45 @@ actor UsageLedgerReader {
                 cacheRead: delta["cached"] ?? 0,
                 output: delta["output"] ?? 0
             )
+            // A reading is one request, and its own input — cached part
+            // included — is how full that request's context was.
+            .request(context: int(((payload["info"] as? [String: Any])?["last_token_usage"] as? [String: Any])?["input_tokens"]))
             guard tally.total > 0 else { return }
 
-            days[slot, default: [:]][model] = (days[slot]?[model] ?? TokenTally()) + tally
+            // The running total this reading brought the session to: a copy
+            // of it in a fork's rollout is the parent's request.
+            let total = [
+                current["input"] ?? 0, current["cached"] ?? 0, current["output"] ?? 0, int(totals["total_tokens"])
+            ].map(String.init).joined(separator: ":")
+            // Only a fork's readings can be copies, so only a fork keeps them
+            // one by one; any other session adds its readings up and keeps
+            // just the totals they reached, for its forks to be checked against.
+            if forked {
+                let id = "codex:\(session):\(total)"
+                guard replies[id] == nil else { return }
+                replies[id] = ScannedReply(slot: slot, model: model, tally: tally, runningTotal: total, fromFork: true)
+            } else {
+                days[slot, default: [:]][model] = (days[slot]?[model] ?? TokenTally()) + tally
+                runningTotals.append(total)
+            }
             lastCountSlot = slot
             clock.counted(output: tally.output, slot: slot, model: model)
         }
 
         scanned.days = days
+        scanned.replies = replies
+        scanned.runningTotals = runningTotals
         scanned.timings = clock.timings
         return scanned
+    }
+
+    private func codexCounts(_ usage: [String: Any]) -> [String: Int] {
+        [
+            "input": int(usage["input_tokens"]),
+            "cached": int(usage["cached_input_tokens"]),
+            "cacheWrite": int(usage["cache_write_input_tokens"]),
+            "output": int(usage["output_tokens"])
+        ]
     }
 
     /// What the model writes in a Codex rollout, as opposed to what is
@@ -1410,9 +1697,15 @@ private struct FileCache: Codable {
         var cwd: String?
         /// Optional for the same reason; `ledger-5` is what makes it present.
         var timings: [String: [String: ReplyTiming]]?
-        /// Claude Code's replies by id (`ScannedReply`), counted across files
-        /// by `scan`; `ledger-6` is what makes it present.
+        /// Claude Code's replies and Codex's readings by id (`ScannedReply`),
+        /// counted across files by `scan`; `ledger-6` is what makes it
+        /// present, `ledger-7` what puts Codex in it.
         var replies: [String: UsageLedgerReader.ScannedReply]?
+        /// `Scanned.runningTotals`; `ledger-7` is what makes it present.
+        var runningTotals: [String]?
+
+        /// A Codex rollout forked from another session (`ScannedReply.fromFork`).
+        var isFork: Bool { replies?.values.contains { $0.fromFork == true } ?? false }
 
         /// The earliest quarter-hour with work in it.
         var firstSlot: String? {
@@ -1468,6 +1761,12 @@ private struct FileCache: Codable {
         // forked conversation's transcript opens with a copy of the old one's
         // history; entries now keep Claude Code's replies by id so `scan` can
         // drop the copies.
-        (directory ?? PulseStorage.directory).appending(path: "ledger-6-\(provider.rawValue).json")
+        //
+        // **`ledger-7`: Codex forks counted their parents' history.** Codex
+        // readings are now kept by running total and a fork's inherited
+        // readings are dropped (`parseCodex`); Claude Code's cache writes now
+        // keep their one-hour share (`TokenTally.cacheWrite1h`). Both need
+        // every file read once more.
+        (directory ?? PulseStorage.directory).appending(path: "ledger-7-\(provider.rawValue).json")
     }
 }

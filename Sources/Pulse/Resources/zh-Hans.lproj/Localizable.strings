@@ -296,6 +296,7 @@
 "Start Pulse automatically when you log in." = "登录 macOS 后自动启动 Pulse。";
 "Waiting for approval in System Settings › General › Login Items." = "等待在「系统设置 › 通用 › 登录项」中允许。";
 
+
 /* 菜单栏图标 */
 "Hide menu bar icon" = "隐藏菜单栏图标";
 "Remove Pulse from the menu bar; use the panel menu or shortcut to open settings." = "从菜单栏移除 Pulse；需要设置时可用面板菜单或快捷键打开。";
@@ -542,15 +543,17 @@
 "Current streak" = "当前连续";
 "Longest streak" = "最长连续";
 "Peak hour" = "高峰时段";
-"Favourite model" = "最常用模型";
+"Most tokens" = "用量最多的模型";
 "By kind" = "按类型";
-"Input" = "输入";
-"Sent fresh, not served from the cache." = "新发送的，没有走缓存。";
-"Cache write" = "缓存写入";
-"Put into the prompt cache to be re-used." = "写进提示缓存，留着复用。";
-"Cache read" = "缓存读取";
-"Served from the cache, and priced far lower." = "从缓存取回，计价低得多。";
 "Output" = "输出";
+"Fresh input" = "新内容";
+"Sent this time and not read from the cache." = "这一轮发给模型、没从缓存读出的内容。";
+"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "这一轮发给模型、没从缓存读出的内容。其中 %@ 存进了缓存，Claude 等少数服务对这部分多收一档。";
+"Read back from the cache, usually at a lower price." = "从缓存读出的内容，通常按折扣价计费。";
+"These records carry no cache figures." = "这些记录里没有缓存数据。";
+"Not reported" = "未记录";
+"Fresh" = "新内容";
+"Cached" = "缓存命中";
 "Written back by the model." = "模型写回来的。";
 "By hour" = "按小时";
 "By month" = "按月";
@@ -561,8 +564,6 @@
 "Busiest hour" = "最忙";
 "Day by day" = "按天明细";
 "Date" = "日期";
-"C. read" = "缓存读";
-"C. write" = "缓存写";
 "Cost" = "花费";
 "%@ per page" = "每页 %@ 条";
 "%@–%@ of %@" = "第 %@–%@ 条，共 %@ 条";

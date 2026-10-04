@@ -132,7 +132,8 @@ struct ModelSpendDetailView: View {
                     TokenKindBreakdown(
                         tally: tally,
                         cost: model.costBreakdown,
-                        unpriced: model.unpricedTokens
+                        unpriced: model.unpricedTokens,
+                        readsUnreported: readsUnreported
                     )
                 } else {
                     SettingsRow(String.localized("Token breakdown unavailable.")) {
@@ -209,7 +210,7 @@ struct ModelSpendDetailView: View {
     /// cell sorts last and a real zero sorts as a zero.
     private var daily: some View {
         let rows = ModelSpendSummary.sorted(
-            model.days.filter { $0.tokens > 0 }, by: sort, ascending: ascending
+            model.days.filter { $0.tokens > 0 }, by: sort, ascending: ascending, cacheUnreported: readsUnreported
         )
         let pages = max((rows.count + pageSize - 1) / pageSize, 1)
         let current = min(max(page, 0), pages - 1)
@@ -277,20 +278,26 @@ struct ModelSpendDetailView: View {
     }
 
     /// One cell, by column, so the row and the header cannot get out of step.
+    /// Every agent that sent work to this model keeps no cache figure
+    /// (`SpendAgent.reportsCacheReads`).
+    private var readsUnreported: Bool {
+        model.tally?.reportsNoCache == true
+            || !model.agents.isEmpty && model.agents.allSatisfy { !$0.agent.reportsCacheReads }
+    }
+
     @ViewBuilder
     private func cell(_ day: ModelSpendSummary.Day, column: ModelSpendSummary.DayColumn) -> some View {
         switch column {
         case .date:
             Text(Self.shortDate(day.date))
                 .frame(maxWidth: .infinity, alignment: .leading)
-        case .input:
-            tokenCell(day.tally?.input)
+        case .fresh:
+            tokenCell(day.tally?.fresh)
+        case .cacheRead:
+            // A store with no cache column has no hits to show, not zero.
+            tokenCell(readsUnreported && day.tally?.cacheRead == 0 ? nil : day.tally?.cacheRead)
         case .output:
             tokenCell(day.tally?.output)
-        case .cacheRead:
-            tokenCell(day.tally?.cacheRead)
-        case .cacheWrite:
-            tokenCell(day.tally?.cacheWrite)
         case .total:
             tokenCell(day.tokens)
         case .cost:
@@ -357,12 +364,11 @@ extension ModelSpendSummary.DayColumn {
     var title: String {
         switch self {
         case .date: .localized("Date")
-        case .input: .localized("Input")
-        case .output: .localized("Output")
         // Short, because columns of Chinese headings in a settings pane are a
         // table that wraps.
-        case .cacheRead: .localized("C. read")
-        case .cacheWrite: .localized("C. write")
+        case .fresh: .localized("Fresh")
+        case .cacheRead: .localized("Cached")
+        case .output: .localized("Output")
         case .total: .localized("Total")
         case .cost: .localized("Cost")
         }

@@ -165,7 +165,9 @@ final class CardLedgers {
         case .agents(let agents):
             var ledgers: [UsageLedger] = []
             for agent in agents { ledgers.append(await AgentLedgers.shared.ledger(for: agent)) }
-            return .answered(UsageLedger.adding(ledgers))
+            var combined = UsageLedger.adding(ledgers)
+            combined.reportsCacheReads = agents.contains { $0.reportsCacheReads }
+            return .answered(combined)
         case .accountStatistics:
             let read = await ZaiUsageService(provider: provider, enteredKey: APIKeyStore.key(for: provider)).history()
             switch read {

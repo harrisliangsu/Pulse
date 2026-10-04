@@ -86,7 +86,9 @@ enum OpenCodeStore {
                 input: Self.int(counts["input"]),
                 cacheWrite: Self.int(cache["write"]),
                 cacheRead: Self.int(cache["read"]),
-                output: Self.int(counts["output"]) + Self.int(counts["reasoning"])
+                // OpenCode 2 states the role in its own column; OpenCode 1's
+                // `message` rows are the ones old enough to have no total.
+                output: Self.output(counts, int: Self.int, totallessFolded: sqlite3_column_text(statement, 3) == nil)
             )
             guard tally.total > 0 else { return }
 
@@ -196,6 +198,36 @@ enum OpenCodeStore {
         return Date(timeIntervalSince1970: Double(created) / 1000)
     }
 
+
+    /// Output with its reasoning, counted once.
+    ///
+    /// **Two shapes under one name.** Current OpenCode (and Kilo, and MiMo
+    /// Code, which share its store) reports reasoning **beside** output, and
+    /// `total` is input, output, reasoning and cache together. Older rows
+    /// folded reasoning **into** output and left it out of `total`; adding it
+    /// again counted it twice (632 rows on the Mac this was found on). So:
+    ///
+    /// - reasoning larger than output cannot be inside it, and is added;
+    /// - a `total` decides where there is one;
+    /// - without one, `totallessFolded` does. OpenCode 1's `message` rows that
+    ///   predate `total` all have output at least their reasoning — 78 of 78
+    ///   here, where a fifth of later rows with reasoning beside output do
+    ///   not — so they are the folded shape. OpenCode 2's `session_message`
+    ///   carries no `total` at all and keeps reasoning beside output.
+    static func output(_ counts: [String: Any], int: (Any?) -> Int, totallessFolded: Bool = false) -> Int {
+        let output = int(counts["output"]), reasoning = int(counts["reasoning"])
+        guard reasoning > 0, output >= reasoning else { return output + reasoning }
+        let cache = counts["cache"] as? [String: Any] ?? [:]
+        let total = int(counts["total"])
+        guard total > 0 else {
+            // Only a row with no total at all is OpenCode 1's old shape; a
+            // total written as zero says nothing either way.
+            let stated = counts["total"].map { !($0 is NSNull) } ?? false
+            return totallessFolded && !stated ? output : output + reasoning
+        }
+        let folded = total == int(counts["input"]) + output + int(cache["read"]) + int(cache["write"])
+        return folded ? output : output + reasoning
+    }
     private static func int(_ value: Any?) -> Int {
         (value as? Int) ?? (value as? Double).map(Int.init) ?? (value as? NSNumber)?.intValue ?? 0
     }

@@ -154,22 +154,30 @@ struct AccountUsageCard: View {
         return Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 16) {
             GridRow {
                 figure(String.localized("Today"),
-                       cost: ledger.today?.cost ?? 0, tokens: ledger.today?.tokens ?? 0)
-                figure(String.localized("Last 31 days"), cost: recent.cost, tokens: recent.tokens)
+                       cost: ledger.today.map { UsageLedger.shownCost($0.cost, tokens: $0.tokens, unpriced: $0.unpricedTokens) } ?? 0,
+                       tokens: ledger.today?.tokens ?? 0)
+                figure(String.localized("Last 31 days"),
+                       cost: UsageLedger.shownCost(recent.cost, tokens: recent.tokens, unpriced: recent.unpriced),
+                       tokens: recent.tokens)
             }
             GridRow {
                 figure(String.localized("Busiest day"),
-                       cost: busiest?.cost ?? 0, tokens: busiest?.tokens ?? 0)
+                       cost: busiest.map { UsageLedger.shownCost($0.cost, tokens: $0.tokens, unpriced: $0.unpricedTokens) } ?? 0,
+                       tokens: busiest?.tokens ?? 0)
                 // **"All time" is only true of a ledger that goes back.** A
                 // provider's statistics are asked for a fixed window, so all
                 // time and the last month are the same sum — one figure
                 // printed twice, under a label claiming a lifetime Pulse does
                 // not have. A shorter span is something the window can answer.
                 if ledger.origin == .localTranscripts {
-                    figure(String.localized("All time"), cost: all.cost, tokens: all.tokens)
+                    figure(String.localized("All time"),
+                           cost: UsageLedger.shownCost(all.cost, tokens: all.tokens, unpriced: all.unpriced),
+                           tokens: all.tokens)
                 } else {
                     let week = ledger.total(overLast: 7)
-                    figure(String.localized("Last 7 days"), cost: week.cost, tokens: week.tokens)
+                    figure(String.localized("Last 7 days"),
+                           cost: UsageLedger.shownCost(week.cost, tokens: week.tokens, unpriced: week.unpriced),
+                           tokens: week.tokens)
                 }
             }
         }
@@ -183,7 +191,7 @@ struct AccountUsageCard: View {
     /// model, which no price list can turn into a cost — and `Self.money(0)`
     /// renders a confident "$0.00" for work that certainly cost something.
     /// The figure that is actually known takes the top line instead.
-    private func figure(_ label: String, cost: Double, tokens: Int) -> some View {
+    private func figure(_ label: String, cost: Double?, tokens: Int) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.system(size: 11))
@@ -192,7 +200,8 @@ struct AccountUsageCard: View {
             // Money where there is money: this Mac's logs priced at API rates,
             // or a provider's own log of what it charged.
             if ledger.origin == .localTranscripts || ledger.origin == .providerLogs {
-                Text(Self.money(cost, currency: ledger.currency))
+                // None of it priced: a dash, as the Token spend pane draws it.
+                Text(verbatim: cost.map { Self.money($0, currency: ledger.currency) } ?? "—")
                     .font(.system(size: 17, weight: .semibold))
                     .monospacedDigit()
 

@@ -346,13 +346,21 @@ private struct MenuAccountDetail: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 10) {
-                        figure(String.localized("Today"), cost: today?.cost ?? 0, tokens: today?.tokens ?? 0)
-                        figure(String.localized("Busiest day"), cost: busiest?.cost ?? 0, tokens: busiest?.tokens ?? 0)
+                        figure(String.localized("Today"),
+                               cost: today.map { UsageLedger.shownCost($0.cost, tokens: $0.tokens, unpriced: $0.unpricedTokens) } ?? 0,
+                               tokens: today?.tokens ?? 0, currency: ledger.currency)
+                        figure(String.localized("Busiest day"),
+                               cost: busiest.map { UsageLedger.shownCost($0.cost, tokens: $0.tokens, unpriced: $0.unpricedTokens) } ?? 0,
+                               tokens: busiest?.tokens ?? 0, currency: ledger.currency)
                     }
                     Spacer(minLength: 12)
                     VStack(alignment: .leading, spacing: 10) {
-                        figure(String.localized("Last 31 days"), cost: recent.cost, tokens: recent.tokens)
-                        figure(String.localized("All time"), cost: all.cost, tokens: all.tokens)
+                        figure(String.localized("Last 31 days"),
+                               cost: UsageLedger.shownCost(recent.cost, tokens: recent.tokens, unpriced: recent.unpriced),
+                               tokens: recent.tokens, currency: ledger.currency)
+                        figure(String.localized("All time"),
+                               cost: UsageLedger.shownCost(all.cost, tokens: all.tokens, unpriced: all.unpriced),
+                               tokens: all.tokens, currency: ledger.currency)
                     }
                     .frame(width: 120, alignment: .leading)
                 }
@@ -376,12 +384,15 @@ private struct MenuAccountDetail: View {
         }
     }
 
-    private func figure(_ title: String, cost: Double, tokens: Int) -> some View {
+    /// None of it priced is a dash, as the Token spend pane draws it, and the
+    /// money is in the ledger's own currency — DeepSeek's console charges in
+    /// yuan.
+    private func figure(_ title: String, cost: Double?, tokens: Int, currency: String?) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(verbatim: title)
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
-            Text(verbatim: AccountUsageCard.money(cost))
+            Text(verbatim: cost.map { AccountUsageCard.money($0, currency: currency) } ?? "—")
                 .font(.system(size: 15, weight: .semibold).monospacedDigit())
             Text(verbatim: String.localized("\(TokenCount.short(tokens)) tokens"))
                 .font(.system(size: 11).monospacedDigit())

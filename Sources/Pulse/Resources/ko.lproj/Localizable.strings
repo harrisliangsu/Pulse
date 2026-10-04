@@ -296,6 +296,7 @@
 "Start Pulse automatically when you log in." = "macOS에 로그인하면 Pulse를 자동으로 실행합니다.";
 "Waiting for approval in System Settings › General › Login Items." = "시스템 설정 › 일반 › 로그인 항목에서 허용하기를 기다리는 중입니다.";
 
+
 /* 메뉴 막대 아이콘 */
 "Hide menu bar icon" = "메뉴 막대 아이콘 숨기기";
 "Remove Pulse from the menu bar; use the panel menu or shortcut to open settings." = "메뉴 막대에서 Pulse를 숨깁니다. 설정은 패널 메뉴나 단축키로 열 수 있습니다.";
@@ -542,15 +543,17 @@
 "Current streak" = "현재 연속";
 "Longest streak" = "최장 연속";
 "Peak hour" = "가장 바쁜 시간대";
-"Favourite model" = "가장 자주 쓰는 모델";
+"Most tokens" = "토큰이 가장 많은 모델";
 "By kind" = "종류별";
-"Input" = "입력";
-"Sent fresh, not served from the cache." = "캐시를 거치지 않고 새로 보낸 분량입니다.";
-"Cache write" = "캐시 쓰기";
-"Put into the prompt cache to be re-used." = "다시 쓰려고 프롬프트 캐시에 넣은 분량입니다.";
-"Cache read" = "캐시 읽기";
-"Served from the cache, and priced far lower." = "캐시에서 돌려받은 분량으로, 요금이 훨씬 낮습니다.";
 "Output" = "출력";
+"Fresh input" = "새 입력";
+"Sent this time and not read from the cache." = "이번에 모델에 보냈고 캐시에서 읽지 않은 분량입니다.";
+"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "이번에 모델에 보냈고 캐시에서 읽지 않은 분량입니다. 그중 %@은 캐시에 기록되었고, Claude 등 일부 서비스는 이 부분을 더 비싸게 청구합니다.";
+"Read back from the cache, usually at a lower price." = "캐시에서 읽어 온 분량으로, 보통 더 싸게 청구됩니다.";
+"These records carry no cache figures." = "이 기록에는 캐시 수치가 없습니다.";
+"Not reported" = "기록 없음";
+"Fresh" = "새 입력";
+"Cached" = "캐시 적중";
 "Written back by the model." = "모델이 되돌려 쓴 분량입니다.";
 "By hour" = "시간대별";
 "By month" = "월별";
@@ -561,8 +564,6 @@
 "Busiest hour" = "가장 바쁜 시간";
 "Day by day" = "날짜별 내역";
 "Date" = "날짜";
-"C. read" = "캐시 읽기";
-"C. write" = "캐시 쓰기";
 "Cost" = "금액";
 "%@ per page" = "페이지당 %@개";
 "%@–%@ of %@" = "%@–%@번째 / 전체 %@개";

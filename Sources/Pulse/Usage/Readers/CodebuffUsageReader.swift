@@ -49,10 +49,16 @@ enum CodebuffUsageReader {
                 let sources = usageSources(message)
                 guard !sources.isEmpty else { continue }
 
+                // Codebuff's input is the provider's `prompt_tokens`, which
+                // already holds the cached prefix (its own `tokens.ts`: input
+                // is never less than the cache read on any row). Taken as
+                // fresh input beside the cache read, the prefix was counted
+                // twice and priced at the full rate once.
+                let read = cacheRead(sources)
                 let tally = TokenTally(
-                    input: StructuredLogSupport.merged(sources, inputAliases),
+                    input: max(StructuredLogSupport.merged(sources, inputAliases) - read, 0),
                     cacheWrite: StructuredLogSupport.merged(sources, cacheWriteAliases),
-                    cacheRead: cacheRead(sources),
+                    cacheRead: read,
                     output: StructuredLogSupport.merged(sources, outputAliases)
                 )
                 guard tally.total > 0 else { continue }

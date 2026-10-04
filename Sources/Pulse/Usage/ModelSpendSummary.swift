@@ -384,9 +384,14 @@ struct ModelSpendSummary: Equatable, Sendable {
             let input = Self.adding(lhs.input, rhs.input),
             let cacheWrite = Self.adding(lhs.cacheWrite, rhs.cacheWrite),
             let cacheRead = Self.adding(lhs.cacheRead, rhs.cacheRead),
-            let output = Self.adding(lhs.output, rhs.output)
+            let output = Self.adding(lhs.output, rhs.output),
+            let hourWrites = Self.adding(lhs.cacheWrite1h, rhs.cacheWrite1h),
+            let silent = Self.adding(lhs.repliesWithoutCacheFields, rhs.repliesWithoutCacheFields)
         else { return nil }
-        return TokenTally(input: input, cacheWrite: cacheWrite, cacheRead: cacheRead, output: output)
+        return TokenTally(
+            input: input, cacheWrite: cacheWrite, cacheRead: cacheRead, output: output,
+            cacheWrite1h: hourWrites, repliesWithoutCacheFields: silent
+        )
     }
 
     private static func adding(_ lhs: Int, _ rhs: Int) -> Int? {
@@ -401,10 +406,10 @@ struct ModelSpendSummary: Equatable, Sendable {
     /// asked of the same rows whoever asks it.
     enum DayColumn: String, CaseIterable, Identifiable, Sendable {
         case date
-        case input
-        case output
+        /// New input, cache writes included (`TokenTally.fresh`).
+        case fresh
         case cacheRead
-        case cacheWrite
+        case output
         case total
         case cost
 
@@ -425,7 +430,7 @@ struct ModelSpendSummary: Equatable, Sendable {
     /// adjacent values above 2^53 compare equal and fall back to the date,
     /// which is a wrong order rather than a rounding. The generic ranker below
     /// is shared only for the nil-last and tie rules.
-    static func sorted(_ days: [Day], by column: DayColumn, ascending: Bool) -> [Day] {
+    static func sorted(_ days: [Day], by column: DayColumn, ascending: Bool, cacheUnreported: Bool = false) -> [Day] {
         /// Equal values keep their place by date, so two runs over one table
         /// agree rather than shuffling.
         func byDate(_ lhs: Day, _ rhs: Day) -> Bool {
@@ -454,14 +459,14 @@ struct ModelSpendSummary: Equatable, Sendable {
         // this column.
         case .date:
             return days.sorted(by: byDate)
-        case .input:
-            return days.sorted { rank($0.tally?.input, $1.tally?.input, $0, $1) }
+        case .fresh:
+            return days.sorted { rank($0.tally?.fresh, $1.tally?.fresh, $0, $1) }
+        case .cacheRead:
+            // A store with no cache column has hits that were never recorded.
+            func hits(_ day: Day) -> Int? { cacheUnreported && day.tally?.cacheRead == 0 ? nil : day.tally?.cacheRead }
+            return days.sorted { rank(hits($0), hits($1), $0, $1) }
         case .output:
             return days.sorted { rank($0.tally?.output, $1.tally?.output, $0, $1) }
-        case .cacheRead:
-            return days.sorted { rank($0.tally?.cacheRead, $1.tally?.cacheRead, $0, $1) }
-        case .cacheWrite:
-            return days.sorted { rank($0.tally?.cacheWrite, $1.tally?.cacheWrite, $0, $1) }
         case .total:
             return days.sorted { rank($0.tokens, $1.tokens, $0, $1) }
         case .cost:

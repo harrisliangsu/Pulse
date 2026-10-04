@@ -296,6 +296,7 @@
 "Start Pulse automatically when you log in." = "macOS にログインすると Pulse を自動的に起動します。";
 "Waiting for approval in System Settings › General › Login Items." = "「システム設定 › 一般 › ログイン項目」での許可を待っています。";
 
+
 /* メニューバーのアイコン */
 "Hide menu bar icon" = "メニューバーのアイコンを隠す";
 "Remove Pulse from the menu bar; use the panel menu or shortcut to open settings." = "Pulse をメニューバーから外します。設定はパネルのメニューかショートカットで開けます。";
@@ -542,15 +543,17 @@
 "Current streak" = "現在の連続日数";
 "Longest streak" = "最長の連続日数";
 "Peak hour" = "ピークの時間帯";
-"Favourite model" = "最もよく使うモデル";
+"Most tokens" = "トークン最多のモデル";
 "By kind" = "種類別";
-"Input" = "入力";
-"Sent fresh, not served from the cache." = "キャッシュを経ず、新たに送ったぶんです。";
-"Cache write" = "キャッシュ書き込み";
-"Put into the prompt cache to be re-used." = "再利用のためプロンプトキャッシュに入れたぶんです。";
-"Cache read" = "キャッシュ読み出し";
-"Served from the cache, and priced far lower." = "キャッシュから返されたぶんで、料金はずっと安くなります。";
 "Output" = "出力";
+"Fresh input" = "新しい入力";
+"Sent this time and not read from the cache." = "今回モデルに送り、キャッシュから読まなかったぶんです。";
+"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "今回モデルに送り、キャッシュから読まなかったぶんです。うち %@ はキャッシュに書き込まれ、Claude など一部のサービスではここが割高になります。";
+"Read back from the cache, usually at a lower price." = "キャッシュから読み出したぶんで、ふつうは割安になります。";
+"These records carry no cache figures." = "これらの記録にはキャッシュの数値がありません。";
+"Not reported" = "記録なし";
+"Fresh" = "新規";
+"Cached" = "キャッシュ";
 "Written back by the model." = "モデルが書き返したぶんです。";
 "By hour" = "時間帯別";
 "By month" = "月別";
@@ -561,8 +564,6 @@
 "Busiest hour" = "最も多い時間";
 "Day by day" = "日ごとの明細";
 "Date" = "日付";
-"C. read" = "キャッシュ読";
-"C. write" = "キャッシュ書";
 "Cost" = "金額";
 "%@ per page" = "1 ページ %@ 件";
 "%@–%@ of %@" = "%@–%@ 件目 / 全 %@ 件";

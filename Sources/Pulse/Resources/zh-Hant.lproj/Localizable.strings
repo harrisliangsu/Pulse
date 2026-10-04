@@ -296,6 +296,7 @@
 "Start Pulse automatically when you log in." = "登入 macOS 後自動啟動 Pulse。";
 "Waiting for approval in System Settings › General › Login Items." = "等待在「系統設定 › 一般 › 登入項目」中允許。";
 
+
 /* 選單列圖示 */
 "Hide menu bar icon" = "隱藏選單列圖示";
 "Remove Pulse from the menu bar; use the panel menu or shortcut to open settings." = "從選單列移除 Pulse；需要設定時可用面板選單或快速鍵開啟。";
@@ -542,15 +543,17 @@
 "Current streak" = "目前連續";
 "Longest streak" = "最長連續";
 "Peak hour" = "尖峰時段";
-"Favourite model" = "最常用的模型";
+"Most tokens" = "用量最多的模型";
 "By kind" = "依類型";
-"Input" = "輸入";
-"Sent fresh, not served from the cache." = "重新送出的，沒有走快取。";
-"Cache write" = "快取寫入";
-"Put into the prompt cache to be re-used." = "寫進提示快取，留著重複使用。";
-"Cache read" = "快取讀取";
-"Served from the cache, and priced far lower." = "從快取取回，計價低得多。";
 "Output" = "輸出";
+"Fresh input" = "新內容";
+"Sent this time and not read from the cache." = "這一輪發給模型、沒從快取讀出的內容。";
+"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "這一輪發給模型、沒從快取讀出的內容。其中 %@ 存進了快取，Claude 等少數服務對這部分多收一檔。";
+"Read back from the cache, usually at a lower price." = "從快取讀出的內容，通常按折扣價計費。";
+"These records carry no cache figures." = "這些記錄裡沒有快取資料。";
+"Not reported" = "未記錄";
+"Fresh" = "新內容";
+"Cached" = "快取命中";
 "Written back by the model." = "模型寫回來的。";
 "By hour" = "依小時";
 "By month" = "依月份";
@@ -561,8 +564,6 @@
 "Busiest hour" = "最忙";
 "Day by day" = "逐日明細";
 "Date" = "日期";
-"C. read" = "快取讀";
-"C. write" = "快取寫";
 "Cost" = "花費";
 "%@ per page" = "每頁 %@ 筆";
 "%@–%@ of %@" = "第 %@–%@ 筆，共 %@ 筆";

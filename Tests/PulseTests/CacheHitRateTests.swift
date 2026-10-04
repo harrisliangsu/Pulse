@@ -5,7 +5,8 @@ import Testing
 /// The detailed card's cache hit rate: cache reads over every input token,
 /// and nothing at all where the records cannot vouch for their split.
 struct CacheHitRateTests {
-    private let start = Calendar.current.startOfDay(for: Date(timeIntervalSince1970: 1_790_000_000))
+    /// Yesterday, so `day(1)` is today: a span is counted back from today.
+    private let start = Calendar.current.date(byAdding: .day, value: -1, to: Calendar.current.startOfDay(for: Date()))!
 
     private func day(_ offset: Int, _ tally: TokenTally, unclassified: Int = 0) -> LedgerDay {
         var day = LedgerDay(date: Calendar.current.date(byAdding: .day, value: offset, to: start)!,
@@ -39,6 +40,39 @@ struct CacheHitRateTests {
             day(1, TokenTally(input: 10, cacheRead: 90)),
         ]).cacheHitRate(overLast: 1))
         #expect(abs(rate - 0.9) < 0.0001)
+    }
+
+    @Test func aSpanIsCalendarDaysNotTheLastRecords() {
+        // Last used ten days ago: the last week is quiet, not the week before
+        // the break.
+        let stale = ledger([
+            day(-10, TokenTally(input: 10, cacheRead: 90)),
+            day(-9, TokenTally(input: 10, cacheRead: 90)),
+        ])
+        #expect(stale.total(overLast: 7).tokens == 0)
+        #expect(stale.cacheHitRate(overLast: 7) == nil)
+        #expect(stale.recent(7).count == 7)
+        #expect(stale.total(overLast: 31).tokens == 200)
+        // A ledger younger than the span starts at its first day.
+        #expect(ledger([day(1, TokenTally(input: 1))]).recent(31).count == 1)
+    }
+
+    @Test func aModelThatNeverNamedTheCacheIsLeftOut() {
+        // One model through a compatible endpoint that writes no cache field,
+        // one through Anthropic: the rate is the second's alone.
+        let silent = TokenTally(input: 900, repliesWithoutCacheFields: 3)
+        let cached = TokenTally(input: 10, cacheRead: 90)
+        var mixed = LedgerDay(date: day(1, TokenTally()).date, tokens: 1_000, cost: 0, unpricedTokens: 0,
+                              models: ["gateway": 900, "claude": 100])
+        mixed.tally = silent + cached
+        mixed.modelTallies = ["gateway": silent, "claude": cached]
+        let rate = try? #require(ledger([mixed]).cacheHitRate(overLast: 31))
+        #expect(rate.map { abs($0 - 0.9) < 0.0001 } == true)
+        #expect(ledger([mixed]).cacheHitRatesByModel(overLast: 31).map(\.name) == ["claude"])
+
+        var only = day(1, silent)
+        only.modelTallies = ["gateway": silent]
+        #expect(ledger([only]).cacheHitRate(overLast: 31) == nil)
     }
 
     @Test func tokensNoKindCanClaimWithholdIt() {

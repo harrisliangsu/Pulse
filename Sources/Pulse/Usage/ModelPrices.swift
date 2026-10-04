@@ -15,6 +15,35 @@ struct ModelPrice: Codable, Sendable, Equatable {
     /// How the provider writes the model's name — "GPT-5.6 Sol" rather than
     /// `gpt-5.6-sol`. Optional so an older cached file still decodes.
     let name: String?
+    /// The rates a request pays once its context passes a size, lowest
+    /// threshold first (`cost.tiers`, or `context_over_200k` where that is all
+    /// there is). Nil where the model has one rate whatever the context.
+    var tiers: [ContextTier]? = nil
+
+    /// One long-context tier: a request whose context — fresh input, cache
+    /// read and cache write together — is **over** `threshold` tokens is
+    /// billed at these rates, all of it, not just the part past the line.
+    /// That is how OpenAI states its 272K tier, and what ccusage and CodexBar
+    /// apply.
+    struct ContextTier: Codable, Sendable, Equatable {
+        let threshold: Int
+        let input: Double
+        let output: Double
+        let cacheRead: Double?
+        let cacheWrite: Double?
+
+        /// The tier as a price of its own; a cache rate it does not state
+        /// falls back to its own input rate, as the base rates do.
+        var price: ModelPrice {
+            ModelPrice(input: input, output: output, cacheRead: cacheRead, cacheWrite: cacheWrite, name: nil)
+        }
+    }
+
+    /// The tier a request whose context fell in `band` (`TokenTally.contextBands`)
+    /// pays: the highest threshold at or under the band's floor.
+    func tier(forBand band: Int) -> ContextTier? {
+        tiers?.filter { $0.threshold <= band }.max { $0.threshold < $1.threshold }
+    }
 }
 
 /// The price list, fetched from models.dev and kept on disk.
@@ -23,10 +52,10 @@ struct ModelPrice: Codable, Sendable, Equatable {
 /// on the next read after 24 hours, and the cached copy keeps the settings
 /// pane working offline. Failed downloads may retry after five minutes.
 ///
-/// Prices are the base rates. Some models charge more above a long-context
-/// threshold, and that tier isn't applied here: the logs record how many
-/// tokens a request used, not how full its context was, so honouring the tier
-/// would mean guessing which side of the line each request fell on.
+/// Long-context tiers are applied where a request's own size is known: Claude
+/// Code's replies and Codex's readings are one request each, and record their
+/// context (`TokenTally.contextBands`). A store that adds requests up before
+/// Pulse sees them is priced at the base rates.
 actor ModelPrices {
     static let shared = ModelPrices()
 
@@ -170,7 +199,8 @@ actor ModelPrices {
                     output: output,
                     cacheRead: number(cost["cache_read"]),
                     cacheWrite: number(cost["cache_write"]),
-                    name: (model as? [String: Any])?["name"] as? String
+                    name: (model as? [String: Any])?["name"] as? String,
+                    tiers: tiers(in: cost)
                 )
             }
         }
@@ -193,12 +223,38 @@ actor ModelPrices {
                     output: output,
                     cacheRead: number(cost["cache_read"]),
                     cacheWrite: number(cost["cache_write"]),
-                    name: (model as? [String: Any])?["name"] as? String
+                    name: (model as? [String: Any])?["name"] as? String,
+                    tiers: tiers(in: cost)
                 )
             }
         }
 
         return prices.isEmpty ? nil : prices
+    }
+
+    /// `cost.tiers[]` of `tier.type == "context"`, or `context_over_200k` on
+    /// its own. models.dev writes a threshold both as `272000` and `272001`
+    /// ("over 272,000" either way), so the second is read as the first.
+    static func tiers(in cost: [String: Any]) -> [ModelPrice.ContextTier]? {
+        func tier(_ rates: [String: Any], over threshold: Int) -> ModelPrice.ContextTier? {
+            guard let input = number(rates["input"]), let output = number(rates["output"]) else { return nil }
+            return ModelPrice.ContextTier(
+                threshold: threshold, input: input, output: output,
+                cacheRead: number(rates["cache_read"]), cacheWrite: number(rates["cache_write"])
+            )
+        }
+        var found: [ModelPrice.ContextTier] = []
+        for entry in cost["tiers"] as? [[String: Any]] ?? [] {
+            guard let shape = entry["tier"] as? [String: Any], shape["type"] as? String == "context",
+                  let size = (shape["size"] as? Int) ?? (shape["size"] as? NSNumber)?.intValue, size > 1
+            else { continue }
+            let threshold = (size - 1) % 1_000 == 0 ? size - 1 : size
+            if let tier = tier(entry, over: threshold) { found.append(tier) }
+        }
+        if found.isEmpty, let over = cost["context_over_200k"] as? [String: Any], let tier = tier(over, over: 200_000) {
+            found.append(tier)
+        }
+        return found.isEmpty ? nil : found.sorted { $0.threshold < $1.threshold }
     }
 
     private static func number(_ value: Any?) -> Double? {
@@ -310,18 +366,19 @@ actor ModelPrices {
         let prices: [String: ModelPrice]
     }
 
-    /// Version 4 includes namespaced plan-vendor rates. A version 3 table can
-    /// be fresh but cannot satisfy the new lookup, so it is only an offline
-    /// fallback and never suppresses a download on upgrade.
+    /// Version 4 includes namespaced plan-vendor rates; version 5 keeps each
+    /// model's long-context tiers. A version 4 table can be fresh but carries
+    /// no tiers, so it is only an offline fallback and never suppresses a
+    /// download on upgrade.
     private static var cacheFile: URL {
-        PulseStorage.directory.appending(path: "model-prices-4.json")
+        PulseStorage.directory.appending(path: "model-prices-5.json")
     }
 
     static func readCache(
         in directory: URL = PulseStorage.directory,
         allowPreviousVersion: Bool = false
     ) -> Cache? {
-        let names = [cacheFile.lastPathComponent] + (allowPreviousVersion ? ["model-prices-3.json"] : [])
+        let names = [cacheFile.lastPathComponent] + (allowPreviousVersion ? ["model-prices-4.json"] : [])
         for name in names {
             guard let data = try? Data(contentsOf: directory.appending(path: name)),
                   let cached = try? JSONDecoder().decode(Cache.self, from: data) else { continue }
@@ -359,7 +416,11 @@ enum PulseStorage {
         "ledger-4-claudeCode.json", // first-line output counts, no reply timings
         "ledger-4-codex.json",
         "ledger-5-claudeCode.json", // a resumed session's copied history counted again
-        "ledger-5-codex.json"
+        "ledger-5-codex.json",
+        "ledger-6-claudeCode.json", // Codex forks counted their parents' history; no one-hour writes
+        "ledger-6-codex.json",
+        "model-prices-2.json",      // before plan vendors were namespaced
+        "model-prices-3.json"
     ]
 
     static func removeSupersededFiles() {
