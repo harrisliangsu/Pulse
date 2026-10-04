@@ -90,6 +90,8 @@ Default window: **920 × 660**, set on the `NSWindow`'s `contentRect`; the view'
 
 Two groups. The first is the app: version and update state, where the usage figures come from, and the **source address** — the URL itself as the subtitle rather than a sentence about it, because half the people reading that row will want to type it rather than click it.
 
+Opening the pane **asks for an update there and then** (`AppUpdate.probe`, Sparkle's `checkForUpdateInformation`): no Sparkle window, only the Version subtitle changes — "Checking…", then the answer. Without it "up to date" meant only that the last scheduled check said so, however long ago. Skipped while a check or update is already running. **Check now** is still the one that puts up Sparkle's window.
+
 The second is **Credits**, and anything shipped here that somebody else made belongs in it: the design it was built from, the provider marks, and the animated marks' geometry ([../decisions/bot-mark-geometry.md](../decisions/bot-mark-geometry.md)). Crediting the icons and not the vendored artwork beside them would be the inconsistency, not the extra row.
 
 ## Provider panes

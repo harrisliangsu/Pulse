@@ -3611,6 +3611,9 @@ struct SettingsView: View {
                 }
             }
         }
+        // Without this the row says "up to date" on nothing but the last
+        // answer, however old. Quiet: the subtitle is where the result goes.
+        .onAppear { update.probe() }
     }
 
     /// The version, and what is known about a newer one. All four states are
