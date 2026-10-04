@@ -6,7 +6,7 @@ Source: [`Sources/Pulse/Usage/UsageAlerts.swift`](../Sources/Pulse/Usage/UsageAl
 
 ## What can be said
 
-Five things, and nothing else. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card.
+Six things, and nothing else. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card.
 
 | Alert | Fires when | Gated by |
 |---|---|---|
@@ -15,6 +15,7 @@ Five things, and nothing else. Each is something you would want to know *while l
 | `reset` | A window that was warned about has unambiguously turned over | `alertsOnReset` + `alertThreshold` |
 | `unreadable(_:)` | Three eligible failures; cached figures remain protected for their first 30 minutes, while a failure with no usable figures counts immediately | `alertsOnFailure` |
 | `lowBalance(remaining:)` | A prepaid balance falls under the figure set for that account | `lowBalanceAlerts[account]` |
+| Service outage (`OutageMemory`) | Codex's, Claude Code's or DeepSeek's own status page reports one of its components down, worse, or back | `alertsOnOutage`, and the provider switched on |
 
 All off by default. All ask for the **default sound**; the mute switch is macOS's own per-app "Play sound for notifications".
 
@@ -42,6 +43,20 @@ One rule for all of them rather than sound only for the consequential ones. macO
 - **Live readings only**, the same rule the limits follow: a stale reading carries whatever the cache last banked, and the account may have been topped up since.
 - **Once.** The memory records the figure warned about, not a flag, so **moving the line warns again** — somebody who raises it from ¥5 to ¥50 is asking a new question. A balance climbing back over re-arms it, which for bought credit only ever means a top-up.
 - **Nothing is said about when it comes back**, unlike every other alert here. It does not come back on its own: the only thing that refills this is the reader.
+
+### A service outage is the provider's word about its service
+
+Requested 2026-10-04, after the status rows on the Codex, Claude Code and DeepSeek panes ([providers/codex.md](providers/codex.md#service-status)). One switch, **When a service is down**, off by default; its subtitle names the three.
+
+- **Only for a provider switched on.** `UsageAlerts.checkServices` reads the page of each provider among `shownAccounts` and no other — a disabled provider is not fetched, and nobody hears about a tool they don't use.
+- **Only about what the tool runs on** (`StatusPage.notifiesAbout`). The Claude pane shows all six components of status.claude.com; a notification is only for **Claude Code** and **Claude API**, by id. Claude for Government going down is not news to someone running Claude Code. Codex's page is read as its Codex group, all four. DeepSeek's: the rows whose name contains "API" — the account Pulse reads ([providers/deepseek.md](providers/deepseek.md#service-status)).
+- **Down means the page says so**: degraded performance, partial or full outage. Maintenance is planned, and a value Pulse can't read is not a witnessed outage. A page that can't be read changes nothing — neither an outage nor a recovery.
+- **Once per outage.** Said when a component first goes down, again only when it gets worse (degraded → full), and once more when the page calls it operational — that last only for one that was announced. Better-but-still-down is recorded silently, so a second slide is news again. An outage already under way when the switch goes on is said at once (`reconsiderAlerts` runs the check).
+- **One notification per provider**, every component in one sentence ("OpenAI reports CLI (Partial outage) and Codex API (Degraded performance)."), identifier `service-status-<provider>`, so a newer word replaces the last in Notification Centre.
+- **Every five minutes, on its own clock** (`ServiceStatus.checkInterval`, a loop `UsageAlerts.start` begins). It first rode the refresh pass, which stretches to 30 minutes while the Mac is idle — and the moment somebody comes back to work is when an outage matters most. Five, not less: status pages are written by people minutes into an incident, so asking more often learns nothing sooner. A tick returns at once unless the switch is on and a provider with a page is in use. The sleep is on the continuous clock, so a tick due during sleep comes right after waking. Each check reads only the current state — one request per page — never the history; one check at a time.
+- **Its own file**, `status-alerts.json`. Not a field on `AlertMemory`: that type decodes as a whole, and a key old files lack would have thrown away every limit already warned about. `UsageAlerts.observe` works on `wantsUsageAlerts`, so this switch alone writes no `alerts.json`.
+
+Rules pinned by `OutageMemoryTests`.
 
 ## Rules that are not obvious
 
@@ -83,7 +98,7 @@ Every rule on this page is covered by `AlertMemoryTests` ([testing.md](testing.m
 
 `AlertMemory.alerts(for:as:…)` is pure apart from its own `self` — no disk, no notification centre, and the one clock reading it needs is taken at the edge and passed in as `now`. That is what makes these rules arguable.
 
-`UsageAlerts.observe` returns immediately when `AppSettings.wantsAlerts` is false, so nothing is tracked and no file is written for a feature nobody has switched on. Without that guard the memory was written on the first pass of every launch — measured — and failures were counted up against accounts for nothing.
+`UsageAlerts.observe` returns immediately when `AppSettings.wantsUsageAlerts` is false (`wantsAlerts` adds the outage switch, for permission only), so nothing is tracked and no file is written for a feature nobody has switched on. Without that guard the memory was written on the first pass of every launch — measured — and failures were counted up against accounts for nothing.
 
 ## Permission, and the unbundled build
 

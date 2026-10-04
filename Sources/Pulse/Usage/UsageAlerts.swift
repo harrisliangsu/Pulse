@@ -501,19 +501,30 @@ final class UsageAlerts {
     private let settings: AppSettings
     // Read-only outside this type so tests can verify no warning is consumed during authorization.
     private(set) var memory: AlertMemory
+    private(set) var outages: OutageMemory
     private var tapHandler: NotificationTapHandler?
     private var authorizationRequest: Task<Bool, Never>?
+    private var outageCheck: Task<Void, Never>?
+    private var outageTimer: Task<Void, Never>?
     private let memoryFile: URL
+    private let outageFile: URL
 
     private static var file: URL {
         PulseStorage.directory.appending(path: "alerts.json")
     }
 
-    init(settings: AppSettings, file: URL = UsageAlerts.file) {
+    private static var outagesFile: URL {
+        PulseStorage.directory.appending(path: "status-alerts.json")
+    }
+
+    init(settings: AppSettings, file: URL = UsageAlerts.file, outageFile: URL = UsageAlerts.outagesFile) {
         self.settings = settings
         memoryFile = file
+        self.outageFile = outageFile
         memory = (try? Data(contentsOf: file))
             .flatMap { try? JSONDecoder().decode(AlertMemory.self, from: $0) } ?? AlertMemory()
+        outages = (try? Data(contentsOf: outageFile))
+            .flatMap { try? JSONDecoder().decode(OutageMemory.self, from: $0) } ?? OutageMemory()
     }
 
     /// Wires up what happens when one is clicked, and reads the current grant.
@@ -528,6 +539,19 @@ final class UsageAlerts {
         UNUserNotificationCenter.current().delegate = handler
 
         Task { await readAuthorization() }
+
+        // Its own clock rather than the refresh pass's, which stretches to
+        // half an hour while the Mac sits idle — the moment someone comes back
+        // to work is when an outage matters most. Each tick returns at once
+        // unless the switch is on and a provider with a page is in use. The
+        // sleep is on the continuous clock, so a tick due while the Mac slept
+        // comes right after it wakes.
+        outageTimer = Task { [weak self] in
+            while !Task.isCancelled {
+                self?.checkServices()
+                try? await Task.sleep(for: ServiceStatus.checkInterval)
+            }
+        }
     }
 
     /// Re-reads the grant. Called when the settings window opens, because that
@@ -597,7 +621,7 @@ final class UsageAlerts {
         // file**: without this the memory was written on the first pass of
         // every launch — measured — and a run of failures was counted up for a
         // feature nobody had turned on.
-        guard settings.wantsAlerts, authorizationRequest == nil,
+        guard settings.wantsUsageAlerts, authorizationRequest == nil,
               !Self.isSupported || authorization != .notDetermined else { return }
 
         let before = memory
@@ -624,6 +648,67 @@ final class UsageAlerts {
         guard Self.isSupported, !alerts.isEmpty else { return }
 
         for alert in alerts { post(alert) }
+    }
+
+    /// Asks the status pages of the providers in use whether their service is
+    /// down, and says so (`OutageMemory`). Called every `checkInterval` and
+    /// when the setting goes on; one check at a time.
+    ///
+    /// **Only providers switched on**: a disabled one is not fetched, and a
+    /// page that can't be read changes nothing.
+    func checkServices() {
+        guard settings.alertsOnOutage, outageCheck == nil, authorizationRequest == nil,
+              !Self.isSupported || authorization != .notDetermined else { return }
+        let inUse = Set(settings.shownAccounts.compactMap(\.provider.statusPage))
+        let pages = StatusPage.allCases.filter(inUse.contains)
+        guard !pages.isEmpty else { return }
+
+        outageCheck = Task {
+            for page in pages {
+                guard let components = await ServiceStatus.current(page) else { continue }
+                consider(components.filter(page.notifiesAbout), from: page)
+            }
+            outageCheck = nil
+        }
+    }
+
+    private func consider(_ components: [ServiceStatus.Component], from page: StatusPage) {
+        // Switched off while the page was being read.
+        guard settings.alertsOnOutage else { return }
+        let before = outages
+        let change = outages.changes(in: components)
+        if outages != before { saveOutages() }
+        // Kept up to date whether or not anything can be posted, for the same
+        // reason the limits' memory is.
+        guard Self.isSupported, !change.isEmpty else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = page.provider.displayName
+        content.subtitle = .localized("Service status")
+        // A status, not an event: true whenever it is read.
+        let down = change.worse.isEmpty ? "" : String.localized("\(page.company) reports \(Self.list(change.worse, states: true)).")
+        let back = change.recovered.isEmpty ? "" : String.localized("Back to normal: \(Self.list(change.recovered, states: false)).")
+        content.body = Self.joined(down, back)
+        content.sound = .default
+
+        // One per provider: a newer word on the same service replaces the last.
+        let request = UNNotificationRequest(
+            identifier: "service-status-\(page.provider.rawValue)",
+            content: content,
+            trigger: nil
+        )
+        Task { try? await UNUserNotificationCenter.current().add(request) }
+    }
+
+    /// "CLI (Partial outage) and Codex API (Degraded performance)", in the
+    /// interface language's own way of listing.
+    private static func list(_ components: [ServiceStatus.Component], states: Bool) -> String {
+        let items = components.map { component in
+            states ? String.localized("\(component.name) (\(component.state.title))") : component.name
+        }
+        let formatter = ListFormatter()
+        formatter.locale = LocalizationSource.locale
+        return formatter.string(from: items) ?? items.joined(separator: ", ")
     }
 
     private func post(_ alert: UsageAlert) {
@@ -731,6 +816,16 @@ final class UsageAlerts {
         // actor-isolation slip that is a warning here and an error in Xcode.
         let snapshot = memory
         let destination = memoryFile
+        Self.disk.async {
+            PulseStorage.prepare()
+            guard let data = try? JSONEncoder().encode(snapshot) else { return }
+            try? data.write(to: destination, options: .atomic)
+        }
+    }
+
+    private func saveOutages() {
+        let snapshot = outages
+        let destination = outageFile
         Self.disk.async {
             PulseStorage.prepare()
             guard let data = try? JSONEncoder().encode(snapshot) else { return }

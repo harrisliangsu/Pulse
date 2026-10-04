@@ -1200,6 +1200,28 @@ struct SettingsView: View {
                     .toggleStyle(.switch)
                     .disabled(!UsageAlerts.isSupported)
                 }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("When a service is down"),
+                    subtitle: String.localized("Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.alertsOnOutage },
+                        set: {
+                            settings.alertsOnOutage = $0
+                            Task {
+                                if await alerts.requestAuthorizationIfNeeded() {
+                                    store.reconsiderAlerts()
+                                }
+                            }
+                        }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!UsageAlerts.isSupported)
+                }
             }
         }
     }
@@ -1877,6 +1899,12 @@ struct SettingsView: View {
                 accounts(for: account)
 
                 liveUsage(for: account)
+            }
+
+            // The service, not the account, so every account of it shows
+            // this; a switched-off one fetches nothing.
+            if let page = provider.statusPage, settings.isEnabled(account) {
+                ServiceStatusGroup(page: page)
             }
 
             // Its own group rather than a row under Connection, which is
@@ -3732,7 +3760,8 @@ enum SettingsPane: Hashable {
             [.localized("Open at login"), .localized("Hide menu bar icon"), .localized("Shortcuts"),
              .localized("Interface language")]
         case .notifications:
-            [.localized("Warn at"), .localized("When a limit comes back"), .localized("When a reading stops arriving")]
+            [.localized("Warn at"), .localized("When a limit comes back"), .localized("When a reading stops arriving"),
+             .localized("When a service is down")]
         case .network:
             [.localized("Check every"), .localized("Proxy")]
         case .extensions:

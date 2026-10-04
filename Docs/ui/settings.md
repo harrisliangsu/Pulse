@@ -68,7 +68,7 @@ With **Usage panel in the menu** on (`AppSettings.showsMenuDashboard`, **off by 
 
 An account pane grows a **Notifications** group of its own where `Provider.reportsSpendableBalance` is true — a "warn below" figure in money. Not a row under Connection, which is about credentials and routes, and not in the Notifications pane either: the figure is per account, because the providers that report a balance do not price in the same currency. [../notifications.md](../notifications.md)
 
-The **Notifications** pane's three controls are not independent of each other: the reset toggle is greyed out while the threshold is Off, because a reset is only announced for a window that was warned about, and every control is greyed out in an unbundled build. Its subtitle reports `UNAuthorizationStatus`, not the switches. Rules: [../notifications.md](../notifications.md).
+The **Notifications** pane's controls are not independent of each other: the reset toggle is greyed out while the threshold is Off, because a reset is only announced for a window that was warned about, and every control is greyed out in an unbundled build. The fourth, **When a service is down**, is about the providers' own status pages rather than readings; its subtitle names Codex, Claude Code and DeepSeek and says it only covers the ones switched on. Its subtitle reports `UNAuthorizationStatus`, not the switches. Rules: [../notifications.md](../notifications.md).
 
 ## Controls
 

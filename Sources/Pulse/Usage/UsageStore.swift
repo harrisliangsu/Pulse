@@ -1087,6 +1087,8 @@ final class UsageStore {
     /// successful pass.
     func reconsiderAlerts() {
         guard let alerts else { return }
+        // An outage already under way is said now, not a pass from now.
+        alerts.checkServices()
         let now = Date()
         var needsRefresh = false
         for account in settings.shownAccounts {

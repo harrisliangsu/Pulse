@@ -148,6 +148,20 @@ Prepaid credit is **not a limit**: there is no ceiling to reach and no window to
 
 Not read: `/api/v0/usage/export` (a spreadsheet), `/users/get_api_keys`, `/api/v0/users/set_alert_bound` (DeepSeek's own server-side low-balance alert; Pulse's [Warn me below](#warn-me-below) is the local equivalent and does not touch it).
 
+## Service status
+
+Settings › DeepSeek › **Service status** (`ServiceStatus.flashcat`, `ServiceStatusGroup`, `StatusPage.deepSeek`): every component status.deepseek.com shows — DeepSeek V4 Pro API, V4.1 Flash API, and the chat section's chat, file upload and search as of 2026-10-04 — each with the state now, a bar a day for 90 days and the page's uptime, as on [codex.md](codex.md#service-status) and [claude-code.md](claude-code.md#service-status). Requested 2026-10-04.
+
+**Read out of the page, because there is no feed.** The page is Flashcat's (Flashduty); `/api/v2/summary.json` is a 404, and Flashcat's open API needs an account key. The page is a Next.js app: its data travels in `self.__next_f.push([1,"…"])` script chunks which, joined, are lines of `id:JSON`. Two lines carry an `initialData` object — `page` (`components[]` with `component_id`, `name`, `section_id`, `status`, `order_id`, `hide_all`; `sections[]`) and the history (`component_impacts[]` with `start_at_seconds`, `end_at_seconds`, `status`; `component_uptimes[]` with a numeric `uptime` and `available_since_seconds`). Nothing else on the page is read. **A redesign that moves them is no reading** — the pane says it couldn't read the page — never "all clear". The fixture is the whole page as captured.
+
+**The model is incident.io's**: a day takes the worst impact overlapping it; before `available_since_seconds` it has no record. States: `degraded`, `partial_outage`, `full_outage`, `maintenance` (Flashcat's spellings). The state now is the component's own `status` when the page gives one — null while operational, as far as has been seen — else any impact still open. No live outage has been seen; that part follows the model, not an observation.
+
+**Local days.** The server draws its first pass in UTC, then the page redraws in the viewer's time zone once it loads. Pulse matches what the reader sees: in UTC+8 on 2026-10-04 all five rows agreed bar for bar with the browser (`ServiceStatusTests`), and the UTC pass agreed with the server's HTML. A section's own row is an aggregate and is not drawn, as with OpenAI's groups.
+
+**Colours are the page's**: operational `#22C55E`, degraded `#EAB308`, partial `#F97316`, full `#EF4444`, rounded bars; maintenance `#3B82F6` is a guess from the same Tailwind set.
+
+**Notifications cover the API rows only** — `name` contains "API". Pulse reads the API account, the API rows are named after the model and a new model is a new row, and the chat site is not the API. [../notifications.md](../notifications.md)
+
 ## Currencies
 
 `balance_infos` is an **array** and an account can hold both CNY and USD. They cannot be added, and Pulse will not pick a "main" one by comparing figures across currencies — ¥100 against $10 is not a comparison. The ring follows the reader's choice if they made one, else the first entry with money in it, else the first entry at all. `creditBalance` is formatted in the currency the purse is actually priced in, not the reader's locale.

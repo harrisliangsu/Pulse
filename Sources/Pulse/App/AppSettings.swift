@@ -1193,10 +1193,26 @@ final class AppSettings {
         }
     }
 
+    /// Say when a provider's own status page — Codex's, Claude Code's,
+    /// DeepSeek's — reports an outage: for whichever is switched on, and only
+    /// about what it runs on (`StatusPage.notifiesAbout`). Rules: `OutageMemory`.
+    var alertsOnOutage = false {
+        didSet {
+            guard alertsOnOutage != oldValue else { return }
+            UserDefaults.standard.set(alertsOnOutage, forKey: Key.alertsOnOutage)
+        }
+    }
+
+    /// Whether any rule about readings is on. What `UsageAlerts.observe`
+    /// works for; the outage check reads status pages, not readings.
+    var wantsUsageAlerts: Bool {
+        alertThreshold != .off || alertsOnReset || alertsOnFailure || !lowBalanceAlerts.isEmpty
+    }
+
     /// Whether anything at all would be posted. What decides if permission is
     /// worth asking for.
     var wantsAlerts: Bool {
-        alertThreshold != .off || alertsOnReset || alertsOnFailure || !lowBalanceAlerts.isEmpty
+        wantsUsageAlerts || alertsOnOutage
     }
 
     /// A second, smaller ring inside the first, for the next-fullest limit.
@@ -1716,6 +1732,7 @@ final class AppSettings {
             alertsOnFailure: defaults.object(forKey: Key.alertsOnFailure) as? Bool ?? false
         )
         settings.showsCodexResetCredits = defaults.bool(forKey: Key.showsCodexResetCredits)
+        settings.alertsOnOutage = defaults.bool(forKey: Key.alertsOnOutage)
         settings.showsUsageInMenuBar = defaults.bool(forKey: Key.showsUsageInMenuBar)
         settings.showsMenuDashboard = defaults.bool(forKey: Key.showsMenuDashboard)
         settings.primedProviders = Set(defaults.stringArray(forKey: Key.primedProviders) ?? [])
@@ -1890,6 +1907,7 @@ final class AppSettings {
         static let alertThreshold = "settings.alertThreshold"
         static let alertsOnReset = "settings.alertsOnReset"
         static let alertsOnFailure = "settings.alertsOnFailure"
+        static let alertsOnOutage = "settings.alertsOnOutage"
         static let providerOrder = "settings.providerOrder"
     }
 }
