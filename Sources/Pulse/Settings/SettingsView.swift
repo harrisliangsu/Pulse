@@ -971,6 +971,20 @@ struct SettingsView: View {
                 SettingsRowDivider()
 
                 SettingsRow(
+                    String.localized("Show Dock icon while Settings is open"),
+                    subtitle: String.localized("So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.showsDockIconInSettings },
+                        set: { settings.showsDockIconInSettings = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
                     String.localized("Hide menu bar icon"),
                     subtitle: String.localized("Remove Pulse from the menu bar; use the panel menu or shortcut to open settings.")
                 ) {

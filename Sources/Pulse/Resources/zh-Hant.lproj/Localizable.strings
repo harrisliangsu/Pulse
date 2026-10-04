@@ -296,6 +296,8 @@
 "Start Pulse automatically when you log in." = "登入 macOS 後自動啟動 Pulse。";
 "Waiting for approval in System Settings › General › Login Items." = "等待在「系統設定 › 一般 › 登入項目」中允許。";
 
+"Show Dock icon while Settings is open" = "開啟設定時顯示 Dock 圖示";
+"So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes." = "設定視窗被蓋住時，可從 Dock 或 ⌘-Tab 找回；視窗關閉後圖示隨之消失。";
 
 /* 選單列圖示 */
 "Hide menu bar icon" = "隱藏選單列圖示";

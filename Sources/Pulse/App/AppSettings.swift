@@ -29,6 +29,21 @@ final class AppSettings {
         }
     }
 
+    /// Whether Pulse shows a Dock icon for as long as the settings window is
+    /// open.
+    ///
+    /// On by default: an `.accessory` app has no Dock icon and no ⌘-Tab entry,
+    /// so a settings window that something else has covered cannot be found
+    /// again. The icon is there only while the window is, and goes with it.
+    /// Goes through its own callback, not `onChange`, which refetches.
+    var showsDockIconInSettings: Bool {
+        didSet {
+            guard showsDockIconInSettings != oldValue else { return }
+            UserDefaults.standard.set(showsDockIconInSettings, forKey: Key.showsDockIconInSettings)
+            onDockIconChange?()
+        }
+    }
+
     /// Whether the menu bar item also shows the tightest limit: the mark of
     /// the account whose ring is fullest, and its percentage.
     ///
@@ -1320,10 +1335,13 @@ final class AppSettings {
     /// Kept separate from `onChange` so a presentation preference cannot start
     /// a provider refresh.
     var onMenuBarIconChange: (() -> Void)?
+    /// Called when the Dock icon the settings window brings should appear or go.
+    var onDockIconChange: (() -> Void)?
 
     init(
         isPanelVisible: Bool = true,
         hidesMenuBarIcon: Bool = false,
+        showsDockIconInSettings: Bool = true,
         hidesInFullScreen: Bool = true,
         followsActiveDisplay: Bool = false,
         openSettingsShortcut: GlobalShortcut? = nil,
@@ -1376,6 +1394,7 @@ final class AppSettings {
     ) {
         self.isPanelVisible = isPanelVisible
         self.hidesMenuBarIcon = hidesMenuBarIcon
+        self.showsDockIconInSettings = showsDockIconInSettings
         self.hidesInFullScreen = hidesInFullScreen
         self.followsActiveDisplay = followsActiveDisplay
         self.openSettingsShortcut = openSettingsShortcut
@@ -1671,6 +1690,7 @@ final class AppSettings {
         let settings = AppSettings(
             isPanelVisible: visible,
             hidesMenuBarIcon: defaults.object(forKey: Key.hidesMenuBarIcon) as? Bool ?? false,
+            showsDockIconInSettings: defaults.object(forKey: Key.showsDockIconInSettings) as? Bool ?? true,
             hidesInFullScreen: defaults.object(forKey: Key.hidesInFullScreen) as? Bool ?? true,
             followsActiveDisplay: defaults.object(forKey: Key.followsActiveDisplay) as? Bool ?? false,
             openSettingsShortcut: defaults.string(forKey: Key.openSettingsShortcut)
@@ -1842,6 +1862,7 @@ final class AppSettings {
     private enum Key {
         static let panelVisible = "settings.panelVisible"
         static let hidesMenuBarIcon = "settings.hidesMenuBarIcon"
+        static let showsDockIconInSettings = "settings.showsDockIconInSettings"
         static let extraAccounts = "settings.extraAccounts"
         static let hidesInFullScreen = "settings.hidesInFullScreen"
         static let followsActiveDisplay = "settings.followsActiveDisplay"
