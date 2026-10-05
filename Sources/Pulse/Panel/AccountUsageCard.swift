@@ -503,14 +503,26 @@ enum TokenCount {
     /// `MyriadUnitsTests` can drive it without setting the app's language; do
     /// not tidy it back.
     static func short(_ tokens: Int, units: (tenThousand: String, hundredMillion: String)?) -> String {
+        let (number, unit) = parts(tokens, units: units)
+        return number + unit
+    }
+
+    /// The same figure as `short`, split at the unit: ("4.19", "亿"), ("5.9", "B"),
+    /// ("812", ""). The recap cards draw the number large and the unit small,
+    /// so they need the two apart — and take them from here so there is one
+    /// rule for where 万 and 亿 begin, not two.
+    static func parts(
+        _ tokens: Int,
+        units: (tenThousand: String, hundredMillion: String)?
+    ) -> (number: String, unit: String) {
         if let units { return grouped(tokens, units) }
 
         let value = Double(tokens)
         switch value {
-        case 1_000_000_000...: return format(value / 1_000_000_000, decimals: value < 1e10 ? 1 : 0) + "B"
-        case 1_000_000...: return format(value / 1_000_000, decimals: value < 1e7 ? 1 : 0) + "M"
-        case 1_000...: return format(value / 1_000, decimals: value < 1e4 ? 1 : 0) + "K"
-        default: return "\(tokens)"
+        case 1_000_000_000...: return (format(value / 1_000_000_000, decimals: value < 1e10 ? 1 : 0), "B")
+        case 1_000_000...: return (format(value / 1_000_000, decimals: value < 1e7 ? 1 : 0), "M")
+        case 1_000...: return (format(value / 1_000, decimals: value < 1e4 ? 1 : 0), "K")
+        default: return ("\(tokens)", "")
         }
     }
 
@@ -523,18 +535,18 @@ enum TokenCount {
     private static func grouped(
         _ tokens: Int,
         _ units: (tenThousand: String, hundredMillion: String)
-    ) -> String {
+    ) -> (number: String, unit: String) {
         let value = Double(tokens)
         switch value {
         case 100_000_000...:
             let scaled = value / 100_000_000
             // Three significant figures, which is what "419M" carried.
-            return format(scaled, decimals: scaled < 10 ? 2 : (scaled < 100 ? 1 : 0)) + units.hundredMillion
+            return (format(scaled, decimals: scaled < 10 ? 2 : (scaled < 100 ? 1 : 0)), units.hundredMillion)
         case 10_000...:
             let scaled = value / 10_000
-            return format(scaled, decimals: scaled < 10 ? 1 : 0) + units.tenThousand
+            return (format(scaled, decimals: scaled < 10 ? 1 : 0), units.tenThousand)
         default:
-            return "\(tokens)"
+            return ("\(tokens)", "")
         }
     }
 

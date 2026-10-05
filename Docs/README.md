@@ -14,6 +14,7 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 | [refresh-and-data.md](refresh-and-data.md) | Refresh loop, cache, activity, ledger, forecast, estimate, chart hover |
 | [token-spend.md](token-spend.md) | Token spend pane: agents read, model drill-down, pricing, what may be said about the figures |
 | [token-spend-sources.md](token-spend-sources.md) | The complete agent/source catalog: default macOS location, format, counters reported, evidence level |
+| [recap.md](recap.md) | The shareable month and year recap cards: which cards a recap gets, nil means left out, language rules, the review render |
 | [notifications.md](notifications.md) | When Pulse posts a notification, and what it refuses to say |
 | [development.md](development.md) | Localization, resources, layout budgets, how to add UI |
 | [testing.md](testing.md) | What `swift test` covers, fixtures, why the gaps are gaps |
