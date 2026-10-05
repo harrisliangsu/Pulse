@@ -71,8 +71,30 @@ final class AppUpdate {
         )
     }
 
-    /// The feed to read for the language Pulse is set to, or nil to read
-    /// Info.plist's.
+    /// Where the feed is read from. **The mirror first**: update.qunqin.org, a
+    /// Cloudflare Worker in front of GitHub (`Scripts/update-mirror`), for
+    /// places that cannot reach GitHub. A check that cannot reach the feed or
+    /// the download switches to the other for the next one, so either being
+    /// down costs one check, not every update. Not kept across launches: each
+    /// launch starts on the mirror. [Docs/update-mirror.md]
+    enum FeedHost: Equatable, Sendable {
+        case mirror
+        case github
+
+        var base: String {
+            switch self {
+            case .mirror: "https://update.qunqin.org/"
+            case .github: "https://raw.githubusercontent.com/qunqin24/Pulse/main/"
+            }
+        }
+
+        var other: FeedHost { self == .mirror ? .github : .mirror }
+    }
+
+    /// The feed to read next.
+    private(set) var host: FeedHost = .mirror
+
+    /// The feed for a host and the language Pulse is set to.
     ///
     /// The notes in the update window come in one language: each item in
     /// `appcast.xml` carries one `<description xml:lang>` per language and
@@ -81,15 +103,13 @@ final class AppUpdate {
     /// language's copy of the feed (`appcast-zh.xml`, `appcast-en.xml`, written
     /// by `Scripts/appcast.py` beside the main one). The changelog is written in
     /// Chinese and English; Japanese and Korean read the English.
-    nonisolated static func feedURL(for language: AppLanguage, base: String?) -> String? {
-        guard let base, base.hasSuffix("/appcast.xml") else { return nil }
-        let file: String
-        switch language {
-        case .system: return nil
-        case .chineseSimplified, .chineseTraditional: file = "appcast-zh.xml"
-        case .english, .japanese, .korean: file = "appcast-en.xml"
+    nonisolated static func feedURL(for language: AppLanguage, host: FeedHost) -> String {
+        let file = switch language {
+        case .system: "appcast.xml"
+        case .chineseSimplified, .chineseTraditional: "appcast-zh.xml"
+        case .english, .japanese, .korean: "appcast-en.xml"
         }
-        return String(base.dropLast("appcast.xml".count)) + file
+        return host.base + file
     }
 
     /// Asks now, and shows Sparkle's own window with whatever it finds.
@@ -128,9 +148,15 @@ final class AppUpdate {
         newer = item.map { Release(version: $0.displayVersionString) }
     }
 
-    fileprivate func failCheck(_ failed: Bool) {
+    fileprivate func failCheck(_ failed: Bool, unreachable: Bool) {
         isChecking = false
         if failed { didFail = true }
+        if unreachable { host = host.other }
+    }
+
+    /// The feed Sparkle asks for at the start of each check.
+    fileprivate var feedURLForNextCheck: String {
+        Self.feedURL(for: LocalizationSource.language, host: host)
     }
 
     /// Every cycle ends here, whichever of the calls above it made first, so a
@@ -150,13 +176,10 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
     /// Weak: the app owns the updater, not the other way round.
     weak var owner: AppUpdate?
 
-    /// Read at every check, so a language changed in Settings applies to the
-    /// next one.
+    /// Read at every check, so a language changed in Settings, or a host
+    /// switched after a failure, applies to the next one.
     nonisolated func feedURLString(for updater: SPUUpdater) -> String? {
-        AppUpdate.feedURL(
-            for: LocalizationSource.language,
-            base: Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String
-        )
+        MainActor.assumeIsolated { owner?.feedURLForNextCheck }
     }
 
     nonisolated func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
@@ -174,7 +197,11 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
         // failure to *reach or read* the feed counts.
         let failed = (error as NSError).domain == NSURLErrorDomain
             || (error as NSError).code == Int(SUError.appcastError.rawValue)
-        MainActor.assumeIsolated { owner?.failCheck(failed) }
+        // A feed or an archive that could not be fetched: the next check
+        // tries the other host (`FeedHost`). The archive comes from the host
+        // the feed did — the mirror rewrites the feed's downloads to itself.
+        let unreachable = failed || (error as NSError).code == Int(SUError.downloadError.rawValue)
+        MainActor.assumeIsolated { owner?.failCheck(failed, unreachable: unreachable) }
     }
 
     nonisolated func updater(

@@ -210,7 +210,7 @@ Pulse 只呈現各服務回報的數字，每個百分比都來自那份回覆�
 
 ## 安裝
 
-1. 從 [Releases](https://github.com/qunqin24/Pulse/releases/latest) 下載最新的 **`Pulse-x.y.z.dmg`**。
+1. 從 [Releases](https://github.com/qunqin24/Pulse/releases/latest) 下載最新的 **`Pulse-x.y.z.dmg`**。連不上 GitHub 的話，可以從 [update.qunqin.org](https://update.qunqin.org/download/latest) 直接下載最新版。
 2. 開啟磁碟映像，將 **Pulse** 拖進你的 `Applications` 資料夾。
 3. 首次啟動時，先選擇要監控的服務，預設全部不勾選。按 **「完成」** 後，Pulse 才會讀取所選服務的憑證並查詢用量。關閉選擇視窗會保持未啟用監控；也可以在設定中開啟任一服務。升級會保留原有選擇，對新支援且在這部 Mac 上找到的服務只詢問一次。
 4. Pulse 常駐選單列。若選單列過於擁擠，右鍵點按浮動膠囊——或收合後的細條——並選擇 **「設定…」**；也可在 **設定 › 一般 › 快速鍵** 中為它指派全域快速鍵。
