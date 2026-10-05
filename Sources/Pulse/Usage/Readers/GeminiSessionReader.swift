@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// Gemini CLI's three on-disk shapes.
@@ -9,10 +10,11 @@ import Foundation
 ///
 /// The token keys are aliases — `prompt`/`input_tokens`/`promptTokenCount` and
 /// so on — and the cache relation is **shape-specific**, so the two decoders
-/// are kept apart rather than blended. Tool tokens are real counters; the
-/// session shape folds them into fresh input while the headless usage object
-/// does not carry them at all. Reasoning is additive on top of output, and
-/// cache writes are always zero here.
+/// are kept apart rather than blended. Tool tokens are real counters and both
+/// shapes fold them into fresh input; where a headless object names neither
+/// tool nor thought tokens but states a total, what the total holds beyond
+/// input and output is counted unclassified. Reasoning is additive on top of
+/// output, and cache writes are always zero here.
 enum GeminiSessionReader {
     enum Shape {
         case session
@@ -167,10 +169,14 @@ enum GeminiSessionReader {
             guard let stats else { continue }
 
             if let models = stats["models"] as? [String: [String: Any]] {
-                for (model, counts) in models {
+                for (model, entry) in models {
+                    // `--output-format json` nests a model's counts under
+                    // `tokens` (net `input`, gross `prompt`, `thoughts`,
+                    // `tool`); `stream-json` puts them on the model itself.
+                    let counts = entry["tokens"] as? [String: Any] ?? entry
                     let usage = decode(counts, shape: .headless, tokenWrapper: false)
                     guard usage.tally.total > 0 || usage.unclassified > 0 else { continue }
-                    guard let timestamp = AgentLogIO.timestamp(counts["timestamp"]) ?? lineTime else {
+                    guard let timestamp = AgentLogIO.timestamp(entry["timestamp"]) ?? lineTime else {
                         incomplete = true
                         continue
                     }
@@ -264,8 +270,20 @@ enum GeminiSessionReader {
             return (TokenTally(input: fresh, cacheWrite: 0, cacheRead: cachedCount, output: outputBucket), 0)
         case .headless:
             let cacheInclusive = tokenWrapper || (input.key != nil && input.key != "input")
-            let fresh = cacheInclusive ? max(0, inputCount - cachedCount) : inputCount
-            return (TokenTally(input: fresh, cacheWrite: 0, cacheRead: cachedCount, output: outputBucket), 0)
+            // Tool-use prompt tokens are input the model was sent, counted
+            // apart from the prompt by Gemini.
+            let fresh = (cacheInclusive ? max(0, inputCount - cachedCount) : inputCount) + toolCount
+            // **`stream-json` names neither thoughts nor tool tokens**, and
+            // its `output_tokens` is the candidates alone; its total still
+            // holds both. What the total has beyond input and output is real
+            // work of two kinds that cannot be told apart — counted, in no
+            // kind, rather than dropped.
+            var unclassified = 0
+            if reasoning.value == nil, tool.value == nil, let totalCount {
+                let gross = cacheInclusive ? inputCount : inputCount + cachedCount
+                unclassified = max(totalCount - gross - outputCount, 0)
+            }
+            return (TokenTally(input: fresh, cacheWrite: 0, cacheRead: cachedCount, output: outputBucket), unclassified)
         }
     }
 

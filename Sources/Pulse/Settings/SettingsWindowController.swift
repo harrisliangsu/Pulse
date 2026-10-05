@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import AppKit
 import SwiftUI
 
@@ -34,6 +35,24 @@ final class SettingsWindowController {
         self.update = update
         self.alerts = alerts
         self.shortcuts = shortcuts
+        settings.onDockIconChange = { [weak self] in self?.applyDockIcon() }
+    }
+
+    /// The Dock icon follows the window: it is there while the window is on
+    /// screen and the setting allows it, and Pulse is a menu bar app again the
+    /// moment either stops being true.
+    ///
+    /// `.regular` is also what puts Pulse in ⌘-Tab, which is the point — a
+    /// covered settings window has no other way back.
+    private func applyDockIcon() {
+        let open = window.map { $0.isVisible || $0.isMiniaturized } ?? false
+        let wanted = open && settings.showsDockIconInSettings
+        let policy: NSApplication.ActivationPolicy = wanted ? .regular : .accessory
+        guard NSApp.activationPolicy() != policy else { return }
+        NSApp.setActivationPolicy(policy)
+        // Changing the policy can drop activation, and this window is what the
+        // person is looking at.
+        if wanted { NSApp.activate(ignoringOtherApps: true) }
     }
 
     func show(link: PulseLink? = nil) {
@@ -47,9 +66,15 @@ final class SettingsWindowController {
         // window is the only place Pulse reports it.
         alerts.refreshAuthorization()
 
-        NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
         window.center()
+        applyDockIcon()
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func releaseDockIcon() {
+        guard NSApp.activationPolicy() != .accessory else { return }
+        NSApp.setActivationPolicy(.accessory)
     }
 
     /// Re-reads the title, which is set once at creation but has to follow a
@@ -98,7 +123,12 @@ final class SettingsWindowController {
         // The documented "hairline once content is scrolled under it" setting.
         window.titlebarSeparatorStyle = .automatic
         window.isReleasedWhenClosed = false
-        window.onClose = { [weak navigation] in navigation?.isWindowVisible = false }
+        window.onClose = { [weak self] in
+            self?.navigation.isWindowVisible = false
+            // `close()` runs this before the window is off screen, so the
+            // policy is set from the fact rather than from `isVisible`.
+            self?.releaseDockIcon()
+        }
         window.contentView = NSHostingView(
             rootView: SettingsView(store: store, settings: settings, placement: placement, update: update, alerts: alerts, shortcuts: shortcuts, navigation: navigation)
         )

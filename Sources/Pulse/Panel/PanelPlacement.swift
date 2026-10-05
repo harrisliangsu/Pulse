@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 import SwiftUI
 
@@ -7,10 +8,16 @@ import SwiftUI
 /// Docked, this is the screen edge the rail is fused to. Floating, it is
 /// whichever half of the screen the rail is sitting in, so the card always
 /// unfolds towards the roomier side rather than off the edge of the display.
+///
+/// `bottom` is both kinds: a rail fused to the screen's bottom edge — the
+/// physical one, level with the Dock, so it can sit in the empty stretch
+/// either side of it — and a horizontal rail standing free in the lower half
+/// of the screen. Either way its card opens upwards.
 enum PanelEdge: String, Sendable {
     case left
     case right
     case top
+    case bottom
 
     /// Which way the rail runs.
     ///
@@ -19,12 +26,17 @@ enum PanelEdge: String, Sendable {
     /// which of the two ratios is pinned — actually only cares about this. Two
     /// vertical edges and one horizontal one is a coincidence of what is built
     /// today; the axis is the thing.
-    enum Axis: Sendable {
+    enum Axis: String, Sendable {
         case vertical
         case horizontal
     }
 
-    var axis: Axis { self == .top ? .horizontal : .vertical }
+    var axis: Axis {
+        switch self {
+        case .left, .right: .vertical
+        case .top, .bottom: .horizontal
+        }
+    }
     var isVertical: Bool { axis == .vertical }
     var isLeft: Bool { self == .left }
 
@@ -34,7 +46,7 @@ enum PanelEdge: String, Sendable {
     /// are measured from.
     var railAlignment: Alignment {
         switch self {
-        case .left, .top: .topLeading
+        case .left, .top, .bottom: .topLeading
         case .right: .topTrailing
         }
     }
@@ -47,6 +59,7 @@ enum PanelEdge: String, Sendable {
         case .left: .leading
         case .right: .trailing
         case .top: .top
+        case .bottom: .bottom
         }
     }
 
@@ -56,6 +69,7 @@ enum PanelEdge: String, Sendable {
         case .left: .topTrailing
         case .right: .topLeading
         case .top: .topLeading
+        case .bottom: .bottomLeading
         }
     }
 
@@ -65,7 +79,7 @@ enum PanelEdge: String, Sendable {
     var cardDirection: CGFloat {
         switch self {
         case .left, .top: 1
-        case .right: -1
+        case .right, .bottom: -1
         }
     }
 
@@ -74,15 +88,17 @@ enum PanelEdge: String, Sendable {
     var cardRevealOrigin: CGFloat {
         switch self {
         case .left, .top: 0
-        case .right: 1
+        case .right, .bottom: 1
         }
     }
 }
 
-/// Whether the panel is fused to a screen edge or standing free.
+/// Whether the panel is fused to a screen edge or standing free — and,
+/// standing free, which way the rail runs: upright like a side dock, or lying
+/// across like the top one.
 enum PanelDock: Equatable, Hashable, Sendable {
     case edge(PanelEdge)
-    case floating
+    case floating(PanelEdge.Axis)
 
     var edge: PanelEdge? {
         if case .edge(let edge) = self { return edge }
@@ -133,6 +149,23 @@ final class PanelPlacement {
 
     /// Present only while attached to a physical notch; never persisted.
     var notch: CGRect?
+
+    /// How tall a card may be on the side it opens to, for a rail lying
+    /// across: from the rail to the screen's usable edge, less the gap. Nil
+    /// down a side, where the card slides along the rail instead. Set where
+    /// the panel is placed, never persisted (`UsageDetailCard.maxHeight`).
+    var cardRoom: CGFloat?
+
+    /// The room a card has beyond a lying rail whose top-left is `railOrigin`.
+    static func cardRoom(edge: PanelEdge, railOrigin: CGPoint, rail: CGSize, in visible: CGRect) -> CGFloat? {
+        let room: CGFloat
+        switch edge {
+        case .top: room = (railOrigin.y - rail.height) - visible.minY
+        case .bottom: room = visible.maxY - railOrigin.y
+        case .left, .right: return nil
+        }
+        return max(room - DetailCardLayout.horizontalGap, 0)
+    }
 
     /// Which display the rail was left on, as `PanelScreen` names them.
     ///
@@ -190,18 +223,25 @@ final class PanelPlacement {
     }
 
     /// Which way the card opens. Docked, the edge it is fused to; floating,
-    /// the half of the screen it is standing in.
+    /// the half of the screen it is standing in — left or right for an
+    /// upright rail, top or bottom for one lying across.
     var edge: PanelEdge {
-        dock.edge ?? (horizontalRatio < 0.5 ? .left : .right)
+        switch dock {
+        case .edge(let edge): edge
+        case .floating(.vertical): horizontalRatio < 0.5 ? .left : .right
+        case .floating(.horizontal): verticalRatio < 0.5 ? .top : .bottom
+        }
     }
 
     var isDocked: Bool { dock.isDocked }
 
-    static func restored() -> PanelPlacement {
-        let defaults = UserDefaults.standard
+    /// `defaults` is only ever not `.standard` in a test.
+    static func restored(from defaults: UserDefaults = .standard) -> PanelPlacement {
 
         let dock: PanelDock = if defaults.object(forKey: Key.floating) as? Bool == true {
-            .floating
+            // Absent for anyone who floated the panel before there was a
+            // second axis, which was always upright.
+            .floating(defaults.string(forKey: Key.floatingAxis).flatMap(PanelEdge.Axis.init(rawValue:)) ?? .vertical)
         } else {
             .edge(defaults.string(forKey: Key.edge).flatMap(PanelEdge.init(rawValue:)) ?? .right)
         }
@@ -291,7 +331,10 @@ final class PanelPlacement {
 
         let defaults = UserDefaults.standard
         defaults.set(!dock.isDocked, forKey: Key.floating)
-        if let edge = dock.edge { defaults.set(edge.rawValue, forKey: Key.edge) }
+        switch dock {
+        case .edge(let edge): defaults.set(edge.rawValue, forKey: Key.edge)
+        case .floating(let axis): defaults.set(axis.rawValue, forKey: Key.floatingAxis)
+        }
         defaults.set(self.horizontalRatio, forKey: Key.horizontalRatio)
         defaults.set(self.verticalRatio, forKey: Key.verticalRatio)
         defaults.set(display, forKey: Key.display)
@@ -355,7 +398,10 @@ final class PanelPlacement {
     /// it goes to the display's physical edge. On a Mac with a notch that is
     /// as far as the notch allows and no further. When `notch` is available,
     /// the surface starts at the physical top and the rings sit below it.
-    func layout(in visible: CGRect, topEdge: CGFloat, panel: CGSize, rail: CGSize) -> Layout {
+    /// - Parameter bottomEdge: the screen's own bottom, below the Dock — where
+    ///   a bottom-docked rail stands. `visible` stops above the Dock across
+    ///   the whole width, though the Dock fills only the middle of it.
+    func layout(in visible: CGRect, topEdge: CGFloat, bottomEdge: CGFloat? = nil, panel: CGSize, rail: CGSize) -> Layout {
         // Along the top the free coordinate is the horizontal one, and the
         // panel hangs *down* from the rail instead of being centred on it,
         // because that is the only direction the card can unfold into.
@@ -379,11 +425,35 @@ final class PanelPlacement {
             )
         }
 
+        // Along the bottom the rail stands on the screen's own edge, beside
+        // the Dock rather than above it, and the window stands up from it:
+        // the card can only unfold upwards.
+        if case .edge(.bottom) = dock {
+            let floor = bottomEdge ?? visible.minY
+            let railX = min(
+                max(visible.minX + CGFloat(horizontalRatio) * max(visible.width - rail.width, 0), visible.minX),
+                max(visible.maxX - rail.width, visible.minX)
+            )
+            let windowX = min(
+                max(railX + rail.width / 2 - panel.width / 2, visible.minX),
+                max(visible.maxX - panel.width, visible.minX)
+            )
+            return Layout(
+                frame: CGRect(x: windowX, y: floor, width: panel.width, height: panel.height),
+                railOrigin: CGPoint(x: railX, y: floor + rail.height)
+            )
+        }
+
+        if case .floating(.horizontal) = dock {
+            return layoutLyingFree(in: visible, panel: panel, rail: rail)
+        }
+
         let railX: CGFloat = switch dock {
         case .edge(.left): visible.minX
         case .edge(.right): visible.maxX - rail.width
-        case .edge(.top): visible.minX  // handled above; never reached
-        case .floating:
+        // Handled above; never reached.
+        case .edge(.top), .edge(.bottom), .floating(.horizontal): visible.minX
+        case .floating(.vertical):
             // Floating means *not touching*. Without this, switching to free
             // placement while the stored position is still the docked one
             // leaves the rail flush against the side of the screen wearing the
@@ -415,6 +485,43 @@ final class PanelPlacement {
         )
     }
 
+    /// A rail lying across the screen and standing free: the top dock's
+    /// shape, placed by both ratios the way the upright floating rail is.
+    ///
+    /// Kept clear of the sides by the docking distance for the same reason
+    /// that rail is. The window hangs *down* from the rail in the top half of
+    /// the screen and stands *up* from it in the bottom half (`edge`), so the
+    /// card always has the roomier half to open into — hanging down
+    /// everywhere would slice it off against the Dock the moment the rail was
+    /// parked low.
+    private func layoutLyingFree(in visible: CGRect, panel: CGSize, rail: CGSize) -> Layout {
+        let railX = min(
+            max(
+                visible.minX + CGFloat(horizontalRatio) * max(visible.width - rail.width, 0),
+                visible.minX + Self.dockDistance
+            ),
+            max(visible.maxX - rail.width - Self.dockDistance, visible.minX + Self.dockDistance)
+        )
+        // Screen coordinates run bottom-up: this is the rail's bottom edge.
+        let railY = visible.minY
+            + CGFloat(1 - verticalRatio) * max(visible.height - rail.height, 0)
+
+        let windowX = min(
+            max(railX + rail.width / 2 - panel.width / 2, visible.minX),
+            max(visible.maxX - panel.width, visible.minX)
+        )
+        let wantedY = edge == .bottom ? railY : railY + rail.height - panel.height
+        let windowY = min(
+            max(wantedY, visible.minY),
+            max(visible.maxY - panel.height, visible.minY)
+        )
+
+        return Layout(
+            frame: CGRect(x: windowX, y: windowY, width: panel.width, height: panel.height),
+            railOrigin: CGPoint(x: railX, y: railY + rail.height)
+        )
+    }
+
     /// The two ratios that would put the rail at a given spot on screen.
     static func ratios(forRailAt origin: CGPoint, in visible: CGRect, rail: CGSize) -> (h: Double, v: Double) {
         let across = max(visible.width - rail.width, 0)
@@ -433,6 +540,7 @@ final class PanelPlacement {
     private enum Key {
         static let edge = "panel.edge"
         static let floating = "panel.floating"
+        static let floatingAxis = "panel.floatingAxis"
         static let horizontalRatio = "panel.horizontalRatio"
         static let verticalRatio = "panel.verticalRatio"
         static let display = "panel.display"

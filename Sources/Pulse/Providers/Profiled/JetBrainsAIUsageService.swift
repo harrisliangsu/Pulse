@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// JetBrains AI: the AI Assistant quota a JetBrains IDE keeps on this Mac.
@@ -131,7 +132,18 @@ enum JetBrainsAIUsageService {
               let match = text.wholeMatch(of: #/P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?/#)
         else { return nil }
         let parts = [(match.1, 7 * 86_400), (match.2, 86_400), (match.3, 3_600), (match.4, 60), (match.5, 1)]
-        let total = parts.reduce(0) { sum, part in sum + (part.0.flatMap { Int($0) } ?? 0) * part.1 }
+        var total = 0
+        for (digits, unit) in parts {
+            guard let digits else { continue }
+            // Digits past `Int` do not parse; a count that does but overflows
+            // its unit, or the sum, is not a length either.
+            guard let count = Int(digits) else { return nil }
+            guard count > 0 else { continue }
+            guard let seconds = UsageWindow.length(count, unitSeconds: unit) else { return nil }
+            let (sum, overflow) = total.addingReportingOverflow(seconds)
+            guard !overflow, sum <= UsageWindow.longestLength else { return nil }
+            total = sum
+        }
         return total > 0 ? total : nil
     }
 }

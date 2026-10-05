@@ -20,7 +20,7 @@ struct ModelPriceCacheTests {
     }
 
     private static func save(_ prices: [String: ModelPrice], at date: Date, in root: URL,
-                             version: Int = 4) throws {
+                             version: Int = 5) throws {
         let cache = ModelPrices.Cache(fetchedAt: date, prices: prices)
         try JSONEncoder().encode(cache).write(to: root.appending(path: "model-prices-\(version).json"))
     }
@@ -85,20 +85,20 @@ struct ModelPriceCacheTests {
         #expect(await downloads.calls == 2)
     }
 
-    @Test("Offline fallback can recover without a relaunch, including a fresh pre-vendor table", arguments: [3, 4])
+    @Test("Offline fallback can recover without a relaunch, including a fresh table without tiers", arguments: [4, 5])
     func offlineFallbackRecovers(version: Int) async throws {
         let root = try Self.directory()
         defer { try? FileManager.default.removeItem(at: root) }
         let clock = Clock()
         let old = Self.table(1), new = Self.table(9)
-        let originalDate = version == 3 ? clock.now() : clock.now().addingTimeInterval(-3 * Self.day)
+        let originalDate = version == 4 ? clock.now() : clock.now().addingTimeInterval(-3 * Self.day)
         try Self.save(old, at: originalDate, in: root, version: version)
         let downloads = Downloads([nil, new])
         let prices = ModelPrices(cacheDirectory: root, now: { clock.now() }, download: { await downloads.read() })
         #expect(await prices.prices() == old)
         #expect(await downloads.calls == 1)
         #expect(ModelPrices.readCache(in: root, allowPreviousVersion: true)?.fetchedAt == originalDate)
-        if version == 3 { #expect(ModelPrices.readCache(in: root) == nil) }
+        if version == 4 { #expect(ModelPrices.readCache(in: root) == nil) }
         clock.advance(Self.retry - 1)
         #expect(await prices.prices() == old)
         #expect(await downloads.calls == 1)

@@ -70,6 +70,52 @@ struct AgentStoreTests {
         #expect(session.project?.name == "Pulse")
     }
 
+    @Test("OpenCode 2's tables are read, with the copied history counted once")
+    func openCodeTwoIsRead() throws {
+        let root = try Self.temporary("opencode2")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let file = root.appending(path: "opencode.db")
+
+        var handle: OpaquePointer?
+        #expect(sqlite3_open(file.path, &handle) == SQLITE_OK)
+        defer { sqlite3_close(handle) }
+
+        let created = Int(Date(timeIntervalSince1970: 1_789_372_800).timeIntervalSince1970) * 1000
+        // OpenCode 1's shape, as the upgrade left it in both tables.
+        let old = """
+        {"role":"assistant","modelID":"priced","time":{"created":\(created)},\
+        "tokens":{"input":100,"output":10,"reasoning":0,"cache":{"write":0,"read":0}}}
+        """
+        // OpenCode 2's: no role, the model an object.
+        let new = """
+        {"time":{"created":\(created + 1000)},"model":{"id":"priced","providerID":"openai"},\
+        "tokens":{"input":200,"output":20,"reasoning":5,"cache":{"write":0,"read":0}}}
+        """
+        let user = #"{"time":{"created":1},"tokens":{"input":999}}"#
+
+        for sql in [
+            "CREATE TABLE session (id TEXT, project_id TEXT, slug TEXT, directory TEXT, title TEXT)",
+            "CREATE TABLE message (id TEXT, session_id TEXT, time_created INTEGER, data TEXT)",
+            "CREATE TABLE session_v2 (id TEXT, slug TEXT, title TEXT, directory TEXT)",
+            "CREATE TABLE session_message (id TEXT, session_id TEXT, type TEXT, seq INTEGER, data TEXT)",
+            "INSERT INTO session_v2 VALUES ('s1','slug-one','Fix the ring','/Users/me/Code/Pulse')",
+            // Copied by the upgrade: in both tables under one id.
+            "INSERT INTO message VALUES ('m1','s1',1,'\(old)')",
+            "INSERT INTO session_message VALUES ('m1','s1','assistant',1,'\(old)')",
+            // Written since: only the new table.
+            "INSERT INTO session_message VALUES ('m2','s1','assistant',2,'\(new)')",
+            // A user turn with a count in it is still not a reply.
+            "INSERT INTO session_message VALUES ('m3','s1','user',3,'\(user)')",
+        ] {
+            #expect(sqlite3_exec(handle, sql, nil, nil, nil) == SQLITE_OK)
+        }
+
+        let ledger = OpenCodeStore.ledger(at: file, prices: Self.prices)
+        let tally = ledger.days.reduce(TokenTally()) { $0 + $1.tally }
+        #expect(tally == TokenTally(input: 300, cacheWrite: 0, cacheRead: 0, output: 35))
+        #expect(ledger.sessions.first?.title == "Fix the ring")
+    }
+
     // MARK: - Grok Build
 
     @Test("A turn's usage is read per model, and the folder names the project")

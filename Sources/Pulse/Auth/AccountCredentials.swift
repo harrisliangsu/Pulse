@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// The login Pulse holds for one account it signed in to itself.
@@ -40,9 +41,17 @@ enum AccountCredentialStore {
         load()?[account.id]
     }
 
+    /// Every read-modify-write of the file, so a renewal's check and its write
+    /// cannot have a removal land between them, whichever thread they run on.
+    private static let lock = NSLock()
+
     /// Stores a login, or forgets one when `nil` is passed.
     @discardableResult
     static func set(_ credentials: AccountCredentials?, for account: AccountKey) -> Bool {
+        lock.withLock { write(credentials, for: account) }
+    }
+
+    private static func write(_ credentials: AccountCredentials?, for account: AccountKey) -> Bool {
         // A file that exists but won't decode is not an empty one. Treating it
         // as empty would silently throw away every other account's login and
         // report success — the same trap `APIKeyStore` was fixed for.
@@ -64,12 +73,29 @@ enum AccountCredentialStore {
     ///
     /// Sign-out still goes through `set(_:for:)`, which is unconditional:
     /// forgetting a login is a decision, not a race.
+    ///
+    /// **A renewal never brings a login back.** Removing an account forgets
+    /// its login while a renewal for it can still be out; when that answer
+    /// came back to an empty slot it was written — "older than nothing" — and
+    /// the access and refresh tokens the user had just asked Pulse to forget
+    /// were on disk again. A renewal is of a login that is still there, or it
+    /// is nothing. Nor is it written over another account's login that was
+    /// signed in to the same slot meanwhile.
     @discardableResult
     static func renewed(_ credentials: AccountCredentials, for account: AccountKey) -> Bool {
-        if let existing = self.credentials(for: account), existing.expiresAt >= credentials.expiresAt {
-            return false
+        lock.withLock {
+            guard let all = load(), acceptsRenewal(credentials, over: all[account.id]) else { return false }
+            return write(credentials, for: account)
         }
-        return set(credentials, for: account)
+    }
+
+    /// The rule `renewed` writes by, apart from the file so it can be tested
+    /// without touching a real login.
+    static func acceptsRenewal(_ credentials: AccountCredentials, over existing: AccountCredentials?) -> Bool {
+        guard let existing else { return false }
+        if existing.expiresAt >= credentials.expiresAt { return false }
+        if let held = existing.accountID, let renewing = credentials.accountID, held != renewing { return false }
+        return true
     }
 
     // MARK: - The file

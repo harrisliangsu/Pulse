@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// DeepSeek Harness (`dsh`) transcripts.
@@ -27,11 +28,16 @@ import Foundation
 /// fork collapses with its original.
 enum DSHUsageReader {
     static func records(roots: [URL]) -> [AgentUsageRecord] {
+        readWithNotes(roots: roots).records
+    }
+
+    static func readWithNotes(roots: [URL]) -> AgentRecordReaders.Read {
         var records: [AgentUsageRecord] = []
+        var notes: [String] = []
 
         for file in transcriptFiles(roots) {
-            guard !Task.isCancelled else { return [] }
-            guard case let .success(data) = read(file), !data.isEmpty else { continue }
+            guard !Task.isCancelled else { return .init(records: [], notes: []) }
+            guard case let .success(data) = read(file, notes: &notes), !data.isEmpty else { continue }
 
             var sessionID: String?
             var workspace: String?
@@ -126,7 +132,7 @@ enum DSHUsageReader {
             }
         }
 
-        return records
+        return .init(records: records, notes: notes)
     }
 
     /// Every compressed transcript that actually failed to decode.
@@ -180,17 +186,20 @@ enum DSHUsageReader {
     /// The transcript's bytes with the standard ceilings: the file itself when
     /// it is plain JSONL, or its streaming decode when its bytes are zstd.
     ///
-    /// Pure — the file is read each time, with no cached result — so `records`
-    /// and `notes` never disagree about a store that changed between calls.
-    private static func read(_ file: URL) -> Result<Data, DSHZstdDecoder.Failure> {
+    /// Reports a compressed decode's failure alongside its records.
+    private static func read(_ file: URL, notes: inout [String]) -> Result<Data, DSHZstdDecoder.Failure> {
         guard let data = try? Data(contentsOf: file, options: .mappedIfSafe) else {
             return .failure(.corrupt("file could not be read"))
         }
-        return decode(
+        let result = decode(
             data,
             rawLimit: DSHZstdDecoder.maxRawBytes,
             decodedLimit: DSHZstdDecoder.maxDecodedBytes
         )
+        if case let .failure(failure) = result, DSHZstdDecoder.isZstd(data), !Task.isCancelled {
+            notes.append("\(file.lastPathComponent): \(failure.description)")
+        }
+        return result
     }
 
     /// The bytes as JSONL, decoding only when the zstd frame magic is actually

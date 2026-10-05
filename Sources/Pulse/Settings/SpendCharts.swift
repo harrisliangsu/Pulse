@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import SwiftUI
 
 /// One agent's or one model's share of the whole, as a bar.
@@ -187,13 +188,21 @@ struct HourProfile: View {
     }
 }
 
-/// Fresh input, cache written, cache read, output — the four kinds of token,
-/// with each one's share of the whole.
+/// New input, cache hits, output — what was sent fresh, what was read back
+/// from the cache, and what the model wrote, each with its share of the whole.
 ///
-/// **The split is the point, not the total.** These four are priced an order of
-/// magnitude apart — a cache read costs a tenth of fresh input on most price
-/// lists — so a bill that looks surprising next to a token count is usually
-/// explained here and nowhere else.
+/// **The split is the point, not the total.** A cache hit is priced at a
+/// fraction of new input on most price lists, so a bill that looks surprising
+/// next to a token count is usually explained here and nowhere else.
+///
+/// **Three kinds, not Anthropic's four.** A cache write is not a different
+/// kind of input; it is new input that Anthropic (and a few others) bills a
+/// step higher for keeping. OpenAI-style services cache new input on their own
+/// and report no write at all. Four rows put Claude's new input under "cache
+/// write" and Codex's under "input" and set the two side by side, which read
+/// as Codex never caching and Claude never sending anything new. So new input
+/// is one row, and where part of it was written to the cache, its note says
+/// how much — the reason that part costs more.
 ///
 /// The agent and combined panes have no per-model money and pass no `cost`, so
 /// they draw tokens alone; a model's drill-down passes its own `costBreakdown`
@@ -207,37 +216,66 @@ struct TokenKindBreakdown: View {
     /// Tokens behind these amounts that had no price. A positive count puts a
     /// `*` on each kind's amount, tying it to the note under the rows.
     var unpriced: Int = 0
+    /// Every agent behind this tally keeps no cache figure at all
+    /// (`SpendAgent.reportsCacheReads`). Their zero is not "nothing was read
+    /// from the cache", so the row says it was not recorded instead.
+    var readsUnreported = false
 
     var body: some View {
         let total = max(tally.total, 1)
+        let rows = Self.rows(tally, cost: cost, readsUnreported: readsUnreported)
 
         return VStack(spacing: 0) {
-            ForEach(Array(Self.rows(tally, cost: cost).enumerated()), id: \.offset) { index, row in
+            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                 if index > 0 { SettingsRowDivider() }
                 SettingsRow(row.label, subtitle: row.note) {
-                    HStack(spacing: 10) {
-                        ShareBar(share: Double(row.tokens) / Double(total))
-                            .frame(width: 64, height: 6)
-
-                        Text(String.localized("\(TokenCount.short(row.tokens)) tokens"))
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                            // One line, always. Grouped by ten thousands
-                            // these read "1246万 tokens", which is wider
-                            // than the English it was measured against and
-                            // was wrapping under its own bar.
-                            .lineLimit(1)
-                            .fixedSize(horizontal: true, vertical: false)
-                            .help(SpendFormat.tokens(row.tokens))
-
-                        if row.cost != nil {
-                            CostText(cost: row.cost, unpriced: unpriced)
-                                .font(.system(size: 12))
-                                .frame(width: 76, alignment: .trailing)
-                        }
+                    if row.unreported {
+                        unreported
+                    } else {
+                        figures(row, total: total)
                     }
                 }
+            }
+        }
+    }
+
+    /// Stands where the bar and count would, and keeps the cost column's
+    /// width so the rows above and below stay aligned.
+    private var unreported: some View {
+        HStack(spacing: 10) {
+            Text(String.localized("Not reported"))
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+
+            if cost != nil {
+                Color.clear.frame(width: 76, height: 1)
+            }
+        }
+    }
+
+    private func figures(_ row: Row, total: Int) -> some View {
+        HStack(spacing: 10) {
+            ShareBar(share: Double(row.tokens) / Double(total))
+                .frame(width: 64, height: 6)
+
+            Text(String.localized("\(TokenCount.short(row.tokens)) tokens"))
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                // One line, always. Grouped by ten thousands
+                // these read "1246万 tokens", which is wider
+                // than the English it was measured against and
+                // was wrapping under its own bar.
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .help(SpendFormat.tokens(row.tokens))
+
+            if row.cost != nil {
+                CostText(cost: row.cost, unpriced: unpriced)
+                    .font(.system(size: 12))
+                    .frame(width: 76, alignment: .trailing)
             }
         }
     }
@@ -247,13 +285,28 @@ struct TokenKindBreakdown: View {
         let note: String
         let tokens: Int
         let cost: Double?
+        var unreported = false
     }
 
-    private static func rows(_ tally: TokenTally, cost: TokenCost?) -> [Row] {
-        [
-            Row(label: .localized("Input"), note: .localized("Sent fresh, not served from the cache."), tokens: tally.input, cost: cost?.input),
-            Row(label: .localized("Cache write"), note: .localized("Put into the prompt cache to be re-used."), tokens: tally.cacheWrite, cost: cost?.cacheWrite),
-            Row(label: .localized("Cache read"), note: .localized("Served from the cache, and priced far lower."), tokens: tally.cacheRead, cost: cost?.cacheRead),
+    private static func rows(_ tally: TokenTally, cost: TokenCost?, readsUnreported: Bool) -> [Row] {
+        // The write is named only where there was one: a zero here is most
+        // often a service with no such step, and saying "0 written" is the
+        // misreading this layout exists to avoid.
+        // One sentence pair per key, not two keys joined: a space between
+        // them is English punctuation, not Chinese.
+        let fresh = tally.cacheWrite > 0
+            ? String.localized(
+                "Sent this time and not read from the cache. Of it, \(TokenCount.short(tally.cacheWrite)) was written to the cache, which Claude and a few others bill higher."
+            )
+            : String.localized("Sent this time and not read from the cache.")
+        let freshCost = cost.map { $0.input + $0.cacheWrite }
+        // A hit that did turn up is shown, whatever the agent is said to keep.
+        let hit = readsUnreported && tally.cacheRead == 0
+            ? Row(label: .localized("Cache hit"), note: .localized("These records carry no cache figures."), tokens: 0, cost: nil, unreported: true)
+            : Row(label: .localized("Cache hit"), note: .localized("Read back from the cache, usually at a lower price."), tokens: tally.cacheRead, cost: cost?.cacheRead)
+        return [
+            Row(label: .localized("Fresh input"), note: fresh, tokens: tally.fresh, cost: freshCost),
+            hit,
             Row(label: .localized("Output"), note: .localized("Written back by the model."), tokens: tally.output, cost: cost?.output),
         ]
     }

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import AppKit
 
 /// How the menu bar item draws the account it speaks for.
@@ -158,8 +159,7 @@ extension MenuBarReading {
         on button: NSStatusBarButton
     ) {
         guard let reading else {
-            button.image = NSImage(systemSymbolName: "chart.pie.fill", accessibilityDescription: "Pulse")
-            button.image?.isTemplate = true
+            button.image = pulseMark(height: 16)
             button.attributedTitle = NSAttributedString()
             button.imagePosition = .imageOnly
             button.toolTip = "Pulse"
@@ -211,6 +211,38 @@ extension MenuBarReading {
         var attributes: [NSAttributedString.Key: Any] = [.font: font]
         if reading.isAlert { attributes[.foregroundColor] = NSColor.systemRed }
         button.attributedTitle = NSAttributedString(string: " " + reading.text(remaining: remaining), attributes: attributes)
+    }
+
+    /// Pulse's own mark — the app icon's P, one stroke — as a template, so
+    /// the menu bar colours it like every other item there. Drawn from
+    /// `AppIcon/pulse-mark.svg`'s path rather than shipped as a file: one
+    /// stroke, a 100-unit pen with round ends, bounds 302–762 × 194–830.
+    @MainActor
+    static func pulseMark(height: CGFloat) -> NSImage {
+        let bounds = NSRect(x: 302, y: 194, width: 460, height: 636)
+        let scale = height / bounds.height
+        let image = NSImage(size: NSSize(width: (bounds.width * scale).rounded(.up), height: height), flipped: false) { _ in
+            let transform = NSAffineTransform()
+            transform.scale(by: scale)
+            transform.translateX(by: -bounds.minX, yBy: -bounds.minY)
+            transform.concat()
+            // The SVG's y runs down; here it runs up, so every y is 1024 − y.
+            let path = NSBezierPath()
+            path.move(to: NSPoint(x: 352, y: 244))
+            path.line(to: NSPoint(x: 352, y: 780))
+            path.line(to: NSPoint(x: 562, y: 780))
+            path.appendArc(withCenter: NSPoint(x: 562, y: 630), radius: 150, startAngle: 90, endAngle: -90, clockwise: true)
+            path.line(to: NSPoint(x: 530, y: 480))
+            path.lineWidth = 100
+            path.lineCapStyle = .round
+            path.lineJoinStyle = .round
+            NSColor.black.setStroke()
+            path.stroke()
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = "Pulse"
+        return image
     }
 
     /// A provider's mark at a menu's size. A copy: the store's image is shared,

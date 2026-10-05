@@ -1,8 +1,8 @@
 ## Related issue
 
-Link an issue if there is one (for example, `Closes #123`), or write “Not required: small bug fix / documentation / translation”.
+Link an issue if there is one (for example, `Closes #123`), or write “None”. An issue is optional for every type of contribution.
 
-New features and major refactors require an issue a maintainer has labelled `accepted`. Small bug fixes, documentation and translations can be submitted directly. Missing links and more than two open PRs receive a reminder; this workflow leaves your PR open. See CONTRIBUTING.md → Pull requests.
+You can submit a PR directly, including new features and major refactors. No prior approval is required. See CONTRIBUTING.md → Pull requests.
 
 ## Problem
 
@@ -22,7 +22,6 @@ List anything not tested, known failures, or environments not covered.
 
 ## Checklist
 
-- [ ] This is a small bug fix, documentation or translation, or it links to an issue labelled `accepted` for a new feature or major refactor.
 - [ ] I searched existing issues and pull requests for duplicates.
 - [ ] The change is focused and contains no unrelated work.
 - [ ] I updated the relevant documentation.

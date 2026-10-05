@@ -440,6 +440,10 @@ struct DatabaseLogReadersTests {
         let badRoots = DatabaseLogReaders.inputs(client: "zed", home: badHome, environment: [:])
         #expect(DatabaseLogReaders.records(client: "zed", roots: badRoots).count == 1)
         #expect(!DatabaseLogReaders.notes(client: "zed", roots: badRoots).isEmpty)
+        let combined = AgentRecordReaders.read(client: "zed", roots: badRoots)
+        #expect(combined.records.count == 1)
+        #expect(combined.records.first?.tally.total == 110)
+        #expect(!combined.notes.isEmpty)
 
         // The size ceiling is the same failure class; the limit is injected so
         // the test need not build a 32 MiB buffer. `tooLarge` is thrown before

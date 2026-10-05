@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// One **incremental** piece of work an agent's store recorded.
@@ -126,6 +127,7 @@ enum AgentUsageLedger {
         // session below is a subset of this bounded total, none of that
         // arithmetic needs a saturating guard of its own.
         var acceptedTotal = 0
+        var lookup = ModelPriceLookup(prices)
 
         for record in records {
             guard !Task.isCancelled else { return .empty }
@@ -184,7 +186,7 @@ enum AgentUsageLedger {
             // still count toward the totals and the models.
             guard let sessionID = Self.nonBlank(record.sessionID) else { continue }
 
-            let price = ModelPrices.price(for: model, in: prices, vendor: vendor)
+            let price = lookup.price(for: model, vendor: vendor)
             let money = price.map { record.tally.cost(at: $0) } ?? 0
             let unpriced = extra + (price == nil ? known : 0)
             let name = Self.nonBlank(record.sessionName)
@@ -241,7 +243,7 @@ enum AgentUsageLedger {
         // tokens must never be listed as having "no published price".
         var unpriced = Set(ledger.unpricedModels)
         for model in acceptedModels {
-            if let price = ModelPrices.price(for: model, in: prices, vendor: vendor) {
+            if let price = lookup.price(for: model, vendor: vendor) {
                 if let name = price.name { ledger.modelNames[model] = name }
             } else {
                 unpriced.insert(model)

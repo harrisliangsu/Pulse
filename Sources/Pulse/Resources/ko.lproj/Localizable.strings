@@ -81,7 +81,7 @@
 "With more than one display, the rail moves to the one the pointer is on." = "디스플레이가 여러 대일 때, 포인터가 있는 쪽으로 레일이 옮겨 갑니다.";
 "Left" = "왼쪽";
 "Top" = "위";
-"Percentages on top" = "위에 백분율 표시";
+"Percentages across" = "가로일 때 백분율 표시";
 "Turn red at" = "빨간색으로 바뀌는 지점";
 "Where a ring turns from green to red." = "링이 초록에서 빨강으로 바뀌는 지점입니다.";
 "Where a ring turns from green to muted grey." = "링이 초록에서 차분한 회색으로 바뀌는 지점입니다.";
@@ -145,7 +145,10 @@
 "Whether each limit lasts its window, on the card." = "각 한도가 다음 초기화까지 버틸지 카드에 표시합니다.";
 "Counts down instead of up, figure and ring together." = "수치와 링 모두 쓴 양이 아니라 남은 양을 보여 줍니다.";
 "Swaps the two, wherever the panel is." = "패널 위치와 상관없이 백분율을 링 위로 옮깁니다.";
-"Only when the panel is docked to the top." = "패널을 화면 위쪽에 붙였을 때만 표시합니다.";
+"When the panel lies across: docked to the top or bottom, or free." = "패널을 가로로 두었을 때 표시합니다: 위나 아래에 붙였거나 가로로 자유롭게 두었을 때.";
+"Bottom" = "아래";
+"Figures beside the rings" = "수치를 링 오른쪽에 표시";
+"Only when the panel lies free across. A thinner, longer panel." = "가로로 자유롭게 두었을 때만 적용됩니다. 패널이 더 가늘고 길어집니다.";
 "Drag it anywhere; near an edge it snaps on." = "어디로든 끌 수 있으며, 가장자리에 가까워지면 달라붙습니다.";
 "Right" = "오른쪽";
 
@@ -262,10 +265,11 @@
 "Busiest day" = "가장 많이 쓴 날";
 "Next expires in %@" = "가장 이른 만료가 %@ 후";
 "Top model" = "가장 많이 쓴 모델";
-"%@ · %@ of tokens" = "%@ · 토큰의 %@";
 "Estimated value" = "사용분 추정 금액";
 "%@ used so far" = "이번 주기에 %@ 사용";
-"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out." = "제공업체가 보고한 값이 아니라 추정치입니다. 이 Mac이 이번 주기에 쓴 금액을 제공업체가 알려 준 사용률로 나눈 값입니다. 다른 기기에서 한 작업은 세지 않으므로 값이 낮게 나옵니다. 사용량이 너무 적어 추정할 수 없는 주기는 표시하지 않습니다.";
+"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. If both are in use at once, the figure reads low. Windows with too little use to extrapolate from are left out." = "보고된 수치가 아니라 추정치입니다. 이 Mac에서 기간이 시작된 뒤 쓴 금액을 제공업체가 알려 주는 사용률로 나눈 값입니다. 사용률이 오르는데 이 Mac에서는 거의 쓰지 않았다면 다른 곳(다른 컴퓨터나 웹사이트)에서도 쓰고 있는 것이므로, 그 기간은 초기화될 때까지 추정하지 않습니다. 양쪽에서 동시에 쓰고 있으면 추정치가 낮게 나옵니다. 추정하기에 사용량이 너무 적은 한도는 표시하지 않습니다.";
+"Also used somewhere this Mac's logs can't see" = "이 Mac의 기록 밖에서도 사용되고 있습니다";
+"Not estimated" = "추정하지 않음";
 
 /* Adaptive refresh */
 "2 to 30 minutes as needed. Now: %@ minutes." = "필요에 따라 2~30분으로 조절합니다. 현재 %@분.";
@@ -277,7 +281,8 @@
 
 /* Free placement */
 "Position" = "위치";
-"Free" = "자유";
+"Free across" = "가로 자유";
+"Free upright" = "세로 자유";
 "Last 31 days" = "최근 31일";
 
 /* Panel size */
@@ -297,6 +302,9 @@
 "Open at login" = "로그인 시 실행";
 "Start Pulse automatically when you log in." = "macOS에 로그인하면 Pulse를 자동으로 실행합니다.";
 "Waiting for approval in System Settings › General › Login Items." = "시스템 설정 › 일반 › 로그인 항목에서 허용하기를 기다리는 중입니다.";
+
+"Show Dock icon while Settings is open" = "설정이 열려 있는 동안 Dock 아이콘 표시";
+"So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes." = "설정 창이 가려져도 Dock이나 ⌘-Tab으로 다시 찾을 수 있으며, 창을 닫으면 아이콘도 사라집니다.";
 
 /* 메뉴 막대 아이콘 */
 "Hide menu bar icon" = "메뉴 막대 아이콘 숨기기";
@@ -546,15 +554,17 @@
 "Current streak" = "현재 연속";
 "Longest streak" = "최장 연속";
 "Peak hour" = "가장 바쁜 시간대";
-"Favourite model" = "가장 자주 쓰는 모델";
+"Most tokens" = "토큰이 가장 많은 모델";
 "By kind" = "종류별";
-"Input" = "입력";
-"Sent fresh, not served from the cache." = "캐시를 거치지 않고 새로 보낸 분량입니다.";
-"Cache write" = "캐시 쓰기";
-"Put into the prompt cache to be re-used." = "다시 쓰려고 프롬프트 캐시에 넣은 분량입니다.";
-"Cache read" = "캐시 읽기";
-"Served from the cache, and priced far lower." = "캐시에서 돌려받은 분량으로, 요금이 훨씬 낮습니다.";
 "Output" = "출력";
+"Fresh input" = "새 입력";
+"Sent this time and not read from the cache." = "이번에 모델에 보냈고 캐시에서 읽지 않은 분량입니다.";
+"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "이번에 모델에 보냈고 캐시에서 읽지 않은 분량입니다. 그중 %@은 캐시에 기록되었고, Claude 등 일부 서비스는 이 부분을 더 비싸게 청구합니다.";
+"Read back from the cache, usually at a lower price." = "캐시에서 읽어 온 분량으로, 보통 더 싸게 청구됩니다.";
+"These records carry no cache figures." = "이 기록에는 캐시 수치가 없습니다.";
+"Not reported" = "기록 없음";
+"Fresh" = "새 입력";
+"Cached" = "캐시 적중";
 "Written back by the model." = "모델이 되돌려 쓴 분량입니다.";
 "By hour" = "시간대별";
 "By month" = "월별";
@@ -565,8 +575,6 @@
 "Busiest hour" = "가장 바쁜 시간";
 "Day by day" = "날짜별 내역";
 "Date" = "날짜";
-"C. read" = "캐시 읽기";
-"C. write" = "캐시 쓰기";
 "Cost" = "금액";
 "%@ per page" = "페이지당 %@개";
 "%@–%@ of %@" = "%@–%@번째 / 전체 %@개";
@@ -962,7 +970,17 @@
 "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "요금제 이름과 숫자를 읽은 시각을 더하고, '토큰 사용량'을 켜면 이 Mac의 최근 사용량도 표시합니다.";
 "Estimated value %@ · %@ used" = "한도 추정 가치 %@ · 이번 주기 %@ 사용";
 "Cache hit rate" = "캐시 적중률";
-"Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out." = "최근 31일 동안 전체 입력 중 프롬프트 캐시에서 읽은 입력의 비율입니다. 기록에서 토큰 종류를 구분할 수 없는 모델은 표시하지 않습니다.";
+"Models" = "모델";
+"Share" = "비중";
+"Cache hit" = "캐시 적중";
+"Tokens/s" = "토큰/초";
+"First token" = "첫 토큰";
+"Share and cache hit cover the last 31 days." = "비중과 캐시 적중은 최근 31일 기준입니다.";
+"Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply." = "비중과 캐시 적중은 최근 31일, 토큰/초는 최근 24시간만 보며 요청을 보낸 때부터 답변이 끝날 때까지로 잽니다.";
+"Too few replies in the last 24 hours to time." = "최근 24시간 동안의 답변이 적어 아직 속도를 표시하지 않습니다.";
+"First token is Codex's own measure of how long a turn waited for it." = "첫 토큰은 Codex가 직접 잰, 각 턴에서 첫 토큰이 오기까지 걸린 시간입니다.";
+"Claude Code doesn't record when the first token arrived, so its wait isn't shown." = "Claude Code는 첫 토큰이 도착한 시각을 기록하지 않아 지연 시간을 표시하지 않습니다.";
+"%@ s" = "%@초";
 "Prompt cache (%@)" = "프롬프트 캐시(%@)";
 "%@ left" = "%@ 남음";
 "Expired" = "만료됨";
@@ -981,3 +999,72 @@
 "No conversation is within its guaranteed cache time" = "보장 시간 안에 캐시가 남은 대화가 없습니다";
 "Kept at least %@" = "최소 %@ 유지";
 "The latest one's guaranteed time ended at %@." = "가장 최근 대화의 보장 시간은 %@에 끝났습니다.";
+"Usage panel in the menu" = "메뉴에 사용량 패널 표시";
+"Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend." = "메뉴 막대 아이콘을 열면 위쪽에 모든 계정의 개요와, 계정별 한도·요금제·비용 탭을 보여 줍니다.";
+"OpenCode console" = "OpenCode 콘솔";
+"Account request log" = "계정 요청 기록";
+"Kept. The detailed card reads every request on the account with it." = "저장됨. 자세한 카드가 이것으로 계정의 모든 요청을 읽습니다.";
+"No OpenCode console session found. Sign in at opencode.ai first." = "OpenCode 콘솔 세션을 찾지 못했습니다. 먼저 opencode.ai에 로그인하세요.";
+"Costs as %@ charged them, for the whole account." = "금액은 %@가 실제로 청구한 것으로, 계정 전체 기준입니다.";
+"The console session has expired. Read it again in Settings." = "콘솔 세션이 만료되었습니다. 설정에서 다시 읽어 주세요.";
+"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode 콘솔이 30일 동안 보관하는 요청 기록입니다. 계정의 모든 기기와 모든 앱에서 보낸 요청과 각 요청의 비용이 들어 있습니다. 키가 없거나 거부되면 요금제 한도도 이것으로 읽습니다. Pulse는 콘솔 로그인 쿠키만 이 Mac에 암호화해 보관합니다.";
+"Turn on Detailed card above to see the request log on the card." = "위의 '자세한 카드'를 켜면 카드에서 요청 기록을 볼 수 있습니다.";
+"Read from %@ · workspace %@." = "%@에서 읽음 · 워크스페이스 '%@'.";
+"The console turned this session away. Sign in again at opencode.ai, then read it again." = "콘솔이 이 세션을 받아들이지 않았습니다. opencode.ai에 다시 로그인한 뒤 다시 읽어 주세요.";
+"Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "%@에서 읽었지만 콘솔이 응답하지 않았습니다. 다음 새로 고침 때 다시 시도합니다.";
+"Reading the account's records…" = "계정 기록을 읽는 중…";
+"From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "%@의 계정 전체 요청 기록으로, 모든 기기와 이를 쓰는 모든 앱이 포함됩니다. 금액은 요청마다 실제로 청구된 것입니다. 기록은 30일 동안 보관됩니다.";
+
+"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days." = "%@ 콘솔이 기록한 계정 전체 사용량으로, 모든 키와 모든 기기가 포함됩니다. 금액은 날짜별 실제 청구액입니다. Pulse는 최근 30일을 읽습니다.";
+"DeepSeek console" = "DeepSeek 콘솔";
+"Account usage" = "계정 사용량";
+"Kept. The usage history below and the detailed card read the whole account with it." = "저장됨. 아래 사용 기록과 자세한 카드가 이것으로 계정 전체를 읽습니다.";
+"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac." = "DeepSeek 콘솔이 기록하는 계정 사용량입니다. 모든 키와 모든 기기의 날짜별 사용량과 실제 청구액이 들어 있습니다. 키가 없거나 거부되면 잔액도 이것으로 읽습니다. Pulse는 콘솔 로그인 정보만 이 Mac에 암호화해 보관합니다.";
+"Reads Chrome, Edge, Brave, Arc and other Chromium browsers." = "Chrome, Edge, Brave, Arc 등 Chromium 브라우저에서 읽습니다.";
+"No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc." = "Chromium 브라우저를 찾지 못했습니다. Chrome, Edge, Brave 또는 Arc에서 platform.deepseek.com에 로그인하세요.";
+"No DeepSeek console sign-in found. Sign in at platform.deepseek.com first." = "DeepSeek 콘솔 로그인을 찾지 못했습니다. 먼저 platform.deepseek.com에 로그인하세요.";
+"The console turned this sign-in away. Sign in again at platform.deepseek.com, then read it again." = "콘솔이 이 로그인을 받아들이지 않았습니다. platform.deepseek.com에 다시 로그인한 뒤 다시 읽어 주세요.";
+
+"Last 30 days" = "최근 30일";
+"Last 90 days" = "최근 90일";
+"All sessions" = "모든 세션";
+"Signs of a weaker model" = "성능 저하 징후";
+"Period" = "기간";
+"No Codex replies with reasoning in this period" = "이 기간에 추론이 포함된 Codex 응답이 없습니다";
+"%@ of %@ long replies had their reasoning cut off" = "긴 응답 %2$@개 중 %1$@개의 추론이 도중에 끊겼습니다";
+"Too few to tell" = "데이터 부족";
+"Possibly weakened" = "성능 저하 의심";
+"Normal" = "정상";
+"None found" = "찾지 못함";
+"%@ more" = "%@개 더";
+"Checked %@ sessions." = "세션 %@개를 확인했습니다.";
+"Read from this Mac's Codex records; nothing is sent." = "이 Mac의 Codex 기록만 읽으며, 아무 요청도 보내지 않습니다.";
+"Reasoning cut off: the model's reasoning stopped at exactly 516, 1,034, 1,552… tokens, as if cut off. Only about 0.2% of replies would stop there by chance." = "추론 끊김: 모델의 추론이 516, 1,034, 1,552… 토큰에서 딱 멈춰, 강제로 끊긴 것처럼 보이는 경우입니다. 우연히 여기서 멈추는 응답은 약 0.2%뿐입니다.";
+"Settings quietly lowered: a turn ran on a worse model, lower reasoning or a smaller context than you chose, without you changing anything." = "몰래 낮아진 설정: 어떤 턴이 내가 고른 것보다 못한 모델, 낮은 추론 수준 또는 짧은 컨텍스트로 실행된 경우입니다. 나는 설정을 바꾸지 않았습니다.";
+"These are signs, not proof: Codex doesn't record which model the server actually used." = "징후일 뿐 확증은 아닙니다. 서버가 실제로 어떤 모델을 썼는지는 Codex가 기록하지 않습니다.";
+"Reasoning cut off" = "추론 끊김";
+"%@ replies in all" = "전체 응답 %@개";
+"Settings quietly lowered" = "몰래 낮아진 설정";
+"Model: %@ swapped for %@" = "모델: %@이(가) %@(으)로 바뀜";
+"Reasoning: %@ lowered to %@" = "추론 수준: %@에서 %@(으)로 낮아짐";
+"Context: %@ cut to %@" = "컨텍스트: %@에서 %@(으)로 줄어듦";
+"Checked %@ sessions: the model, reasoning and context you chose were never changed." = "세션 %@개를 확인했습니다. 고른 모델, 추론 수준, 컨텍스트가 바뀐 적이 없습니다.";
+"%@ other sessions can't be checked: older than Codex 0.144, or run by Codex itself." = "그 밖의 세션 %@개는 판단할 수 없습니다: Codex 0.144 이전이거나 Codex가 직접 실행한 세션입니다.";
+"Service status" = "서비스 상태";
+"Operational" = "정상";
+"Degraded performance" = "성능 저하";
+"Partial outage" = "일부 장애";
+"Full outage" = "전면 장애";
+"Under maintenance" = "점검 중";
+"Unrecognised status" = "알 수 없는 상태";
+"Couldn't read the status page." = "상태 페이지를 읽지 못했습니다.";
+"Status page" = "상태 페이지";
+"As %@ reports it on its status page, read when this page opens and every five minutes while it stays open." = "%@이(가) 상태 페이지에 공개한 내용입니다. 이 페이지를 열 때 읽어 오고, 열려 있는 동안 5분마다 업데이트합니다.";
+"90 days ago" = "90일 전";
+"%@ uptime" = "가동률 %@";
+"No data" = "데이터 없음";
+"When a service is down" = "서비스에 장애가 있을 때";
+"Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on." = "Codex, Claude Code, DeepSeek 각각의 상태 페이지를 기준으로, 켜 둔 서비스만 알립니다.";
+"%@ reports %@." = "%@ 발표: %@.";
+"Back to normal: %@." = "정상으로 돌아왔습니다: %@.";
+"%@ (%@)" = "%@ (%@)";

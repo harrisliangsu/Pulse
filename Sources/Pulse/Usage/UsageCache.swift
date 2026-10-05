@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// The last good reading from each provider, so a failed fetch shows numbers
@@ -155,11 +156,16 @@ actor UsageCache {
         // A gateway with no usable address is the same case: there is no
         // server to have a reading from. So is a Qoder session discarded
         // because the site changed: what is banked is the other site's.
+        // The three shared by every profiled provider belong here too — no
+        // session read, no saved login, no app — or Zed's deleted session and
+        // Gemini's vanished login file showed the last percentage, stale,
+        // instead of asking to sign in.
         if case .unavailable(let reason) = fetched.state,
            [.apiKeyMissing, .ollamaSessionMissing, .qoderSessionMissing, .stepFunSessionMissing, .xiaomiSessionMissing, .signedOut,
             .claudeDesktopNotSignedIn, .claudeDesktopKeyRefused,
             .kimiSignInRequired, .kimiLoginExpired,
-            .serverAddressMissing, .serverAddressRefused].contains(reason) {
+            .serverAddressMissing, .serverAddressRefused,
+            .sessionMissing, .localLoginMissing, .localAppMissing].contains(reason) {
             return fetched
         }
 

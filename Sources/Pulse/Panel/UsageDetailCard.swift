@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import AppKit
 import SwiftUI
 
@@ -183,6 +184,9 @@ struct UsageDetailCard: View {
     /// When each live session's prompt cache lapses, where the logs say. The
     /// card names the soonest; Settings lists them all.
     var promptCache: PromptCacheReading?
+    /// Windows whose current cycle was seen spent off this Mac
+    /// (`ElsewhereWatch`), which take no value estimate.
+    var usedElsewhere: Set<String> = []
     /// Where the pointer's tip should sit along the side facing the rail,
     /// measured from the card's own top or leading edge. The card gets pushed
     /// around by the panel's own edges (see
@@ -217,7 +221,67 @@ struct UsageDetailCard: View {
     /// The colour language, so the bars agree with the rings.
     @Environment(\.ringColourScheme) private var ringColourScheme
 
+    /// The tallest the card may be, pointer included, or nil for no limit —
+    /// the room between the rail and the screen's edge on the side it opens
+    /// to, for a rail lying across (`PanelPlacement.cardRoom`).
+    var maxHeight: CGFloat?
+    /// The card's contents at their own height, measured inside the scroll
+    /// view so a limited card knows whether it has to scroll at all.
+    @State private var naturalHeight: CGFloat?
+
     var body: some View {
+        bounded
+        // Room for the pointer on the side facing the rail. The shape below
+        // covers the whole frame, body and pointer together.
+        .padding(Self.pointerSide(for: edge), DetailCardLayout.pointerWidth)
+        // **Inside the card, never ahead of it.** Switching between two cards
+        // of different heights keeps this one view and swaps its rows: the
+        // outline grows on the panel's spring, but a row the new card adds is
+        // laid out at its final place at once, so it stood outside a card
+        // that had not reached it yet — the text arriving before the card.
+        // Masked to the same outline, the card uncovers it as it grows.
+        // The content only: the surface keeps its own edge, where glass
+        // draws a rim this would cut.
+        .mask { bubble }
+        // The card follows the rail's surface: a glass capsule beside a solid
+        // black card reads as two different components, not one panel.
+        .background(LiquidBubbleSurface(bubble: bubble, usesGlass: usesGlass))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(String.localized("\(title ?? usage.provider.displayName) usage details"))
+    }
+
+    /// The contents, scrolling **only when the screen cannot hold them**.
+    ///
+    /// A rail lying across opens its card into one half of the screen, and
+    /// near the middle that half can be shorter than a tall card — a detailed
+    /// card with a forecast and many limits on a 13" display was 95pt taller
+    /// than the room below the rail, and its foot was cut off by the screen.
+    /// Turning the card the other way does not help there: the rail already
+    /// opens it to the roomier half. So it scrolls, inside the same outline.
+    /// The window keeps its size; only the card is shorter.
+    @ViewBuilder
+    private var bounded: some View {
+        if let limit = maxHeight.map({ $0 - DetailCardLayout.pointerWidth }),
+           limit < DetailCardLayout.maximumHeight {
+            let natural = naturalHeight ?? min(DetailCardLayout.estimatedHeight, limit)
+            ScrollView(.vertical) {
+                content.background(
+                    GeometryReader { proxy in
+                        Color.clear.onChange(of: proxy.size.height, initial: true) { _, height in
+                            naturalHeight = height
+                        }
+                    }
+                )
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollDisabled(natural <= limit)
+            .frame(width: DetailCardLayout.width, height: max(min(natural, limit), 0))
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: DetailCardLayout.contentSpacing) {
             header
 
@@ -308,23 +372,6 @@ struct UsageDetailCard: View {
         }
         .padding(DetailCardLayout.padding)
         .frame(width: DetailCardLayout.width, alignment: .leading)
-        // Room for the pointer on the side facing the rail. The shape below
-        // covers the whole frame, body and pointer together.
-        .padding(Self.pointerSide(for: edge), DetailCardLayout.pointerWidth)
-        // **Inside the card, never ahead of it.** Switching between two cards
-        // of different heights keeps this one view and swaps its rows: the
-        // outline grows on the panel's spring, but a row the new card adds is
-        // laid out at its final place at once, so it stood outside a card
-        // that had not reached it yet — the text arriving before the card.
-        // Masked to the same outline, the card uncovers it as it grows.
-        // The content only: the surface keeps its own edge, where glass
-        // draws a rim this would cut.
-        .mask { bubble }
-        // The card follows the rail's surface: a glass capsule beside a solid
-        // black card reads as two different components, not one panel.
-        .background(LiquidBubbleSurface(bubble: bubble, usesGlass: usesGlass))
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(String.localized("\(title ?? usage.provider.displayName) usage details"))
     }
 
     /// The soonest available credit's expiry, with the year: a credit can
@@ -388,6 +435,7 @@ struct UsageDetailCard: View {
         case .left: .leading
         case .right: .trailing
         case .top: .top
+        case .bottom: .bottom
         }
     }
 
@@ -422,12 +470,27 @@ struct UsageDetailCard: View {
     /// ≈$101 used". The settings pane's `BudgetEstimate`, from the ledger the
     /// card already holds — so only where that ledger carries money and its
     /// quarter-hours, which is this Mac's records and never a provider's own
-    /// statistics. Nil wherever the estimator withholds it.
+    /// statistics. Nil wherever the estimator withholds it, and for a provider
+    /// that states what its limits are worth (`estimatesValue`).
     private func valueText(_ window: UsageWindow) -> String? {
-        guard isDetailed, case .ledger(let ledger) = spend,
-              let estimate = BudgetEstimator.estimate(for: window, ledger: ledger)
+        guard isDetailed, Self.estimatesValue(for: usage.provider),
+              case .ledger(let ledger) = spend,
+              !usedElsewhere.contains(window.id),
+              let estimate = BudgetEstimator.estimate(for: window, ledger: ledger, observedAt: usage.observedAt)
         else { return nil }
         return .localized("Estimated value \(BudgetEstimator.approximate(estimate.full)) · \(BudgetEstimator.approximate(estimate.spent)) used")
+    }
+
+    /// Whether a limit's worth is something to estimate at all.
+    ///
+    /// **Not for OpenCode Go.** Its plan states every limit in money — its
+    /// docs give the amounts and the console's meters count them in
+    /// micro-cents — so dividing this Mac's spend by a percentage would put a
+    /// guess beside a figure the provider already publishes, and could
+    /// disagree with it. **Nor for DeepSeek**, whose ring is a balance: it is
+    /// money already, in the account's own currency, not a limit to price.
+    nonisolated static func estimatesValue(for provider: Provider) -> Bool {
+        provider != .openCodeGo && provider != .deepSeek
     }
 
     /// "Updated 3 min ago".
@@ -941,26 +1004,48 @@ extension UsageDetailCard {
         case empty
         /// Asked of the provider, which did not answer.
         case failed
+        /// The provider turned the saved session away: read it again.
+        case signedOut
         case ledger(UsageLedger)
     }
 }
 
 /// The detailed card's last section: the account's recent usage, from this
 /// Mac's records at the Token spend pane's prices, or — for Z.ai and Zhipu —
-/// from the statistics the provider publishes for the whole account.
+/// from the statistics the provider publishes for the whole account, or — for
+/// OpenCode Go — from its console's log of every request, priced as charged.
 ///
 /// **Tokens lead, money follows.** The tokens are counted; the money is those
 /// counts at API prices, which a subscription does not pay — so it is the
 /// smaller, dimmer line, marked as approximate, and the section says so. A
-/// provider's own statistics carry no money at all, so they show none.
+/// provider's own statistics carry no money at all, so they show none. A
+/// provider's own log carries what it charged, which is shown as it is.
 private struct ActivitySection: View {
     let spend: UsageDetailCard.Spend
     let provider: Provider
     var promptCache: PromptCacheReading?
 
     /// The provider's figures rather than this Mac's: headed and footed as
-    /// such, and never priced.
-    private var isAccountWide: Bool { provider.cardHistory == .accountStatistics }
+    /// such. Read off the ledger once there is one, since OpenCode Go's source
+    /// depends on whether a console session is kept.
+    private var isAccountWide: Bool {
+        if case .ledger(let ledger) = spend {
+            return ledger.origin == .providerStatistics || ledger.origin == .providerLogs
+        }
+        return provider.cardHistory == .accountStatistics || provider.cardHistory == .accountLogs
+    }
+
+    /// Money the provider charged, not money worked out from a price list.
+    /// What the money is counted in, where the ledger says (DeepSeek's yuan).
+    private var currency: String? {
+        if case .ledger(let ledger) = spend { return ledger.currency }
+        return nil
+    }
+
+    private var isCharged: Bool {
+        if case .ledger(let ledger) = spend { return ledger.origin == .providerLogs }
+        return false
+    }
 
     /// The chart's span, and the longest of the three figures.
     private static let span = 31
@@ -978,11 +1063,17 @@ private struct ActivitySection: View {
 
             switch spend {
             case .reading:
-                message(String.localized("Reading local records…"))
+                // A provider's own records are fetched, not read off this Mac,
+                // and the first month of a console log can take a few seconds.
+                message(isAccountWide
+                    ? String.localized("Reading the account's records…")
+                    : String.localized("Reading local records…"))
             case .empty:
                 message(String.localized("No history yet"))
             case .failed:
                 message(String.localized("Couldn't read the history."))
+            case .signedOut:
+                message(String.localized("The console session has expired. Read it again in Settings."))
             case .ledger(let ledger):
                 figures(ledger)
                 DaysChart(days: ledger.recent(Self.span))
@@ -990,9 +1081,11 @@ private struct ActivitySection: View {
                 topModel(ledger)
                 cacheHitRate(ledger)
                 if let promptCache { PromptCacheRow(reading: promptCache) }
-                Text(isAccountWide
-                    ? String.localized("From \(provider.displayName), for the whole account.")
-                    : String.localized("Costs are estimates at API prices."))
+                Text(isCharged
+                    ? String.localized("Costs as \(provider.displayName) charged them, for the whole account.")
+                    : isAccountWide
+                        ? String.localized("From \(provider.displayName), for the whole account.")
+                        : String.localized("Costs are estimates at API prices."))
                     .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
                     .foregroundStyle(.primary.opacity(0.4))
                     .lineLimit(1)
@@ -1016,7 +1109,7 @@ private struct ActivitySection: View {
         // No money line at all where there is no money anywhere — a provider's
         // own statistics, or nothing priced — rather than a blank band under
         // the figures. One priced column keeps the line on all three, level.
-        let priced = !isAccountWide && month.cost > 0
+        let priced = (isCharged || !isAccountWide) && month.cost > 0
         return HStack(alignment: .top, spacing: 8) {
             figure(String.localized("Today"), tokens: today?.tokens ?? 0, cost: today?.cost ?? 0, priced: priced)
             figure(String.localized("7 days"), tokens: week.tokens, cost: week.cost, priced: priced)
@@ -1039,7 +1132,8 @@ private struct ActivitySection: View {
                 .foregroundStyle(.primary)
                 .frame(height: DetailCardLayout.figureValueHeight)
             if priced {
-                Text(verbatim: cost > 0 ? "≈" + AccountUsageCard.money(cost) : " ")
+                // "≈" for an estimate; what the provider charged is stated.
+                Text(verbatim: cost > 0 ? (isCharged ? "" : "≈") + AccountUsageCard.money(cost, currency: currency) : " ")
                     .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded).monospacedDigit())
                     .foregroundStyle(.primary.opacity(0.45))
                     .frame(height: DetailCardLayout.figureLabelHeight)

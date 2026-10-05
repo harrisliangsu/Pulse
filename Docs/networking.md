@@ -19,7 +19,8 @@ The boundary includes:
 
 - provider usage requests, including the isolated ephemeral sessions used for borrowed browser cookies;
 - OAuth, device-code and browser-login token exchanges;
-- the models.dev price download.
+- the models.dev price download;
+- the status-page reads on the Codex, Claude Code and DeepSeek panes, and the outage notification's ([providers/codex.md](providers/codex.md#service-status), [providers/claude-code.md](providers/claude-code.md#service-status), [providers/deepseek.md](providers/deepseek.md#service-status)).
 
 Cookie storage, cache and redirect policies still belong to each caller. Applying a proxy must not turn a borrowed browser session into a process-wide cookie jar or allow its hand-written `Cookie` header across a redirect.
 

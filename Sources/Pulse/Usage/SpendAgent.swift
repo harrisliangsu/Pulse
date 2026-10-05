@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// A coding agent that leaves a record of its work on this Mac.
@@ -387,6 +388,19 @@ enum SpendAgent: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// Whether this agent's records say anything about the prompt cache.
+    ///
+    /// False for Goose and Kiro, whose stores keep input and output and no
+    /// cache column at all: their zero cache hits are not a measurement of a
+    /// cache that never hit, so the breakdown says the figure is not recorded
+    /// and the cache hit rate is left out.
+    var reportsCacheReads: Bool {
+        switch self {
+        case .goose, .kiro: false
+        default: true
+        }
+    }
+
     /// Whether this agent's native reader was checked against a real store on a
     /// real machine.
     ///
@@ -419,7 +433,8 @@ enum SpendAgent: String, CaseIterable, Identifiable, Sendable {
         guard !Task.isCancelled else { return [] }
         return switch self {
         case .claudeCode: [home.appending(path: ".claude/projects")]
-        case .codex: [home.appending(path: ".codex/sessions")]
+        // An archived session is still work done; `UsageLedgerReader` reads both.
+        case .codex: [home.appending(path: ".codex/sessions"), home.appending(path: ".codex/archived_sessions")]
         case .openCode: [home.appending(path: ".local/share/opencode/opencode.db")]
         case .kiloCLI: [home.appending(path: ".local/share/kilo/kilo.db")]
         case .grok: [home.appending(path: ".grok/sessions")]

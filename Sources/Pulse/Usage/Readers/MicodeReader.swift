@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// MiMo Code's OpenCode-shaped database, `mimocode*.db` under the XDG data
@@ -74,9 +75,8 @@ enum MicodeReader {
                     input: DatabaseReaderSupport.clampedCount(counts["input"]),
                     cacheWrite: DatabaseReaderSupport.clampedCount(cache["write"]),
                     cacheRead: DatabaseReaderSupport.clampedCount(cache["read"]),
-                    // Reasoning is a real field and is billed as output.
-                    output: DatabaseReaderSupport.clampedCount(counts["output"])
-                        + DatabaseReaderSupport.clampedCount(counts["reasoning"])
+                    // Reasoning is billed as output, and counted once.
+                    output: OpenCodeStore.output(counts, int: DatabaseReaderSupport.clampedCount)
                 )
                 guard tally.total > 0 else { return }
 

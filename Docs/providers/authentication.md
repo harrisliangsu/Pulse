@@ -29,7 +29,7 @@ Measured: a Codex access token lives on the order of 240 hours; a Claude Code on
 
 Pulse’s extra-account login has its own refresh token and does not read or write what the CLI stored. That separation is the reason for signing in.
 
-`fetchAdded` renews when the access token is within a minute of expiry. A renewal that fails reports `.signedOut`, not a network error: the remedy is the same and the user can act on it. That case names no provider.
+`fetchAdded` renews when the access token is within a minute of expiry. A renewal that fails reports `.signedOut`, not a network error: the remedy is the same and the user can act on it. That case names no provider. A renewal is written only over the login it renews (`AccountCredentialStore.renewed` / `acceptsRenewal`): not when a longer-lived one is already stored, not over another account's login in the same slot, and **never into an empty slot** — removing an account forgets its login, and a renewal still out at that moment used to write the forgotten tokens back.
 
 ## Extra accounts: who can have them
 

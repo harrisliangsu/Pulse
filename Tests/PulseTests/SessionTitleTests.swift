@@ -132,7 +132,7 @@ struct SessionTitleTests {
         #expect(scanned.title == "Renamed")
         // Aggregate every bucket rather than trusting a random `.first`, so
         // the assertion is about the whole transcript's counts.
-        let tallies = scanned.days.values.flatMap { $0.values }
+        let tallies = scanned.allDays.values.flatMap { $0.values }
         #expect(tallies.reduce(0) { $0 + $1.input } == 100)
         #expect(tallies.reduce(0) { $0 + $1.output } == 10)
         #expect(tallies.reduce(0) { $0 + $1.total } == 110)

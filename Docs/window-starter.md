@@ -19,6 +19,7 @@ It is also the one place Pulse acts rather than reads. It holds no credential fo
 **By the clock, not by guessing from the reply.** How a window that has reset but not restarted is reported differs by provider and is documented by neither. What is certain is the reset time the last reading stated. So:
 
 - Every reading of an eligible window with a future `resetsAt` is remembered.
+- Before each timer is set, the resets of a provider whose starter or account is now off are forgotten (`WindowPrimer.kept`). They were kept, and once they had passed the timer came due every five seconds for as long as Pulse ran, only for `fire` to skip them.
 - A one-shot timer is set for the earliest remembered reset plus a minute's grace (`WindowPrimer.grace`), moved to the start of the allowed hours if it falls outside them.
 - When it fires, a window is due if its reset and grace have passed, it is inside the hours, and the latest reading does not show a **later** reset — which would mean the user has used it since (`WindowPrimer.isDue`). One message starts every due window of the account.
 - The account is then refreshed, so its new reset is remembered and the next start scheduled from it.

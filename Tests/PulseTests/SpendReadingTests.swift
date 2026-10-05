@@ -203,12 +203,72 @@ struct SpendReadingTests {
         #expect(!AppSettings().readsTokenSpend)
         let scanned = await UsageLedgerReader().parse(file, provider: .codex)
         #expect(scanned.cwd == "/work/project")
-        #expect(scanned.days.values.flatMap { $0.values }.reduce(TokenTally(), +)
+        #expect(scanned.allDays.values.flatMap { $0.values }.reduce(TokenTally(), +)
             == TokenTally(input: 80, cacheRead: 20, output: 10))
         let cache = root.appending(path: "cache")
         try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
         let reader = AgentLedgers(home: root, environment: [:], cacheDirectory: cache, prices: { [:] })
         #expect(try await reader.scan().ledgers[.codex]?.allTime.tokens == 110)
-        #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-4-codex.json").path))
+        #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-7-codex.json").path))
+    }
+
+    private func codexCount(_ time: String, input: Int, output: Int, last: (input: Int, output: Int)) -> String {
+        #"{"timestamp":"2026-01-02T\#(time)Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":\#(input),"cached_input_tokens":0,"output_tokens":\#(output),"total_tokens":\#(input + output)},"last_token_usage":{"input_tokens":\#(last.input),"cached_input_tokens":0,"output_tokens":\#(last.output),"total_tokens":\#(last.input + last.output)}}}}"#
+    }
+
+    private func codexTurn(_ id: String) -> String {
+        #"{"timestamp":"2026-01-02T09:10:00Z","type":"event_msg","payload":{"type":"task_started","turn_id":"\#(id)"}}"#
+    }
+
+    private let codexModel = #"{"timestamp":"2026-01-02T09:00:00Z","type":"turn_context","payload":{"model":"gpt-5"}}"#
+
+    /// A Codex Desktop sub-agent's rollout: it opens on the parent's running
+    /// total, replays the parent's last reading in a `rollout-N` turn, then
+    /// does 550 tokens of its own work.
+    private func codexFork(replayTurn: String) -> String {
+        [
+            #"{"timestamp":"2026-01-02T09:10:00Z","type":"session_meta","payload":{"id":"child","forked_from_id":"parent"}}"#,
+            codexModel,
+            codexCount("09:10:00", input: 1_000, output: 100, last: (0, 0)),
+            codexTurn(replayTurn),
+            codexCount("09:10:00", input: 2_000, output: 200, last: (1_000, 100)),
+            codexTurn("019f8f37-eb69-7e62-8fa8-e3d19fec5ade"),
+            codexCount("09:10:00", input: 2_500, output: 250, last: (500, 50)),
+        ].joined(separator: "\n")
+    }
+
+    @Test("A Codex fork counts only its own work, archived or not, with or without its parent on disk")
+    func codexForks() async throws {
+        let root = try temporary()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let parent = [
+            #"{"timestamp":"2026-01-02T09:00:00Z","type":"session_meta","payload":{"id":"parent"}}"#,
+            codexModel,
+            codexCount("09:00:00", input: 1_000, output: 100, last: (1_000, 100)),
+            codexCount("09:05:00", input: 2_000, output: 200, last: (1_000, 100)),
+        ].joined(separator: "\n")
+        try write(parent, to: root.appending(path: ".codex/sessions/2026/01/02/rollout-parent.jsonl"))
+        // Archived, and its replayed reading in an ordinary turn: the copy is
+        // known by the running total it repeats.
+        try write(codexFork(replayTurn: "019f8f06-dfd5-7cd2-a871-b31a926f92b7"),
+                  to: root.appending(path: ".codex/archived_sessions/rollout-child.jsonl"))
+
+        let cache = root.appending(path: "cache")
+        try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
+        let reader = AgentLedgers(home: root, environment: [:], cacheDirectory: cache, prices: { [:] })
+        let scannedTokens = try await reader.scan().ledgers[.codex]?.allTime.tokens
+        #expect(scannedTokens == 2_200 + 550)
+
+        // The parent gone, the replayed turn is still known by its `rollout-`
+        // id, and the opening total is still the parent's.
+        let alone = await UsageLedgerReader().parse(
+            {
+                let file = root.appending(path: "alone.jsonl")
+                try? write(codexFork(replayTurn: "rollout-4"), to: file)
+                return file
+            }(),
+            provider: .codex
+        )
+        #expect(alone.allDays.values.flatMap { $0.values }.reduce(TokenTally(), +).total == 550)
     }
 }
