@@ -8,6 +8,8 @@ Owns: the JSON contract other people's status lines are built on. Where the figu
 
 Source: [`Sources/Pulse/Usage/UsageReport.swift`](../Sources/Pulse/Usage/UsageReport.swift). Dispatched in `PulseMain` before `LegacyDefaults.migrateIfNeeded()`, alongside `--statusline`.
 
+`--recap` is a different command, for one month's or year's Token spend recap: [token-spend.md](token-spend.md#the-recap-and---recap).
+
 ## It prints the cache and never fetches
 
 A status line polls every couple of seconds. Seventy-seven providers cannot be asked at that rate, and a command that opened network connections and touched the keychain every time a terminal redrew would be a worse citizen than no command at all.

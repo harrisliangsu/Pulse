@@ -2,7 +2,7 @@
 
 Owns: the Settings pane that answers *across everything I use, where did the work go* — its agents, its readers, and what may and may not be said about the figures. The per-provider history card is a different thing and lives in [refresh-and-data.md](refresh-and-data.md).
 
-Source: [`SpendAgent`](../Sources/Pulse/Usage/SpendAgent.swift), [`AgentLedgers`](../Sources/Pulse/Usage/AgentLedgers.swift), [`AgentCache`](../Sources/Pulse/Usage/AgentCache.swift), [`AgentUsageRecord`](../Sources/Pulse/Usage/AgentUsageRecord.swift), [`AgentLogIO`](../Sources/Pulse/Usage/AgentLogIO.swift), [`AgentSQLite`](../Sources/Pulse/Usage/AgentSQLite.swift), the reader families under [`Usage/Readers`](../Sources/Pulse/Usage/Readers), [`SpendSummary`](../Sources/Pulse/Usage/SpendSummary.swift), [`ModelSpendSummary`](../Sources/Pulse/Usage/ModelSpendSummary.swift), [`TokenSpendView`](../Sources/Pulse/Settings/TokenSpendView.swift), [`ModelSpendDetailView`](../Sources/Pulse/Settings/ModelSpendDetailView.swift). The complete source catalog — every store, its default macOS path, the counters it reports and how well that is evidenced — is [token-spend-sources.md](token-spend-sources.md).
+Source: [`SpendAgent`](../Sources/Pulse/Usage/SpendAgent.swift), [`AgentLedgers`](../Sources/Pulse/Usage/AgentLedgers.swift), [`AgentCache`](../Sources/Pulse/Usage/AgentCache.swift), [`AgentUsageRecord`](../Sources/Pulse/Usage/AgentUsageRecord.swift), [`AgentLogIO`](../Sources/Pulse/Usage/AgentLogIO.swift), [`AgentSQLite`](../Sources/Pulse/Usage/AgentSQLite.swift), the reader families under [`Usage/Readers`](../Sources/Pulse/Usage/Readers), [`SpendSummary`](../Sources/Pulse/Usage/SpendSummary.swift), [`ModelSpendSummary`](../Sources/Pulse/Usage/ModelSpendSummary.swift), [`Recap`](../Sources/Pulse/Usage/Recap.swift), [`TokenSpendView`](../Sources/Pulse/Settings/TokenSpendView.swift), [`ModelSpendDetailView`](../Sources/Pulse/Settings/ModelSpendDetailView.swift). The complete source catalog — every store, its default macOS path, the counters it reports and how well that is evidenced — is [token-spend-sources.md](token-spend-sources.md).
 
 It counts the last **week** until the reader picks another span, and the pick is kept for the next visit and the next launch (`AppSettings.spendSpan`; `SpendSpan.default` is `.week`). A stored value the picker no longer offers falls back to the week.
 
@@ -133,6 +133,34 @@ Local SwiftUI row rendering with synthetic data (not a live-client capture):
 Local SwiftUI row rendering with synthetic data (not a live-client capture):
 
 ![project identity](project-identity.png)
+
+## The recap and `--recap`
+
+`Recap` ([`Recap.swift`](../Sources/Pulse/Usage/Recap.swift), built by [`RecapBuild.swift`](../Sources/Pulse/Usage/RecapBuild.swift)) is one calendar month's or year's figures for the shareable recap cards: **facts only, no copy**, and a figure Pulse cannot stand behind is `nil`, never zero. It is built from the same `[SpendAgent: UsageLedger]` the pane holds, by `Recap.build(_:from:prices:now:calendar:)`; it reads nothing itself.
+
+**Everything is added up by `SpendSummary`**, over `SpendSummary.of(_:from:until:)` — the calendar-bounded form of `of(_:overLast:)` (`until` is exclusive; days, quarter-hours and a session's own buckets outside `[from, until)` are cut, and the series is padded from `from`; an `until` not after `from` is no days; streaks stay whole-history). The recap cannot count a span differently from the pane. A period still running ends at the end of today (`isInProgress`), and the **previous period is cut to the same number of days** (October 1–5 against September 1–5), clamped to that period's length (March against February); `previousTokens` is nil when nothing was recorded then.
+
+What `build` works out itself, and the rules it applies:
+
+- **Hours** (`hours`, `peakHour`, `lateShare`, `persona`) are nil when any contributing store has only session- or report-level timing (`hasAggregateTiming`) or no quarter-hour work was recorded. `lateShare` is the 21:00–04:59 share of the quarter-hour tokens; the peak is the earliest hour among equals.
+- **Persona** is a plain majority (more than half) of the hour tokens, checked in order: `nightOwl` 21:00–04:59, `earlyBird` 05:00–09:59, `dayShift` 10:00–17:59, else `allDay`. Exactly half is not a majority.
+- **Late nights** (`lateNights`, `latestMinute`): any work with a recorded quarter-hour from 00:00 to 04:59 local counts toward its night, once per night; the minute is the quarter-hour's start, or a session's own last record where that falls later in the window. Work with day-level timing only has no minute, so where `hours` is nil `lateNights` is a floor.
+- **Cache hit rate** is `UsageLedger.cacheHitRate`'s rule (`UsageLedger.cacheReading(in:)`, shared) over every contributing agent: nil when any has counts that may be missing or tokens no kind can claim; an agent whose store records no cache (`SpendAgent.reportsCacheReads`) is left out of the rate, not counted as misses.
+- **Cache savings** are, per model, cache-read tokens billed at the input rate less what they were billed at — `TokenTally.costBreakdown` with the reads folded into input, long-context tiers included — at the price `ModelPriceLookup` returns for that raw id and the agent's `priceVendor`: the lookup the ledgers were priced with. It uses each day's own per-model tallies (`LedgerDay.modelTallies`), nothing prorated. A model with no price, or a day without per-model detail, adds nothing, so the figure is a floor; it is nil when no priced cache read exists. A model that states no cache rate is billed at its input rate and saves nothing.
+- **Money** is nil for a day, month or total where no work had a price (`UsageLedger.shownCost`) and for days and months with no work; a part-priced figure is its priced subtotal, as in the pane. A model's money is its raw ids' own `LedgerDay.modelCosts`, grouped by display name; nil where none was priced.
+- Models, projects and agents are heaviest first, with shares **of the recap's tokens**; an agent's `activeDays` is `SpendSummary.activeDays` over that agent alone.
+
+### `Pulse --recap`
+
+```bash
+./build.noindex/Pulse.app/Contents/MacOS/Pulse --recap 2026-09   # a month
+./build.noindex/Pulse.app/Contents/MacOS/Pulse --recap 2026      # a year
+./build.noindex/Pulse.app/Contents/MacOS/Pulse --recap           # this month
+```
+
+Prints the `Recap` as sorted, pretty JSON on stdout and exits ([`RecapReport.swift`](../Sources/Pulse/Usage/RecapReport.swift)): `period`, `start`/`end` (local dates; `end` is the first day after the span), `inProgress`, the totals, `days`, `months` (a year), `hours`, `latestMinute` (minutes after midnight), `persona`, `models`, `agents`, `projects`, `cacheHitRate`, `cacheSavings`, the streaks. **A missing figure is absent from the JSON**, not null or zero. Nothing is translated.
+
+It reads as the pane does — `AgentLedgers.scan()` over the agents present on this Mac, the same price table — and **only while Token spend reading is on**: with it off it says so on stderr and exits 2 (a bad argument also exits 2). It stores no setting and writes nothing beyond the ledger and price caches the readers keep. It is dispatched before `LegacyDefaults.migrateIfNeeded()`, like `--json` ([json-output.md](json-output.md)), and it keeps the main queue running (`dispatchMain`) instead of parking the main thread, because the scan reports progress on the main actor.
 
 ## Caching
 
