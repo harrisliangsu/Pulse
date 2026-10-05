@@ -117,6 +117,8 @@ struct SettingsView: View {
     /// disagree about what a month is.
     @State private var spendFocus: SpendAgent?
     @State private var focusedSpend = SpendSummary()
+    /// The year-long activity chart's series, for the agent on screen or all.
+    @State private var spendActivity = TokenActivity()
     private var spendLedgers: [SpendAgent: UsageLedger] { spendRead.snapshot?.ledgers ?? [:] }
     /// Present sources — installed, or captured/exported somewhere Pulse reads
     /// — that produced no records at all. Named together at the foot of the
@@ -339,6 +341,11 @@ struct SettingsView: View {
                                     span: Binding(
                                         get: { settings.spendSpan },
                                         set: { settings.spendSpan = $0 }
+                                    ),
+                                    activity: spendActivity,
+                                    activityView: Binding(
+                                        get: { settings.spendActivityView },
+                                        set: { settings.spendActivityView = $0 }
                                     ),
                                     isLoading: isScanningSpend,
                                     isSummarizing: spendSummaryIsPending,
@@ -2273,6 +2280,7 @@ struct SettingsView: View {
         spend = SpendSummary()
         focusedSpend = SpendSummary()
         modelSpend = ModelSpendSummary()
+        spendActivity = TokenActivity()
     }
 
     /// The same function over the same ledgers, twice: once for everything and
@@ -2299,6 +2307,7 @@ struct SettingsView: View {
         spend = result.overview
         focusedSpend = result.agent
         modelSpend = result.model
+        spendActivity = result.activity
         displayedSpendRequest = request
     }
 

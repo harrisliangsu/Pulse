@@ -55,6 +55,36 @@ struct SpendSummaryCacheTests {
         #expect(replaced.model.tokens == 90)
     }
 
+    @Test("The year's activity ignores the span, follows the agent, and is rebuilt for a new snapshot or day")
+    func activityIsIndependentOfTheSpan() async throws {
+        let cache = SpendSummaryCache()
+        let snapshot = UUID()
+        let old = today.addingTimeInterval(-40 * 86400)
+        let ledgers: [SpendAgent: UsageLedger] = [.codex: ledger(10, at: today), .claudeCode: ledger(20, at: old)]
+        func request(days: Int?, agent: SpendAgent? = nil, id: UUID? = nil, date: Date? = nil) -> SpendSummaryCache.Request {
+            .init(window: .init(snapshot: id ?? snapshot, days: days, today: date ?? today, calendar: calendar, language: "en"),
+                  agent: agent, model: nil)
+        }
+        // A one-day span still carries the whole year.
+        let day = try await cache.summaries(for: request(days: 1), ledgers: ledgers)
+        #expect(day.overview.tokens == 10)
+        #expect(day.activity.total == 30)
+        let all = try await cache.summaries(for: request(days: nil), ledgers: ledgers)
+        #expect(all.activity == day.activity)
+        // Narrowed to an agent, it is that agent's year.
+        let codex = try await cache.summaries(for: request(days: 1, agent: .codex), ledgers: ledgers)
+        #expect(codex.activity.total == 10)
+        let claude = try await cache.summaries(for: request(days: 7, agent: .claudeCode), ledgers: ledgers)
+        #expect(claude.activity.total == 20)
+        // A replacement snapshot and a new day are new figures.
+        let replaced = try await cache.summaries(for: request(days: 1, id: UUID()), ledgers: [.codex: ledger(90, at: today)])
+        #expect(replaced.activity.total == 90)
+        let later = try await cache.summaries(
+            for: request(days: 1, id: UUID(), date: today.addingTimeInterval(86400)), ledgers: [.codex: ledger(90, at: today)])
+        #expect(later.activity.total == 90)
+        #expect(later.activity.weeks.flatMap(\.drawn).last?.date == today.addingTimeInterval(86400))
+    }
+
     @Test("A cancelled request cannot poison the next summary")
     func cancelledRequest() async throws {
         let cache = SpendSummaryCache()

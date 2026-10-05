@@ -1099,3 +1099,12 @@
 "Couldn't make the image." = "画像を作れませんでした。";
 "Saved" = "保存しました";
 "Save here" = "ここに保存";
+"Token activity" = "トークン活動";
+"Daily" = "毎日";
+"Weekly" = "毎週";
+"Cumulative" = "累計";
+"%@ tokens in the last 12 months" = "過去 12 か月の合計 %@ tokens";
+"%@ over the last 12 months, %@ active days" = "過去 12 か月：%@、記録のある日は %@ 日";
+"Less" = "少";
+"More" = "多";
+"Total through %@" = "%@ までの累計";

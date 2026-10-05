@@ -1099,3 +1099,12 @@
 "Couldn't make the image." = "이미지를 만들지 못했습니다.";
 "Saved" = "저장했습니다";
 "Save here" = "여기에 저장";
+"Token activity" = "토큰 활동";
+"Daily" = "일별";
+"Weekly" = "주별";
+"Cumulative" = "누적";
+"%@ tokens in the last 12 months" = "최근 12개월 동안 %@ tokens";
+"%@ over the last 12 months, %@ active days" = "최근 12개월: %@, 기록이 있는 날 %@일";
+"Less" = "적음";
+"More" = "많음";
+"Total through %@" = "%@까지 누적";

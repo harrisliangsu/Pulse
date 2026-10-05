@@ -49,6 +49,10 @@ struct TokenSpendView: View {
     /// diagnostics never reach the view.
     let hasReadLimitations: Bool
     @Binding var span: SpendSpan
+    /// The last twelve months to today, over the agent on screen where there is
+    /// one. Independent of `span`: the "Token activity" chart is the long view.
+    var activity = TokenActivity()
+    @Binding var activityView: ActivityView
     let isLoading: Bool
     var isSummarizing = false
     let refresh: () -> Void
@@ -136,6 +140,7 @@ struct TokenSpendView: View {
                     nothingForAgent(focus)
                 } else {
                     total(focused)
+                    activitySection
                     kinds(focused)
                     streaks(focused)
                     if span != .today { hourly(focused) }
@@ -150,6 +155,7 @@ struct TokenSpendView: View {
                 empty
             } else {
                 total(summary)
+                activitySection
                 kinds(summary)
                 streaks(summary)
                 if span != .today { hourly(summary) }
@@ -389,6 +395,16 @@ struct TokenSpendView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
+        }
+    }
+
+    // MARK: - The year
+
+    /// Not drawn for a Mac with no record in the last twelve months: an empty
+    /// grid would say "quiet" about days nothing was read for.
+    @ViewBuilder private var activitySection: some View {
+        if !activity.isEmpty {
+            TokenActivitySection(activity: activity, view: $activityView)
         }
     }
 

@@ -1017,6 +1017,30 @@ final class AppSettings {
         }
     }
 
+    /// Which view of the Token spend pane's year-long "Token activity" chart is
+    /// open: the daily grid until the reader picks another, and their pick is
+    /// kept like the span's. No `onChange?()` for the same reason.
+    var spendActivityView: ActivityView {
+        didSet {
+            guard spendActivityView != oldValue else { return }
+            Self.storeSpendActivityView(spendActivityView, in: .standard)
+        }
+    }
+
+    /// The chart view last chosen, or the daily grid when nothing is stored or
+    /// what is stored is no longer offered. Takes the store as an argument so
+    /// the round trip can be pinned against an isolated suite.
+    static func storedSpendActivityView(in defaults: UserDefaults) -> ActivityView {
+        defaults.string(forKey: Key.spendActivityView)
+            .flatMap(ActivityView.init(rawValue:)) ?? .default
+    }
+
+    static func storeSpendActivityView(_ view: ActivityView, in defaults: UserDefaults) {
+        defaults.set(view.rawValue, forKey: Key.spendActivityView)
+    }
+
+    static var spendActivityViewDefaultsKey: String { Key.spendActivityView }
+
     /// Local records are read only after this pane is explicitly enabled.
     /// No onChange: that hook refreshes the quota providers.
     var readsTokenSpend: Bool {
@@ -1439,6 +1463,7 @@ final class AppSettings {
         animatesRingActivity: Bool = true,
         splitAccounts: Set<String> = [],
         spendSpan: SpendSpan = .default,
+        spendActivityView: ActivityView = .default,
         readsTokenSpend: Bool = false,
         alertThreshold: AlertThreshold = .default,
         alertsOnReset: Bool = false,
@@ -1492,6 +1517,7 @@ final class AppSettings {
         self.animatesRingActivity = animatesRingActivity
         self.splitAccounts = splitAccounts
         self.spendSpan = spendSpan
+        self.spendActivityView = spendActivityView
         self.readsTokenSpend = readsTokenSpend
         self.alertThreshold = alertThreshold
         self.alertsOnReset = alertsOnReset
@@ -1797,6 +1823,7 @@ final class AppSettings {
             animatesRingActivity: defaults.object(forKey: Key.animatesRingActivity) as? Bool ?? true,
             splitAccounts: Set(defaults.stringArray(forKey: Key.splitAccounts) ?? []),
             spendSpan: Self.storedSpendSpan(in: defaults),
+            spendActivityView: Self.storedSpendActivityView(in: defaults),
             readsTokenSpend: Self.storedReadsTokenSpend(in: defaults),
             alertThreshold: (defaults.object(forKey: Key.alertThreshold) as? Int)
                 .flatMap(AlertThreshold.init(rawValue:)) ?? .default,
@@ -1980,6 +2007,7 @@ final class AppSettings {
         static let animatesRingActivity = "settings.animatesRingActivity"
         static let splitAccounts = "settings.splitAccounts"
         static let spendSpan = "settings.spendSpan"
+        static let spendActivityView = "settings.spendActivityView"
         static let readsTokenSpend = "settings.readsTokenSpend"
         static let alertThreshold = "settings.alertThreshold"
         static let alertsOnReset = "settings.alertsOnReset"

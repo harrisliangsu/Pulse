@@ -1099,3 +1099,12 @@
 "Couldn't make the image." = "沒能製作圖片。";
 "Saved" = "已儲存";
 "Save here" = "儲存到這裡";
+"Token activity" = "Token 活動";
+"Daily" = "每天";
+"Weekly" = "每週";
+"Cumulative" = "累計總量";
+"%@ tokens in the last 12 months" = "近 12 個月共 %@ tokens";
+"%@ over the last 12 months, %@ active days" = "近 12 個月：%@，%@ 天有記錄";
+"Less" = "少";
+"More" = "多";
+"Total through %@" = "截至 %@ 累計";

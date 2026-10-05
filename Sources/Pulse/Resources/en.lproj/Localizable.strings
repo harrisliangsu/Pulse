@@ -1099,3 +1099,12 @@
 "Couldn't make the image." = "Couldn't make the image.";
 "Saved" = "Saved";
 "Save here" = "Save here";
+"Token activity" = "Token activity";
+"Daily" = "Daily";
+"Weekly" = "Weekly";
+"Cumulative" = "Cumulative";
+"%@ tokens in the last 12 months" = "%@ tokens in the last 12 months";
+"%@ over the last 12 months, %@ active days" = "%@ over the last 12 months, %@ active days";
+"Less" = "Less";
+"More" = "More";
+"Total through %@" = "Total through %@";
