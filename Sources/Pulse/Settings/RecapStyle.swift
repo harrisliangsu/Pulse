@@ -120,7 +120,12 @@ struct RecapRichText: View {
         var result = AttributedString()
         for segment in RecapEmphasis.segments(text) {
             // A no-break space either side stands in for the bar's padding.
-            var piece = AttributedString(segment.emphasised && highlights ? "\u{00A0}\(segment.text)\u{00A0}" : segment.text)
+            // **One bar is one piece.** Korean breaks between "2025" and
+            // "년", and a bar split over two lines read as two highlights:
+            // a word joiner between every character keeps it whole.
+            let unbroken = segment.text.map(String.init).joined(separator: "\u{2060}")
+                .replacingOccurrences(of: " ", with: "\u{00A0}")
+            var piece = AttributedString(segment.emphasised && highlights ? "\u{00A0}\(unbroken)\u{00A0}" : segment.text)
             piece.font = .recap(size, segment.emphasised ? emphasisWeight : weight)
             piece.foregroundColor = color
             if segment.emphasised, highlights { piece.backgroundColor = RecapColor.lime }
