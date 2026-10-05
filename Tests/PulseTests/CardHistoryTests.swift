@@ -13,10 +13,11 @@ struct CardHistoryTests {
         #expect(Provider.glmCoding.cardHistory == .accountStatistics)
         #expect(Provider.kimiCode.cardHistory == .agents([.kimiCLI]))
         // A provider with no records anywhere has no section to show — until
-        // its console sign-in is kept. `DeepSeekConsoleTests`, running in
-        // parallel, keeps one for a moment, so the rule is checked as it stands.
-        let deepSeek = Provider.deepSeek.cardHistory
-        #expect(deepSeek == nil || deepSeek == .accountLogs)
+        // its console sign-in is kept. Passed in: whether one is kept is this
+        // Mac's state (another test's `loadAPIKeys()` reads the real store).
+        #expect(Provider.deepSeek.cardHistory(openCodeSession: false, deepSeekSession: false) == nil)
+        #expect(Provider.deepSeek.cardHistory(openCodeSession: false, deepSeekSession: true) == .accountLogs)
+        #expect(Provider.openCodeGo.cardHistory(openCodeSession: true, deepSeekSession: false) == .accountLogs)
     }
 
     @Test func onlyThisMacsRecordsWaitForTokenSpend() {

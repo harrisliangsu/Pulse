@@ -69,7 +69,7 @@ struct ClaudeCodeUsageService: Sendable {
             return await ClaudeDesktopSession.usage(for: AccountKey(.claudeCode)).recording(.desktopSession)
 
         case .endpoint:
-            guard let token = loadAccessToken() else {
+            guard let token = await loadAccessToken() else {
                 return ProviderUsage.unavailable(.claudeCode, reason: .claudeSignInRequired).recording(.endpoint)
             }
             return await endpointUsage(account: AccountKey(.claudeCode), token: token).recording(.endpoint)
@@ -79,7 +79,7 @@ struct ClaudeCodeUsageService: Sendable {
             // token is still evidence of a login, and asking twice means
             // spawning `security` twice a pass — which is the thing the read
             // was pulled out of the loop to stop.
-            let credentials = storedCredentials()
+            let credentials = await storedCredentials()
             let hadCredentials = credentials != nil
             var attempts: [ConnectionDiagnostic.Attempt] = []
             if let token = credentials.flatMap(Self.unexpiredAccessToken) {
@@ -201,8 +201,8 @@ struct ClaudeCodeUsageService: Sendable {
 
     // MARK: - Credentials
 
-    private func loadAccessToken() -> String? {
-        storedCredentials().flatMap(Self.unexpiredAccessToken)
+    private func loadAccessToken() async -> String? {
+        await storedCredentials().flatMap(Self.unexpiredAccessToken)
     }
 
     /// The blob as stored, expired or not.
@@ -211,33 +211,35 @@ struct ClaudeCodeUsageService: Sendable {
     /// questions: "is there a usable token" and "is this person signed in at
     /// all". Reading only the first cannot tell an expired login from no login,
     /// which is the whole distinction the card is trying to draw.
-    private func storedCredentials() -> [String: Any]? {
-        readKeychainCredentials() ?? readCredentialsFile()
+    private func storedCredentials() async -> [String: Any]? {
+        if let kept = await readKeychainCredentials() { return kept }
+        return readCredentialsFile()
     }
 
     /// The credentials blob Claude Code stores, or nil if it can't be read.
     ///
     /// Shelling out to `security` keeps this to the same access the CLI itself
-    /// uses. Note the first read can raise a permission prompt; the process is
-    /// short-lived and its failure is handled, so a refused prompt degrades to
-    /// the status line route rather than hanging the panel.
-    private func readKeychainCredentials() -> [String: Any]? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/security")
-        process.arguments = ["find-generic-password", "-s", keychainService, "-w"]
-
-        let output = Pipe()
-        process.standardOutput = output
-        process.standardError = FileHandle.nullDevice
-
-        guard (try? process.run()) != nil else { return nil }
-
-        let data = output.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else { return nil }
-
+    /// uses. The first read can raise a permission prompt, and **a prompt
+    /// nobody answers must not hold the pass**: the read goes through
+    /// `BoundedProcess`, off the cooperative pool and ended at
+    /// `keychainDeadline` — long enough for a person to read the prompt and
+    /// click, short of `UsageStore`'s own watchdog. A refused or unanswered
+    /// prompt degrades to the credentials file and then the status line,
+    /// rather than freezing every provider's refresh behind it.
+    private func readKeychainCredentials() async -> [String: Any]? {
+        let result = await BoundedProcess.run(
+            URL(fileURLWithPath: "/usr/bin/security"),
+            ["find-generic-password", "-s", keychainService, "-w"],
+            environment: nil,
+            deadline: Self.keychainDeadline,
+            outputCeiling: 1 << 20
+        )
+        guard case .success(let data) = result else { return nil }
         return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
     }
+
+    /// How long a keychain read may wait, permission prompt included.
+    static let keychainDeadline: TimeInterval = 60
 
     private func readCredentialsFile() -> [String: Any]? {
         guard let data = try? Data(contentsOf: credentialsFile) else { return nil }
