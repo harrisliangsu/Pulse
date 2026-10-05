@@ -615,16 +615,20 @@ final class UsageAlerts {
     init(settings: AppSettings, file: URL = UsageAlerts.file, outageFile: URL = UsageAlerts.outagesFile) {
         self.settings = settings
         memoryFile = file
-        advanceFile = file.deletingLastPathComponent().appending(path: "advance-reminders.json")
+        // Both memories have to be stored before either file is read back
+        // through `self`: Swift rejects a use of one property while another
+        // is still unset.
+        let reminders = file.deletingLastPathComponent().appending(path: "advance-reminders.json")
+        advanceFile = reminders
         self.outageFile = outageFile
         memory = (try? Data(contentsOf: file))
             .flatMap { try? JSONDecoder().decode(AlertMemory.self, from: $0) } ?? AlertMemory()
-        if let data = try? Data(contentsOf: advanceFile),
+        outages = (try? Data(contentsOf: outageFile))
+            .flatMap { try? JSONDecoder().decode(OutageMemory.self, from: $0) } ?? OutageMemory()
+        if let data = try? Data(contentsOf: reminders),
            let stored = try? JSONDecoder().decode(AdvanceReminderBook.Memory.self, from: data) {
             advance.memory = stored
         }
-        outages = (try? Data(contentsOf: outageFile))
-            .flatMap { try? JSONDecoder().decode(OutageMemory.self, from: $0) } ?? OutageMemory()
     }
 
     /// Wires up what happens when one is clicked, and reads the current grant.
