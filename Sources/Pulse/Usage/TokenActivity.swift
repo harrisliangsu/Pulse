@@ -135,7 +135,7 @@ struct TokenActivity: Equatable, Sendable {
     static func window(today: Date, calendar: Calendar) -> (start: Date, gridStart: Date) {
         let weekStart = { (date: Date) in calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date }
         let year = calendar.date(byAdding: .year, value: -1, to: today) ?? today
-        let candidate = calendar.date(byAdding: .day, value: 1, to: year) ?? year
+        let candidate = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: year) ?? year)
         let longest = calendar.date(byAdding: .weekOfYear, value: -52, to: weekStart(today)) ?? candidate
         let start = max(candidate, longest)
         return (start, weekStart(start))
@@ -185,8 +185,10 @@ struct TokenActivity: Equatable, Sendable {
                     days.append(nil)
                 }
                 unrecorded.append(date >= start && date < firstDrawn)
+                // Back to the day's start: where DST begins at midnight (Cairo,
+                // Santiago) adding a day lands on 01:00 and would stay there.
                 guard let next = calendar.date(byAdding: .day, value: 1, to: date) else { break }
-                date = next
+                date = calendar.startOfDay(for: next)
             }
             while days.count < 7 { days.append(nil) }
             while unrecorded.count < 7 { unrecorded.append(false) }

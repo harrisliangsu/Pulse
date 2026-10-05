@@ -59,19 +59,25 @@ extension RecapDeck {
 
     /// "Active 27 of 30 days", with the days in bold.
     var activeDaysLine: String {
-        .localized("Active \(RecapEmphasis.mark("\(recap.activeDays)")) of \("\(recap.elapsedDays)") days")
+        let active = RecapEmphasis.mark("\(recap.activeDays)")
+        // "of 1 days" on a running month's first day: the singular is its own key.
+        return recap.elapsedDays == 1
+            ? .localized("Active \(active) of 1 day")
+            : .localized("Active \(active) of \("\(recap.elapsedDays)") days")
     }
 
     /// "412 sessions".
-    func sessionsText(_ count: Int) -> String { .localized("\("\(count)") sessions") }
+    func sessionsText(_ count: Int) -> String { RecapWords.sessions(count) }
 
-    /// "↑ 38%" and "vs August", for a period with something before it to
-    /// compare to. Nil without it: a percentage of nothing is not a number.
+    /// "↑ 38%" and "vs same period in August", for a period with something
+    /// before it to compare to. `Recap.previousTokens` is counted over the same
+    /// number of days of the period before, so every card says "same period".
+    /// Nil without it: a percentage of nothing is not a number.
     var change: (arrow: String, percent: String, versus: String)? {
         guard let previous = recap.previousTokens, previous > 0 else { return nil }
         let delta = Int(((Double(recap.tokens) / Double(previous) - 1) * 100).rounded())
         let arrow = delta > 0 ? "↑" : (delta < 0 ? "↓" : "→")
-        return (arrow, "\(abs(delta))%", .localized("vs \(previousName)"))
+        return (arrow, "\(abs(delta))%", .localized("vs same period in \(previousName)"))
     }
 
     /// The tokens a day, over the days the period has had.

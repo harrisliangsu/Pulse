@@ -134,8 +134,10 @@ struct RecapMonthsView: View {
             }
             Rectangle().fill(RecapColor.ink).frame(height: 2).padding(.top, 34)
             VStack(spacing: 0) {
-                ForEach(months) { month in
-                    row(month, maximum: maximum, isBusiest: month.month == busiest?.month)
+                let insights = RecapInsights(recap)
+                ForEach(Array(months.enumerated()), id: \.element.id) { index, month in
+                    row(month, maximum: maximum, isBusiest: month.month == busiest?.month,
+                        toCome: insights.isMonthToCome(index))
                 }
             }
             .padding(.top, 14)
@@ -144,7 +146,9 @@ struct RecapMonthsView: View {
         }
     }
 
-    private func row(_ month: Recap.Month, maximum: Int, isBusiest: Bool) -> some View {
+    /// One month as a row; a month still to come in a running year is a
+    /// dashed outline with no figure, not a quiet month's sliver of a bar.
+    private func row(_ month: Recap.Month, maximum: Int, isBusiest: Bool, toCome: Bool) -> some View {
         let fraction = max(CGFloat(month.tokens) / CGFloat(maximum), 0.02)
         return HStack(spacing: 0) {
             Text(verbatim: RecapFormat.shortMonthName(month.month))
@@ -155,13 +159,19 @@ struct RecapMonthsView: View {
                 .frame(width: 104, alignment: .leading)
             GeometryReader { proxy in
                 HStack(spacing: 14) {
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(isBusiest ? RecapColor.ink : RecapColor.restBar)
-                        .frame(width: max(6, (proxy.size.width - 150) * fraction), height: isBusiest ? 42 : 30)
-                    Text(verbatim: RecapFormat.tokens(month.tokens).text)
-                        .font(.recap(18, isBusiest ? .semibold : .regular, mono: true))
-                        .foregroundStyle(isBusiest ? RecapColor.ink : RecapColor.secondary)
-                        .lineLimit(1)
+                    if toCome {
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .strokeBorder(RecapColor.rule, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                            .frame(width: 30, height: 30)
+                    } else {
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .fill(isBusiest ? RecapColor.ink : RecapColor.restBar)
+                            .frame(width: max(6, (proxy.size.width - 150) * fraction), height: isBusiest ? 42 : 30)
+                        Text(verbatim: RecapFormat.tokens(month.tokens).text)
+                            .font(.recap(18, isBusiest ? .semibold : .regular, mono: true))
+                            .foregroundStyle(isBusiest ? RecapColor.ink : RecapColor.secondary)
+                            .lineLimit(1)
+                    }
                     Spacer(minLength: 0)
                 }
                 .frame(maxHeight: .infinity)

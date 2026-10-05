@@ -147,6 +147,22 @@ struct TokenActivityTests {
         #expect(last.days.compactMap { $0 }.count == 1)
     }
 
+    @Test("A midnight DST start does not knock the days after it off their keys")
+    func midnightDaylightSaving() throws {
+        // Cairo springs forward at 00:00 on the last Friday of April: that day
+        // starts at 01:00, and stepping by a day used to stay at 01:00.
+        var cairo = Calendar(identifier: .gregorian)
+        cairo.timeZone = try #require(TimeZone(identifier: "Africa/Cairo"))
+        cairo.firstWeekday = 2
+        let september = try #require(cairo.date(from: DateComponents(year: 2026, month: 9, day: 1)))
+        let now = try #require(cairo.date(from: DateComponents(year: 2026, month: 10, day: 5, hour: 15)))
+        let result = TokenActivity.of([.claudeCode: Self.ledger([(september, 70)])], now: now, calendar: cairo)
+        let drawn = result.weeks.flatMap(\.drawn)
+        #expect(drawn.first { $0.date == september }?.tokens == 70)
+        #expect(result.total == 70)
+        #expect(drawn.last?.date == cairo.startOfDay(for: now))
+    }
+
     @Test("Days in the window before the first record are outlines, never days with a count")
     func unrecordedOutlines() throws {
         let first = Self.date(2026, 1, 15)

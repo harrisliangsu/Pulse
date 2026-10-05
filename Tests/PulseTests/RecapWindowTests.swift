@@ -329,6 +329,37 @@ struct RecapWindowTests {
         model.windowDidClose()
     }
 
+    @Test("A window shown again reads again only once its read is half an hour or a day old")
+    @MainActor
+    func reshownWindowRereadsWhenStale() async throws {
+        final class State { var loads = 0; var now = RecapWindowTests.at(2026, 10, 3) }
+        let state = State()
+        let model = RecapWindowModel(
+            settings: AppSettings(readsTokenSpend: true),
+            now: { state.now },
+            load: { _ async throws -> RecapSource.Loaded in
+                state.loads += 1
+                return RecapSource.Loaded(ledgers: [:], prices: [:], earliest: nil)
+            }
+        )
+        model.begin(on: nil)
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(state.loads == 1)
+
+        // Shown again ten minutes on: what was read is still good.
+        state.now = state.now.addingTimeInterval(10 * 60)
+        model.begin(on: nil)
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(state.loads == 1)
+
+        // Shown again an hour on: read again, so "to date" is today's.
+        state.now = state.now.addingTimeInterval(60 * 60)
+        model.begin(on: nil)
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(state.loads == 2)
+        model.windowDidClose()
+    }
+
     @Test("The card on screen is kept by identity, and falls back to the first when it goes")
     @MainActor
     func cardIsKeptByIdentity() {

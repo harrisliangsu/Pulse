@@ -104,6 +104,9 @@ final class RecapWindow: NSWindow {
     var onArrow: ((Int) -> Void)?
 
     override func close() {
+        // Ends the price field's editing first, which commits what was typed:
+        // closing mid-entry keeps the price, as Return or a click away would.
+        makeFirstResponder(nil)
         onClose?()
         super.close()
     }

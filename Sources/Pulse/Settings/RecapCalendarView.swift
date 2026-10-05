@@ -36,7 +36,7 @@ struct RecapCalendarHero: View {
                     }
                 Spacer(minLength: 0)
                 VStack(alignment: .trailing, spacing: 12) {
-                    if let change = deck.change {
+                    if let change = deck.sameSpanChange {
                         RecapPill(fill: RecapColor.ink, horizontal: 12, vertical: 6) {
                             Text(verbatim: "\(change.arrow) \(change.percent) \(change.versus)")
                                 .font(.recap(18))
@@ -251,7 +251,7 @@ struct RecapCalendarTiles: View {
                     .foregroundStyle(RecapTileTone.white.caption)
                     .recapFit(0.6)
                 RecapFigureText(
-                    figure: .init(number: "\(recap.longestStreak)", unit: .localized("days")),
+                    figure: .init(number: "\(recap.longestStreak)", unit: RecapWords.daysUnit(recap.longestStreak)),
                     numberSize: 48, unitSize: 24, unitWeight: .bold, tracking: -0.03, unitGap: 6
                 )
                 Spacer(minLength: 0)

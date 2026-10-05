@@ -1003,10 +1003,9 @@
 "Early bird" = "아침형";
 "Day shift" = "낮 시간형";
 "All day" = "하루 종일형";
-"In %@, you and AI worked through" = "%@, 당신과 AI가 함께 처리한 양";
-"Active %@ of %@ days" = "%@ / %@일 사용";
+"In %@, you and AI worked through" = "%@, AI와 함께 처리한 양";
+"Active %@ of %@ days" = "활동일 %@ / %@일";
 "%@ sessions" = "세션 %@개";
-"vs %@" = "%@ 대비";
 "Counted from this Mac's local records · money estimated at API prices" = "이 Mac의 로컬 기록 기준 · 금액은 API 요금으로 추산";
 "Counted from this Mac's local records" = "이 Mac의 로컬 기록 기준";
 "Figures are to date." = "수치는 오늘까지의 기준입니다.";
@@ -1046,18 +1045,18 @@
 "Estimated at each model's published API price. The plan price is the one you typed in Pulse." = "각 모델이 공개한 API 요금으로 추산했습니다. 요금제 가격은 Pulse에 입력한 값입니다.";
 "Figures are to date, and the plan price is prorated by the days so far." = "수치는 오늘까지의 기준이며, 요금제 가격은 지금까지 지난 일수로 나눠 계산했습니다.";
 "That was" = "이것이";
-"your %@." = "당신의 %@입니다.";
+"your %@." = "%@입니다.";
 "Tokens" = "토큰";
 "Sessions" = "세션";
 "Most used" = "가장 많이 쓴 모델";
-"Your type" = "당신의 유형";
+"Your type" = "내 유형";
 "See you in %@" = "%@에 만나요";
 "Your busiest month" = "가장 많이 쓴 달";
 "vs same period in %@" = "%@ 같은 기간 대비";
 "Tokens · to %@" = "토큰 · %@ 기준";
 "Estimated at API prices · daily" = "API 요금 기준 추산 · 일별";
 "Estimated at API prices · monthly" = "API 요금 기준 추산 · 월별";
-"%@ per active day" = "기록이 있는 날 평균 %@개";
+"%@ per active day" = "활동일 평균 %@개";
 "Tools" = "도구";
 "Every day of %@" = "%@ 하루하루";
 "Busiest %@ · %@" = "최다 %@ · %@";
@@ -1079,8 +1078,8 @@
 "No records for %@" = "%@의 기록이 없습니다";
 "Nothing in this Mac's usage records falls in this period." = "이 Mac의 사용량 기록에 이 기간의 내용이 없습니다.";
 "The first read of a long history can take a minute or two." = "기록이 많으면 첫 읽기에 1~2분 걸릴 수 있습니다.";
-"Month" = "월별";
-"Year" = "연도별";
+"Month" = "월간";
+"Year" = "연간";
 "Monthly price" = "월 구독료";
 "Only used for the payback card. Leave it empty to leave that card out." = "‘구독 본전’ 카드에만 쓰입니다. 비워 두면 그 카드는 만들지 않습니다.";
 "Privacy" = "개인정보";
@@ -1096,7 +1095,7 @@
 "Daily" = "일별";
 "Weekly" = "주별";
 "Cumulative" = "누적";
-"%@ tokens in the last 12 months" = "최근 12개월 동안 %@ tokens";
+"%@ tokens in the last 12 months" = "최근 12개월 동안 %@ 토큰";
 "%@ over the last 12 months, %@ active days" = "최근 12개월: %@, 기록이 있는 날 %@일";
 "Less" = "적음";
 "More" = "많음";
@@ -1104,11 +1103,15 @@
 
 // Recap cards, redesigned: opener, calendar, timetable and payback
 "In all" = "모두";
-"tool" = "개 도구";
-"tools" = "개 도구";
+"tool" = "개의 도구";
+"tools" = "개의 도구";
 "%@ active days" = "활동일 %@일";
 "1 active day" = "활동일 1일";
 "1 day" = "1일";
+"day" = "일";
+"1 session" = "세션 1개";
+"1 agent" = "도구 1개";
+"Active %@ of 1 day" = "활동일 %@ / 1일";
 "Used %@ · top tool" = "%@ 사용 · 주력";
 "Which days · days used · token share" = "사용한 날 · 일수 · 토큰 비중";
 "Which months · days used · token share" = "사용한 달 · 일수 · 토큰 비중";
@@ -1124,8 +1127,8 @@
 "Usually starts" = "보통 시작";
 "The earliest hour of the day with any work" = "하루 중 가장 이른 기록 시각";
 "Finishes latest" = "가장 늦은 마무리";
-"One night ran past midnight" = "자정을 넘긴 밤은 1일";
-"%@ nights ran past midnight" = "자정을 넘긴 밤은 %@일";
+"One night ran past midnight" = "자정을 넘긴 밤이 1번";
+"%@ nights ran past midnight" = "자정을 넘긴 밤이 %@번";
 "9 PM to 5 AM" = "오후 9시~오전 5시";
 "of your usage fell in these hours" = "사용량 중 이 시간대의 비중";
 "Four parts of the day" = "하루의 네 구간";

@@ -316,7 +316,7 @@ struct RecapPaybackView: View {
 
     @ViewBuilder
     private var daily: some View {
-        if let bars = insights.costBars, let top = bars.max(), top > 0 {
+        if let bars = insights.costBars, let top = bars.compactMap({ $0 }).max(), top > 0 {
             let best = bars.firstIndex(of: top)
             VStack(spacing: 10) {
                 RecapHairline(strong: true).padding(.bottom, 8)
@@ -326,10 +326,18 @@ struct RecapPaybackView: View {
                 )
                 HStack(alignment: .bottom, spacing: 4) {
                     ForEach(bars.indices, id: \.self) { index in
-                        RoundedRectangle(cornerRadius: 3, style: .continuous)
-                            .fill(index == best ? RecapColor.ink : (bars[index] > 0 ? RecapColor.lime : RecapColor.restBar))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: max(4, CGFloat(bars[index] / top) * 90))
+                        if let bar = bars[index] {
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .fill(index == best ? RecapColor.ink : (bar > 0 ? RecapColor.lime : RecapColor.restBar))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: max(4, CGFloat(bar / top) * 90))
+                        } else {
+                            // A month still to come: an outline, not a zero.
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .strokeBorder(RecapColor.rule, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 12)
+                        }
                     }
                 }
                 .frame(height: 92, alignment: .bottom)

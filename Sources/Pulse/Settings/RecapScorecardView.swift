@@ -168,7 +168,7 @@ struct RecapScorecardView: View {
             cells.append(Cell(id: cells.count, figure: figure, label: label, wordUnit: word, widget: widget))
         }
         let slots = deck.scoreBars.map(\.slot)
-        add(.init(number: "\(recap.activeDays)", unit: .localized("days")), .localized("Active days"), word: true,
+        add(.init(number: "\(recap.activeDays)", unit: RecapWords.daysUnit(recap.activeDays)), .localized("Active days"), word: true,
             widget: slots.isEmpty ? nil : .pips(slots))
         var note: Widget?
         if let perDay = deck.sessionsPerActiveDay {

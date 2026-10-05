@@ -1004,9 +1004,8 @@
 "Day shift" = "日中型";
 "All day" = "終日型";
 "In %@, you and AI worked through" = "%@、あなたと AI が処理したのは";
-"Active %@ of %@ days" = "利用日 %@ / %@ 日";
+"Active %@ of %@ days" = "活動日 %@ / %@ 日";
 "%@ sessions" = "%@ セッション";
-"vs %@" = "%@比";
 "Counted from this Mac's local records · money estimated at API prices" = "この Mac のローカル記録から集計 · 金額は API 料金で概算";
 "Counted from this Mac's local records" = "この Mac のローカル記録から集計";
 "Figures are to date." = "数字は本日までのものです。";
@@ -1032,8 +1031,8 @@
 "Still going · longest %@" = "継続中 · 最長 %@";
 "Top projects" = "よく使ったプロジェクト";
 "In %@," = "%@、";
-"%@ AI tools coded with you." = "%@ つの AI と一緒にコードを書いた。";
-"One AI tool coded with you." = "ひとつの AI と一緒にコードを書いた。";
+"%@ AI tools coded with you." = "%@つの AI が、あなたと一緒にコードを書きました。";
+"One AI tool coded with you." = "ひとつの AI が、あなたと一緒にコードを書きました。";
 "Worked beside you" = "一緒に働いたツール";
 "Turn the page to see what you made together" = "めくって、一緒に何をしたか見てみましょう";
 "is your busiest hour of the day." = "は、あなたの一日でいちばん忙しい時間です。";
@@ -1057,7 +1056,7 @@
 "Tokens · to %@" = "トークン · %@まで";
 "Estimated at API prices · daily" = "API 料金で概算 · 日別";
 "Estimated at API prices · monthly" = "API 料金で概算 · 月別";
-"%@ per active day" = "記録のある日は平均 %@ 件";
+"%@ per active day" = "活動日は平均 %@ 件";
 "Tools" = "ツール";
 "Every day of %@" = "%@の毎日";
 "Busiest %@ · %@" = "最多 %@ · %@";
@@ -1096,7 +1095,7 @@
 "Daily" = "毎日";
 "Weekly" = "毎週";
 "Cumulative" = "累計";
-"%@ tokens in the last 12 months" = "過去 12 か月の合計 %@ tokens";
+"%@ tokens in the last 12 months" = "過去 12 か月の合計 %@ トークン";
 "%@ over the last 12 months, %@ active days" = "過去 12 か月：%@、記録のある日は %@ 日";
 "Less" = "少";
 "More" = "多";
@@ -1109,6 +1108,10 @@
 "%@ active days" = "活動日 %@ 日";
 "1 active day" = "活動日 1 日";
 "1 day" = "1 日";
+"day" = "日";
+"1 session" = "1 セッション";
+"1 agent" = "1 個のツール";
+"Active %@ of 1 day" = "活動日 %@ / 1 日";
 "Used %@ · top tool" = "%@使用 · メイン";
 "Which days · days used · token share" = "使った日 · 日数 · トークンの割合";
 "Which months · days used · token share" = "使った月 · 日数 · トークンの割合";

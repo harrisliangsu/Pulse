@@ -1006,7 +1006,6 @@
 "In %@, you and AI worked through" = "In %@, you and AI worked through";
 "Active %@ of %@ days" = "Active %@ of %@ days";
 "%@ sessions" = "%@ sessions";
-"vs %@" = "vs %@";
 "Counted from this Mac's local records · money estimated at API prices" = "Counted from this Mac's local records · money estimated at API prices";
 "Counted from this Mac's local records" = "Counted from this Mac's local records";
 "Figures are to date." = "Figures are to date.";
@@ -1070,10 +1069,10 @@
 "View %@ yearly recap" = "View %@ recap";
 "Shareable cards for a month or a year, from this Mac's records." = "Shareable cards for a month or a year, from this Mac's records.";
 "When a recap is ready" = "When a recap is ready";
-"Last month's recap, at the start of the month. Needs Token spend reading." = "Last month's recap, at the start of the month. Needs Token spend reading.";
+"Last month's recap, at the start of the month. Needs Token spend reading." = "Last month's recap, at the start of the month. Needs “Read local usage records”.";
 "Your %@ recap is ready" = "Your %@ recap is ready";
 "The recap needs Token spend" = "The recap needs Token spend";
-"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on.";
+"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "It is built from the usage records on this Mac, which Pulse reads only while “Read local usage records” is on.";
 "Open Token spend" = "Open Token spend";
 "The records could not be read." = "The records could not be read.";
 "No records for %@" = "No records for %@";
@@ -1109,6 +1108,10 @@
 "%@ active days" = "%@ active days";
 "1 active day" = "1 active day";
 "1 day" = "1 day";
+"day" = "day";
+"1 session" = "1 session";
+"1 agent" = "1 agent";
+"Active %@ of 1 day" = "Active %@ of 1 day";
 "Used %@ · top tool" = "Used %@ · top tool";
 "Which days · days used · token share" = "Which days · days used · token share";
 "Which months · days used · token share" = "Which months · days used · token share";

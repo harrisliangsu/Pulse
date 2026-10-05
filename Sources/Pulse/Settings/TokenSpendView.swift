@@ -400,8 +400,10 @@ struct TokenSpendView: View {
 
     // MARK: - The year
 
-    /// Not drawn for a Mac with no record in the last twelve months: an empty
-    /// grid would say "quiet" about days nothing was read for.
+    /// Not drawn for a Mac with no record at all: an empty grid would say
+    /// "quiet" about days nothing was read for. A history that ends more than
+    /// twelve months ago is drawn as a quiet year, because those days were
+    /// read and nothing was in them.
     @ViewBuilder private var activitySection: some View {
         if !activity.isEmpty {
             TokenActivitySection(activity: activity, view: $activityView)

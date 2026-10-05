@@ -542,12 +542,14 @@ struct UsageLedger: Sendable, Equatable {
         guard count > 0, let first = days.first,
               let start = calendar.date(byAdding: .day, value: -(count - 1), to: today) else { return [] }
         let byDate = Dictionary(days.map { (calendar.startOfDay(for: $0.date), $0) }) { kept, _ in kept }
-        var cursor = max(start, calendar.startOfDay(for: first.date))
+        var cursor = max(calendar.startOfDay(for: start), calendar.startOfDay(for: first.date))
         var span: [LedgerDay] = []
         while cursor <= today {
             span.append(byDate[cursor] ?? LedgerDay(date: cursor, tokens: 0, cost: 0, unpricedTokens: 0, models: [:]))
+            // `startOfDay` again: a midnight DST start would otherwise leave
+            // every later day at 01:00, off its key.
             guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
-            cursor = next
+            cursor = calendar.startOfDay(for: next)
         }
         return span
     }
@@ -917,8 +919,10 @@ actor UsageLedgerReader {
                 byDate[cursor]
                     ?? LedgerDay(date: cursor, tokens: 0, cost: 0, unpricedTokens: 0, models: [:])
             )
+            // `startOfDay` again: a midnight DST start would otherwise leave
+            // every later day at 01:00, off its key.
             guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
-            cursor = next
+            cursor = calendar.startOfDay(for: next)
         }
 
         return UsageLedger(

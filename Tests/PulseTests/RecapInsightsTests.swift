@@ -249,6 +249,10 @@ struct RecapInsightsTests {
         let year = Self.recap(days: Self.september([1]), period: .year(2026), months: months, cost: 70)
         #expect(RecapInsights(year).costBars == [1, 2, 3, 0, 5, 6, 7, 8, 9, 10, 11, 12])
 
+        // A free model's day is priced at zero, and is still a price.
+        let free = Self.september([10, 20], cost: { $0 == 10 ? 0 : 5 })
+        #expect(RecapInsights(Self.recap(days: free, cost: 5)).costBars == [0, 5])
+
         var broken = months
         broken[8] = Recap.Month(month: 9, tokens: 100, cost: nil, activeDays: 1)
         #expect(RecapInsights(Self.recap(days: Self.september([1]), period: .year(2026), months: broken, cost: 70)).costBars == nil)
@@ -281,5 +285,31 @@ struct RecapInsightsTests {
         #expect(marks[2] == .quiet)
         #expect(marks[1] == .other)
         #expect(marks[5] == .used)
+    }
+
+    @Test("In a running year the months to come are neither quiet nor zero")
+    func monthsToCome() {
+        // 2026 read on 10 March: April to December have not begun.
+        let months = (1...12).map { Recap.Month(month: $0, tokens: $0 <= 3 ? 10 : 0, cost: $0 <= 3 ? 1 : nil, activeDays: $0 <= 3 ? 1 : 0) }
+        let codex = Self.agent(.codex, on: [Self.date(2, 3)])
+        let base = Self.recap(days: [Recap.Day(date: Self.date(3, 10), tokens: 5, cost: 1)], period: .year(2026), months: months,
+                              agents: [codex], cost: 3)
+        let running = Recap(
+            period: base.period, start: Self.date(1, 1), end: Self.date(3, 11), isInProgress: true,
+            tokens: base.tokens, cost: base.cost, unpricedTokens: 0, previousTokens: nil,
+            activeDays: base.activeDays, elapsedDays: base.elapsedDays, sessions: 1,
+            days: base.days, months: months, hours: nil, peakHour: nil, lateShare: nil, latestMinute: nil, lateNights: 0,
+            persona: nil, models: [], agents: [codex], projects: [], cacheHitRate: nil, cacheSavings: nil,
+            currentStreak: 0, longestStreak: 0, busiestDay: nil, currency: "USD", isPartial: false
+        )
+        let insights = RecapInsights(running)
+        #expect(insights.isMonthToCome(2) == false)
+        #expect(insights.isMonthToCome(3))
+        let marks = insights.marks(of: codex)
+        #expect(marks[1] == .used)
+        #expect(marks[3...].allSatisfy { $0 == .toCome })
+        let bars = insights.costBars
+        #expect(bars?[0...2].allSatisfy { $0 == 1 } == true)
+        #expect(bars?[3...].allSatisfy { $0 == nil } == true)
     }
 }

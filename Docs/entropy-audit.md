@@ -54,7 +54,7 @@ Historical snapshot, not a contract. When this page and the code disagree, the c
 
 | 位置 | 事实 |
 |---|---|
-| `Provider` 与 `SpendAgent` | `Provider.builtIn` 77 个环；`SpendAgent` 54 个 case。名字重叠，`sourceID` 与 inventory id 不同（`claude` 对 `claudeCode`）。Claude Code 与 Codex 走 `UsageLedgerReader` 与 `ledger-8-*.json`；其余走 `AgentLedgers`、`AgentCache` version 8，以及 5 个 legacy store。 |
+| `Provider` 与 `SpendAgent` | `Provider.builtIn` 77 个环；`SpendAgent` 54 个 case。名字重叠，`sourceID` 与 inventory id 不同（`claude` 对 `claudeCode`）。Claude Code 与 Codex 走 `UsageLedgerReader` 与 `ledger-9-*.json`；其余走 `AgentLedgers`、`AgentCache` version 8，以及 5 个 legacy store。 |
 | `ProviderUsage.Unavailability` | 约 60 个 case。Ollama、Xiaomi、Qoder、StepFun 各有 missing / expired / no-plan 专名；profiled 侧已有共享的 `sessionMissing`、`sessionExpired`、`noPlan`。每个新 case 同时进入 `message` 与 `AlertMemory.standing` 的三分。 |
 | Panel 输入路径 | `PointerEntryReporter`（只报 enter）+ `PanelPointerWatcher` 每 0.15s + `ActiveDisplayFollower` 每 0.25s + `FloatingPanel.sendEvent` + `PanelHitArea`。无 `.onHover`，无 global/local event monitor。 |
 | `Usage/UsageSource.swift:308` | `enum PanelMetrics` 定义在 Usage 目录。8 个 `nonisolated(unsafe)` 静态字段加 `NSLock`。`FloatingUsagePanelView` 用 `.id` 拼接 language 等字符串强制重建，因为 `PanelMetrics` 对 SwiftUI 不可观察。 |

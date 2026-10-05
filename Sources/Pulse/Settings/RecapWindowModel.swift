@@ -51,6 +51,18 @@ final class RecapWindowModel {
     private let now: () -> Date
     private var loaded: RecapSource.Loaded?
     private var cache: [Recap.Period: Recap] = [:]
+    /// When `loaded` was read. A window left open reads again when it is shown
+    /// or a period is chosen half an hour on, or on another day: a running
+    /// month's "to date" would otherwise stop where the first read did.
+    private var loadedAt: Date?
+    private static let freshFor: TimeInterval = 30 * 60
+
+    private var isStale: Bool {
+        guard let loadedAt else { return false }
+        let current = now()
+        return current.timeIntervalSince(loadedAt) > Self.freshFor
+            || !Recap.calendar.isDate(loadedAt, inSameDayAs: current)
+    }
     /// Whether the window is on screen. Nothing is read, and a change of the
     /// Token spend switch starts nothing, while it is not.
     private var isOpen = false
@@ -99,6 +111,10 @@ final class RecapWindowModel {
         periodChosen = true
         period = next
         card = .poster
+        if isStale {
+            start()
+            return
+        }
         rebuild()
     }
 
@@ -132,6 +148,7 @@ final class RecapWindowModel {
         loadTask = nil
         buildTask = nil
         loaded = nil
+        loadedAt = nil
         cache = [:]
         recap = nil
         earliest = nil
@@ -154,6 +171,7 @@ final class RecapWindowModel {
             buildTask?.cancel()
             loadTask = nil
             loaded = nil
+            loadedAt = nil
             cache = [:]
             recap = nil
             earliest = nil
@@ -163,9 +181,19 @@ final class RecapWindowModel {
             return
         }
         if loaded != nil {
-            phase = .ready
-            rebuild()
-            return
+            if !isStale {
+                phase = .ready
+                rebuild()
+                return
+            }
+            // Read too long ago: read again rather than draw an old "to date".
+            buildTask?.cancel()
+            buildTask = nil
+            loaded = nil
+            loadedAt = nil
+            cache = [:]
+            recap = nil
+            isBuilding = false
         }
         guard loadTask == nil else { return }
         phase = .loading
@@ -196,6 +224,7 @@ final class RecapWindowModel {
         loadTask = nil
         guard isOpen, settings.readsTokenSpend else { return }
         loaded = result
+        loadedAt = now()
         earliest = result.earliest
         if !periodChosen { period = RecapPeriods.defaultMonth(earliest: result.earliest, now: now()) }
         readProgress = nil

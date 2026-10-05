@@ -57,8 +57,11 @@ final class SettingsWindowController {
         // window is the only place Pulse reports it.
         alerts.refreshAuthorization()
 
+        // Centred when it comes up, not when it is already on screen: the
+        // recap's "Open Token spend" reaches an open window, which stays put.
+        let wasVisible = window.isVisible
         window.makeKeyAndOrderFront(nil)
-        window.center()
+        if !wasVisible { window.center() }
         dock.apply()
         NSApp.activate(ignoringOtherApps: true)
     }

@@ -64,7 +64,9 @@ final class RecapNotice {
             let due = await Task.detached(priority: .utility) {
                 Self.dueMonth(now: now, announced: announced, ledgers: ledgers)
             }.value
-            guard let month = due, settings.alertsOnRecap else { return }
+            // Read again after the awaits: a second check (the switch going on
+            // while the timer fires) may have announced this month meanwhile.
+            guard let month = due, settings.alertsOnRecap, settings.recapAnnouncedMonth != month.key else { return }
 
             // Remembered before it is posted, and whether or not the system
             // will show it: a month is announced once.

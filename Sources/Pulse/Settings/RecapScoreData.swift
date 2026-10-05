@@ -44,14 +44,9 @@ extension RecapDeck {
     /// The last day the recap has: today while the period runs.
     var lastDay: Date? { recap.days.last?.date }
 
-    /// "↑ 150%" and "vs the same stretch of September", for a period with
-    /// something before it to compare to. `Recap.previousTokens` is counted
-    /// over the same number of days of the period before, so "same period" is
-    /// literal. Nil without it: a percentage of nothing is not a number.
-    var sameSpanChange: (arrow: String, percent: String, versus: String)? {
-        guard let change = change else { return nil }
-        return (change.arrow, change.percent, .localized("vs same period in \(previousName)"))
-    }
+    /// The change chip every card draws (`change`), by the name the
+    /// scorecard was written against.
+    var sameSpanChange: (arrow: String, percent: String, versus: String)? { change }
 
     /// Sessions over days with work, rounded. Nil when either is none or the
     /// average rounds to nothing, so the card says nothing rather than "0".

@@ -13,7 +13,7 @@ enum RecapCard: String, Hashable, CaseIterable, Sendable {
     case yearCalendar
     /// A year: one bar per month.
     case months
-    /// Peak hour, and the 24 hours as rows.
+    /// Peak hour, on a dial and as 24 bars.
     case timetable
     /// What the period cost at API prices against the subscription price.
     case payback

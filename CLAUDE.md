@@ -53,6 +53,7 @@ Treat remaining warnings as failures. macOS 14+, Swift tools 6.0, no linter. **`
 | Settings window copy/layout | [Docs/ui/settings.md](Docs/ui/settings.md) |
 | Refresh, cache, activity, ledger | [Docs/refresh-and-data.md](Docs/refresh-and-data.md) |
 | Token spend pane, agents, spend readers | [Docs/token-spend.md](Docs/token-spend.md) |
+| Monthly / yearly recap cards and window | [Docs/recap.md](Docs/recap.md) |
 | Notifications, alert rules | [Docs/notifications.md](Docs/notifications.md) |
 | What is tested, fixtures | [Docs/testing.md](Docs/testing.md) |
 | `--json` output contract | [Docs/json-output.md](Docs/json-output.md) |

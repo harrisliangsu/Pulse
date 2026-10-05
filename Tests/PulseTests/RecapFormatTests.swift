@@ -66,6 +66,8 @@ struct RecapFormatTests {
         #expect(RecapFormat.percent(0) == "0%")
         #expect(RecapFormat.multiple(6.7123) == "6.7")
         #expect(RecapFormat.multiple(12.4) == "12")
+        #expect(RecapFormat.multiple(0.031) == "<0.1")
+        #expect(RecapFormat.multiple(0) == "0.0")
     }
 
     @Test("English reads the day in twelves; the other languages in 24 hours")

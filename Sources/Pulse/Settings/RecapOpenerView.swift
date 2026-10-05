@@ -279,6 +279,10 @@ struct RecapAgentStrip: View {
                         if marks[index] == .quiet {
                             RoundedRectangle(cornerRadius: radius, style: .continuous)
                                 .strokeBorder(Color(recap: 0xDCDCD5), lineWidth: 1)
+                        } else if marks[index] == .toCome {
+                            // Still to come: dashed, as the scorecard draws it.
+                            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                                .strokeBorder(RecapColor.rule, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                         }
                     }
                     .frame(width: cell, height: height)
@@ -292,7 +296,7 @@ struct RecapAgentStrip: View {
         case .used: RecapColor.ink
         case .other: Color(recap: 0xE2E2DB)
         case .quietWeekend: Color(recap: 0xEDEDE7)
-        case .quiet: .clear
+        case .quiet, .toCome: .clear
         }
     }
 }

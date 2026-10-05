@@ -12,6 +12,21 @@ enum RecapWords {
         count == 1 ? .localized("1 day") : .localized("\("\(count)") days")
     }
 
+    /// The unit after a count of days set as a figure: "days", "day".
+    static func daysUnit(_ count: Int) -> String {
+        count == 1 ? .localized("day") : .localized("days")
+    }
+
+    /// "412 sessions", "1 session".
+    static func sessions(_ count: Int) -> String {
+        count == 1 ? .localized("1 session") : .localized("\("\(count)") sessions")
+    }
+
+    /// "5 agents", "1 agent".
+    static func agents(_ count: Int) -> String {
+        count == 1 ? .localized("1 agent") : .localized("\("\(count)") agents")
+    }
+
     /// "8 active days", "1 active day".
     static func activeDays(_ count: Int) -> String {
         count == 1 ? .localized("1 active day") : .localized("\("\(count)") active days")

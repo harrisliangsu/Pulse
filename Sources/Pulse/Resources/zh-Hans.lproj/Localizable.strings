@@ -1006,7 +1006,6 @@
 "In %@, you and AI worked through" = "%@，你和 AI 一起处理了";
 "Active %@ of %@ days" = "活跃 %@ / %@ 天";
 "%@ sessions" = "%@ 个会话";
-"vs %@" = "较%@";
 "Counted from this Mac's local records · money estimated at API prices" = "数据来自这台 Mac 的本机记录 · 金额按 API 价格估算";
 "Counted from this Mac's local records" = "数据来自这台 Mac 的本机记录";
 "Figures are to date." = "数字截至今天。";
@@ -1057,7 +1056,7 @@
 "Tokens · to %@" = "Token · 截至%@";
 "Estimated at API prices · daily" = "按 API 价格估算 · 每天";
 "Estimated at API prices · monthly" = "按 API 价格估算 · 每月";
-"%@ per active day" = "有记录的日子平均 %@ 个";
+"%@ per active day" = "活跃日平均 %@ 个";
 "Tools" = "工具";
 "Every day of %@" = "%@每一天";
 "Busiest %@ · %@" = "最多 %@ · %@";
@@ -1109,6 +1108,10 @@
 "%@ active days" = "%@ 个活跃日";
 "1 active day" = "1 个活跃日";
 "1 day" = "1 天";
+"day" = "天";
+"1 session" = "1 个会话";
+"1 agent" = "1 个工具";
+"Active %@ of 1 day" = "活跃 %@ / 1 天";
 "Used %@ · top tool" = "用了 %@ · 主力";
 "Which days · days used · token share" = "哪几天 · 用了几天 · token 占比";
 "Which months · days used · token share" = "哪几个月 · 用了几天 · token 占比";
@@ -1119,8 +1122,8 @@
 "Average per active day: %@" = "平均每个活跃日 %@";
 "Weekdays %@" = "工作日 %@";
 "Weekends %@" = "周末 %@";
-"%@ weekdays, used on %@ of them" = "%@ 个工作日里用了 %@ 天";
-"%@ weekend days, used on %@ of them" = "%@ 个周末日里用了 %@ 天";
+"%@ weekdays, used on %@ of them" = "工作日 %@ 天里用了 %@ 天";
+"%@ weekend days, used on %@ of them" = "周末 %@ 天里用了 %@ 天";
 "Usually starts" = "通常开工";
 "The earliest hour of the day with any work" = "一天里最早有记录的时刻";
 "Finishes latest" = "最晚收工";

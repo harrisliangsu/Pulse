@@ -243,7 +243,8 @@ struct RecapInsights: Sendable {
     /// day be called the dearest, or the days drawn as a series.
     private var daysAreFullyPriced: Bool {
         let worked = recap.days.filter { $0.tokens > 0 }
-        return !worked.isEmpty && worked.allSatisfy { ($0.cost ?? 0) > 0 }
+        // A price of exactly zero (a free model) is a price; only nil is not.
+        return !worked.isEmpty && worked.allSatisfy { $0.cost != nil }
     }
 
     /// The day that cost most, the earliest of a tie. Nil where any working
@@ -256,18 +257,30 @@ struct RecapInsights: Sendable {
     }
 
     /// Money by day (a month) or by month (a year), one entry per day or
-    /// month with a quiet one a real zero — **nil unless every one with work
-    /// has a cost**: a bar for an unpriced day would be drawn as a zero.
-    var costBars: [Double]? {
+    /// month with a quiet one a real zero and a month still to come in a
+    /// running year nil — **nil altogether unless every one with work has a
+    /// cost**: a bar for an unpriced day would be drawn as a zero.
+    var costBars: [Double?]? {
         switch recap.period {
         case .month:
             guard daysAreFullyPriced else { return nil }
             return recap.days.map { $0.tokens > 0 ? ($0.cost ?? 0) : 0 }
         case .year:
             let worked = recap.months.filter { $0.tokens > 0 }
-            guard recap.months.count == 12, !worked.isEmpty, worked.allSatisfy({ ($0.cost ?? 0) > 0 }) else { return nil }
-            return recap.months.map { $0.tokens > 0 ? ($0.cost ?? 0) : 0 }
+            guard recap.months.count == 12, !worked.isEmpty, worked.allSatisfy({ $0.cost != nil }) else { return nil }
+            return recap.months.enumerated().map { index, month in
+                if isMonthToCome(index) { return nil }
+                return month.tokens > 0 ? (month.cost ?? 0) : 0
+            }
         }
+    }
+
+    /// Whether month `index` (0 for January) of a running year has not begun:
+    /// a month to come, which is not a quiet month and is not drawn as one.
+    func isMonthToCome(_ index: Int) -> Bool {
+        guard recap.isInProgress, case .year = recap.period, let last = recap.days.last?.date else { return false }
+        let starts = recap.monthStarts
+        return index < starts.count && starts[index] > last
     }
 
     // MARK: - Who worked when
@@ -282,6 +295,8 @@ struct RecapInsights: Sendable {
         case quietWeekend
         /// Nobody did, on a weekday (or in a month).
         case quiet
+        /// A month of a running year that has not begun.
+        case toCome
     }
 
     /// One mark per day of the period for an agent.
@@ -297,7 +312,8 @@ struct RecapInsights: Sendable {
     /// month at all. Empty for a month recap.
     func monthMarks(of agent: Recap.AgentShare) -> [Mark] {
         let used = Set(agent.activeDates.map { calendar.component(.month, from: $0) })
-        return recap.months.map { month in
+        return recap.months.enumerated().map { index, month in
+            if isMonthToCome(index) { return .toCome }
             if used.contains(month.month) { return .used }
             return month.tokens > 0 ? .other : .quiet
         }

@@ -496,8 +496,11 @@ struct SpendSummary: Equatable, Sendable {
                     unpricedTokens: dayUnpriced[cursor] ?? 0
                 )
             )
+            // `startOfDay` again: where DST begins at midnight (Santiago,
+            // Asunción) adding a day lands on 01:00 and every later day would
+            // miss its key.
             guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
-            cursor = next
+            cursor = calendar.startOfDay(for: next)
         }
 
         // Months are rolled up from the padded day series, so a month with no

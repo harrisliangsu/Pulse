@@ -48,6 +48,25 @@ struct SpendSummaryTests {
 
     // MARK: - The span
 
+    @Test("A month over a midnight DST start keeps every day on its own key")
+    func midnightDaylightSaving() throws {
+        // Santiago springs forward at 00:00 on Sunday 6 September 2026: that day
+        // starts at 01:00, and the padded series used to stay at 01:00 after it.
+        var santiago = Calendar(identifier: .gregorian)
+        santiago.timeZone = try #require(TimeZone(identifier: "America/Santiago"))
+        func date(_ month: Int, _ day: Int) throws -> Date {
+            try #require(santiago.date(from: DateComponents(year: 2026, month: month, day: day)))
+        }
+        let worked = try date(9, 20)
+        let ledger = Self.ledger([LedgerDay(date: worked, tokens: 50, cost: 1, unpricedTokens: 0, models: ["m": 50])])
+        let summary = SpendSummary.of(
+            [.claudeCode: ledger], from: try date(9, 1), until: try date(10, 1), now: try date(10, 5), calendar: santiago
+        )
+        #expect(summary.days.count == 30)
+        #expect(summary.days.allSatisfy { $0.date == santiago.startOfDay(for: $0.date) })
+        #expect(summary.days.first { $0.date == worked }?.tokens == 50)
+    }
+
     @Test("A span is a window on the calendar, not each ledger's last few rows")
     func spanIsADateWindow() {
         // Codex was used today; Claude Code was last used a fortnight ago.

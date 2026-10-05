@@ -88,9 +88,11 @@ enum RecapFormat {
         Figure(number: String(percent(share).dropLast()), unit: "%")
     }
 
-    /// "6.7" under ten, "42" from ten up.
+    /// "6.7" under ten, "42" from ten up, "<0.1" for a positive multiple that
+    /// would round to "0.0" — a zero is not what was used.
     static func multiple(_ value: Double) -> String {
-        String(format: value < 10 ? "%.1f" : "%.0f", value)
+        if value > 0, value < 0.05 { return "<0.1" }
+        return String(format: value < 10 ? "%.1f" : "%.0f", value)
     }
 
     // MARK: - Hours and clock times

@@ -7,6 +7,40 @@ shows in the update window — see [Scripts/changelog.py](Scripts/changelog.py).
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.8.0
+
+**中文**
+
+**新功能**
+
+- **月报和年报。** 把一个月或一年的 AI 编程记录做成一组可以分享的卡片：总览海报、陪你干活的工具、日历、一天里的时段、订阅回本，最后是一张成绩单。年报另有十二个月的日历和每月对比。在「设置 › Token 消耗」里点「查看九月的月报」或「查看 2026 年报」打开，可以保存、拷贝或分享图片。数据只来自这台 Mac 上的记录；缺的数据不画，不会用 0 补。
+- **回本卡由你填价格。** 在月报窗口里填上每月订阅价，就能看到用出了几倍；不填就没有这张卡。项目名默认显示，可以一键隐藏。
+- **月报好了可以提醒你。** 每月初提醒一次上个月的月报，点开直接看。在「设置 › 通知」的「月报生成时」，默认关闭。
+- **Token 活动图。** Token 消耗面板新增最近十二个月的用量图，可以按每天（一格一天）、每周或累计总量来看，鼠标指上去显示当天或当周的数字。
+
+**改进与修复**
+
+- **会话列表更干净。** Claude Code 的子代理记录并入它所属的会话，同一个会话不再重复出现好几次；Codex 会话用你真正说的第一句话作标题，自动审查的会话标为「Codex 自动审查」，标题里不再出现链接，也不会拿文件名当标题。
+- **项目名更准确。** 在仓库的工作树里干的活算在仓库名下；Codex 桌面版和 DeepSeek 的临时文件夹不再被当成项目。
+- **Gemini CLI 等十个图标显示正常。** 之前 macOS 画不全它们，Gemini CLI 只剩一个点。
+- **月报窗口打开时也显示 Dock 图标**，和设置窗口一样。
+
+**English**
+
+**New**
+
+- **Monthly and yearly recaps.** A month or a year of AI coding as a set of cards to share: an overview poster, the tools that worked with you, the calendar, your hours, whether your plan paid for itself, and a closing scorecard. The yearly recap adds twelve small calendars and a month-by-month comparison. Open it from Settings › Token spend with View September recap or View 2026 recap, then save, copy or share the images. Everything comes from this Mac's own records; what is missing is left out, never drawn as zero.
+- **A payback card at your price.** Type your monthly plan price in the recap window to see how many times over you used it; leave it empty and the card is left out. Project names are shown by default and can be hidden in one click.
+- **A note when the recap is ready.** Once a month, early in the month, for the month that ended; clicking it opens that recap. In Settings › Notifications, off by default.
+- **Token activity.** The Token spend pane charts the last twelve months by day (a square per day), by week or as a running total, with the day's or week's figure under the pointer.
+
+**Changed and fixed**
+
+- **Cleaner session lists.** Claude Code's subagent transcripts join the session they belong to, so one session no longer appears several times; Codex sessions are titled from the first thing you actually said, automatic reviews are marked Codex review, and titles no longer show links or fall back to a file name.
+- **Better project names.** Work in a repository's worktree counts under the repository; Codex Desktop's and DeepSeek's scratch folders are no longer taken for projects.
+- **Gemini CLI and nine other icons draw properly.** macOS drew them incompletely, Gemini CLI as a single dot.
+- **The Dock icon also shows while the recap window is open**, as it does for Settings.
+
 ## 1.7.3
 
 **中文**

@@ -78,7 +78,7 @@ struct RecapPosterView: View {
                         .font(.recap(18, .regular, mono: true))
                         .tracking(1.4)
                         .foregroundStyle(RecapColor.secondary)
-                    if let change = deck.change {
+                    if let change = deck.sameSpanChange {
                         RecapPill(fill: RecapColor.ink, horizontal: 12, vertical: 6) {
                             Text(verbatim: "\(change.arrow) \(change.percent)")
                                 .font(.recap(17, .semibold))
@@ -367,7 +367,7 @@ struct RecapPosterView: View {
                     .lineLimit(1)
                 ZStack {
                     RecapDonut(parts: parts, thickness: 13).frame(width: 96, height: 96)
-                    Text(String.localized("\("\(agents.count)") agents"))
+                    Text(RecapWords.agents(agents.count))
                         .font(.recap(13, .regular, mono: true))
                         .foregroundStyle(RecapColor.secondary)
                         .lineLimit(1)
@@ -436,7 +436,7 @@ struct RecapPosterView: View {
                         .font(.recap(76, .semibold))
                         .tracking(-76 * 0.04)
                         .lineLimit(1)
-                    Text(localized: "days")
+                    Text(RecapWords.daysUnit(streak.days))
                         .font(.recap(28))
                         .lineLimit(1)
                     RecapFlame()
