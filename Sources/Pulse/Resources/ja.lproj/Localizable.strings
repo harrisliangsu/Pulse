@@ -1056,3 +1056,33 @@
 "Over %@ days, you used AI on %@ of them." = "%@ 日のうち、%@ 日 AI を使いました。";
 "Busiest was %@: %@ in a single day." = "いちばん多かったのは %@、1 日で %@ でした。";
 "Rest" = "休み";
+
+// Recap window, entry points and notification
+"Monthly Recap" = "月間まとめ";
+"Yearly Recap" = "年間まとめ";
+"Monthly Recap…" = "月間まとめ…";
+"View %@ recap" = "%@のまとめを見る";
+"Shareable cards for a month or a year, from this Mac's records." = "この Mac の記録から、1か月または1年分の共有用カードを作ります。";
+"When a recap is ready" = "まとめができたとき";
+"Last month's recap, at the start of the month. Needs Token spend reading." = "月初に、先月のまとめができたことを知らせます。「ローカルの使用量記録を読み取る」がオンのときだけ使えます。";
+"Your %@ recap is ready" = "%@のまとめができました";
+"The recap needs Token spend" = "まとめには使用量記録の読み取りが必要です";
+"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "この Mac の使用量記録から作ります。Pulse が記録を読むのは、「ローカルの使用量記録を読み取る」がオンのときだけです。";
+"Open Token spend" = "トークン使用量を開く";
+"The records could not be read." = "記録を読み取れませんでした。";
+"No records for %@" = "%@の記録はありません";
+"Nothing in this Mac's usage records falls in this period." = "この Mac の使用量記録に、この期間の分はありません。";
+"The first read of a long history can take a minute or two." = "履歴が長いと、最初の読み取りに1〜2分かかることがあります。";
+"Month" = "月";
+"Year" = "年";
+"Monthly price" = "月額料金";
+"Only used for the payback card. Leave it empty to leave that card out." = "「サブスクの元取り」カードにだけ使います。空欄なら、そのカードは作りません。";
+"Privacy" = "プライバシー";
+"Hide project names" = "プロジェクト名を隠す";
+"Save image" = "画像を保存";
+"Save all" = "すべて保存";
+"Copy image" = "画像をコピー";
+"Share image" = "画像を共有";
+"Couldn't make the image." = "画像を作れませんでした。";
+"Saved" = "保存しました";
+"Save here" = "ここに保存";

@@ -5,8 +5,8 @@ import Foundation
 /// as readable JSON on stdout — a way to see the real numbers behind the recap
 /// cards without a window.
 ///
-/// **It reads exactly as the Token spend pane does** (`AgentLedgers.scan`, the
-/// agents present on this Mac, the same price table) and **only while Token
+/// **It reads exactly as the Token spend pane does** (`RecapSource.load`:
+/// `AgentLedgers.scan`, the agents present on this Mac, the same price table) and **only while Token
 /// spend reading is on** (`AppSettings.storedReadsTokenSpend`): an explicit
 /// command is not a reason to open stores the reader switched off. With it off
 /// the command says so on stderr and exits 2.
@@ -70,12 +70,11 @@ enum RecapReport {
         let period = period(from: value(in: arguments))!
 
         Task {
-            guard let snapshot = try? await AgentLedgers.shared.scan() else {
+            guard let loaded = try? await RecapSource.load() else {
                 fail("could not read the ledgers")
                 exit(1)
             }
-            let prices = await ModelPrices.shared.prices()
-            guard let recap = Recap.build(period, from: snapshot.ledgers, prices: prices),
+            guard let recap = await RecapSource.build(period, from: loaded),
                   let data = encode(recap) else {
                 fail("could not build the recap")
                 exit(1)

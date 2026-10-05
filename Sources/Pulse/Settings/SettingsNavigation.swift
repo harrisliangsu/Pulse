@@ -10,6 +10,12 @@ final class SettingsNavigation {
     var isWindowVisible = false
     private(set) var requestID = UUID()
 
+    /// Goes to a pane, as a link does.
+    func open(_ pane: SettingsPane) {
+        self.pane = pane
+        requestID = UUID()
+    }
+
     func open(_ link: PulseLink, accounts: [AccountKey]) {
         switch link {
         case .settings: pane = .appearance

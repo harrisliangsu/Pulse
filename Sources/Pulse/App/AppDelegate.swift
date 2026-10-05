@@ -32,6 +32,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var panelController: FloatingPanelController?
     private var statusItem: NSStatusItem?
     private var settingsWindow: SettingsWindowController?
+    private var recapWindow: RecapWindowController?
+    /// One owner of the Dock icon for every window Pulse opens.
+    private lazy var dock = DockPresence(settings: settings)
+    /// "Your September recap is ready", when it is switched on.
+    private lazy var recapNotice = RecapNotice(settings: settings, alerts: alerts)
     private var providerSetupWindow: ProviderSetupWindowController?
     private var preparedClaude = false
 
@@ -113,6 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func settingsChanged() {
         restoreMenuBarEntryPointIfNeeded()
         settingsWindow?.refreshTitle()
+        recapWindow?.refreshTitle()
         providerSetupWindow?.refreshTitle()
         guard !settings.needsProviderSelection else { return }
         if panelController == nil {
@@ -128,7 +134,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func startMonitoring() {
         guard !settings.needsProviderSelection, panelController == nil else { return }
-        alerts.start { [weak self] in self?.showSettings() }
+        alerts.start(
+            openSettings: { [weak self] in self?.showSettings() },
+            openRecap: { [weak self] period in self?.showRecap(period: period) }
+        )
+        recapNotice.start()
         let controller = FloatingPanelController(store: store, settings: settings, placement: placement)
         panelController = controller
         controller.contextMenu = { [weak self] in self?.panelMenu() ?? NSMenu() }
@@ -383,6 +393,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(panelItem)
         }
 
+        // Next to Settings: the window shows what the Token spend pane counts,
+        // and says so itself when reading is off.
+        let recapItem = NSMenuItem(
+            title: .localized("Monthly Recap…"),
+            action: #selector(openRecapFromMenu),
+            keyEquivalent: ""
+        )
+        recapItem.target = self
+        menu.addItem(recapItem)
+
         let settingsItem = NSMenuItem(
             title: .localized("Settings…"),
             action: #selector(openSettingsFromMenu),
@@ -409,6 +429,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openSettingsFromMenu() {
         showSettings()
+    }
+
+    @objc private func openRecapFromMenu() {
+        showRecap(period: nil)
     }
 
     @objc private func checkForUpdate() {
@@ -444,9 +468,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func showSettings(link: PulseLink?) {
-        let window = settingsWindow ?? SettingsWindowController(store: store, settings: settings, placement: placement, update: update, alerts: alerts, shortcuts: shortcuts)
+    private func showSettings(link: PulseLink?, pane: SettingsPane? = nil) {
+        let window = settingsWindow ?? SettingsWindowController(
+            store: store, settings: settings, placement: placement, update: update, alerts: alerts,
+            shortcuts: shortcuts, dock: dock,
+            openRecap: { [weak self] period in self?.showRecap(period: period) }
+        )
         settingsWindow = window
-        window.show(link: link)
+        window.show(link: link, pane: pane)
+    }
+
+    /// The recap window, on a period if one is named: the Token spend pane's
+    /// button and a clicked "recap is ready" notification name one.
+    private func showRecap(period: Recap.Period?) {
+        let window = recapWindow ?? RecapWindowController(
+            settings: settings, dock: dock,
+            openTokenSpend: { [weak self] in self?.showSettings(link: nil, pane: .spend) }
+        )
+        recapWindow = window
+        window.show(period: period)
     }
 }

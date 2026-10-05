@@ -150,6 +150,10 @@ What `build` works out itself, and the rules it applies:
 - **Money** is nil for a day, month or total where no work had a price (`UsageLedger.shownCost`) and for days and months with no work; a part-priced figure is its priced subtotal, as in the pane. A model's money is its raw ids' own `LedgerDay.modelCosts`, grouped by display name; nil where none was priced.
 - Models, projects and agents are heaviest first, with shares **of the recap's tokens**; an agent's `activeDays` is `SpendSummary.activeDays` over that agent alone.
 
+### The recap window
+
+The pane's first group holds a **Monthly Recap** row (reading on only) with a **View September recap** button: the month `RecapPeriods.defaultMonth` picks from the earliest record in this pane's own ledgers — the month that just ended during the first seven days of a month, the running one after that. It opens the recap window on that month ([recap.md](recap.md#the-window)); the same window answers the menu bar menu's **Monthly Recap…**. The window reads through `RecapSource.load`, which reuses the scan `SpendWarmer` keeps, so it is not a second read of the stores, and with reading off it sends the person back to this pane and **does not switch reading on** itself.
+
 ### `Pulse --recap`
 
 ```bash
@@ -160,7 +164,7 @@ What `build` works out itself, and the rules it applies:
 
 Prints the `Recap` as sorted, pretty JSON on stdout and exits ([`RecapReport.swift`](../Sources/Pulse/Usage/RecapReport.swift)): `period`, `start`/`end` (local dates; `end` is the first day after the span), `inProgress`, the totals, `days`, `months` (a year), `hours`, `latestMinute` (minutes after midnight), `persona`, `models`, `agents`, `projects`, `cacheHitRate`, `cacheSavings`, the streaks. **A missing figure is absent from the JSON**, not null or zero. Nothing is translated.
 
-It reads as the pane does — `AgentLedgers.scan()` over the agents present on this Mac, the same price table — and **only while Token spend reading is on**: with it off it says so on stderr and exits 2 (a bad argument also exits 2). It stores no setting and writes nothing beyond the ledger and price caches the readers keep. It is dispatched before `LegacyDefaults.migrateIfNeeded()`, like `--json` ([json-output.md](json-output.md)), and it keeps the main queue running (`dispatchMain`) instead of parking the main thread, because the scan reports progress on the main actor.
+It reads as the pane does — `RecapSource.load` (`AgentLedgers.scan()` over the agents present on this Mac, the same price table; the recap window uses the same function) — and **only while Token spend reading is on**: with it off it says so on stderr and exits 2 (a bad argument also exits 2). It stores no setting and writes nothing beyond the ledger and price caches the readers keep. It is dispatched before `LegacyDefaults.migrateIfNeeded()`, like `--json` ([json-output.md](json-output.md)), and it keeps the main queue running (`dispatchMain`) instead of parking the main thread, because the scan reports progress on the main actor.
 
 ## Caching
 

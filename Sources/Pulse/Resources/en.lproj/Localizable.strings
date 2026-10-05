@@ -1056,3 +1056,33 @@
 "Over %@ days, you used AI on %@ of them." = "Over %@ days, you used AI on %@ of them.";
 "Busiest was %@: %@ in a single day." = "Busiest was %@: %@ in a single day.";
 "Rest" = "Rest";
+
+// Recap window, entry points and notification
+"Monthly Recap" = "Monthly Recap";
+"Yearly Recap" = "Yearly Recap";
+"Monthly Recap…" = "Monthly Recap…";
+"View %@ recap" = "View %@ recap";
+"Shareable cards for a month or a year, from this Mac's records." = "Shareable cards for a month or a year, from this Mac's records.";
+"When a recap is ready" = "When a recap is ready";
+"Last month's recap, at the start of the month. Needs Token spend reading." = "Last month's recap, at the start of the month. Needs Token spend reading.";
+"Your %@ recap is ready" = "Your %@ recap is ready";
+"The recap needs Token spend" = "The recap needs Token spend";
+"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on.";
+"Open Token spend" = "Open Token spend";
+"The records could not be read." = "The records could not be read.";
+"No records for %@" = "No records for %@";
+"Nothing in this Mac's usage records falls in this period." = "Nothing in this Mac's usage records falls in this period.";
+"The first read of a long history can take a minute or two." = "The first read of a long history can take a minute or two.";
+"Month" = "Month";
+"Year" = "Year";
+"Monthly price" = "Monthly price";
+"Only used for the payback card. Leave it empty to leave that card out." = "Only used for the payback card. Leave it empty to leave that card out.";
+"Privacy" = "Privacy";
+"Hide project names" = "Hide project names";
+"Save image" = "Save image";
+"Save all" = "Save all";
+"Copy image" = "Copy image";
+"Share image" = "Share image";
+"Couldn't make the image." = "Couldn't make the image.";
+"Saved" = "Saved";
+"Save here" = "Save here";

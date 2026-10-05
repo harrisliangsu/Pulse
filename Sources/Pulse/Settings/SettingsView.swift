@@ -16,6 +16,8 @@ struct SettingsView: View {
     let shortcuts: GlobalShortcutMonitor
 
     @Bindable var navigation: SettingsNavigation
+    /// Opens the recap window on a period — the one the Token spend pane's button names.
+    var openRecap: @MainActor (Recap.Period) -> Void = { _ in }
     private var pane: SettingsPane {
         get { navigation.pane }
         nonmutating set { navigation.pane = newValue }
@@ -306,6 +308,15 @@ struct SettingsView: View {
                                     SettingsRow(String.localized("Reading \(progress.agent.displayName)…")) {
                                         Text(verbatim: "\(progress.index + 1)/\(progress.total)")
                                             .monospacedDigit()
+                                    }
+                                }
+                                if settings.readsTokenSpend {
+                                    SettingsRowDivider()
+                                    SettingsRow(
+                                        String.localized("Monthly Recap"),
+                                        subtitle: String.localized("Shareable cards for a month or a year, from this Mac's records.")
+                                    ) {
+                                        Button(recapButtonTitle) { openRecap(recapPeriod) }
                                     }
                                 }
                             }
@@ -1142,6 +1153,18 @@ struct SettingsView: View {
         }
     }
 
+    /// The month the recap button opens, which is the one the window would
+    /// open on by itself (`RecapPeriods.defaultMonth`).
+    private var recapPeriod: Recap.Period {
+        RecapPeriods.defaultMonth(earliest: RecapPeriods.earliest(in: spendLedgers))
+    }
+
+    /// "View September recap".
+    private var recapButtonTitle: String {
+        guard case .month(_, let number) = recapPeriod else { return String.localized("Monthly Recap") }
+        return String.localized("View \(RecapFormat.monthName(number)) recap")
+    }
+
     private var notificationsPane: some View {
         VStack(alignment: .leading, spacing: 22) {
             SettingsGroup {
@@ -1238,6 +1261,24 @@ struct SettingsView: View {
                     .labelsHidden()
                     .toggleStyle(.switch)
                     .disabled(!UsageAlerts.isSupported)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("When a recap is ready"),
+                    subtitle: String.localized("Last month's recap, at the start of the month. Needs Token spend reading.")
+                ) {
+                    // The request and the first check follow from the setting
+                    // itself (`AppSettings.onRecapAlertChange`).
+                    Toggle("", isOn: Binding(
+                        get: { settings.alertsOnRecap },
+                        set: { settings.alertsOnRecap = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    // The month is only known from records Pulse has read.
+                    .disabled(!UsageAlerts.isSupported || !settings.readsTokenSpend)
                 }
             }
         }
@@ -3778,7 +3819,7 @@ enum SettingsPane: Hashable {
              .localized("Interface language")]
         case .notifications:
             [.localized("Warn at"), .localized("When a limit comes back"), .localized("When a reading stops arriving"),
-             .localized("When a service is down")]
+             .localized("When a service is down"), .localized("When a recap is ready")]
         case .network:
             [.localized("Check every"), .localized("Proxy")]
         case .extensions:

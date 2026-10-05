@@ -1218,6 +1218,55 @@ final class AppSettings {
         }
     }
 
+    /// Say, in the first days of a month, that last month's recap is ready —
+    /// only when that month had records Pulse has read (`RecapNoticeRule`).
+    /// Off by default. Goes through its own callback, which checks at once:
+    /// switching it on in the first days of a month announces then.
+    var alertsOnRecap = false {
+        didSet {
+            guard alertsOnRecap != oldValue else { return }
+            UserDefaults.standard.set(alertsOnRecap, forKey: Key.alertsOnRecap)
+            onRecapAlertChange?()
+        }
+    }
+
+    /// The month whose recap was last announced, as `Recap.Period.key`
+    /// ("2026-09"), so each month is announced once however often Pulse
+    /// restarts or the switch is flipped.
+    var recapAnnouncedMonth: String? {
+        didSet {
+            guard recapAnnouncedMonth != oldValue else { return }
+            UserDefaults.standard.set(recapAnnouncedMonth, forKey: Key.recapAnnouncedMonth)
+        }
+    }
+
+    /// What the reader pays a month, in US dollars — typed into the recap
+    /// window, used only for its payback card. **Nil is nothing typed**, never a
+    /// guess and never zero: no payback card is drawn for it. Only a positive
+    /// amount within `RecapPrice.maximum` is kept.
+    var recapMonthlyPrice: Double? {
+        didSet {
+            // Assigning inside `didSet` does not run it again.
+            let kept = RecapPrice.normalized(recapMonthlyPrice)
+            if kept != recapMonthlyPrice { recapMonthlyPrice = kept }
+            guard kept != oldValue else { return }
+            if let kept {
+                UserDefaults.standard.set(kept, forKey: Key.recapMonthlyPrice)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Key.recapMonthlyPrice)
+            }
+        }
+    }
+
+    /// Whether the recap cards say "Project 1", "Project 2" instead of the
+    /// directories' names. Off: names are shown.
+    var recapHidesProjects = false {
+        didSet {
+            guard recapHidesProjects != oldValue else { return }
+            UserDefaults.standard.set(recapHidesProjects, forKey: Key.recapHidesProjects)
+        }
+    }
+
     /// Whether any rule about readings is on. What `UsageAlerts.observe`
     /// works for; the outage check reads status pages, not readings.
     var wantsUsageAlerts: Bool {
@@ -1227,7 +1276,7 @@ final class AppSettings {
     /// Whether anything at all would be posted. What decides if permission is
     /// worth asking for.
     var wantsAlerts: Bool {
-        wantsUsageAlerts || alertsOnOutage
+        wantsUsageAlerts || alertsOnOutage || alertsOnRecap
     }
 
     /// A second, smaller ring inside the first, for the next-fullest limit.
@@ -1337,6 +1386,9 @@ final class AppSettings {
     var onMenuBarIconChange: (() -> Void)?
     /// Called when the Dock icon the settings window brings should appear or go.
     var onDockIconChange: (() -> Void)?
+    /// Called when the recap notification is switched, so a month already
+    /// announceable is announced now.
+    var onRecapAlertChange: (() -> Void)?
 
     init(
         isPanelVisible: Bool = true,
@@ -1753,6 +1805,10 @@ final class AppSettings {
         )
         settings.showsCodexResetCredits = defaults.bool(forKey: Key.showsCodexResetCredits)
         settings.alertsOnOutage = defaults.bool(forKey: Key.alertsOnOutage)
+        settings.alertsOnRecap = defaults.bool(forKey: Key.alertsOnRecap)
+        settings.recapAnnouncedMonth = defaults.string(forKey: Key.recapAnnouncedMonth)
+        settings.recapMonthlyPrice = RecapPrice.normalized(defaults.object(forKey: Key.recapMonthlyPrice) as? Double)
+        settings.recapHidesProjects = defaults.bool(forKey: Key.recapHidesProjects)
         settings.showsUsageInMenuBar = defaults.bool(forKey: Key.showsUsageInMenuBar)
         settings.showsMenuDashboard = defaults.bool(forKey: Key.showsMenuDashboard)
         settings.primedProviders = Set(defaults.stringArray(forKey: Key.primedProviders) ?? [])
@@ -1929,6 +1985,10 @@ final class AppSettings {
         static let alertsOnReset = "settings.alertsOnReset"
         static let alertsOnFailure = "settings.alertsOnFailure"
         static let alertsOnOutage = "settings.alertsOnOutage"
+        static let alertsOnRecap = "settings.alertsOnRecap"
+        static let recapAnnouncedMonth = "settings.recapAnnouncedMonth"
+        static let recapMonthlyPrice = "settings.recapMonthlyPrice"
+        static let recapHidesProjects = "settings.recapHidesProjects"
         static let providerOrder = "settings.providerOrder"
     }
 }

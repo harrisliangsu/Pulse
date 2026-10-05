@@ -1056,3 +1056,33 @@
 "Over %@ days, you used AI on %@ of them." = "%@일 중 %@일 AI를 사용했습니다.";
 "Busiest was %@: %@ in a single day." = "가장 바빴던 날은 %@, 하루에 처리한 양은 %@입니다.";
 "Rest" = "휴식";
+
+// Recap window, entry points and notification
+"Monthly Recap" = "월간 리포트";
+"Yearly Recap" = "연간 리포트";
+"Monthly Recap…" = "월간 리포트…";
+"View %@ recap" = "%@ 리포트 보기";
+"Shareable cards for a month or a year, from this Mac's records." = "이 Mac의 기록으로 한 달 또는 한 해의 공유용 카드를 만듭니다.";
+"When a recap is ready" = "리포트가 준비되었을 때";
+"Last month's recap, at the start of the month. Needs Token spend reading." = "매월 초에 지난달 리포트가 준비되었음을 알립니다. ‘로컬 사용량 기록 읽기’가 켜져 있어야 합니다.";
+"Your %@ recap is ready" = "%@ 리포트가 준비되었습니다";
+"The recap needs Token spend" = "리포트에는 사용량 기록 읽기가 필요합니다";
+"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "이 Mac의 사용량 기록으로 만듭니다. Pulse는 ‘로컬 사용량 기록 읽기’가 켜져 있는 동안에만 기록을 읽습니다.";
+"Open Token spend" = "토큰 사용량 열기";
+"The records could not be read." = "기록을 읽지 못했습니다.";
+"No records for %@" = "%@의 기록이 없습니다";
+"Nothing in this Mac's usage records falls in this period." = "이 Mac의 사용량 기록에 이 기간의 내용이 없습니다.";
+"The first read of a long history can take a minute or two." = "기록이 많으면 첫 읽기에 1~2분 걸릴 수 있습니다.";
+"Month" = "월별";
+"Year" = "연도별";
+"Monthly price" = "월 구독료";
+"Only used for the payback card. Leave it empty to leave that card out." = "‘구독 본전’ 카드에만 쓰입니다. 비워 두면 그 카드는 만들지 않습니다.";
+"Privacy" = "개인정보";
+"Hide project names" = "프로젝트 이름 숨기기";
+"Save image" = "이미지 저장";
+"Save all" = "모두 저장";
+"Copy image" = "이미지 복사";
+"Share image" = "이미지 공유";
+"Couldn't make the image." = "이미지를 만들지 못했습니다.";
+"Saved" = "저장했습니다";
+"Save here" = "여기에 저장";

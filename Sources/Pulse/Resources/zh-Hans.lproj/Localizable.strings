@@ -1056,3 +1056,33 @@
 "Over %@ days, you used AI on %@ of them." = "%@ 天里，你有 %@ 天在用 AI。";
 "Busiest was %@: %@ in a single day." = "最忙的是 %@，一天就处理了 %@。";
 "Rest" = "休息";
+
+// Recap window, entry points and notification
+"Monthly Recap" = "月报";
+"Yearly Recap" = "年报";
+"Monthly Recap…" = "月报…";
+"View %@ recap" = "查看%@的月报";
+"Shareable cards for a month or a year, from this Mac's records." = "用这台 Mac 的本机记录，生成可以分享的月度和年度卡片。";
+"When a recap is ready" = "月报生成时";
+"Last month's recap, at the start of the month. Needs Token spend reading." = "每月月初告诉你上个月的月报好了。需要先开启“读取本机用量记录”。";
+"Your %@ recap is ready" = "%@的月报已经生成";
+"The recap needs Token spend" = "月报需要先读取本机用量记录";
+"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "月报根据这台 Mac 上的用量记录生成。只有开启“读取本机用量记录”后，Pulse 才会去读。";
+"Open Token spend" = "打开 Token 消耗";
+"The records could not be read." = "没能读取用量记录。";
+"No records for %@" = "%@没有用量记录";
+"Nothing in this Mac's usage records falls in this period." = "这台 Mac 的用量记录里，没有这段时间的内容。";
+"The first read of a long history can take a minute or two." = "记录很多时，第一次读取可能要一两分钟。";
+"Month" = "月度";
+"Year" = "年度";
+"Monthly price" = "每月订阅价格";
+"Only used for the payback card. Leave it empty to leave that card out." = "只用于“订阅回本”卡片。不填，就不生成这张卡片。";
+"Privacy" = "隐私";
+"Hide project names" = "隐藏项目名称";
+"Save image" = "保存图片";
+"Save all" = "全部保存";
+"Copy image" = "复制图片";
+"Share image" = "分享图片";
+"Couldn't make the image." = "没能生成图片。";
+"Saved" = "已保存";
+"Save here" = "保存到这里";
