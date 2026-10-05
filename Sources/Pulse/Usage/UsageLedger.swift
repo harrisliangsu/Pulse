@@ -558,11 +558,35 @@ struct UsageLedger: Sendable, Equatable {
     /// the whole; so would a store that cannot prove its counts are complete.
     /// Nil then, and nil with no input at all.
     func cacheHitRate(overLast count: Int) -> Double? {
-        guard !hasPartialCounts, reportsCacheReads else { return nil }
-        let span = recent(count)
+        guard case .measured(let tally) = cacheReading(in: recent(count)) else { return nil }
+        let input = tally.input + tally.cacheWrite + tally.cacheRead
+        guard input > 0 else { return nil }
+        return Double(tally.cacheRead) / Double(input)
+    }
+
+    /// What a span's records say about the prompt cache — the rule
+    /// `cacheHitRate` applies, kept apart so a rate over several ledgers (the
+    /// recap's) adds up the same measured tallies instead of working the rule
+    /// out a second way.
+    enum CacheReading: Equatable, Sendable {
+        /// The input kinds the rate is measured over: cache reads, and every
+        /// input token beside them, from the models that said anything about
+        /// the cache.
+        case measured(TokenTally)
+        /// The store (or every model in it) records no cache. Its zero hits
+        /// are not a cache that missed, so it has no part in a rate.
+        case unrecorded
+        /// Counts that may be missing or cannot be sorted into their kinds:
+        /// a rate over them would state part of the work as the whole.
+        case unvouched
+    }
+
+    func cacheReading(in span: [LedgerDay]) -> CacheReading {
+        guard reportsCacheReads else { return .unrecorded }
+        guard !hasPartialCounts else { return .unvouched }
         let tally = span.reduce(TokenTally()) { $0 + $1.tally }
         let tokens = span.reduce(0) { $0 + $1.tokens }
-        guard tally.total == tokens else { return nil }
+        guard tally.total == tokens else { return .unvouched }
 
         // **A model that said nothing about the cache is left out of the
         // rate**, not counted as all misses: its input would sit in the
@@ -576,10 +600,8 @@ struct UsageLedger: Sendable, Equatable {
             for (raw, model) in day.modelTallies { byModel[raw] = (byModel[raw] ?? TokenTally()) + model }
         }
         let measured = split ? byModel.values.filter { !$0.reportsNoCache }.reduce(TokenTally(), +) : tally
-        guard !measured.reportsNoCache else { return nil }
-        let input = measured.input + measured.cacheWrite + measured.cacheRead
-        guard input > 0 else { return nil }
-        return Double(measured.cacheRead) / Double(input)
+        guard !measured.reportsNoCache else { return .unrecorded }
+        return .measured(measured)
     }
 
     /// One model's cache hit rate over a span, and how much input it is
