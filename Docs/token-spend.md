@@ -292,7 +292,7 @@ The comparisons use the single-lookup versus bulk-index API, individual versus g
 
 `TokenActivityTests` pins the activity series on a fixed clock and UTC calendar (window bounds and column count, leap years, Monday-first versus Sunday-first bucketing, quiet versus not-drawn days, older work, agent sums, partial flag, the running total, the quartile steps, month labels, the persisted view) and `SpendSummaryCacheTests` its independence from the span.
 
-`SpendReadStateTests` drives the same window-scoped lifecycle used by `SettingsView`: sidebar reuse including empty results and read-limit notes, release when disabled/closed even from another pane, one forced rescan, cancelled/failed-read retry, and stale completion/progress/defer rejection after a replacement starts. These are state-transition checks, not real-input UI verification.
+`SpendReadStateTests` drives the same window-scoped lifecycle used by `SpendPaneModel`: sidebar reuse including empty results and read-limit notes, release when disabled/closed even from another pane, one forced rescan, cancelled/failed-read retry, and stale completion/progress/defer rejection after a replacement starts. These are state-transition checks, not real-input UI verification.
 
 `ModelPriceLookupTests` checks repeated alias/vendor precedence and isolation across replacement price tables. `LedgerCacheWriteTests` observes the real cache file's modification time during unchanged repricing, then verifies edit/deletion persistence. `SpendSummaryCacheTests` checks model/agent isolation, snapshot/span/day invalidation, cancellation and which scopes may display previous results during a quiet refresh. Compressed-reader tests exercise the combined records/notes route as well as the individual entry points.
 

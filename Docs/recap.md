@@ -106,7 +106,7 @@ writes every card of the sample month and year in all five languages to `/tmp/re
 
 **Entry points** — both open the same window, and neither menu carries one (the rail's and the menu bar's menus stay to the panel, Settings and Quit):
 
-- the Token spend pane's **Monthly and Yearly Recap** row, with two buttons side by side so the yearly recap is not found only inside the window: **View September recap** opens on that month (`SettingsView.recapPeriod`, the window's own default rule) and **View 2026 recap** on the year by the same rule (`RecapPeriods.defaultYear`: January 1–7 opens the year that just ended, any other day this one, in progress; the year is a plain string, never "2,026");
+- the Token spend pane's **Monthly and Yearly Recap** row, with two buttons side by side so the yearly recap is not found only inside the window: **View September recap** opens on that month (`TokenSpendPane.recapPeriod`, the window's own default rule) and **View 2026 recap** on the year by the same rule (`RecapPeriods.defaultYear`: January 1–7 opens the year that just ended, any other day this one, in progress; the year is a plain string, never "2,026");
 - a clicked "recap is ready" notification, on the month it names ([notifications.md](notifications.md#the-monthly-recap)).
 
 **Layout.** The deck on the left, one card at a time, drawn live and scaled to fit (`RecapCardView` at 1080 × 1920, `scaleEffect`), with previous / next buttons beside it and dots with a "1 / 5" counter under it; **← and →** turn the page. On the right: the period, the price, the privacy switch and four buttons. The window follows the system's light or dark; only the cards are paper.

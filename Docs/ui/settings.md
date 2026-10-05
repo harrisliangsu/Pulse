@@ -4,6 +4,36 @@ Chrome and why it is AppKit-owned: [../architecture.md](../architecture.md). Loc
 
 `SettingsView` / `SettingsRow`: `NavigationSplitView` source list, panes from `SettingsGroup` + `SettingsRow` (title + optional subtitle left, control right). `SettingsPane` includes `.account(AccountKey)`, so every account — each provider’s first, plus any added login — has a sidebar row.
 
+## Where the code lives
+
+All of it is in `Sources/Pulse/Settings`. `SettingsView.swift` is the shell and nothing else: the split view, the heading, the switch that picks a pane, the search text, and the three models below. A pane is a view that draws rows; what a pane edits through a button is in a model.
+
+| File | Holds |
+|---|---|
+| `SettingsView.swift` | Shell. Owns `search`, `SpendPaneModel`, `AccountHistoryModel`, `AccountFlows`. Sets the sidebar column's width and the search field (properties of the split view's sidebar column, so they stay on the shell). Runs the three tasks the models need (below). |
+| `SettingsSidebar.swift` | The source list: sections, the search match, the "No matches" line. |
+| `SettingsPane.swift` | `SettingsPane` (title, symbol, search terms, the sidebar's fixed sections) and `Provider.Billing.sectionTitle`. |
+| `AppearancePane.swift`, `RingsPane.swift`, `PlacementPane.swift`, `GeneralPane.swift`, `NotificationsPane.swift`, `NetworkPane.swift`, `AboutPane.swift` | One fixed pane each. State that belongs to the pane lives in it: the drag target of the order list, the login-item nudge, the proxy text fields. |
+| `TokenSpendPane.swift`, `SpendPaneModel.swift` | The Token spend pane (switch, recap buttons, `TokenSpendView`) and its reading: the combined and per-agent figures, scan progress, the drilled-in agent and model. |
+| `AccountPane.swift` | One account's pane: the cards in order, and the seed of the typed fields when the account or its switch changes. |
+| `AccountPanelGroup.swift` | Panel card: show in panel, ring window, split, Codex reset credits, detailed card (`detailedCardSubtitle`), animated mark, ring colour. |
+| `WindowStarterGroup.swift` | Claude Code / Codex window starter and its risk confirmation. |
+| `AccountConnectionGroup.swift`, `AccountConnectionRows.swift` | Connection card: route picker, Copilot sign-in, key field, browser read, and the single rows it draws (site, server address, balance basis, full tank, warn below). Scrolls and focuses itself when a remedy names a field. |
+| `AccountsGroup.swift` | Another subscription of the same provider: sign in, rename, remove. |
+| `ClaudeCodeStatusLineRow.swift`, `AccountLiveUsageGroup.swift` | The status-line switch, and the Current usage card. |
+| `AccountHistoryGroup.swift`, `EstimatedValueGroup.swift`, `AccountHistoryModel.swift` | Usage history, the money estimate, and the ledgers and read results behind them. |
+| `AccountFlows.swift` | Builds and wires the four models below. |
+| `ProviderCredentialModel.swift` | The key field, reveal, saved key; save, browser read (cookie or local storage), what the read said. |
+| `ProviderSignInModel.swift` | Added-account sign-in (browser or device code) and Copilot's GitHub device flow, with their prompts, errors and cancellation. Also `SettingsClipboard`. |
+| `ConnectionRepairModel.swift` | What each diagnostics remedy does, the line it leaves, the scroll-and-focus requests, the status-line nudge. |
+| `AccountEntryFields.swift` | Server address, full-tank figure and warn-below figure, as text committed on Save; `hasBalanceRing` / `reportsBalance`. |
+
+**A model is the shell's when its state has to outlive the pane.** A device-code sign-in polls for fifteen minutes, a browser read may be waiting on a keychain dialog, and the ledgers take long enough to read that they are kept while the window is open: switching to another pane must not throw any of that away or orphan the task writing to it. State that is only a pane's own stays in the pane, so it resets with it.
+
+**Three tasks stay on the shell's scroll view** — history (`AccountHistoryModel.key`), Token spend reading (`SpendPaneModel.loadKey`) and its summary (`summaryRequest`). Their keys include the selected pane and the window's visibility, and the release path (leave the pane, switch reading off, close the window) only runs if a task is still alive to see the key change. Moving one into a pane view would silently drop that path.
+
+A new pane: a view in its own file, `SettingsPane` case (`title`, `symbol`, `searchTerms`), and one line in the shell’s `switch`.
+
 The sidebar is `.searchable(placement: .sidebar)` — **not** `.automatic`: this window has no `NSToolbar`, so automatic placement has nowhere to put the field. Accounts match on the provider's name *as well as* the user's label, so a second Claude subscription called "工作" is still found by typing "claude". Matching is `localizedStandardContains` (case- and accent-insensitive, the same comparison Finder searches with). A section with no matches is omitted; nothing matching at all leaves a "No matches" line. The current selection is not cleared by a search that hides it — you keep your place.
 
 ## Provider chooser
@@ -104,7 +134,7 @@ OpenCode Go's history displays saved figures while updating and progressively fi
 
 Codex's first account also has **Reset credits on the card** in its Panel group: off by default, and while on, its hover card says how many limit reset credits Codex reports, or "Not available" ([../providers/codex.md](../providers/codex.md#limit-reset-credits)).
 
-Every account has **Detailed card** in its Panel group (`AppSettings.detailedCards`, account ids; off by default). It is per account on purpose — a first version was one switch in Rings and figures, and the detailed card is worth its height for the account somebody watches closely and noise on the rest. The subtitle says what the card adds and what history it will carry, the way it will carry it (`SettingsView.detailedCardSubtitle`): none, the account's month from the provider (Z.ai, Zhipu), or this Mac's recent activity with Token spend on. The card itself: [panel-geometry.md](panel-geometry.md#detailed-card).
+Every account has **Detailed card** in its Panel group (`AppSettings.detailedCards`, account ids; off by default). It is per account on purpose — a first version was one switch in Rings and figures, and the detailed card is worth its height for the account somebody watches closely and noise on the rest. The subtitle says what the card adds and what history it will carry, the way it will carry it (`AccountPanelGroup.detailedCardSubtitle`): none, the account's month from the provider (Z.ai, Zhipu), or this Mac's recent activity with Token spend on. The card itself: [panel-geometry.md](panel-geometry.md#detailed-card).
 
 Claude Code's and Codex's panes have a **Prompt cache** group ahead of the estimate and history, while the account is on: every conversation still holding a cache (for Codex, still inside OpenAI's guaranteed 30 minutes, worded "at least"), soonest to lapse first, each with its time left ([panel-geometry.md](panel-geometry.md#detailed-card)). **Its read is keyed by provider** (`.task(id: provider)`, and the reading dropped when it was another provider's): SwiftUI keeps the group in place from one pane to the next, and with a bare `.task` Codex's pane listed Claude Code's conversations under Codex's footnote.
 
