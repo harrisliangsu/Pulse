@@ -172,7 +172,9 @@ struct RecapWindowView: View {
                             .onTapGesture { model.card = card }
                     }
                 }
-                Text(verbatim: "\(index + 1) / \(deck.cards.count)")
+                // The count printed on the cards themselves: the poster is not
+                // one of the numbered stories, so it is named instead.
+                Text(verbatim: deck.page(of: current).map { "\($0.number) / \($0.count)" } ?? String.localized("Overview"))
                     .font(.system(size: 11).monospacedDigit())
                     .foregroundStyle(.secondary)
             }

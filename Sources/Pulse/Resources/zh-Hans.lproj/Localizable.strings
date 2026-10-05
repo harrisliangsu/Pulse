@@ -1030,7 +1030,8 @@
 "Still going · longest %@" = "还在继续 · 最长一次 %@";
 "Top projects" = "花时间最多的项目";
 "In %@," = "%@，";
-"you didn't code alone." = "你没有一个人写代码。";
+"%@ AI tools coded with you." = "有 %@ 个 AI 和你一起写代码。";
+"One AI tool coded with you." = "有 1 个 AI 和你一起写代码。";
 "Worked beside you" = "陪你干活的";
 "Days used · token share" = "用了几天 · token 占比";
 "Turn the page to see what you made together" = "往后翻，看看你们一起做了什么";

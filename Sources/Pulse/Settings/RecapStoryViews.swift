@@ -110,7 +110,14 @@ struct RecapOpenerView: View {
     private var headline: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(String.localized("In \(deck.periodName),"))
-            Text(localized: "you didn't code alone.")
+            // The count is the roster below it, so the line says how many
+            // rather than a negative ("didn't code alone") that read oddly in
+            // Chinese. One tool gets its own sentence: no plural to agree.
+            if recap.agents.count == 1 {
+                Text(localized: "One AI tool coded with you.")
+            } else {
+                Text(String.localized("\("\(recap.agents.count)") AI tools coded with you."))
+            }
         }
         .font(.recap(76, .black))
         .tracking(-0.76)
@@ -123,6 +130,9 @@ struct RecapOpenerView: View {
     private var roster: some View {
         let agents = Array(recap.agents.prefix(5))
         let top = max(agents.first?.share ?? 0, 0.0001)
+        // Five rows fill the page; fewer leave a hole under the headline, so
+        // each missing row's height is shared out between the ones there are.
+        let room = CGFloat(max(0, 5 - agents.count)) * 16
         return VStack(spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
                 Text(localized: "Worked beside you")
@@ -167,8 +177,8 @@ struct RecapOpenerView: View {
                     }
                     .frame(height: first ? 12 : 8)
                 }
-                .padding(.top, 26)
-                .padding(.bottom, 28)
+                .padding(.top, 26 + room)
+                .padding(.bottom, 28 + room)
             }
             RecapRule(strong: true)
             HStack {

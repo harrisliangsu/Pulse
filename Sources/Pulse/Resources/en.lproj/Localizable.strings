@@ -1030,7 +1030,8 @@
 "Still going · longest %@" = "Still going · longest %@";
 "Top projects" = "Top projects";
 "In %@," = "In %@,";
-"you didn't code alone." = "you didn't code alone.";
+"%@ AI tools coded with you." = "%@ AI tools coded with you.";
+"One AI tool coded with you." = "One AI tool coded with you.";
 "Worked beside you" = "Worked beside you";
 "Days used · token share" = "Days used · token share";
 "Turn the page to see what you made together" = "Turn the page to see what you made together";

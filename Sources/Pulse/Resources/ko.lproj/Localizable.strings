@@ -1030,7 +1030,8 @@
 "Still going · longest %@" = "진행 중 · 최장 %@";
 "Top projects" = "시간을 가장 많이 쓴 프로젝트";
 "In %@," = "%@에는";
-"you didn't code alone." = "혼자 코딩하지 않았습니다.";
+"%@ AI tools coded with you." = "AI 도구 %@개와 함께 코딩했습니다.";
+"One AI tool coded with you." = "AI 도구 하나와 함께 코딩했습니다.";
 "Worked beside you" = "함께 일한 도구";
 "Days used · token share" = "사용 일수 · 토큰 비중";
 "Turn the page to see what you made together" = "넘겨서 함께 한 일을 확인하세요";

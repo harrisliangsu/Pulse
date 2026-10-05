@@ -1030,7 +1030,8 @@
 "Still going · longest %@" = "継続中 · 最長 %@";
 "Top projects" = "時間をかけたプロジェクト";
 "In %@," = "%@、";
-"you didn't code alone." = "ひとりでは書いていない。";
+"%@ AI tools coded with you." = "%@ つの AI と一緒にコードを書いた。";
+"One AI tool coded with you." = "ひとつの AI と一緒にコードを書いた。";
 "Worked beside you" = "一緒に働いたツール";
 "Days used · token share" = "利用日数 · トークンの割合";
 "Turn the page to see what you made together" = "めくって、一緒に何をしたか見てみましょう";
