@@ -1,0 +1,237 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
+import Foundation
+
+// The floating panel: whether it is shown, where it may go, how big it is, and
+// everything about the rail that changes its length or thickness.
+//
+// **Two callbacks, chosen on purpose.** Showing or hiding the panel goes
+// through `onChange` — it also starts and stops the activity watcher, which
+// `UsageStore.settingsChanged` takes care of. Everything else here is layout
+// or appearance, and goes through `onLayoutChange`, which re-places the panel
+// and **does not refresh a single provider**. They all used to share
+// `onChange`, so choosing a panel size cost every provider a request for
+// figures that had not moved (`AppSettingsLayoutTests`).
+//
+// **The `PanelMetrics` ones set the metric before announcing the change.**
+// Whoever reacts is about to measure the panel, and it has to already be the
+// new size when they do. Only the settings the running app is drawn from move
+// those globals (`drivesPanelMetrics`).
+
+extension AppSettings.Key {
+    static let panelVisible = "settings.panelVisible"
+    static let hidesInFullScreen = "settings.hidesInFullScreen"
+    static let followsActiveDisplay = "settings.followsActiveDisplay"
+    static let panelSize = "settings.panelSize"
+    static let railSpacing = "settings.railSpacing"
+    static let topRailShowsPercentages = "settings.topRailShowsPercentages"
+    static let sideRailShowsPercentages = "settings.sideRailShowsPercentages"
+    static let labelAboveRing = "settings.labelAboveRing"
+    static let freeAcrossFiguresBeside = "settings.freeAcrossFiguresBeside"
+    static let usesRoundEnds = "settings.usesRoundEnds"
+    static let showsWindowClock = "settings.showsWindowClock"
+    static let showsForecast = "settings.showsForecast"
+    static let detailedCards = "settings.detailedCards"
+    static let usesGlass = "settings.usesGlass"
+    static let glassTransparency = "settings.glassTransparency"
+    static let autoCollapse = "settings.autoCollapse"
+    static let splitAccounts = "settings.splitAccounts"
+}
+
+extension AppSettings.Default {
+    static let isPanelVisible = true
+    static let hidesInFullScreen = true
+    static let followsActiveDisplay = false
+    static let topRailShowsPercentages = false
+    static let sideRailShowsPercentages = true
+    static let labelAboveRing = false
+    static let freeAcrossFiguresBeside = false
+    static let usesRoundEnds = false
+    static let showsWindowClock = false
+    static let showsForecast = false
+    static let usesGlass = false
+    static let glassTransparency = PanelGlass.defaultTransparency
+    static let autoCollapse = true
+}
+
+extension AppSettings {
+    func isPanelVisibleChanged(from old: Bool) {
+        guard isPanelVisible != old else { return }
+        defaults.set(isPanelVisible, forKey: Key.panelVisible)
+        onChange?()
+    }
+
+    func hidesInFullScreenChanged(from old: Bool) {
+        guard hidesInFullScreen != old else { return }
+        defaults.set(hidesInFullScreen, forKey: Key.hidesInFullScreen)
+        onLayoutChange?()
+    }
+
+    func followsActiveDisplayChanged(from old: Bool) {
+        guard followsActiveDisplay != old else { return }
+        defaults.set(followsActiveDisplay, forKey: Key.followsActiveDisplay)
+        onLayoutChange?()
+    }
+
+    func panelSizeChanged(from old: PanelSize) {
+        guard panelSize != old else { return }
+        if drivesPanelMetrics { PanelMetrics.use(panelSize) }
+        defaults.set(panelSize.rawValue, forKey: Key.panelSize)
+        onLayoutChange?()
+    }
+
+    func railSpacingChanged(from old: RailSpacing) {
+        guard railSpacing != old else { return }
+        if drivesPanelMetrics { PanelMetrics.use(railSpacing) }
+        defaults.set(railSpacing.rawValue, forKey: Key.railSpacing)
+        onLayoutChange?()
+    }
+
+    /// Changes the rail's thickness along the top.
+    func topRailShowsPercentagesChanged(from old: Bool) {
+        guard topRailShowsPercentages != old else { return }
+        if drivesPanelMetrics { PanelMetrics.showTopPercentages(topRailShowsPercentages) }
+        defaults.set(topRailShowsPercentages, forKey: Key.topRailShowsPercentages)
+        onLayoutChange?()
+    }
+
+    /// Makes the rail shorter or longer down a side.
+    func sideRailShowsPercentagesChanged(from old: Bool) {
+        guard sideRailShowsPercentages != old else { return }
+        if drivesPanelMetrics { PanelMetrics.showSidePercentages(sideRailShowsPercentages) }
+        defaults.set(sideRailShowsPercentages, forKey: Key.sideRailShowsPercentages)
+        onLayoutChange?()
+    }
+
+    func labelAboveRingChanged(from old: Bool) {
+        guard labelAboveRing != old else { return }
+        if drivesPanelMetrics { PanelMetrics.putLabelAboveRing(labelAboveRing) }
+        defaults.set(labelAboveRing, forKey: Key.labelAboveRing)
+        onLayoutChange?()
+    }
+
+    func freeAcrossFiguresBesideChanged(from old: Bool) {
+        guard freeAcrossFiguresBeside != old else { return }
+        if drivesPanelMetrics { PanelMetrics.putFreeAcrossFiguresBeside(freeAcrossFiguresBeside) }
+        defaults.set(freeAcrossFiguresBeside, forKey: Key.freeAcrossFiguresBeside)
+        onLayoutChange?()
+    }
+
+    func usesRoundEndsChanged(from old: Bool) {
+        guard usesRoundEnds != old else { return }
+        if drivesPanelMetrics { PanelMetrics.useRoundEnds(usesRoundEnds) }
+        defaults.set(usesRoundEnds, forKey: Key.usesRoundEnds)
+        onLayoutChange?()
+    }
+
+    func showsWindowClockChanged(from old: Bool) {
+        guard showsWindowClock != old else { return }
+        if drivesPanelMetrics { PanelMetrics.showWindowClock(showsWindowClock) }
+        defaults.set(showsWindowClock, forKey: Key.showsWindowClock)
+        onLayoutChange?()
+    }
+
+    func showsForecastChanged(from old: Bool) {
+        guard showsForecast != old else { return }
+        if drivesPanelMetrics { PanelMetrics.showForecast(showsForecast) }
+        defaults.set(showsForecast, forKey: Key.showsForecast)
+        onLayoutChange?()
+    }
+
+    func detailedCardsChanged(from old: Set<String>) {
+        guard detailedCards != old else { return }
+        // The app's own settings only: a test's `AppSettings` must not
+        // resize the frame every other test is measuring.
+        if drivesPanelMetrics { PanelMetrics.showDetailedCard(!detailedCards.isEmpty) }
+        defaults.set(detailedCards.sorted(), forKey: Key.detailedCards)
+        onLayoutChange?()
+    }
+
+    func usesGlassChanged(from old: Bool) {
+        guard usesGlass != old else { return }
+        defaults.set(usesGlass, forKey: Key.usesGlass)
+        onLayoutChange?()
+    }
+
+    func autoCollapseChanged(from old: Bool) {
+        guard autoCollapse != old else { return }
+        defaults.set(autoCollapse, forKey: Key.autoCollapse)
+        onLayoutChange?()
+    }
+
+    /// **Stays on `onChange`, unlike the rest of this file.** How many rings
+    /// a split account has is read off its *reading* (`RailSlot.modelGroups`),
+    /// so a refresh is what makes a split show both groups when the reading it
+    /// has does not carry them yet.
+    func splitAccountsChanged(from old: Set<String>) {
+        guard splitAccounts != old else { return }
+        // The rail is about to get longer. Before the change is announced,
+        // so whoever re-measures the panel sees the size it will be.
+        resizeRail()
+        defaults.set(Array(splitAccounts), forKey: Key.splitAccounts)
+        onChange?()
+    }
+
+    func showsDetailedCard(for account: AccountKey) -> Bool {
+        detailedCards.contains(account.id)
+    }
+
+    func setShowsDetailedCard(_ shows: Bool, for account: AccountKey) {
+        if shows { detailedCards.insert(account.id) } else { detailedCards.remove(account.id) }
+    }
+
+    func isSplit(_ account: AccountKey) -> Bool {
+        account.provider.splitsByModelGroup && splitAccounts.contains(account.id)
+    }
+
+    func setSplit(_ split: Bool, for account: AccountKey) {
+        var updated = splitAccounts
+        if split { updated.insert(account.id) } else { updated.remove(account.id) }
+        splitAccounts = updated
+    }
+
+    /// Makes room for the rings that are shown. A no-op for any instance but
+    /// the app's own — see `drivesPanelMetrics`.
+    func resizeRail() {
+        guard drivesPanelMetrics else { return }
+        PanelMetrics.makeRoom(for: railSlotCount)
+    }
+
+    /// How many rings the rail has to have room for.
+    ///
+    /// **The shown accounts, not every account.** It used to be every one, so
+    /// that switching a provider off never resized the window. That stopped
+    /// being affordable once there were dozens of providers: the transparent
+    /// window was reserving a rail for all of them, thousands of points taller
+    /// than any screen, for rings nobody had switched on. Switching one on or
+    /// off now resizes the window — from Settings, never while a card is
+    /// opening — and `settingsChanged()` re-places it on the way.
+    ///
+    /// A split account is still counted for the groups it can produce rather
+    /// than the groups a reading happens to carry, so a reading never moves
+    /// the budget: only a setting does.
+    var railSlotCount: Int {
+        shownAccounts.reduce(0) { total, account in
+            total + (isSplit(account) ? account.provider.modelGroupCount : 1)
+        }
+    }
+
+    /// Brings `PanelMetrics` in line with what was just restored, before this
+    /// instance is allowed to move it.
+    func applyPanelMetrics() {
+        PanelMetrics.use(panelSize)
+        PanelMetrics.use(railSpacing)
+        PanelMetrics.showTopPercentages(topRailShowsPercentages)
+        PanelMetrics.showSidePercentages(sideRailShowsPercentages)
+        PanelMetrics.putLabelAboveRing(labelAboveRing)
+        PanelMetrics.putFreeAcrossFiguresBeside(freeAcrossFiguresBeside)
+        PanelMetrics.showWindowClock(showsWindowClock)
+        PanelMetrics.useRoundEnds(usesRoundEnds)
+        PanelMetrics.showForecast(showsForecast)
+        PanelMetrics.showDetailedCard(!detailedCards.isEmpty)
+    }
+
+    /// The settings `init` has no parameter for.
+    func restorePanel(from defaults: UserDefaults) {
+        detailedCards = Set(defaults.stringArray(forKey: Key.detailedCards) ?? [])
+    }
+}

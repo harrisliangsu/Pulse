@@ -4,16 +4,58 @@ import Observation
 import SwiftUI
 
 /// User-facing preferences, persisted in `UserDefaults`.
+///
+/// **Where things live.** Swift keeps stored properties in the class body, and
+/// `@Observable` tracks only those, so this file is the one list of everything
+/// that is stored: each setting's declaration and its documentation, grouped by
+/// topic. What a change *does* — the key it is written under, the callback it
+/// fires, the global it keeps in step — is in that topic's file:
+///
+/// | File | Topic |
+/// |---|---|
+/// | `AppSettings+Application` | menu bar item, Dock icon, shortcuts, language |
+/// | `AppSettings+Panel` | the floating panel: visibility, size, rail metrics, glass |
+/// | `AppSettings+Rings` | how a ring looks: tint, mark, clock, warning colour, pinned window |
+/// | `AppSettings+Accounts` | which accounts exist, which are shown, in what order |
+/// | `AppSettings+Providers` | per-provider choices: routes, sites, balance basis, proxy, cadence |
+/// | `AppSettings+TokenSpend` | the Token spend pane |
+/// | `AppSettings+Notifications` | alert rules |
+/// | `AppSettings+Recap` | the monthly recap |
+/// | `AppSettings+WindowStarter` | the window starter |
+///
+/// **Two callbacks, and the difference is a network request.** `onChange`
+/// is the usage loop's hook: `AppDelegate` answers it by re-placing the panel
+/// *and* asking every provider again. `onLayoutChange` re-places the panel and
+/// nothing else. A setting that changes only how Pulse draws or places itself
+/// goes through the second; reaching for `onChange` there costs every
+/// provider a request for a figure that did not change.
 @Observable
 final class AppSettings {
-    /// Whether the floating panel is on screen.
-    var isPanelVisible: Bool {
-        didSet {
-            guard isPanelVisible != oldValue else { return }
-            UserDefaults.standard.set(isPanelVisible, forKey: Key.panelVisible)
-            onChange?()
-        }
-    }
+    /// Where every setting is written. The app's own settings use
+    /// `UserDefaults.standard`; a test passes a throwaway suite.
+    @ObservationIgnored let defaults: UserDefaults
+
+    // MARK: - Callbacks
+
+    /// Called after any change the usage loop has to react to — a provider
+    /// switched on or off, a route or a site chosen, the panel shown or hidden.
+    /// `AppDelegate` re-places the panel and refreshes every provider.
+    var onChange: (() -> Void)?
+    /// Called after a change to how the panel is drawn or placed — its size,
+    /// its rail's metrics, its glass. Re-places the panel; does **not**
+    /// refresh anything. See the table above.
+    var onLayoutChange: (() -> Void)?
+    /// Called only when the menu bar status item should be inserted or removed.
+    /// Kept separate from `onChange` so a presentation preference cannot start
+    /// a provider refresh.
+    var onMenuBarIconChange: (() -> Void)?
+    /// Called when the Dock icon the settings window brings should appear or go.
+    var onDockIconChange: (() -> Void)?
+    /// Called when the recap notification is switched, so a month already
+    /// announceable is announced now.
+    var onRecapAlertChange: (() -> Void)?
+
+    // MARK: - Application (AppSettings+Application)
 
     /// Whether Pulse removes its menu bar icon.
     ///
@@ -22,11 +64,7 @@ final class AppSettings {
     /// through its dedicated callback, and changing it must not trigger a
     /// provider refresh.
     var hidesMenuBarIcon: Bool {
-        didSet {
-            guard hidesMenuBarIcon != oldValue else { return }
-            UserDefaults.standard.set(hidesMenuBarIcon, forKey: Key.hidesMenuBarIcon)
-            onMenuBarIconChange?()
-        }
+        didSet { hidesMenuBarIconChanged(from: oldValue) }
     }
 
     /// Whether Pulse shows a Dock icon for as long as the settings window is
@@ -37,11 +75,7 @@ final class AppSettings {
     /// again. The icon is there only while the window is, and goes with it.
     /// Goes through its own callback, not `onChange`, which refetches.
     var showsDockIconInSettings: Bool {
-        didSet {
-            guard showsDockIconInSettings != oldValue else { return }
-            UserDefaults.standard.set(showsDockIconInSettings, forKey: Key.showsDockIconInSettings)
-            onDockIconChange?()
-        }
+        didSet { showsDockIconInSettingsChanged(from: oldValue) }
     }
 
     /// Whether the menu bar item also shows the tightest limit: the mark of
@@ -52,11 +86,7 @@ final class AppSettings {
     /// default, like every other addition to what Pulse puts on screen. Goes
     /// through the menu bar's own callback, not `onChange`, which refetches.
     var showsUsageInMenuBar = false {
-        didSet {
-            guard showsUsageInMenuBar != oldValue else { return }
-            UserDefaults.standard.set(showsUsageInMenuBar, forKey: Key.showsUsageInMenuBar)
-            onMenuBarIconChange?()
-        }
+        didSet { showsUsageInMenuBarChanged(from: oldValue) }
     }
 
     /// Whether the menu bar item's menu opens on the usage dashboard — an
@@ -66,31 +96,49 @@ final class AppSettings {
     /// the menu is a few plain items until somebody asks for more. Read when
     /// the menu opens, so it needs no callback.
     var showsMenuDashboard = false {
-        didSet {
-            guard showsMenuDashboard != oldValue else { return }
-            UserDefaults.standard.set(showsMenuDashboard, forKey: Key.showsMenuDashboard)
-        }
+        didSet { showsMenuDashboardChanged(from: oldValue) }
     }
 
     /// The account the menu bar speaks for, by id. Nil — the default — is
     /// whichever ring is fullest. An account taken off the rail falls back to
     /// that too (`MenuBarReading.choose`) rather than leaving the bar blank.
     var menuBarAccount: String? {
-        didSet {
-            guard menuBarAccount != oldValue else { return }
-            UserDefaults.standard.set(menuBarAccount, forKey: Key.menuBarAccount)
-            onMenuBarIconChange?()
-        }
+        didSet { menuBarAccountChanged(from: oldValue) }
     }
 
     /// How the menu bar draws the account: its figure, a small ring, or its
     /// five-hour and weekly limits side by side. See `MenuBarStyle`.
     var menuBarStyle: MenuBarStyle = .figure {
-        didSet {
-            guard menuBarStyle != oldValue else { return }
-            UserDefaults.standard.set(menuBarStyle.rawValue, forKey: Key.menuBarStyle)
-            onMenuBarIconChange?()
-        }
+        didSet { menuBarStyleChanged(from: oldValue) }
+    }
+
+    /// The key combination that opens settings from anywhere, or nil.
+    ///
+    /// Deliberately no `onChange`: that is the usage loop's hook and it
+    /// refetches every provider when it fires. A shortcut is not a reading.
+    /// Whoever sets one tells `GlobalShortcutMonitor` directly, which is the
+    /// only thing that has to hear about it.
+    var openSettingsShortcut: GlobalShortcut? {
+        didSet { openSettingsShortcutChanged(from: oldValue) }
+    }
+
+    /// The key combination that draws the floating panel or takes it away, or
+    /// nil. Same rule about `onChange` as the one above.
+    var togglePanelShortcut: GlobalShortcut? {
+        didSet { togglePanelShortcutChanged(from: oldValue) }
+    }
+
+    /// Interface language. Applied to `LocalizationSource` as soon as it
+    /// changes so the UI re-reads its strings without a relaunch.
+    var language: AppLanguage {
+        didSet { languageChanged(from: oldValue) }
+    }
+
+    // MARK: - Panel (AppSettings+Panel)
+
+    /// Whether the floating panel is on screen.
+    var isPanelVisible: Bool {
+        didSet { isPanelVisibleChanged(from: oldValue) }
     }
 
     /// Whether the floating panel stays out of other apps' full-screen Spaces.
@@ -101,11 +149,7 @@ final class AppSettings {
     /// so it needs no Accessibility permission and cannot confuse a maximized
     /// window with a real full-screen Space.
     var hidesInFullScreen: Bool {
-        didSet {
-            guard hidesInFullScreen != oldValue else { return }
-            UserDefaults.standard.set(hidesInFullScreen, forKey: Key.hidesInFullScreen)
-            onChange?()
-        }
+        didSet { hidesInFullScreenChanged(from: oldValue) }
     }
 
     /// Whether the panel moves itself onto whichever display the pointer is on.
@@ -119,665 +163,12 @@ final class AppSettings {
     /// the focused window's display instead would follow other apps around,
     /// which is the opposite of what this is for.
     var followsActiveDisplay: Bool {
-        didSet {
-            guard followsActiveDisplay != oldValue else { return }
-            UserDefaults.standard.set(followsActiveDisplay, forKey: Key.followsActiveDisplay)
-            onChange?()
-        }
+        didSet { followsActiveDisplayChanged(from: oldValue) }
     }
-
-    /// The key combination that opens settings from anywhere, or nil.
-    ///
-    /// Deliberately no `onChange`: that is the usage loop's hook and it
-    /// refetches every provider when it fires. A shortcut is not a reading.
-    /// Whoever sets one tells `GlobalShortcutMonitor` directly, which is the
-    /// only thing that has to hear about it.
-    var openSettingsShortcut: GlobalShortcut? {
-        didSet {
-            guard openSettingsShortcut != oldValue else { return }
-            UserDefaults.standard.set(openSettingsShortcut?.storage, forKey: Key.openSettingsShortcut)
-        }
-    }
-
-    /// The key combination that draws the floating panel or takes it away, or
-    /// nil. Same rule about `onChange` as the one above.
-    var togglePanelShortcut: GlobalShortcut? {
-        didSet {
-            guard togglePanelShortcut != oldValue else { return }
-            UserDefaults.standard.set(togglePanelShortcut?.storage, forKey: Key.togglePanelShortcut)
-        }
-    }
-
-    /// Where DeepSeek's ring gets its denominator.
-    ///
-    /// DeepSeek reports a prepaid balance and no allowance at all, so unlike
-    /// every other provider there is no percentage to show until something
-    /// supplies one. Three modes, one setting, and the card always names which
-    /// is in force — see `BalanceBasis`. Scalars rather than the per-account
-    /// dictionaries beside them because DeepSeek has no second account.
-    var deepSeekBasis: BalanceBasis {
-        didSet {
-            guard deepSeekBasis != oldValue else { return }
-            UserDefaults.standard.set(deepSeekBasis.rawValue, forKey: Key.deepSeekBasis)
-            onChange?()
-        }
-    }
-
-    /// What the reader calls a full tank, for `BalanceBasis.budget`. Nil until
-    /// they say, which leaves that mode showing the balance and no fraction.
-    var deepSeekBudget: Double? {
-        didSet {
-            guard deepSeekBudget != oldValue else { return }
-            UserDefaults.standard.set(deepSeekBudget, forKey: Key.deepSeekBudget)
-            onChange?()
-        }
-    }
-
-    /// Which currency the ring follows when the account holds more than one.
-    /// Nil takes the first the reply lists with money in it.
-    var deepSeekCurrency: String? {
-        didSet {
-            guard deepSeekCurrency != oldValue else { return }
-            UserDefaults.standard.set(deepSeekCurrency, forKey: Key.deepSeekCurrency)
-            onChange?()
-        }
-    }
-
-    /// The same choice read straight from the defaults, for a reader off the
-    /// main actor (the detailed card's DeepSeek history, whose money follows it).
-    nonisolated static var storedDeepSeekCurrency: String? {
-        UserDefaults.standard.string(forKey: Key.deepSeekCurrency)
-    }
-
-    /// Which Qoder site the saved session belongs to.
-    ///
-    /// `qoder.com` and `qoder.com.cn` are two sign-ins on two hosts, and a
-    /// session for one is refused by — and must never be sent to — the other.
-    /// So the site decides both where the browser is asked for cookies and
-    /// where the request goes, and changing it discards the session saved for
-    /// the old one (Settings does that). A scalar, like DeepSeek's settings
-    /// beside it, because Qoder has no second account.
-    var qoderSite: QoderSite {
-        didSet {
-            guard qoderSite != oldValue else { return }
-            UserDefaults.standard.set(qoderSite.rawValue, forKey: Key.qoderSite)
-            onChange?()
-        }
-    }
-
-    /// Which StepFun site the saved session belongs to: `platform.stepfun.com`
-    /// or `platform.stepfun.ai`, two sign-ins on two hosts. The same rules as
-    /// `qoderSite`: it decides where cookies are read from and where the
-    /// request goes, and changing it discards the saved session.
-    var stepFunSite: StepFunSite {
-        didSet {
-            guard stepFunSite != oldValue else { return }
-            UserDefaults.standard.set(stepFunSite.rawValue, forKey: Key.stepFunSite)
-            onChange?()
-        }
-    }
-
-    /// Where Pulse sends a self-hosted gateway's request, per account.
-    ///
-    /// sub2api and New API are somebody's own deployments, so unlike every
-    /// other provider here there is no address to ship: these are typed.
-    /// Stored as the reader wrote it and checked on the way out
-    /// (`GatewayAddress`), so a half-typed address never becomes a request and
-    /// is never quietly rewritten into one. Empty until they say.
-    ///
-    /// **Keyed by account id, like `sources` and `sessionBrowsers`**, rather
-    /// than a scalar per provider. It was a scalar while sub2api was the only
-    /// one; a second gateway turned "the address" into "*whose* address", and
-    /// a shape that cannot hold two is the shape that quietly gives one
-    /// provider the other's host.
-    var serverAddresses: [String: String] {
-        didSet {
-            guard serverAddresses != oldValue else { return }
-            UserDefaults.standard.set(serverAddresses, forKey: Key.serverAddresses)
-            onChange?()
-        }
-    }
-
-    /// Whether Codex's card shows how many limit reset credits are left.
-    ///
-    /// **Off by default**, because it is not free: the count is only in
-    /// Codex's app server, so while this is on every Codex refresh starts or
-    /// asks that process — which somebody reading Codex from its usage
-    /// endpoint alone would otherwise never run.
-    ///
-    /// No `onChange`: that refetches every provider, and this is one row on
-    /// one card. Settings asks the store for the count itself.
-    /// Providers whose usage windows Pulse starts as soon as they reset, by
-    /// raw value — see `WindowPrimer`. Empty by default, and switched on only
-    /// through Settings' confirmation, which says what it does and what it
-    /// risks. Not through `onChange`, which refetches every provider:
-    /// `WindowPrimer` observes this itself.
-    var primedProviders: Set<String> = [] {
-        didSet {
-            guard primedProviders != oldValue else { return }
-            UserDefaults.standard.set(Array(primedProviders), forKey: Key.primedProviders)
-        }
-    }
-
-    func primesWindows(for provider: Provider) -> Bool {
-        primedProviders.contains(provider.rawValue)
-    }
-
-    func setPrimesWindows(_ on: Bool, for provider: Provider) {
-        if on { primedProviders.insert(provider.rawValue) } else { primedProviders.remove(provider.rawValue) }
-    }
-
-    /// When the window starter may act. See `PrimerHours`.
-    var primerHours: PrimerHours = .default {
-        didSet {
-            guard primerHours != oldValue else { return }
-            UserDefaults.standard.set(primerHours.start, forKey: Key.primerStart)
-            UserDefaults.standard.set(primerHours.end, forKey: Key.primerEnd)
-        }
-    }
-
-    /// When each provider's window was last started, and how that went —
-    /// what its pane shows, so the reader can see it is doing something.
-    private(set) var primerRunTimes: [String: Double] = [:]
-    private(set) var primerRunOutcomes: [String: String] = [:]
-
-    func lastPrimerRun(for provider: Provider) -> (date: Date, outcome: WindowStarter.Outcome)? {
-        guard let time = primerRunTimes[provider.rawValue],
-              let outcome = primerRunOutcomes[provider.rawValue].flatMap(WindowStarter.Outcome.init(rawValue:))
-        else { return nil }
-        return (Date(timeIntervalSince1970: time), outcome)
-    }
-
-    func recordPrimerRun(for provider: Provider, outcome: WindowStarter.Outcome, at date: Date) {
-        primerRunTimes[provider.rawValue] = date.timeIntervalSince1970
-        primerRunOutcomes[provider.rawValue] = outcome.rawValue
-        UserDefaults.standard.set(primerRunTimes, forKey: Key.primerRunTimes)
-        UserDefaults.standard.set(primerRunOutcomes, forKey: Key.primerRunOutcomes)
-    }
-
-    var showsCodexResetCredits = false {
-        didSet {
-            guard showsCodexResetCredits != oldValue else { return }
-            UserDefaults.standard.set(showsCodexResetCredits, forKey: Key.showsCodexResetCredits)
-        }
-    }
-
-    /// Where each API account's ring gets its denominator, keyed by account.
-    /// DeepSeek's own lives in `deepSeekBasis`, from before there were others;
-    /// `balanceBasis(for:)` reads either. A missing entry is the default.
-    var balanceBases: [String: String] = [:] {
-        didSet {
-            guard balanceBases != oldValue else { return }
-            UserDefaults.standard.set(balanceBases, forKey: Key.balanceBases)
-            onChange?()
-        }
-    }
-
-    /// What the reader calls a full tank for each API account, for
-    /// `BalanceBasis.budget`. DeepSeek's lives in `deepSeekBudget`.
-    var balanceBudgets: [String: Double] = [:] {
-        didSet {
-            guard balanceBudgets != oldValue else { return }
-            UserDefaults.standard.set(balanceBudgets, forKey: Key.balanceBudgets)
-            onChange?()
-        }
-    }
-
-    func balanceBasis(for account: AccountKey) -> BalanceBasis {
-        if account == AccountKey(.deepSeek) { return deepSeekBasis }
-        return balanceBases[account.id].flatMap(BalanceBasis.init(rawValue:)) ?? .default
-    }
-
-    func setBalanceBasis(_ basis: BalanceBasis, for account: AccountKey) {
-        if account == AccountKey(.deepSeek) { deepSeekBasis = basis; return }
-        balanceBases[account.id] = basis == .default ? nil : basis.rawValue
-    }
-
-    func balanceBudget(for account: AccountKey) -> Double? {
-        account == AccountKey(.deepSeek) ? deepSeekBudget : balanceBudgets[account.id]
-    }
-
-    func setBalanceBudget(_ budget: Double?, for account: AccountKey) {
-        if account == AccountKey(.deepSeek) { deepSeekBudget = budget; return }
-        balanceBudgets[account.id] = budget
-    }
-
-    /// Warn when a prepaid balance falls below this much, per account.
-    ///
-    /// Empty is off, which is how it ships — the same rule every other alert
-    /// follows. Keyed by account id and stored per account rather than as one
-    /// figure because the providers that report a balance do not price in the
-    /// same currency: ¥20 and $20 are not the same line.
-    var lowBalanceAlerts: [String: Double] {
-        didSet {
-            guard lowBalanceAlerts != oldValue else { return }
-            UserDefaults.standard.set(lowBalanceAlerts, forKey: Key.lowBalanceAlerts)
-            onChange?()
-        }
-    }
-
-    /// The order the rail draws them in, as account ids.
-    ///
-    /// Stored rather than derived so it survives a launch, and resolved through
-    /// `orderedAccounts` rather than trusted as-is: an account added later is
-    /// missing from every list stored before it existed, and one removed would
-    /// still be named in lists stored while it did. The stored values are
-    /// unchanged from when this was a list of providers — a provider's first
-    /// account has the provider's own raw value as its id.
-    var providerOrder: [String] {
-        didSet {
-            orderedCache = nil
-            guard providerOrder != oldValue else { return }
-            UserDefaults.standard.set(providerOrder, forKey: Key.providerOrder)
-            // Deliberately no `onChange`: that is how the AppKit side hears
-            // about settings the *usage loop* cares about, and it refetches
-            // every provider when it fires. Rearranging the rail is a layout
-            // change — the panel is `@Observable` and redraws on its own, and
-            // nobody's rate limit should pay for a reorder.
-        }
-    }
-
-    /// Accounts Pulse knows about beyond each provider's first, which exist
-    /// only because Pulse was signed in to them.
-    var extraAccounts: [ExtraAccount] {
-        didSet {
-            orderedCache = nil
-            guard extraAccounts != oldValue else { return }
-            // Before the change is announced: whoever reacts is about to
-            // measure the panel, and the rail is now longer than it was.
-            resizeRail()
-            let data = try? JSONEncoder().encode(extraAccounts)
-            UserDefaults.standard.set(data, forKey: Key.extraAccounts)
-            onChange?()
-        }
-    }
-
-    /// Every account there is: each provider's first, plus whatever has been
-    /// added to the two that allow it, plus one per extension found. Declaration
-    /// order, before the user's own order is applied.
-    var allAccounts: [AccountKey] {
-        Provider.builtIn.flatMap { provider in
-            [AccountKey(provider)] + extraAccounts.filter { $0.provider == provider }.map(\.key)
-        } + extensions.map(\.account)
-    }
-
-    /// The extensions the last scan of the extensions folder found usable, and
-    /// the folders it turned away. Nothing here is fetched until its account
-    /// is switched on, which is `enabledAccounts`' job as for any provider.
-    ///
-    /// **Scanned at launch and when asked, not watched.** A program being
-    /// copied in is a half-written folder for a moment, and a watcher would
-    /// list it broken and then fixed. Settings has a button for "look again".
-    private(set) var extensions: [PulseExtension] = [] {
-        didSet {
-            orderedCache = nil
-            // What `storedRail()` — `--json` — lists, so it never has to read
-            // the folder itself.
-            let names = Dictionary(extensions.map { ($0.account.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-            UserDefaults.standard.set(names, forKey: Key.extensionNames)
-        }
-    }
-    private(set) var extensionProblems: [ExtensionCatalog.Problem] = []
-
-    /// Reads the extensions folder again and, if that changed anything, tells
-    /// whoever draws the rail.
-    func rescanExtensions() {
-        apply(ExtensionCatalog.scan())
-    }
-
-    /// Separate from `rescanExtensions` so a test can hand in a scan without a
-    /// folder on disk.
-    func apply(_ scan: ExtensionCatalog.Scan) {
-        guard scan.extensions != extensions || scan.problems != extensionProblems else { return }
-        let changedAccounts = scan.extensions.map(\.account) != extensions.map(\.account)
-        extensions = scan.extensions
-        extensionProblems = scan.problems
-        // Before the change is announced, for the reason `extraAccounts` gives.
-        resizeRail()
-        if changedAccounts { onChange?() }
-    }
-
-    /// The extension behind an account, if it is one and it is still there.
-    func pulseExtension(for account: AccountKey) -> PulseExtension? {
-        guard account.provider == .pulseExtension else { return nil }
-        return extensions.first { $0.account == account }
-    }
-
-    /// Every account, in the user's order.
-    ///
-    /// Anything the stored order doesn't mention goes after it, **sorted by
-    /// name**. Someone who has arranged the rail keeps their arrangement and a
-    /// provider added later lands at the bottom of it; someone who never
-    /// touched it — which is everybody until they do — gets the whole list in
-    /// alphabetical order rather than in the order the enum happens to be
-    /// written in.
-    ///
-    /// **Worked out once and kept.** The panel asks for it on every mouse
-    /// event it handles and every view that draws the rail asks again, and
-    /// with seventy-odd providers each answer was a sort of every name. It
-    /// changes only with the stored order, the added accounts and the
-    /// extensions found, which is exactly what clears it. Those three are
-    /// still read on every call, so whoever asks is told when they change.
-    var orderedAccounts: [AccountKey] {
-        _ = providerOrder
-        _ = extraAccounts
-        _ = extensions
-        if let orderedCache { return orderedCache }
-        let known = allAccounts
-        let knownSet = Set(known)
-        let stored = providerOrder.compactMap(AccountKey.init(id:)).filter(knownSet.contains)
-        let storedSet = Set(stored)
-        let ordered = stored + known.filter { !storedSet.contains($0) }.sorted(by: byName)
-        orderedCache = ordered
-        return ordered
-    }
-
-    @ObservationIgnored private var orderedCache: [AccountKey]?
-
-    /// The order accounts fall into before anybody has arranged them: **by the
-    /// name on the row**.
-    ///
-    /// It used to be declaration order, which is the order the providers were
-    /// added to the enum over the months — an order with a meaning, but not one
-    /// visible from the outside. Seventeen rows arranged by nothing a reader
-    /// can see is a list you have to scan rather than one you can look in.
-    ///
-    /// An added account sorts by the label the user gave it, not by its
-    /// provider, because the label is what is written on the row. Two Claude
-    /// Code accounts called "Work" and "Personal" belong under W and P.
-    ///
-    /// `localizedStandardCompare` is Finder's comparison: case- and
-    /// accent-insensitive, and it puts any digits in a name in numeric order.
-    /// The same one the settings search matches with.
-    private func byName(_ a: AccountKey, _ b: AccountKey) -> Bool {
-        let left = label(for: a)
-        let right = label(for: b)
-        // Ids as the tie-break, so two rows that read the same never swap
-        // places between launches.
-        if left.localizedStandardCompare(right) == .orderedSame { return a.id < b.id }
-        return left.localizedStandardCompare(right) == .orderedAscending
-    }
-
-    /// Moves an account one place up or down **among the shown ones**.
-    /// Silently does nothing at the ends, so the buttons can simply be
-    /// disabled there.
-    ///
-    /// Among the shown ones because that is the only list the Order group
-    /// draws: with seventy-odd providers, listing the switched-off ones made
-    /// it a list of things that are not on the rail. A move that stepped over
-    /// one of those would change nothing anybody can see.
-    func move(_ account: AccountKey, by offset: Int) {
-        var shown = shownAccounts
-        guard
-            let from = shown.firstIndex(of: account),
-            shown.indices.contains(from + offset)
-        else { return }
-
-        shown.swapAt(from, from + offset)
-        store(shownOrder: shown)
-    }
-
-    /// The shown accounts in the order given, then everything else in the
-    /// order it already had. What is switched off keeps its place relative to
-    /// its own kind, and comes back at the end of the rail when it is switched
-    /// on again.
-    private func store(shownOrder shown: [AccountKey]) {
-        providerOrder = (shown + orderedAccounts.filter { !shown.contains($0) }).map(\.id)
-    }
-
-    /// Whether the rail is in an order somebody chose, rather than the one it
-    /// ships with.
-    ///
-    /// Compared against the accounts themselves, not against whether anything
-    /// is stored: dragging a row down and back up again leaves a full stored
-    /// list that happens to match the default exactly, and offering to reset
-    /// an order that is already the default is a button that does nothing.
-    /// Whether anybody has actually arranged the rail.
-    ///
-    /// **Not `orderedAccounts != allAccounts`.** That compared the order shown
-    /// against *declaration* order, and since the default became name order the
-    /// two differ on a fresh install — so "Reset order" was enabled out of the
-    /// box and did nothing when pressed, which is the one thing a control must
-    /// never do. The question is whether a stored arrangement exists that still
-    /// names something real.
-    var hasCustomOrder: Bool {
-        !providerOrder.compactMap(AccountKey.init(id:)).filter(allAccounts.contains).isEmpty
-    }
-
-    /// Back to declaration order.
-    ///
-    /// By clearing the stored list rather than writing the default into it, so
-    /// a provider added in a later version keeps arriving at the bottom of the
-    /// rail instead of being pinned by a list written before it existed —
-    /// which is the whole reason `orderedAccounts` appends what it doesn't
-    /// recognise.
-    func resetOrder() { providerOrder = [] }
-
-    /// Drops an account into the place another one currently holds.
-    ///
-    /// The standard "take its place" behaviour, and it reads in both
-    /// directions because the indices shift underneath it: dragging *down*
-    /// onto a row lands after it (the target moved up when the dragged row was
-    /// lifted out), dragging *up* onto a row lands before it. Both are what
-    /// the pointer was pointing at.
-    func move(_ account: AccountKey, onto target: AccountKey) {
-        guard account != target else { return }
-
-        var shown = shownAccounts
-        guard
-            let from = shown.firstIndex(of: account),
-            let to = shown.firstIndex(of: target)
-        else { return }
-
-        shown.remove(at: from)
-        shown.insert(account, at: min(to, shown.count))
-        store(shownOrder: shown)
-    }
-
-    /// What to call an account. A provider's first one is just the provider;
-    /// the rest carry a label so two subscriptions can be told apart.
-    func label(for account: AccountKey) -> String {
-        // The manifest's name. A removed extension's account is gone from
-        // every list, so the fallback is only ever read in passing.
-        if account.provider == .pulseExtension {
-            return pulseExtension(for: account)?.name ?? account.slot
-        }
-        return extraAccounts.first { $0.key == account }?.label ?? account.provider.displayName
-    }
-
-    /// Which accounts appear in the rail. Empty only until the initial choice
-    /// is made; once monitoring starts, the last ring cannot be switched off.
-    ///
-    /// Ids rather than providers, and stored under the same key with the same
-    /// values as when it was providers: a first account's id *is* its
-    /// provider's raw value, so nothing written by an older version stops
-    /// matching.
-    var enabledAccounts: Set<String> {
-        didSet {
-            guard enabledAccounts != oldValue else { return }
-            if enabledAccounts.isEmpty {
-                enabledAccounts = oldValue
-                return
-            }
-            // The rail is sized from what is shown, so the budget moves
-            // before the change is announced — see `railSlotCount`.
-            resizeRail()
-            UserDefaults.standard.set(Array(enabledAccounts), forKey: ProviderSelection.enabledKey)
-            onChange?()
-        }
-    }
-
-    var needsProviderSelection: Bool { shownAccounts.isEmpty }
-
-    /// Discovery is metadata only. Neither list enables anything on its own.
-    var detectedProviders: Set<Provider> = []
-    var suggestedProviders: Set<Provider> = []
-
-    func selectProviders(_ providers: Set<Provider>) {
-        guard !providers.isEmpty else { return }
-        enabledAccounts.formUnion(providers.map(\.rawValue))
-    }
-
-    /// Interface language. Applied to `LocalizationSource` as soon as it
-    /// changes so the UI re-reads its strings without a relaunch.
-    var language: AppLanguage {
-        didSet {
-            guard language != oldValue else { return }
-            LocalizationSource.use(language)
-            UserDefaults.standard.set(language.rawValue, forKey: Key.language)
-            onChange?()
-        }
-    }
-
-    /// Which window each provider's ring shows, keyed by provider. A missing
-    /// entry means "whichever is closest to its limit".
-    var pinnedWindows: [String: String] {
-        didSet {
-            guard pinnedWindows != oldValue else { return }
-            UserDefaults.standard.set(pinnedWindows, forKey: Key.pinnedWindows)
-            onChange?()
-        }
-    }
-
-    /// A colour chosen for an account's ring, keyed by account. A missing
-    /// entry means the ring is coloured by how much of its limit is gone,
-    /// which is the default and the one that means something.
-    var ringTints: [String: String] {
-        didSet {
-            guard ringTints != oldValue else { return }
-            UserDefaults.standard.set(ringTints, forKey: Key.ringTints)
-        }
-    }
-
-    /// Which rings draw an animated mark instead of the provider's logo,
-    /// keyed by account. A missing entry means the logo, which is the default.
-    ///
-    /// **Per account, not one switch for the rail.** A logo says which of
-    /// twenty products a ring belongs to, and a mark gives that up for
-    /// motion — which is a trade worth making for the two or three rings
-    /// somebody actually watches work, and not for the rest. Per account
-    /// rather than per provider for the same reason `ringTints` is: two
-    /// accounts of one provider are two rings, and they are told apart by
-    /// exactly this kind of choice.
-    ///
-    /// **The mark takes the CLI-activity arc with it, on that ring only.** A
-    /// white travelling arc and a mark that visibly gets to work are one fact
-    /// drawn twice.
-    var botMarks: [String: Bool] {
-        didSet {
-            guard botMarks != oldValue else { return }
-            UserDefaults.standard.set(botMarks, forKey: Key.botMarks)
-        }
-    }
-
-    /// The persona chosen for an account's mark, keyed by account. A missing
-    /// entry means automatic, which is what almost everyone will leave it on.
-    ///
-    /// Automatic is dealt by position on the rail, so the ring beside this one
-    /// is a different character. Choosing one is for when somebody wants a
-    /// particular provider to be the sleepy one.
-    var botPersonas: [String: String] {
-        didSet {
-            guard botPersonas != oldValue else { return }
-            UserDefaults.standard.set(botPersonas, forKey: Key.botPersonas)
-        }
-    }
-
-    /// A colour chosen for an account's **mark**, keyed by account. A missing
-    /// entry means the brand colour, or one dealt across the rail.
-    ///
-    /// Separate from `ringTints` on purpose: the ring means how close the
-    /// limit is, the mark means which provider this is, and somebody who
-    /// wants a green bot in a red ring is asking for two different things.
-    var botColours: [String: String] {
-        didSet {
-            guard botColours != oldValue else { return }
-            UserDefaults.standard.set(botColours, forKey: Key.botColours)
-        }
-    }
-
-    /// The body shape chosen for an account's mark, keyed by account. A
-    /// missing entry is round, which is what every mark is until somebody
-    /// changes it.
-    ///
-    /// **Not dealt like the colours and the personas.** Those are dealt
-    /// because two rings that look identical are unreadable, and a colour or a
-    /// rhythm says nothing by itself. A shape somebody did not choose would be
-    /// the app making a claim about that provider with a silhouette.
-    var botShapes: [String: String] {
-        didSet {
-            guard botShapes != oldValue else { return }
-            UserDefaults.standard.set(botShapes, forKey: Key.botShapes)
-        }
-    }
-
-    /// Which browser an account's session cookie is read from, keyed by
-    /// account. A missing entry means "whichever, starting with the default
-    /// one" — the same shape as `sources`, and for the same reason: naming one
-    /// means a failure is *reported* rather than quietly answered from
-    /// somewhere the user never signed in.
-    var sessionBrowsers: [String: String] {
-        didSet {
-            guard sessionBrowsers != oldValue else { return }
-            UserDefaults.standard.set(sessionBrowsers, forKey: Key.sessionBrowsers)
-        }
-    }
-
-    /// Which route each provider's figures are read by, keyed by provider. A
-    /// missing entry means `.automatic`.
-    var sources: [String: String] {
-        didSet {
-            guard sources != oldValue else { return }
-            UserDefaults.standard.set(sources, forKey: Key.sources)
-            onChange?()
-        }
-    }
-
-    /// How often the figures are re-read.
-    var refreshInterval: RefreshInterval {
-        didSet {
-            guard refreshInterval != oldValue else { return }
-            UserDefaults.standard.set(refreshInterval.rawValue, forKey: Key.refreshInterval)
-            onChange?()
-        }
-    }
-
-    /// How Pulse's own requests and supported helper processes reach the
-    /// network. System is the default so an upgrade changes nothing.
-    var networkProxy: NetworkProxySettings {
-        didSet {
-            guard networkProxy != oldValue else { return }
-            Self.storeNetworkProxy(networkProxy, in: .standard)
-            NetworkSession.apply(networkProxy)
-            onChange?()
-        }
-    }
-
-    static func storedNetworkProxy(in defaults: UserDefaults) -> NetworkProxySettings {
-        guard let data = defaults.data(forKey: Key.networkProxy),
-              let settings = try? JSONDecoder().decode(NetworkProxySettings.self, from: data)
-        else { return .default }
-        return settings
-    }
-
-    static func storeNetworkProxy(_ settings: NetworkProxySettings, in defaults: UserDefaults) {
-        guard let data = try? JSONEncoder().encode(settings) else { return }
-        defaults.set(data, forKey: Key.networkProxy)
-    }
-
-    static var networkProxyDefaultsKey: String { Key.networkProxy }
 
     /// How big the floating panel is drawn.
     var panelSize: PanelSize {
-        didSet {
-            guard panelSize != oldValue else { return }
-            // Applied before the change is announced: whoever reacts to it is
-            // going to measure the panel, and it has to already be the new
-            // size when they do.
-            PanelMetrics.use(panelSize)
-            UserDefaults.standard.set(panelSize.rawValue, forKey: Key.panelSize)
-            onChange?()
-        }
+        didSet { panelSizeChanged(from: oldValue) }
     }
 
     /// Whether the rail keeps its percent labels while it lies along the top
@@ -788,27 +179,12 @@ final class AppSettings {
     /// directly under the menu bar, which turns a compact pill into a banner.
     /// The number is a hover away on the card either way.
     var topRailShowsPercentages: Bool {
-        didSet {
-            guard topRailShowsPercentages != oldValue else { return }
-            // Before the change is announced, for the same reason `panelSize`
-            // does it: this changes the rail's thickness, and whoever reacts
-            // is about to measure the panel.
-            PanelMetrics.showTopPercentages(topRailShowsPercentages)
-            UserDefaults.standard.set(topRailShowsPercentages, forKey: Key.topRailShowsPercentages)
-            onChange?()
-        }
+        didSet { topRailShowsPercentagesChanged(from: oldValue) }
     }
 
     /// How much air there is between the rings.
     var railSpacing: RailSpacing {
-        didSet {
-            guard railSpacing != oldValue else { return }
-            // Before the change is announced, like `panelSize`: whoever reacts
-            // is about to measure the rail.
-            PanelMetrics.use(railSpacing)
-            UserDefaults.standard.set(railSpacing.rawValue, forKey: Key.railSpacing)
-            onChange?()
-        }
+        didSet { railSpacingChanged(from: oldValue) }
     }
 
     /// Whether the rail keeps its percent labels down a side of the screen.
@@ -818,14 +194,7 @@ final class AppSettings {
     /// the top it is a second line of type directly under the menu bar. Same
     /// control, opposite defaults, for that reason.
     var sideRailShowsPercentages: Bool {
-        didSet {
-            guard sideRailShowsPercentages != oldValue else { return }
-            // Before the change is announced, like `panelSize`: whoever reacts
-            // is about to measure the rail, and it just got shorter or longer.
-            PanelMetrics.showSidePercentages(sideRailShowsPercentages)
-            UserDefaults.standard.set(sideRailShowsPercentages, forKey: Key.sideRailShowsPercentages)
-            onChange?()
-        }
+        didSet { sideRailShowsPercentagesChanged(from: oldValue) }
     }
 
     /// Whether the percent label sits above its ring rather than below it.
@@ -840,12 +209,7 @@ final class AppSettings {
     /// announced: whoever reacts is about to measure the panel, and the hit
     /// testing has to agree with the drawing.
     var labelAboveRing: Bool {
-        didSet {
-            guard labelAboveRing != oldValue else { return }
-            PanelMetrics.putLabelAboveRing(labelAboveRing)
-            UserDefaults.standard.set(labelAboveRing, forKey: Key.labelAboveRing)
-            onChange?()
-        }
+        didSet { labelAboveRingChanged(from: oldValue) }
     }
 
     /// Whether a rail lying free across puts each figure beside its ring
@@ -858,12 +222,7 @@ final class AppSettings {
     /// it goes to `PanelMetrics` before the change is announced, like
     /// `labelAboveRing`.
     var freeAcrossFiguresBeside: Bool {
-        didSet {
-            guard freeAcrossFiguresBeside != oldValue else { return }
-            PanelMetrics.putFreeAcrossFiguresBeside(freeAcrossFiguresBeside)
-            UserDefaults.standard.set(freeAcrossFiguresBeside, forKey: Key.freeAcrossFiguresBeside)
-            onChange?()
-        }
+        didSet { freeAcrossFiguresBesideChanged(from: oldValue) }
     }
 
     /// Whether the rail's ends are half circles taken from the ring, rather
@@ -885,12 +244,7 @@ final class AppSettings {
     /// is 16pt longer with round ends and whoever reacts is about to measure
     /// it.
     var usesRoundEnds: Bool {
-        didSet {
-            guard usesRoundEnds != oldValue else { return }
-            PanelMetrics.useRoundEnds(usesRoundEnds)
-            UserDefaults.standard.set(usesRoundEnds, forKey: Key.usesRoundEnds)
-            onChange?()
-        }
+        didSet { usesRoundEndsChanged(from: oldValue) }
     }
 
     /// Whether each ring also shows how far through its window the clock is.
@@ -901,184 +255,15 @@ final class AppSettings {
     /// on a mark that is 36pt across, and the rail's whole case is that one
     /// glance is enough. Asked for, so it is offered; not assumed.
     ///
-    /// Unlike the other panel settings this changes nothing about the layout —
-    /// the arc is drawn in the margin the rail already has around a ring — so
-    /// it needs no `PanelMetrics` entry and nothing has to be re-measured.
-    ///
-    /// **It moves the figures.** The arc is drawn 5pt outside the ring's own
-    /// edge, so a figure at the usual distance sat on it (issue #73); with
-    /// the arc on, figures stand that much further off and the rail is longer.
-    /// So it goes to `PanelMetrics` before the change is announced, like
-    /// `labelAboveRing`.
+    /// The arc is drawn in the margin the rail already has around a ring, so
+    /// it moves nothing by itself — but **it moves the figures.** The arc is
+    /// drawn 5pt outside the ring's own edge, so a figure at the usual
+    /// distance sat on it (issue #73); with the arc on, figures stand that
+    /// much further off and the rail is longer. So it goes to `PanelMetrics`
+    /// before the change is announced, like `labelAboveRing`.
     var showsWindowClock: Bool {
-        didSet {
-            guard showsWindowClock != oldValue else { return }
-            PanelMetrics.showWindowClock(showsWindowClock)
-            UserDefaults.standard.set(showsWindowClock, forKey: Key.showsWindowClock)
-            onChange?()
-        }
+        didSet { showsWindowClockChanged(from: oldValue) }
     }
-
-    /// Whether the outer clock arc fills with elapsed time or empties with the
-    /// time remaining. Elapsed is the persisted fallback so existing installs
-    /// keep the display they chose before this direction setting existed.
-    var windowClockDirection: WindowClockDirection {
-        didSet {
-            guard windowClockDirection != oldValue else { return }
-            Self.storeWindowClockDirection(windowClockDirection, in: .standard)
-        }
-    }
-
-    static func storedWindowClockDirection(in defaults: UserDefaults) -> WindowClockDirection {
-        defaults.string(forKey: Key.windowClockDirection)
-            .flatMap(WindowClockDirection.init(rawValue:)) ?? .default
-    }
-
-    static func storeWindowClockDirection(
-        _ direction: WindowClockDirection,
-        in defaults: UserDefaults
-    ) {
-        defaults.set(direction.rawValue, forKey: Key.windowClockDirection)
-    }
-
-    static var windowClockDirectionDefaultsKey: String { Key.windowClockDirection }
-
-    /// Show what is **left** rather than what is gone.
-    ///
-    /// The same reading either way — 12% used and 88% left are one fact — but
-    /// which of the two a person wants at a glance is genuinely a matter of
-    /// how they think about a budget, so it is offered rather than argued
-    /// about. Spent is the default because that is what the providers
-    /// themselves report and what every limit is expressed in.
-    ///
-    /// **The ring turns over with the figure, and its colour does not.** A
-    /// number reading 88% beside an arc drawn at 12% is the same reading
-    /// disagreeing with itself, so the arc shows what is left too — but colour
-    /// on these rings means how close the limit is, and that does not change
-    /// because the number was flipped. So a nearly empty ring is still red.
-    ///
-    /// This changes nothing about the layout: "100%" is the widest either
-    /// way round, so no `PanelMetrics` entry and nothing to re-measure.
-    var showsRemaining: Bool {
-        didSet {
-            guard showsRemaining != oldValue else { return }
-            UserDefaults.standard.set(showsRemaining, forKey: Key.showsRemaining)
-        }
-    }
-
-    /// How full a limit has to be before the panel draws it red.
-    ///
-    /// A setting rather than a constant because "getting tight" is a judgement
-    /// about how somebody works, not a fact about the limit: a weekly window
-    /// three-quarters gone on a Monday and on a Friday are the same number and
-    /// not the same news. It moves the **caution** step's upper edge, nothing
-    /// else — green below 50%, yellow up to here, red above it. Spent stays
-    /// what the provider reports, and is never a matter of taste.
-    ///
-    /// No `onChange?()`: nothing about the panel's frame depends on it, and
-    /// `@Observable` already redraws whoever read it.
-    var warningThreshold: WarningThreshold {
-        didSet {
-            guard warningThreshold != oldValue else { return }
-            UserDefaults.standard.set(warningThreshold.rawValue, forKey: Key.warningThreshold)
-        }
-    }
-
-    /// Whether the collapsed sliver takes on `warningThreshold`'s colour when
-    /// a limit is close.
-    ///
-    /// On by default. A rail full of accounts that all cross the threshold at
-    /// once turns the sliver into a permanent coloured line against the
-    /// screen edge — off locks it to its normal, alert-free colour, the same
-    /// one it would draw with nothing to report. The rings are unaffected:
-    /// this only touches the sliver `FloatingUsagePanelView.alertTint` feeds
-    /// `UsageDockView`.
-    ///
-    /// No `onChange?()`: nothing about the panel's frame depends on it, the
-    /// same as `warningThreshold`.
-    var dockShowsAlertColor: Bool {
-        didSet {
-            guard dockShowsAlertColor != oldValue else { return }
-            UserDefaults.standard.set(dockShowsAlertColor, forKey: Key.dockShowsAlertColor)
-        }
-    }
-
-    /// How far back the Token spend pane counts.
-    ///
-    /// The last **week** until the reader picks another span, and their pick is
-    /// kept: the pane answers a sit-down question, and making someone re-choose
-    /// the window on every visit is work nobody asked for. No `onChange?()` —
-    /// nothing about the panel's frame depends on it, and `@Observable` already
-    /// redraws whoever read it, the same as `warningThreshold`.
-    var spendSpan: SpendSpan {
-        didSet {
-            guard spendSpan != oldValue else { return }
-            Self.storeSpendSpan(spendSpan, in: .standard)
-        }
-    }
-
-    /// Which view of the Token spend pane's year-long "Token activity" chart is
-    /// open: the daily grid until the reader picks another, and their pick is
-    /// kept like the span's. No `onChange?()` for the same reason.
-    var spendActivityView: ActivityView {
-        didSet {
-            guard spendActivityView != oldValue else { return }
-            Self.storeSpendActivityView(spendActivityView, in: .standard)
-        }
-    }
-
-    /// The chart view last chosen, or the daily grid when nothing is stored or
-    /// what is stored is no longer offered. Takes the store as an argument so
-    /// the round trip can be pinned against an isolated suite.
-    static func storedSpendActivityView(in defaults: UserDefaults) -> ActivityView {
-        defaults.string(forKey: Key.spendActivityView)
-            .flatMap(ActivityView.init(rawValue:)) ?? .default
-    }
-
-    static func storeSpendActivityView(_ view: ActivityView, in defaults: UserDefaults) {
-        defaults.set(view.rawValue, forKey: Key.spendActivityView)
-    }
-
-    static var spendActivityViewDefaultsKey: String { Key.spendActivityView }
-
-    /// Local records are read only after this pane is explicitly enabled.
-    /// No onChange: that hook refreshes the quota providers.
-    var readsTokenSpend: Bool {
-        didSet {
-            guard readsTokenSpend != oldValue else { return }
-            Self.storeReadsTokenSpend(readsTokenSpend, in: .standard)
-        }
-    }
-
-    static func storedReadsTokenSpend(in defaults: UserDefaults) -> Bool {
-        defaults.object(forKey: Key.readsTokenSpend) as? Bool ?? false
-    }
-
-    static func storeReadsTokenSpend(_ enabled: Bool, in defaults: UserDefaults) {
-        defaults.set(enabled, forKey: Key.readsTokenSpend)
-    }
-
-    /// The span last chosen, or `.week` when nothing is stored or what is
-    /// stored no longer names an offered range.
-    ///
-    /// Takes the store as an argument, rather than reaching for
-    /// `UserDefaults.standard`, so the round trip can be pinned against an
-    /// isolated suite. `restored()` and `spendSpan`'s `didSet` both go through
-    /// this and `storeSpendSpan`, so what a test exercises is the one
-    /// production uses.
-    static func storedSpendSpan(in defaults: UserDefaults) -> SpendSpan {
-        defaults.string(forKey: Key.spendSpan)
-            .flatMap(SpendSpan.init(rawValue:)) ?? .default
-    }
-
-    static func storeSpendSpan(_ span: SpendSpan, in defaults: UserDefaults) {
-        defaults.set(span.rawValue, forKey: Key.spendSpan)
-    }
-
-    /// The key the chosen span lives under. Internal so a test can store a
-    /// value the picker no longer offers and prove the fallback; nothing
-    /// outside the module can see it either way.
-    static var spendSpanDefaultsKey: String { Key.spendSpan }
 
     /// Say on the card whether each limit will last its window.
     ///
@@ -1092,12 +277,7 @@ final class AppSettings {
     /// metric is set before the change is announced, so whoever re-places the
     /// panel measures the size it is about to be.
     var showsForecast: Bool {
-        didSet {
-            guard showsForecast != oldValue else { return }
-            PanelMetrics.showForecast(showsForecast)
-            UserDefaults.standard.set(showsForecast, forKey: Key.showsForecast)
-            onChange?()
-        }
+        didSet { showsForecastChanged(from: oldValue) }
     }
 
     /// The accounts whose card is the detailed one, by account id: the plan,
@@ -1113,22 +293,7 @@ final class AppSettings {
     /// anything out. Set before the change is announced, so whoever re-places
     /// the panel measures the new size.
     var detailedCards: Set<String> = [] {
-        didSet {
-            guard detailedCards != oldValue else { return }
-            // The app's own settings only: a test's `AppSettings` must not
-            // resize the frame every other test is measuring.
-            if drivesPanelMetrics { PanelMetrics.showDetailedCard(!detailedCards.isEmpty) }
-            UserDefaults.standard.set(detailedCards.sorted(), forKey: Key.detailedCards)
-            onChange?()
-        }
-    }
-
-    func showsDetailedCard(for account: AccountKey) -> Bool {
-        detailedCards.contains(account.id)
-    }
-
-    func setShowsDetailedCard(_ shows: Bool, for account: AccountKey) {
-        if shows { detailedCards.insert(account.id) } else { detailedCards.remove(account.id) }
+        didSet { detailedCardsChanged(from: oldValue) }
     }
 
     /// Liquid Glass instead of flat black for the panel's surfaces.
@@ -1153,11 +318,7 @@ final class AppSettings {
     /// reported the handle as perfectly reachable throughout. Neither can
     /// answer whether a real click arrives.
     var usesGlass: Bool {
-        didSet {
-            guard usesGlass != oldValue else { return }
-            UserDefaults.standard.set(usesGlass, forKey: Key.usesGlass)
-            onChange?()
-        }
+        didSet { usesGlassChanged(from: oldValue) }
     }
 
     /// How clear the glass is, 0 to 1: how little of `PanelGlass`'s dimming
@@ -1168,12 +329,16 @@ final class AppSettings {
     /// Deliberately no `onChange`: that refetches every provider, and a
     /// slider sets this dozens of times a second. The panel is `@Observable`
     /// and redraws on its own.
+    ///
+    /// **Observer body kept here, not in `AppSettings+Panel`.** Assigning
+    /// the clamped value inside its own `didSet` does not run the observer
+    /// again; from a method it would, and would write the value out twice.
     var glassTransparency: Double {
         didSet {
             let clamped = min(max(glassTransparency, 0), 1)
             guard clamped == glassTransparency else { glassTransparency = clamped; return }
             guard glassTransparency != oldValue else { return }
-            UserDefaults.standard.set(glassTransparency, forKey: Key.glassTransparency)
+            defaults.set(glassTransparency, forKey: Key.glassTransparency)
         }
     }
 
@@ -1184,123 +349,152 @@ final class AppSettings {
     /// the edge, and the sliver still changes colour when a limit is nearly
     /// gone, so hiding it never hides bad news.
     var autoCollapse: Bool {
-        didSet {
-            guard autoCollapse != oldValue else { return }
-            UserDefaults.standard.set(autoCollapse, forKey: Key.autoCollapse)
-            onChange?()
-        }
+        didSet { autoCollapseChanged(from: oldValue) }
     }
 
-    /// How full a limit gets before Pulse posts a notification about it.
+    /// Accounts whose limits are drawn as one ring per model group, as ids.
     ///
-    /// Off by default, like every other setting that makes Pulse do something
-    /// unprompted. Whatever step is chosen, a limit the provider reports as
-    /// **spent** is always the second one — the two are one setting because
-    /// wanting the warning and not wanting to hear that it happened is not a
-    /// combination anybody has.
-    var alertThreshold: AlertThreshold {
-        didSet {
-            guard alertThreshold != oldValue else { return }
-            UserDefaults.standard.set(alertThreshold.rawValue, forKey: Key.alertThreshold)
-        }
+    /// Off for everyone by default. Only a provider that actually reports more
+    /// than one group can be split — `Provider.splitsByModelGroup` — and today
+    /// that is Antigravity alone: its plan carries a Gemini allowance and a
+    /// separate one for Claude and GPT, and a single ring can only ever show
+    /// the worse of the two.
+    var splitAccounts: Set<String> {
+        didSet { splitAccountsChanged(from: oldValue) }
     }
 
-    /// Say when a limit that was warned about has come back.
+    /// Whether this is the settings the running app is drawn from, and so the
+    /// one allowed to move `PanelMetrics`.
     ///
-    /// Depends on `alertThreshold`, and the settings pane greys it out to say
-    /// so: a reset is only announced for a window Pulse had already mentioned
-    /// on the way up, so with the threshold off there is nothing this can fire
-    /// about. See `AlertMemory` for why it is tied that way.
-    var alertsOnReset: Bool {
-        didSet {
-            guard alertsOnReset != oldValue else { return }
-            UserDefaults.standard.set(alertsOnReset, forKey: Key.alertsOnReset)
-        }
+    /// **Global state, owned by one instance.** The rail's budget is a static
+    /// the AppKit frame reads, and every other `AppSettings` — a preview's, a
+    /// test's — switching an account on would resize a panel it has nothing to
+    /// do with. Under parallel tests that was a race: one suite's toggle
+    /// shrank the window another suite was measuring. Set by `restored()`
+    /// once the metrics have been brought in line with what is stored.
+    @ObservationIgnored var drivesPanelMetrics = false
+
+    // MARK: - Rings (AppSettings+Rings)
+
+    /// Which window each provider's ring shows, keyed by provider. A missing
+    /// entry means "whichever is closest to its limit".
+    var pinnedWindows: [String: String] {
+        didSet { pinnedWindowsChanged(from: oldValue) }
     }
 
-    /// Say when several passes in a row have failed to read an account.
+    /// A colour chosen for an account's ring, keyed by account. A missing
+    /// entry means the ring is coloured by how much of its limit is gone,
+    /// which is the default and the one that means something.
+    var ringTints: [String: String] {
+        didSet { ringTintsChanged(from: oldValue) }
+    }
+
+    /// Which rings draw an animated mark instead of the provider's logo,
+    /// keyed by account. A missing entry means the logo, which is the default.
     ///
-    /// The one alert that is about Pulse rather than about usage. A failed
-    /// fetch falls back to the last good reading, which is the right thing to
-    /// show and also the reason the fault is invisible: the panel goes on
-    /// displaying perfectly plausible figures with only a "last read" time to
-    /// give it away.
-    var alertsOnFailure: Bool {
-        didSet {
-            guard alertsOnFailure != oldValue else { return }
-            UserDefaults.standard.set(alertsOnFailure, forKey: Key.alertsOnFailure)
-        }
+    /// **Per account, not one switch for the rail.** A logo says which of
+    /// twenty products a ring belongs to, and a mark gives that up for
+    /// motion — which is a trade worth making for the two or three rings
+    /// somebody actually watches work, and not for the rest. Per account
+    /// rather than per provider for the same reason `ringTints` is: two
+    /// accounts of one provider are two rings, and they are told apart by
+    /// exactly this kind of choice.
+    ///
+    /// **The mark takes the CLI-activity arc with it, on that ring only.** A
+    /// white travelling arc and a mark that visibly gets to work are one fact
+    /// drawn twice.
+    var botMarks: [String: Bool] {
+        didSet { botMarksChanged(from: oldValue) }
     }
 
-    /// Say when a provider's own status page — Codex's, Claude Code's,
-    /// DeepSeek's — reports an outage: for whichever is switched on, and only
-    /// about what it runs on (`StatusPage.notifiesAbout`). Rules: `OutageMemory`.
-    var alertsOnOutage = false {
-        didSet {
-            guard alertsOnOutage != oldValue else { return }
-            UserDefaults.standard.set(alertsOnOutage, forKey: Key.alertsOnOutage)
-        }
+    /// The persona chosen for an account's mark, keyed by account. A missing
+    /// entry means automatic, which is what almost everyone will leave it on.
+    ///
+    /// Automatic is dealt by position on the rail, so the ring beside this one
+    /// is a different character. Choosing one is for when somebody wants a
+    /// particular provider to be the sleepy one.
+    var botPersonas: [String: String] {
+        didSet { botPersonasChanged(from: oldValue) }
     }
 
-    /// Say, in the first days of a month, that last month's recap is ready —
-    /// only when that month had records Pulse has read (`RecapNoticeRule`).
-    /// Off by default. Goes through its own callback, which checks at once:
-    /// switching it on in the first days of a month announces then.
-    var alertsOnRecap = false {
-        didSet {
-            guard alertsOnRecap != oldValue else { return }
-            UserDefaults.standard.set(alertsOnRecap, forKey: Key.alertsOnRecap)
-            onRecapAlertChange?()
-        }
+    /// A colour chosen for an account's **mark**, keyed by account. A missing
+    /// entry means the brand colour, or one dealt across the rail.
+    ///
+    /// Separate from `ringTints` on purpose: the ring means how close the
+    /// limit is, the mark means which provider this is, and somebody who
+    /// wants a green bot in a red ring is asking for two different things.
+    var botColours: [String: String] {
+        didSet { botColoursChanged(from: oldValue) }
     }
 
-    /// The month whose recap was last announced, as `Recap.Period.key`
-    /// ("2026-09"), so each month is announced once however often Pulse
-    /// restarts or the switch is flipped.
-    var recapAnnouncedMonth: String? {
-        didSet {
-            guard recapAnnouncedMonth != oldValue else { return }
-            UserDefaults.standard.set(recapAnnouncedMonth, forKey: Key.recapAnnouncedMonth)
-        }
+    /// The body shape chosen for an account's mark, keyed by account. A
+    /// missing entry is round, which is what every mark is until somebody
+    /// changes it.
+    ///
+    /// **Not dealt like the colours and the personas.** Those are dealt
+    /// because two rings that look identical are unreadable, and a colour or a
+    /// rhythm says nothing by itself. A shape somebody did not choose would be
+    /// the app making a claim about that provider with a silhouette.
+    var botShapes: [String: String] {
+        didSet { botShapesChanged(from: oldValue) }
     }
 
-    /// What the reader pays a month, in US dollars — typed into the recap
-    /// window, used only for its payback card. **Nil is nothing typed**, never a
-    /// guess and never zero: no payback card is drawn for it. Only a positive
-    /// amount within `RecapPrice.maximum` is kept.
-    var recapMonthlyPrice: Double? {
-        didSet {
-            // Assigning inside `didSet` does not run it again.
-            let kept = RecapPrice.normalized(recapMonthlyPrice)
-            if kept != recapMonthlyPrice { recapMonthlyPrice = kept }
-            guard kept != oldValue else { return }
-            if let kept {
-                UserDefaults.standard.set(kept, forKey: Key.recapMonthlyPrice)
-            } else {
-                UserDefaults.standard.removeObject(forKey: Key.recapMonthlyPrice)
-            }
-        }
+    /// Whether the outer clock arc fills with elapsed time or empties with the
+    /// time remaining. Elapsed is the persisted fallback so existing installs
+    /// keep the display they chose before this direction setting existed.
+    var windowClockDirection: WindowClockDirection {
+        didSet { windowClockDirectionChanged(from: oldValue) }
     }
 
-    /// Whether the recap cards say "Project 1", "Project 2" instead of the
-    /// directories' names. Off: names are shown.
-    var recapHidesProjects = false {
-        didSet {
-            guard recapHidesProjects != oldValue else { return }
-            UserDefaults.standard.set(recapHidesProjects, forKey: Key.recapHidesProjects)
-        }
+    /// Show what is **left** rather than what is gone.
+    ///
+    /// The same reading either way — 12% used and 88% left are one fact — but
+    /// which of the two a person wants at a glance is genuinely a matter of
+    /// how they think about a budget, so it is offered rather than argued
+    /// about. Spent is the default because that is what the providers
+    /// themselves report and what every limit is expressed in.
+    ///
+    /// **The ring turns over with the figure, and its colour does not.** A
+    /// number reading 88% beside an arc drawn at 12% is the same reading
+    /// disagreeing with itself, so the arc shows what is left too — but colour
+    /// on these rings means how close the limit is, and that does not change
+    /// because the number was flipped. So a nearly empty ring is still red.
+    ///
+    /// This changes nothing about the layout: "100%" is the widest either
+    /// way round, so no `PanelMetrics` entry and nothing to re-measure.
+    var showsRemaining: Bool {
+        didSet { showsRemainingChanged(from: oldValue) }
     }
 
-    /// Whether any rule about readings is on. What `UsageAlerts.observe`
-    /// works for; the outage check reads status pages, not readings.
-    var wantsUsageAlerts: Bool {
-        alertThreshold != .off || alertsOnReset || alertsOnFailure || !lowBalanceAlerts.isEmpty
+    /// How full a limit has to be before the panel draws it red.
+    ///
+    /// A setting rather than a constant because "getting tight" is a judgement
+    /// about how somebody works, not a fact about the limit: a weekly window
+    /// three-quarters gone on a Monday and on a Friday are the same number and
+    /// not the same news. It moves the **caution** step's upper edge, nothing
+    /// else — green below 50%, yellow up to here, red above it. Spent stays
+    /// what the provider reports, and is never a matter of taste.
+    ///
+    /// No `onChange?()`: nothing about the panel's frame depends on it, and
+    /// `@Observable` already redraws whoever read it.
+    var warningThreshold: WarningThreshold {
+        didSet { warningThresholdChanged(from: oldValue) }
     }
 
-    /// Whether anything at all would be posted. What decides if permission is
-    /// worth asking for.
-    var wantsAlerts: Bool {
-        wantsUsageAlerts || alertsOnOutage || alertsOnRecap
+    /// Whether the collapsed sliver takes on `warningThreshold`'s colour when
+    /// a limit is close.
+    ///
+    /// On by default. A rail full of accounts that all cross the threshold at
+    /// once turns the sliver into a permanent coloured line against the
+    /// screen edge — off locks it to its normal, alert-free colour, the same
+    /// one it would draw with nothing to report. The rings are unaffected:
+    /// this only touches the sliver `FloatingUsagePanelView.alertTint` feeds
+    /// `UsageDockView`.
+    ///
+    /// No `onChange?()`: nothing about the panel's frame depends on it, the
+    /// same as `warningThreshold`.
+    var dockShowsAlertColor: Bool {
+        didSet { dockShowsAlertColorChanged(from: oldValue) }
     }
 
     /// A second, smaller ring inside the first, for the next-fullest limit.
@@ -1316,29 +510,7 @@ final class AppSettings {
     /// this flag in the metrics was written on every change and read by
     /// nothing.
     var showsSecondRing: Bool {
-        didSet {
-            guard showsSecondRing != oldValue else { return }
-            UserDefaults.standard.set(showsSecondRing, forKey: Key.showsSecondRing)
-            onChange?()
-        }
-    }
-
-    /// Accounts whose limits are drawn as one ring per model group, as ids.
-    ///
-    /// Off for everyone by default. Only a provider that actually reports more
-    /// than one group can be split — `Provider.splitsByModelGroup` — and today
-    /// that is Antigravity alone: its plan carries a Gemini allowance and a
-    /// separate one for Claude and GPT, and a single ring can only ever show
-    /// the worse of the two.
-    var splitAccounts: Set<String> {
-        didSet {
-            guard splitAccounts != oldValue else { return }
-            // The rail is about to get longer. Before the change is announced,
-            // so whoever re-measures the panel sees the size it will be.
-            resizeRail()
-            UserDefaults.standard.set(Array(splitAccounts), forKey: Key.splitAccounts)
-            onChange?()
-        }
+        didSet { showsSecondRingChanged(from: oldValue) }
     }
 
     /// Whether a ring turns while its CLI is working or Pulse is fetching it a
@@ -1351,82 +523,360 @@ final class AppSettings {
     /// CLI is still busy — only the moving cue for them is withheld, for
     /// anyone who finds a rail of turning rings more distracting than useful.
     var animatesRingActivity: Bool {
+        didSet { animatesRingActivityChanged(from: oldValue) }
+    }
+
+    // MARK: - Accounts (AppSettings+Accounts)
+
+    /// Which accounts appear in the rail. Empty only until the initial choice
+    /// is made; once monitoring starts, the last ring cannot be switched off.
+    ///
+    /// Ids rather than providers, and stored under the same key with the same
+    /// values as when it was providers: a first account's id *is* its
+    /// provider's raw value, so nothing written by an older version stops
+    /// matching.
+    ///
+    /// **Observer body kept here, not in `AppSettings+Accounts`**, for the
+    /// reason `glassTransparency` gives: it puts the old value back from inside
+    /// its own `didSet`, which does not run the observer a second time.
+    var enabledAccounts: Set<String> {
         didSet {
-            guard animatesRingActivity != oldValue else { return }
-            UserDefaults.standard.set(animatesRingActivity, forKey: Key.animatesRingActivity)
+            guard enabledAccounts != oldValue else { return }
+            if enabledAccounts.isEmpty {
+                enabledAccounts = oldValue
+                return
+            }
+            // The rail is sized from what is shown, so the budget moves
+            // before the change is announced — see `railSlotCount`.
+            resizeRail()
+            defaults.set(Array(enabledAccounts), forKey: ProviderSelection.enabledKey)
+            onChange?()
         }
     }
 
-    func isSplit(_ account: AccountKey) -> Bool {
-        account.provider.splitsByModelGroup && splitAccounts.contains(account.id)
+    /// Accounts Pulse knows about beyond each provider's first, which exist
+    /// only because Pulse was signed in to them.
+    var extraAccounts: [ExtraAccount] {
+        didSet { extraAccountsChanged(from: oldValue) }
     }
 
-    func setSplit(_ split: Bool, for account: AccountKey) {
-        var updated = splitAccounts
-        if split { updated.insert(account.id) } else { updated.remove(account.id) }
-        splitAccounts = updated
+    /// The order the rail draws them in, as account ids.
+    ///
+    /// Stored rather than derived so it survives a launch, and resolved through
+    /// `orderedAccounts` rather than trusted as-is: an account added later is
+    /// missing from every list stored before it existed, and one removed would
+    /// still be named in lists stored while it did. The stored values are
+    /// unchanged from when this was a list of providers — a provider's first
+    /// account has the provider's own raw value as its id.
+    var providerOrder: [String] {
+        didSet { providerOrderChanged(from: oldValue) }
     }
 
-    /// Whether this is the settings the running app is drawn from, and so the
-    /// one allowed to move `PanelMetrics`.
+    /// The extensions the last scan of the extensions folder found usable, and
+    /// the folders it turned away. Nothing here is fetched until its account
+    /// is switched on, which is `enabledAccounts`' job as for any provider.
     ///
-    /// **Global state, owned by one instance.** The rail's budget is a static
-    /// the AppKit frame reads, and every other `AppSettings` — a preview's, a
-    /// test's — switching an account on would resize a panel it has nothing to
-    /// do with. Under parallel tests that was a race: one suite's toggle
-    /// shrank the window another suite was measuring.
-    private var drivesPanelMetrics = false
+    /// **Scanned at launch and when asked, not watched.** A program being
+    /// copied in is a half-written folder for a moment, and a watcher would
+    /// list it broken and then fixed. Settings has a button for "look again".
+    ///
+    /// Written only by `AppSettings+Accounts` (`apply(_:)`, `restoreAccounts`).
+    var extensions: [PulseExtension] = [] {
+        didSet { extensionsChanged(from: oldValue) }
+    }
+    /// Written only by `AppSettings+Accounts`, like `extensions`.
+    var extensionProblems: [ExtensionCatalog.Problem] = []
 
-    private func resizeRail() {
-        guard drivesPanelMetrics else { return }
-        PanelMetrics.makeRoom(for: railSlotCount)
+    /// Discovery is metadata only. Neither list enables anything on its own.
+    var detectedProviders: Set<Provider> = []
+    var suggestedProviders: Set<Provider> = []
+
+    /// What `orderedAccounts` worked out, kept until one of the three things it
+    /// depends on changes. Not observed: reading `orderedAccounts` reads those
+    /// three, which is what tells an observer.
+    @ObservationIgnored var orderedCache: [AccountKey]?
+
+    // MARK: - Providers (AppSettings+Providers)
+
+    /// Where DeepSeek's ring gets its denominator.
+    ///
+    /// DeepSeek reports a prepaid balance and no allowance at all, so unlike
+    /// every other provider there is no percentage to show until something
+    /// supplies one. Three modes, one setting, and the card always names which
+    /// is in force — see `BalanceBasis`. Scalars rather than the per-account
+    /// dictionaries beside them because DeepSeek has no second account.
+    var deepSeekBasis: BalanceBasis {
+        didSet { deepSeekBasisChanged(from: oldValue) }
     }
 
-    /// How many rings the rail has to have room for.
+    /// What the reader calls a full tank, for `BalanceBasis.budget`. Nil until
+    /// they say, which leaves that mode showing the balance and no fraction.
+    var deepSeekBudget: Double? {
+        didSet { deepSeekBudgetChanged(from: oldValue) }
+    }
+
+    /// Which currency the ring follows when the account holds more than one.
+    /// Nil takes the first the reply lists with money in it.
+    var deepSeekCurrency: String? {
+        didSet { deepSeekCurrencyChanged(from: oldValue) }
+    }
+
+    /// Which Qoder site the saved session belongs to.
     ///
-    /// **The shown accounts, not every account.** It used to be every one, so
-    /// that switching a provider off never resized the window. That stopped
-    /// being affordable once there were dozens of providers: the transparent
-    /// window was reserving a rail for all of them, thousands of points taller
-    /// than any screen, for rings nobody had switched on. Switching one on or
-    /// off now resizes the window — from Settings, never while a card is
-    /// opening — and `settingsChanged()` re-places it on the way.
+    /// `qoder.com` and `qoder.com.cn` are two sign-ins on two hosts, and a
+    /// session for one is refused by — and must never be sent to — the other.
+    /// So the site decides both where the browser is asked for cookies and
+    /// where the request goes, and changing it discards the session saved for
+    /// the old one (Settings does that). A scalar, like DeepSeek's settings
+    /// beside it, because Qoder has no second account.
+    var qoderSite: QoderSite {
+        didSet { qoderSiteChanged(from: oldValue) }
+    }
+
+    /// Which StepFun site the saved session belongs to: `platform.stepfun.com`
+    /// or `platform.stepfun.ai`, two sign-ins on two hosts. The same rules as
+    /// `qoderSite`: it decides where cookies are read from and where the
+    /// request goes, and changing it discards the saved session.
+    var stepFunSite: StepFunSite {
+        didSet { stepFunSiteChanged(from: oldValue) }
+    }
+
+    /// Where Pulse sends a self-hosted gateway's request, per account.
     ///
-    /// A split account is still counted for the groups it can produce rather
-    /// than the groups a reading happens to carry, so a reading never moves
-    /// the budget: only a setting does.
-    var railSlotCount: Int {
-        shownAccounts.reduce(0) { total, account in
-            total + (isSplit(account) ? account.provider.modelGroupCount : 1)
+    /// sub2api and New API are somebody's own deployments, so unlike every
+    /// other provider here there is no address to ship: these are typed.
+    /// Stored as the reader wrote it and checked on the way out
+    /// (`GatewayAddress`), so a half-typed address never becomes a request and
+    /// is never quietly rewritten into one. Empty until they say.
+    ///
+    /// **Keyed by account id, like `sources` and `sessionBrowsers`**, rather
+    /// than a scalar per provider. It was a scalar while sub2api was the only
+    /// one; a second gateway turned "the address" into "*whose* address", and
+    /// a shape that cannot hold two is the shape that quietly gives one
+    /// provider the other's host.
+    var serverAddresses: [String: String] {
+        didSet { serverAddressesChanged(from: oldValue) }
+    }
+
+    /// Whether Codex's card shows how many limit reset credits are left.
+    ///
+    /// **Off by default**, because it is not free: the count is only in
+    /// Codex's app server, so while this is on every Codex refresh starts or
+    /// asks that process — which somebody reading Codex from its usage
+    /// endpoint alone would otherwise never run.
+    ///
+    /// No `onChange`: that refetches every provider, and this is one row on
+    /// one card. Settings asks the store for the count itself.
+    var showsCodexResetCredits = false {
+        didSet { showsCodexResetCreditsChanged(from: oldValue) }
+    }
+
+    /// Where each API account's ring gets its denominator, keyed by account.
+    /// DeepSeek's own lives in `deepSeekBasis`, from before there were others;
+    /// `balanceBasis(for:)` reads either. A missing entry is the default.
+    var balanceBases: [String: String] = [:] {
+        didSet { balanceBasesChanged(from: oldValue) }
+    }
+
+    /// What the reader calls a full tank for each API account, for
+    /// `BalanceBasis.budget`. DeepSeek's lives in `deepSeekBudget`.
+    var balanceBudgets: [String: Double] = [:] {
+        didSet { balanceBudgetsChanged(from: oldValue) }
+    }
+
+    /// Which browser an account's session cookie is read from, keyed by
+    /// account. A missing entry means "whichever, starting with the default
+    /// one" — the same shape as `sources`, and for the same reason: naming one
+    /// means a failure is *reported* rather than quietly answered from
+    /// somewhere the user never signed in.
+    var sessionBrowsers: [String: String] {
+        didSet { sessionBrowsersChanged(from: oldValue) }
+    }
+
+    /// Which route each provider's figures are read by, keyed by provider. A
+    /// missing entry means `.automatic`.
+    var sources: [String: String] {
+        didSet { sourcesChanged(from: oldValue) }
+    }
+
+    /// How often the figures are re-read.
+    var refreshInterval: RefreshInterval {
+        didSet { refreshIntervalChanged(from: oldValue) }
+    }
+
+    /// How Pulse's own requests and supported helper processes reach the
+    /// network. System is the default so an upgrade changes nothing.
+    var networkProxy: NetworkProxySettings {
+        didSet { networkProxyChanged(from: oldValue) }
+    }
+
+    // MARK: - Token spend (AppSettings+TokenSpend)
+
+    /// How far back the Token spend pane counts.
+    ///
+    /// The last **week** until the reader picks another span, and their pick is
+    /// kept: the pane answers a sit-down question, and making someone re-choose
+    /// the window on every visit is work nobody asked for. No `onChange?()` —
+    /// nothing about the panel's frame depends on it, and `@Observable` already
+    /// redraws whoever read it, the same as `warningThreshold`.
+    var spendSpan: SpendSpan {
+        didSet { spendSpanChanged(from: oldValue) }
+    }
+
+    /// Which view of the Token spend pane's year-long "Token activity" chart is
+    /// open: the daily grid until the reader picks another, and their pick is
+    /// kept like the span's. No `onChange?()` for the same reason.
+    var spendActivityView: ActivityView {
+        didSet { spendActivityViewChanged(from: oldValue) }
+    }
+
+    /// Local records are read only after this pane is explicitly enabled.
+    /// No onChange: that hook refreshes the quota providers.
+    var readsTokenSpend: Bool {
+        didSet { readsTokenSpendChanged(from: oldValue) }
+    }
+
+    // MARK: - Notifications (AppSettings+Notifications)
+
+    /// Warn when a prepaid balance falls below this much, per account.
+    ///
+    /// Empty is off, which is how it ships — the same rule every other alert
+    /// follows. Keyed by account id and stored per account rather than as one
+    /// figure because the providers that report a balance do not price in the
+    /// same currency: ¥20 and $20 are not the same line.
+    var lowBalanceAlerts: [String: Double] {
+        didSet { lowBalanceAlertsChanged(from: oldValue) }
+    }
+
+    /// How full a limit gets before Pulse posts a notification about it.
+    ///
+    /// Off by default, like every other setting that makes Pulse do something
+    /// unprompted. Whatever step is chosen, a limit the provider reports as
+    /// **spent** is always the second one — the two are one setting because
+    /// wanting the warning and not wanting to hear that it happened is not a
+    /// combination anybody has.
+    var alertThreshold: AlertThreshold {
+        didSet { alertThresholdChanged(from: oldValue) }
+    }
+
+    /// Say when a limit that was warned about has come back.
+    ///
+    /// Depends on `alertThreshold`, and the settings pane greys it out to say
+    /// so: a reset is only announced for a window Pulse had already mentioned
+    /// on the way up, so with the threshold off there is nothing this can fire
+    /// about. See `AlertMemory` for why it is tied that way.
+    var alertsOnReset: Bool {
+        didSet { alertsOnResetChanged(from: oldValue) }
+    }
+
+    /// Say when several passes in a row have failed to read an account.
+    ///
+    /// The one alert that is about Pulse rather than about usage. A failed
+    /// fetch falls back to the last good reading, which is the right thing to
+    /// show and also the reason the fault is invisible: the panel goes on
+    /// displaying perfectly plausible figures with only a "last read" time to
+    /// give it away.
+    var alertsOnFailure: Bool {
+        didSet { alertsOnFailureChanged(from: oldValue) }
+    }
+
+    /// Say when a provider's own status page — Codex's, Claude Code's,
+    /// DeepSeek's — reports an outage: for whichever is switched on, and only
+    /// about what it runs on (`StatusPage.notifiesAbout`). Rules: `OutageMemory`.
+    var alertsOnOutage = false {
+        didSet { alertsOnOutageChanged(from: oldValue) }
+    }
+
+    /// Say, in the first days of a month, that last month's recap is ready —
+    /// only when that month had records Pulse has read (`RecapNoticeRule`).
+    /// Off by default. Goes through its own callback, which checks at once:
+    /// switching it on in the first days of a month announces then.
+    var alertsOnRecap = false {
+        didSet { alertsOnRecapChanged(from: oldValue) }
+    }
+
+    // MARK: - Recap (AppSettings+Recap)
+
+    /// The month whose recap was last announced, as `Recap.Period.key`
+    /// ("2026-09"), so each month is announced once however often Pulse
+    /// restarts or the switch is flipped.
+    var recapAnnouncedMonth: String? {
+        didSet { recapAnnouncedMonthChanged(from: oldValue) }
+    }
+
+    /// What the reader pays a month, in US dollars — typed into the recap
+    /// window, used only for its payback card. **Nil is nothing typed**, never a
+    /// guess and never zero: no payback card is drawn for it. Only a positive
+    /// amount within `RecapPrice.maximum` is kept.
+    ///
+    /// **Observer body kept here, not in `AppSettings+Recap`**, for the reason
+    /// `glassTransparency` gives.
+    var recapMonthlyPrice: Double? {
+        didSet {
+            // Assigning inside `didSet` does not run it again.
+            let kept = RecapPrice.normalized(recapMonthlyPrice)
+            if kept != recapMonthlyPrice { recapMonthlyPrice = kept }
+            guard kept != oldValue else { return }
+            if let kept {
+                defaults.set(kept, forKey: Key.recapMonthlyPrice)
+            } else {
+                defaults.removeObject(forKey: Key.recapMonthlyPrice)
+            }
         }
     }
 
-    /// Called after any change that the AppKit side has to react to — showing
-    /// or hiding the panel, or resizing it because the rail got shorter.
-    var onChange: (() -> Void)?
-    /// Called only when the menu bar status item should be inserted or removed.
-    /// Kept separate from `onChange` so a presentation preference cannot start
-    /// a provider refresh.
-    var onMenuBarIconChange: (() -> Void)?
-    /// Called when the Dock icon the settings window brings should appear or go.
-    var onDockIconChange: (() -> Void)?
-    /// Called when the recap notification is switched, so a month already
-    /// announceable is announced now.
-    var onRecapAlertChange: (() -> Void)?
+    /// Whether the recap cards say "Project 1", "Project 2" instead of the
+    /// directories' names. Off: names are shown.
+    var recapHidesProjects = false {
+        didSet { recapHidesProjectsChanged(from: oldValue) }
+    }
 
+    // MARK: - Window starter (AppSettings+WindowStarter)
+
+    /// Providers whose usage windows Pulse starts as soon as they reset, by
+    /// raw value — see `WindowPrimer`. Empty by default, and switched on only
+    /// through Settings' confirmation, which says what it does and what it
+    /// risks. Not through `onChange`, which refetches every provider:
+    /// `WindowPrimer` observes this itself.
+    var primedProviders: Set<String> = [] {
+        didSet { primedProvidersChanged(from: oldValue) }
+    }
+
+    /// When the window starter may act. See `PrimerHours`.
+    var primerHours: PrimerHours = .default {
+        didSet { primerHoursChanged(from: oldValue) }
+    }
+
+    /// When each provider's window was last started, and how that went —
+    /// what its pane shows, so the reader can see it is doing something.
+    /// Written only by `AppSettings+WindowStarter`.
+    var primerRunTimes: [String: Double] = [:]
+    var primerRunOutcomes: [String: String] = [:]
+
+    // MARK: - Init
+
+    /// Source-compatible with every caller that names only the settings it
+    /// cares about: `AppSettings(readsTokenSpend: true)`. Every default here is
+    /// the shipped one, and is the same constant `restored()` falls back to
+    /// (`Default`), so the two cannot drift.
+    ///
+    /// The list stays flat. Every stored property has to be assigned in a
+    /// designated initializer's own body, so grouping the arguments into
+    /// per-topic values would leave this body as long as it is and put a second
+    /// list of the same names in front of it.
     init(
-        isPanelVisible: Bool = true,
-        hidesMenuBarIcon: Bool = false,
-        showsDockIconInSettings: Bool = true,
-        hidesInFullScreen: Bool = true,
-        followsActiveDisplay: Bool = false,
+        isPanelVisible: Bool = Default.isPanelVisible,
+        hidesMenuBarIcon: Bool = Default.hidesMenuBarIcon,
+        showsDockIconInSettings: Bool = Default.showsDockIconInSettings,
+        hidesInFullScreen: Bool = Default.hidesInFullScreen,
+        followsActiveDisplay: Bool = Default.followsActiveDisplay,
         openSettingsShortcut: GlobalShortcut? = nil,
         togglePanelShortcut: GlobalShortcut? = nil,
         deepSeekBasis: BalanceBasis = .default,
         deepSeekBudget: Double? = nil,
         deepSeekCurrency: String? = nil,
-        qoderSite: QoderSite = .international,
-        stepFunSite: StepFunSite = .china,
+        qoderSite: QoderSite = Default.qoderSite,
+        stepFunSite: StepFunSite = Default.stepFunSite,
         serverAddresses: [String: String] = [:],
         lowBalanceAlerts: [String: Double] = [:],
         enabledAccounts: Set<String> = Set(Provider.builtIn.map(\.rawValue)),
@@ -1443,32 +893,34 @@ final class AppSettings {
         botColours: [String: String] = [:],
         refreshInterval: RefreshInterval = .default,
         networkProxy: NetworkProxySettings = .default,
-        autoCollapse: Bool = true,
+        autoCollapse: Bool = Default.autoCollapse,
         panelSize: PanelSize = .default,
         railSpacing: RailSpacing = .default,
-        usesGlass: Bool = false,
-        glassTransparency: Double = PanelGlass.defaultTransparency,
-        topRailShowsPercentages: Bool = false,
-        sideRailShowsPercentages: Bool = true,
-        labelAboveRing: Bool = false,
-        freeAcrossFiguresBeside: Bool = false,
-        usesRoundEnds: Bool = false,
-        showsWindowClock: Bool = false,
+        usesGlass: Bool = Default.usesGlass,
+        glassTransparency: Double = Default.glassTransparency,
+        topRailShowsPercentages: Bool = Default.topRailShowsPercentages,
+        sideRailShowsPercentages: Bool = Default.sideRailShowsPercentages,
+        labelAboveRing: Bool = Default.labelAboveRing,
+        freeAcrossFiguresBeside: Bool = Default.freeAcrossFiguresBeside,
+        usesRoundEnds: Bool = Default.usesRoundEnds,
+        showsWindowClock: Bool = Default.showsWindowClock,
         windowClockDirection: WindowClockDirection = .default,
-        showsRemaining: Bool = false,
+        showsRemaining: Bool = Default.showsRemaining,
         warningThreshold: WarningThreshold = .default,
-        dockShowsAlertColor: Bool = true,
-        showsForecast: Bool = false,
-        showsSecondRing: Bool = false,
-        animatesRingActivity: Bool = true,
+        dockShowsAlertColor: Bool = Default.dockShowsAlertColor,
+        showsForecast: Bool = Default.showsForecast,
+        showsSecondRing: Bool = Default.showsSecondRing,
+        animatesRingActivity: Bool = Default.animatesRingActivity,
         splitAccounts: Set<String> = [],
         spendSpan: SpendSpan = .default,
         spendActivityView: ActivityView = .default,
-        readsTokenSpend: Bool = false,
+        readsTokenSpend: Bool = Default.readsTokenSpend,
         alertThreshold: AlertThreshold = .default,
-        alertsOnReset: Bool = false,
-        alertsOnFailure: Bool = false
+        alertsOnReset: Bool = Default.alertsOnReset,
+        alertsOnFailure: Bool = Default.alertsOnFailure,
+        defaults: UserDefaults = .standard
     ) {
+        self.defaults = defaults
         self.isPanelVisible = isPanelVisible
         self.hidesMenuBarIcon = hidesMenuBarIcon
         self.showsDockIconInSettings = showsDockIconInSettings
@@ -1524,236 +976,36 @@ final class AppSettings {
         self.alertsOnFailure = alertsOnFailure
     }
 
-    /// A stored route the provider doesn't offer resolves to `.automatic`
-    /// rather than being handed on. Routes are keyed by account and providers
-    /// gain and lose them between versions, so a list saved while one existed
-    /// would otherwise pin a provider to a route that can only fail.
-    func source(for account: AccountKey) -> UsageSource {
-        let stored = sources[account.id].flatMap(UsageSource.init(rawValue:)) ?? .automatic
-        return UsageSource.options(for: account).contains(stored) ? stored : .automatic
-    }
+    // MARK: - Restoring
 
-    /// The balance this account should be warned below, or nil for no warning.
-    func lowBalanceAlert(for account: AccountKey) -> Double? {
-        lowBalanceAlerts[account.id]
-    }
-
-    /// Anything that is not a positive figure clears it: a warning below zero
-    /// can never fire, and one at zero fires only once the account is already
-    /// empty, which is the moment it is too late to be told.
-    func setLowBalanceAlert(_ amount: Double?, for account: AccountKey) {
-        var updated = lowBalanceAlerts
-        updated[account.id] = amount.flatMap { $0 > 0 ? $0 : nil }
-        lowBalanceAlerts = updated
-    }
-
-    func setSource(_ source: UsageSource, for account: AccountKey) {
-        var updated = sources
-        updated[account.id] = source == .automatic ? nil : source.rawValue
-        sources = updated
-    }
-
-    /// Whether this account's ring draws the animated mark.
-    func showsBotMark(for account: AccountKey) -> Bool {
-        botMarks[account.id] ?? false
-    }
-
-    func setShowsBotMark(_ shows: Bool, for account: AccountKey) {
-        var updated = botMarks
-        // Off is the default, so it is stored as an absence rather than as a
-        // false — the same shape as a cleared ring colour.
-        updated[account.id] = shows ? true : nil
-        botMarks = updated
-    }
-
-    /// The persona chosen for an account's mark, or nil for automatic.
-    ///
-    /// A stored value that stops parsing — a persona removed in a later
-    /// version — reads as automatic rather than as a crash or a blank mark.
-    func botPersona(for account: AccountKey) -> BotMarkPersona? {
-        botPersonas[account.id].flatMap(BotMarkPersona.init(rawValue:))
-    }
-
-    func setBotPersona(_ persona: BotMarkPersona?, for account: AccountKey) {
-        var updated = botPersonas
-        updated[account.id] = persona?.rawValue
-        botPersonas = updated
-    }
-
-    /// The colour chosen for an account's mark, or nil for its brand colour.
-    func botColour(for account: AccountKey) -> Color? {
-        RingTint.color(from: botColours[account.id])
-    }
-
-    func setBotColour(_ colour: Color?, for account: AccountKey) {
-        // A colour with no hex would store nil and silently put the account
-        // back on automatic, which reads as the picker refusing to work —
-        // the same trap `setRingTint` documents.
-        guard let colour else {
-            var updated = botColours
-            updated[account.id] = nil
-            botColours = updated
-            return
-        }
-        guard let hex = colour.hexString else { return }
-        var updated = botColours
-        updated[account.id] = hex
-        botColours = updated
-    }
-
-    /// The shape an account's mark wears. A stored value that no longer
-    /// names a shape reads as round rather than as a blank ring.
-    func botBody(for account: AccountKey) -> BotMarkBody {
-        botShapes[account.id].flatMap(BotMarkBody.init(rawValue:)) ?? .default
-    }
-
-    func setBotBody(_ body: BotMarkBody, for account: AccountKey) {
-        var updated = botShapes
-        // Round is the default, so it is stored as an absence.
-        updated[account.id] = body == .default ? nil : body.rawValue
-        botShapes = updated
-    }
-
-    /// The colour chosen for an account's ring, or nil to colour it by usage.
-    func ringTint(for account: AccountKey) -> Color? {
-        RingTint.color(from: ringTints[account.id])
-    }
-
-    func setRingTint(_ colour: Color?, for account: AccountKey) {
-        // A colour that will not convert to sRGB has no hex, and storing that
-        // nil would *remove* the key — silently putting the account back on
-        // Automatic and taking the colour row off the pane, which reads as the
-        // picker having refused to work. Keep whatever was chosen last
-        // instead; only an explicit nil clears it.
-        guard let colour else {
-            var updated = ringTints
-            updated[account.id] = nil
-            ringTints = updated
-            return
-        }
-        guard let hex = colour.hexString else { return }
-
-        var updated = ringTints
-        updated[account.id] = hex
-        ringTints = updated
-    }
-
-    /// The browser an account's session is read from, or nil for "whichever".
-    func sessionBrowser(for account: AccountKey) -> BrowserCookies.Browser? {
-        sessionBrowsers[account.id].flatMap(BrowserCookies.Browser.init(rawValue:))
-    }
-
-    func setSessionBrowser(_ browser: BrowserCookies.Browser?, for account: AccountKey) {
-        var updated = sessionBrowsers
-        updated[account.id] = browser?.rawValue
-        sessionBrowsers = updated
-    }
-
-    /// The gateway address entered for an account, trimmed, or empty.
-    func serverAddress(for account: AccountKey) -> String {
-        (serverAddresses[account.id] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    /// Blank removes the entry rather than storing an empty string, so the
-    /// stored dictionary carries only addresses somebody actually set.
-    func setServerAddress(_ address: String, for account: AccountKey) {
-        var updated = serverAddresses
-        let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)
-        updated[account.id] = trimmed.isEmpty ? nil : trimmed
-        serverAddresses = updated
-    }
-
-    /// The window pinned for an account, if any.
-    func pinnedWindow(for account: AccountKey) -> String? {
-        pinnedWindows[account.id]
-    }
-
-    func setPinnedWindow(_ id: String?, for account: AccountKey) {
-        var updated = pinnedWindows
-        updated[account.id] = id
-        pinnedWindows = updated
-    }
-
-    /// Puts the stored language into effect. Deliberately not done in `init`:
-    /// that would let any throwaway instance — a SwiftUI preview, say — reset
-    /// the language the app is actually running in.
-    func applyLanguage() {
-        LocalizationSource.use(language)
-    }
-
-    /// What is on the rail, for a command that must not disturb anything.
-    ///
-    /// **Reads and never writes**, which is the whole reason it is not
-    /// `restored()`. That one stamps `hasRun`, the offered list and the
-    /// resolved enabled set on its way through — correct once at launch, and
-    /// wrong for something a status line runs every few seconds. It also puts
-    /// the language into effect and re-measures `PanelMetrics`, neither of
-    /// which a command printing JSON has any business doing.
-    ///
-    /// Nothing is resolved or defaulted either: an installation that has never
-    /// run the app has nothing stored, and the honest answer for it is an
-    /// empty rail rather than a guess at what would be switched on.
-    struct StoredRail: Sendable {
-        /// Enabled accounts, in the order the rail draws them.
-        let accounts: [AccountKey]
-        /// What the user calls an added account.
-        let labels: [String: String]
-        /// The window each account's ring is pinned to, if any.
-        let pinnedWindows: [String: String]
-    }
-
-    static func storedRail() -> StoredRail {
-        let defaults = UserDefaults.standard
-
-        let extras = defaults.data(forKey: Key.extraAccounts)
-            .flatMap { try? JSONDecoder().decode([ExtraAccount].self, from: $0) } ?? []
-        // **Not scanned here.** A status line runs this every couple of
-        // seconds, and the folder was already read by the app, which writes
-        // down what it found — account id to name — each time it looks.
-        let found = (defaults.dictionary(forKey: Key.extensionNames) as? [String: String] ?? [:])
-            .compactMap { id, name in AccountKey(id: id).map { ($0, name) } }
-            .filter { $0.0.provider == .pulseExtension }
-            .sorted { $0.0.id < $1.0.id }
-        let known = Provider.builtIn.flatMap { provider in
-            [AccountKey(provider)] + extras.filter { $0.provider == provider }.map(\.key)
-        } + found.map(\.0)
-
-        let enabled = Set(defaults.stringArray(forKey: ProviderSelection.enabledKey) ?? [])
-        // Same resolution as `orderedAccounts`: stored order first, then
-        // anything it doesn't mention, so a provider added since a stored list
-        // was written comes last rather than vanishing.
-        let stored = (defaults.stringArray(forKey: Key.providerOrder) ?? [])
-            .compactMap(AccountKey.init(id:))
-            .filter(known.contains)
-        let ordered = stored + known.filter { !stored.contains($0) }
-
-        return StoredRail(
-            accounts: ordered.filter { enabled.contains($0.id) },
-            // `uniqueKeysWithValues` **traps** on a duplicate, and this
-            // dictionary is built from a file anyone can edit — in the one
-            // command a status line runs every couple of seconds. Everywhere
-            // else in the app tolerates duplicates (`label(for:)` takes the
-            // first), so crashing here would be the only place that doesn't.
-            labels: Dictionary(
-                extras.map { ($0.id, $0.label) } + found.map { ($0.0.id, $0.1) },
-                uniquingKeysWith: { first, _ in first }
-            ),
-            pinnedWindows: defaults.dictionary(forKey: Key.pinnedWindows) as? [String: String] ?? [:]
-        )
-    }
-
+    /// The settings the running app is drawn from: what is stored, with
+    /// everything that has to follow it put into effect — the language, the
+    /// proxy session, `PanelMetrics`.
     static func restored() -> AppSettings {
-        let defaults = UserDefaults.standard
+        let settings = restoredSettings(from: .standard)
+        settings.applyRestored()
+        return settings
+    }
 
-        let visible = defaults.object(forKey: Key.panelVisible) as? Bool ?? true
-
+    /// What is stored, read into a new `AppSettings`, with no global touched.
+    /// Split from `restored()` so a test can read an isolated suite back.
+    ///
+    /// The memberwise call is flat for the reason `init` is. Settings that are
+    /// not parameters of it are read by their topic's own `restore…` function,
+    /// called at the end.
+    ///
+    /// What this Mac has installed and what its extensions folder holds are
+    /// parameters, defaulting to looking, so a test does not read the Mac.
+    static func restoredSettings(
+        from defaults: UserDefaults,
+        detected: Set<Provider> = Provider.installedOnThisMac(),
+        scan: ExtensionCatalog.Scan = ExtensionCatalog.scan()
+    ) -> AppSettings {
         let extras = (defaults.data(forKey: Key.extraAccounts))
             .flatMap { try? JSONDecoder().decode([ExtraAccount].self, from: $0) } ?? []
-        let detected = Provider.installedOnThisMac()
-        // Before the stored choice is restored, which keeps only accounts it
-        // knows: an extension missing from this list would lose its switch on
-        // every launch.
-        let scan = ExtensionCatalog.scan()
+        // The scan comes before the stored choice is restored, which keeps only
+        // accounts it knows: an extension missing from this list would lose its
+        // switch on every launch.
         let selection = ProviderSelection.restore(
             in: defaults,
             knownAccounts: Set(Provider.builtIn.map(\.rawValue))
@@ -1762,33 +1014,31 @@ final class AppSettings {
             detected: detected
         )
 
-        let language = defaults.string(forKey: Key.language)
-            .flatMap(AppLanguage.init(rawValue:)) ?? .system
-
         let settings = AppSettings(
-            isPanelVisible: visible,
-            hidesMenuBarIcon: defaults.object(forKey: Key.hidesMenuBarIcon) as? Bool ?? false,
-            showsDockIconInSettings: defaults.object(forKey: Key.showsDockIconInSettings) as? Bool ?? true,
-            hidesInFullScreen: defaults.object(forKey: Key.hidesInFullScreen) as? Bool ?? true,
-            followsActiveDisplay: defaults.object(forKey: Key.followsActiveDisplay) as? Bool ?? false,
+            isPanelVisible: defaults.settingsFlag(Key.panelVisible, default: Default.isPanelVisible),
+            hidesMenuBarIcon: defaults.settingsFlag(Key.hidesMenuBarIcon, default: Default.hidesMenuBarIcon),
+            showsDockIconInSettings: defaults.settingsFlag(
+                Key.showsDockIconInSettings, default: Default.showsDockIconInSettings
+            ),
+            hidesInFullScreen: defaults.settingsFlag(Key.hidesInFullScreen, default: Default.hidesInFullScreen),
+            followsActiveDisplay: defaults.settingsFlag(
+                Key.followsActiveDisplay, default: Default.followsActiveDisplay
+            ),
             openSettingsShortcut: defaults.string(forKey: Key.openSettingsShortcut)
                 .flatMap(GlobalShortcut.init(storage:)),
             togglePanelShortcut: defaults.string(forKey: Key.togglePanelShortcut)
                 .flatMap(GlobalShortcut.init(storage:)),
-            deepSeekBasis: defaults.string(forKey: Key.deepSeekBasis)
-                .flatMap(BalanceBasis.init(rawValue:)) ?? .default,
+            deepSeekBasis: defaults.settingsChoice(Key.deepSeekBasis) ?? .default,
             deepSeekBudget: defaults.object(forKey: Key.deepSeekBudget) as? Double,
             deepSeekCurrency: defaults.string(forKey: Key.deepSeekCurrency),
-            qoderSite: defaults.string(forKey: Key.qoderSite)
-                .flatMap(QoderSite.init(rawValue:)) ?? .international,
-            stepFunSite: defaults.string(forKey: Key.stepFunSite)
-                .flatMap(StepFunSite.init(rawValue:)) ?? .china,
+            qoderSite: defaults.settingsChoice(Key.qoderSite) ?? Default.qoderSite,
+            stepFunSite: defaults.settingsChoice(Key.stepFunSite) ?? Default.stepFunSite,
             serverAddresses: defaults.dictionary(forKey: Key.serverAddresses) as? [String: String] ?? [:],
             lowBalanceAlerts: defaults.dictionary(forKey: Key.lowBalanceAlerts) as? [String: Double] ?? [:],
             enabledAccounts: selection.enabledAccounts,
             extraAccounts: extras,
             providerOrder: defaults.stringArray(forKey: Key.providerOrder) ?? [],
-            language: language,
+            language: defaults.settingsChoice(Key.language) ?? .system,
             pinnedWindows: defaults.dictionary(forKey: Key.pinnedWindows) as? [String: String] ?? [:],
             sources: defaults.dictionary(forKey: Key.sources) as? [String: String] ?? [:],
             sessionBrowsers: defaults.dictionary(forKey: Key.sessionBrowsers) as? [String: String] ?? [:],
@@ -1797,226 +1047,91 @@ final class AppSettings {
             botPersonas: defaults.dictionary(forKey: Key.botPersonas) as? [String: String] ?? [:],
             botShapes: defaults.dictionary(forKey: Key.botShapes) as? [String: String] ?? [:],
             botColours: defaults.dictionary(forKey: Key.botColours) as? [String: String] ?? [:],
-            refreshInterval: (defaults.object(forKey: Key.refreshInterval) as? Int)
-                .flatMap(RefreshInterval.init(rawValue:)) ?? .default,
+            refreshInterval: defaults.settingsIntChoice(Key.refreshInterval) ?? .default,
             networkProxy: Self.storedNetworkProxy(in: defaults),
-            autoCollapse: defaults.object(forKey: Key.autoCollapse) as? Bool ?? true,
-            panelSize: defaults.string(forKey: Key.panelSize)
-                .flatMap(PanelSize.init(rawValue:)) ?? .default,
-            railSpacing: defaults.string(forKey: Key.railSpacing)
-                .flatMap(RailSpacing.init(rawValue:)) ?? .default,
-            usesGlass: defaults.object(forKey: Key.usesGlass) as? Bool ?? false,
-            glassTransparency: defaults.object(forKey: Key.glassTransparency) as? Double ?? PanelGlass.defaultTransparency,
-            topRailShowsPercentages: defaults.object(forKey: Key.topRailShowsPercentages) as? Bool ?? false,
-            sideRailShowsPercentages: defaults.object(forKey: Key.sideRailShowsPercentages) as? Bool ?? true,
-            labelAboveRing: defaults.object(forKey: Key.labelAboveRing) as? Bool ?? false,
-            freeAcrossFiguresBeside: defaults.object(forKey: Key.freeAcrossFiguresBeside) as? Bool ?? false,
-            usesRoundEnds: defaults.object(forKey: Key.usesRoundEnds) as? Bool ?? false,
-            showsWindowClock: defaults.object(forKey: Key.showsWindowClock) as? Bool ?? false,
+            autoCollapse: defaults.settingsFlag(Key.autoCollapse, default: Default.autoCollapse),
+            panelSize: defaults.settingsChoice(Key.panelSize) ?? .default,
+            railSpacing: defaults.settingsChoice(Key.railSpacing) ?? .default,
+            usesGlass: defaults.settingsFlag(Key.usesGlass, default: Default.usesGlass),
+            glassTransparency: defaults.object(forKey: Key.glassTransparency) as? Double ?? Default.glassTransparency,
+            topRailShowsPercentages: defaults.settingsFlag(
+                Key.topRailShowsPercentages, default: Default.topRailShowsPercentages
+            ),
+            sideRailShowsPercentages: defaults.settingsFlag(
+                Key.sideRailShowsPercentages, default: Default.sideRailShowsPercentages
+            ),
+            labelAboveRing: defaults.settingsFlag(Key.labelAboveRing, default: Default.labelAboveRing),
+            freeAcrossFiguresBeside: defaults.settingsFlag(
+                Key.freeAcrossFiguresBeside, default: Default.freeAcrossFiguresBeside
+            ),
+            usesRoundEnds: defaults.settingsFlag(Key.usesRoundEnds, default: Default.usesRoundEnds),
+            showsWindowClock: defaults.settingsFlag(Key.showsWindowClock, default: Default.showsWindowClock),
             windowClockDirection: Self.storedWindowClockDirection(in: defaults),
-            showsRemaining: defaults.object(forKey: Key.showsRemaining) as? Bool ?? false,
-            warningThreshold: (defaults.object(forKey: Key.warningThreshold) as? Int)
-                .flatMap(WarningThreshold.init(rawValue:)) ?? .default,
-            dockShowsAlertColor: defaults.object(forKey: Key.dockShowsAlertColor) as? Bool ?? true,
-            showsForecast: defaults.object(forKey: Key.showsForecast) as? Bool ?? false,
-            showsSecondRing: defaults.object(forKey: Key.showsSecondRing) as? Bool ?? false,
-            animatesRingActivity: defaults.object(forKey: Key.animatesRingActivity) as? Bool ?? true,
+            showsRemaining: defaults.settingsFlag(Key.showsRemaining, default: Default.showsRemaining),
+            warningThreshold: defaults.settingsIntChoice(Key.warningThreshold) ?? .default,
+            dockShowsAlertColor: defaults.settingsFlag(Key.dockShowsAlertColor, default: Default.dockShowsAlertColor),
+            showsForecast: defaults.settingsFlag(Key.showsForecast, default: Default.showsForecast),
+            showsSecondRing: defaults.settingsFlag(Key.showsSecondRing, default: Default.showsSecondRing),
+            animatesRingActivity: defaults.settingsFlag(
+                Key.animatesRingActivity, default: Default.animatesRingActivity
+            ),
             splitAccounts: Set(defaults.stringArray(forKey: Key.splitAccounts) ?? []),
             spendSpan: Self.storedSpendSpan(in: defaults),
             spendActivityView: Self.storedSpendActivityView(in: defaults),
             readsTokenSpend: Self.storedReadsTokenSpend(in: defaults),
-            alertThreshold: (defaults.object(forKey: Key.alertThreshold) as? Int)
-                .flatMap(AlertThreshold.init(rawValue:)) ?? .default,
-            alertsOnReset: defaults.object(forKey: Key.alertsOnReset) as? Bool ?? false,
-            alertsOnFailure: defaults.object(forKey: Key.alertsOnFailure) as? Bool ?? false
+            alertThreshold: defaults.settingsIntChoice(Key.alertThreshold) ?? .default,
+            alertsOnReset: defaults.settingsFlag(Key.alertsOnReset, default: Default.alertsOnReset),
+            alertsOnFailure: defaults.settingsFlag(Key.alertsOnFailure, default: Default.alertsOnFailure),
+            defaults: defaults
         )
-        settings.showsCodexResetCredits = defaults.bool(forKey: Key.showsCodexResetCredits)
-        settings.alertsOnOutage = defaults.bool(forKey: Key.alertsOnOutage)
-        settings.alertsOnRecap = defaults.bool(forKey: Key.alertsOnRecap)
-        settings.recapAnnouncedMonth = defaults.string(forKey: Key.recapAnnouncedMonth)
-        settings.recapMonthlyPrice = RecapPrice.normalized(defaults.object(forKey: Key.recapMonthlyPrice) as? Double)
-        settings.recapHidesProjects = defaults.bool(forKey: Key.recapHidesProjects)
-        settings.showsUsageInMenuBar = defaults.bool(forKey: Key.showsUsageInMenuBar)
-        settings.showsMenuDashboard = defaults.bool(forKey: Key.showsMenuDashboard)
-        settings.primedProviders = Set(defaults.stringArray(forKey: Key.primedProviders) ?? [])
-        if let start = defaults.object(forKey: Key.primerStart) as? Int,
-           let end = defaults.object(forKey: Key.primerEnd) as? Int,
-           (0...23).contains(start), (0...23).contains(end) {
-            settings.primerHours = PrimerHours(start: start, end: end)
-        }
-        settings.primerRunTimes = defaults.dictionary(forKey: Key.primerRunTimes) as? [String: Double] ?? [:]
-        settings.primerRunOutcomes = defaults.dictionary(forKey: Key.primerRunOutcomes) as? [String: String] ?? [:]
-        settings.menuBarAccount = defaults.string(forKey: Key.menuBarAccount)
-        settings.menuBarStyle = defaults.string(forKey: Key.menuBarStyle).flatMap(MenuBarStyle.init(rawValue:)) ?? .figure
-        settings.detailedCards = Set(defaults.stringArray(forKey: Key.detailedCards) ?? [])
-        settings.balanceBases = defaults.dictionary(forKey: Key.balanceBases) as? [String: String] ?? [:]
-        settings.balanceBudgets = (defaults.dictionary(forKey: Key.balanceBudgets) as? [String: Double] ?? [:])
-            .filter { $0.value.isFinite && $0.value > 0 }
-        settings.detectedProviders = detected
-        settings.suggestedProviders = selection.suggestedProviders
-        settings.extensions = scan.extensions
-        settings.extensionProblems = scan.problems
-        settings.applyLanguage()
-        NetworkSession.apply(settings.networkProxy)
-        PanelMetrics.use(settings.panelSize)
-        PanelMetrics.use(settings.railSpacing)
-        PanelMetrics.showTopPercentages(settings.topRailShowsPercentages)
-        PanelMetrics.showSidePercentages(settings.sideRailShowsPercentages)
-        PanelMetrics.putLabelAboveRing(settings.labelAboveRing)
-        PanelMetrics.putFreeAcrossFiguresBeside(settings.freeAcrossFiguresBeside)
-        PanelMetrics.showWindowClock(settings.showsWindowClock)
-        PanelMetrics.useRoundEnds(settings.usesRoundEnds)
-        PanelMetrics.showForecast(settings.showsForecast)
-        PanelMetrics.showDetailedCard(!settings.detailedCards.isEmpty)
-        settings.drivesPanelMetrics = true
-        settings.resizeRail()
+        settings.restoreProviders(from: defaults)
+        settings.restoreNotifications(from: defaults)
+        settings.restoreRecap(from: defaults)
+        settings.restoreApplication(from: defaults)
+        settings.restoreWindowStarter(from: defaults)
+        settings.restorePanel(from: defaults)
+        settings.restoreAccounts(detected: detected, suggested: selection.suggestedProviders, scan: scan)
         return settings
     }
 
-    func isEnabled(_ account: AccountKey) -> Bool {
-        enabledAccounts.contains(account.id)
+    /// Everything outside this object that has to agree with what was just
+    /// restored, and only then the right to move `PanelMetrics` afterwards.
+    private func applyRestored() {
+        applyLanguage()
+        NetworkSession.apply(networkProxy)
+        applyPanelMetrics()
+        drivesPanelMetrics = true
+        resizeRail()
     }
 
-    func setEnabled(_ isEnabled: Bool, for account: AccountKey) {
-        if isEnabled {
-            enabledAccounts.insert(account.id)
-        } else {
-            enabledAccounts.remove(account.id)
-        }
+    // MARK: - Keys and defaults
+
+    /// The `UserDefaults` keys, which are the stored format: renaming one
+    /// resets everybody's choice. Each topic file extends this with its own
+    /// (`AppSettings+Panel` adds `panelSize`, and so on), and
+    /// `AppSettingsPersistenceTests` spells them out so a rename fails.
+    enum Key {}
+
+    /// The shipped default of every setting whose default is a literal, which
+    /// both `init` and `restored()` need. Topic files extend this too.
+    enum Default {}
+}
+
+extension UserDefaults {
+    /// A stored boolean, or `value` when none is stored — or when what is
+    /// stored is not a boolean, which `bool(forKey:)` would read as false.
+    func settingsFlag(_ key: String, default value: Bool) -> Bool {
+        object(forKey: key) as? Bool ?? value
     }
 
-    /// The accounts the rail is actually showing, in the user's order — which
-    /// is what everything measuring or hit-testing the rail has to agree on.
-    var shownAccounts: [AccountKey] { orderedAccounts.filter(isEnabled) }
-
-    /// Adds an account Pulse has just signed in to, switched on and last in
-    /// the rail. The slot is generated here so it can never collide with one
-    /// that has been removed.
-    @discardableResult
-    func addAccount(_ provider: Provider, label: String, slot: String = UUID().uuidString) -> AccountKey {
-        let account = ExtraAccount(provider: provider, slot: slot, label: label)
-        extraAccounts.append(account)
-        enabledAccounts.insert(account.id)
-        return account.key
+    /// A stored string naming a case, or nil when none is stored or it names
+    /// a case a later version removed.
+    func settingsChoice<Choice: RawRepresentable>(_ key: String) -> Choice? where Choice.RawValue == String {
+        string(forKey: key).flatMap(Choice.init(rawValue:))
     }
 
-    /// Forgets an account, and everything stored against it — a later account
-    /// must never inherit a removed one's pinned window, route, colours, or
-    /// any other per-account setting.
-    func removeAccount(_ account: AccountKey) {
-        guard !account.isPrimary else { return }
-
-        extraAccounts.removeAll { $0.key == account }
-        // **The set refuses to go empty, and that refusal put the removed
-        // account straight back.** `enabledAccounts` restores its old value
-        // rather than accept nothing — so deleting the only enabled account
-        // left its id behind, naming an account that no longer exists, and the
-        // rail drew nothing at all because `shownAccounts` filters the real
-        // ones. The provider this account belonged to takes its place: there
-        // is always one, and it is the nearest thing to what was being watched.
-        if enabledAccounts == [account.id] {
-            enabledAccounts = [AccountKey(account.provider).id]
-        } else {
-            enabledAccounts.remove(account.id)
-        }
-        providerOrder.removeAll { $0 == account.id }
-        pinnedWindows[account.id] = nil
-        sources[account.id] = nil
-        ringTints[account.id] = nil
-        sessionBrowsers[account.id] = nil
-        serverAddresses[account.id] = nil
-        lowBalanceAlerts[account.id] = nil
-        balanceBases[account.id] = nil
-        balanceBudgets[account.id] = nil
-        botMarks[account.id] = nil
-        botPersonas[account.id] = nil
-        botColours[account.id] = nil
-        botShapes[account.id] = nil
-        detailedCards.remove(account.id)
-        splitAccounts.remove(account.id)
-        if menuBarAccount == account.id { menuBarAccount = nil }
-    }
-
-    func rename(_ account: AccountKey, to label: String) {
-        guard let index = extraAccounts.firstIndex(where: { $0.key == account }) else { return }
-        extraAccounts[index].label = label
-    }
-
-    private enum Key {
-        static let panelVisible = "settings.panelVisible"
-        static let hidesMenuBarIcon = "settings.hidesMenuBarIcon"
-        static let showsDockIconInSettings = "settings.showsDockIconInSettings"
-        static let extraAccounts = "settings.extraAccounts"
-        static let hidesInFullScreen = "settings.hidesInFullScreen"
-        static let followsActiveDisplay = "settings.followsActiveDisplay"
-        static let openSettingsShortcut = "settings.openSettingsShortcut"
-        static let togglePanelShortcut = "settings.togglePanelShortcut"
-        static let deepSeekBasis = "settings.deepSeekBasis"
-        static let deepSeekBudget = "settings.deepSeekBudget"
-        static let deepSeekCurrency = "settings.deepSeekCurrency"
-        static let qoderSite = "settings.qoderSite"
-        static let stepFunSite = "settings.stepFunSite"
-        static let serverAddresses = "settings.serverAddresses"
-        static let lowBalanceAlerts = "settings.lowBalanceAlerts"
-        static let balanceBases = "settings.balanceBases"
-        static let showsCodexResetCredits = "settings.showsCodexResetCredits"
-        static let showsUsageInMenuBar = "settings.showsUsageInMenuBar"
-        static let showsMenuDashboard = "settings.showsMenuDashboard"
-        static let primedProviders = "settings.primedProviders"
-        static let primerStart = "settings.primerStart"
-        static let primerEnd = "settings.primerEnd"
-        static let primerRunTimes = "settings.primerRunTimes"
-        static let primerRunOutcomes = "settings.primerRunOutcomes"
-        static let menuBarAccount = "settings.menuBarAccount"
-        static let menuBarStyle = "settings.menuBarStyle"
-        static let extensionNames = "settings.extensionNames"
-        static let balanceBudgets = "settings.balanceBudgets"
-        static let language = "settings.language"
-        static let pinnedWindows = "settings.pinnedWindows"
-        static let sources = "settings.sources"
-        static let sessionBrowsers = "settings.sessionBrowsers"
-        static let ringTints = "settings.ringTints"
-        // Bumped when `.automatic` arrived and became the default: the old
-        // key holds a fixed number of seconds for anyone who ran an earlier
-        // build, which would quietly keep them on the cadence the new default
-        // exists to replace.
-        static let refreshInterval = "settings.refreshInterval.v2"
-        static let networkProxy = "settings.networkProxy"
-        static let autoCollapse = "settings.autoCollapse"
-        static let panelSize = "settings.panelSize"
-        static let railSpacing = "settings.railSpacing"
-        static let usesGlass = "settings.usesGlass"
-        static let glassTransparency = "settings.glassTransparency"
-        static let topRailShowsPercentages = "settings.topRailShowsPercentages"
-        static let sideRailShowsPercentages = "settings.sideRailShowsPercentages"
-        static let labelAboveRing = "settings.labelAboveRing"
-        static let freeAcrossFiguresBeside = "settings.freeAcrossFiguresBeside"
-        static let usesRoundEnds = "settings.usesRoundEnds"
-        static let showsWindowClock = "settings.showsWindowClock"
-        static let windowClockDirection = "settings.windowClockDirection"
-        static let botMarks = "settings.botMarks"
-        static let botPersonas = "settings.botPersonas"
-        static let botShapes = "settings.botShapes"
-        static let botColours = "settings.botColours"
-        static let showsRemaining = "settings.showsRemaining"
-        static let warningThreshold = "settings.warningThreshold"
-        static let dockShowsAlertColor = "settings.dockShowsAlertColor"
-        static let showsForecast = "settings.showsForecast"
-        static let detailedCards = "settings.detailedCards"
-        static let showsSecondRing = "settings.showsSecondRing"
-        static let animatesRingActivity = "settings.animatesRingActivity"
-        static let splitAccounts = "settings.splitAccounts"
-        static let spendSpan = "settings.spendSpan"
-        static let spendActivityView = "settings.spendActivityView"
-        static let readsTokenSpend = "settings.readsTokenSpend"
-        static let alertThreshold = "settings.alertThreshold"
-        static let alertsOnReset = "settings.alertsOnReset"
-        static let alertsOnFailure = "settings.alertsOnFailure"
-        static let alertsOnOutage = "settings.alertsOnOutage"
-        static let alertsOnRecap = "settings.alertsOnRecap"
-        static let recapAnnouncedMonth = "settings.recapAnnouncedMonth"
-        static let recapMonthlyPrice = "settings.recapMonthlyPrice"
-        static let recapHidesProjects = "settings.recapHidesProjects"
-        static let providerOrder = "settings.providerOrder"
+    /// The same for a case stored as a number.
+    func settingsIntChoice<Choice: RawRepresentable>(_ key: String) -> Choice? where Choice.RawValue == Int {
+        (object(forKey: key) as? Int).flatMap(Choice.init(rawValue:))
     }
 }
