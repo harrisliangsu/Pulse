@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.13</title>
+            <pubDate>Mon, 05 Oct 2026 01:53:56 -0000</pubDate>
+            <sparkle:version>1.4.13</sparkle:version>
+            <sparkle:shortVersionString>1.4.13</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.13</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.13</h2><ul><li><strong>面板可以横放，也可以贴在屏幕底边。</strong> 位置为左侧、顶部、底部、自由（横向）、自由（竖向）、右侧。自由（横向）是顶部那条横栏，可以放在屏幕任意位置；底部贴着屏幕最底边，可以放在程序坞两边的空白处。横放时可以把百分比放在圆环右边。打开「距离重置的时间」后，数字会离开外圈。卡片比这一侧的屏幕更高时会滚动，不再被边缘截掉。感谢 <a href="https://github.com/qunqin24/Pulse/issues/70">@GinWU05</a> 和 <a href="https://github.com/qunqin24/Pulse/issues/73">@tyrival</a>。</li><li><strong>按模型看用量，以及读写速度。</strong> Claude Code 和 Codex 的设置里新增「模型」：每个模型的占比、缓存命中率，以及最近 24 小时每秒输出多少 token。Codex 还会显示首字要等多久。仍留着提示缓存的对话会列出还剩多久。</li><li><strong>OpenCode Go 可以读官网控制台。</strong> 读过浏览器登录后，额度和每一次请求都从控制台来，覆盖所有设备，金额是实际扣费。OpenCode 2 的新记录也能读到，同一条消息只算一次。</li><li><strong>DeepSeek 控制台。</strong> 读过浏览器登录后，会显示最近 30 天：按天、按模型的花费和 token，用账号自己的币种；没有 API Key 时也能读余额。</li><li><strong>Codex 的降智迹象。</strong> Codex 设置只读这台 Mac 上的会话，不发请求：长回复的推理是否正好停在 516、1,034、1,552 这些位置，以及有没有哪一轮在你没改设置的情况下换了模型、调低了推理或缩短了上下文。这些是迹象，不是定论。</li><li><strong>服务状态。</strong> Codex、Claude Code 和 DeepSeek 的设置页按各自官方状态页的样子显示：每一项现在是否正常、大约 90 天里每天一根竖条，以及状态页公布的可用率。通知新增「服务出故障时」，默认关闭。打开后每 5 分钟检查一次已开启的这三家，只在和工具相关的项目出故障、变严重或恢复时各通知一次。</li><li><strong>打开「关于」时立刻检查更新。</strong> 版本那一行是这次的结果，不是上一次定时检查留下的。</li><li><strong>设置打开时显示程序坞图标</strong>，默认开启。被其他窗口挡住的设置可以用 Cmd-Tab 找回来；窗口关上后，图标一起消失。</li><li><strong>Token 消耗的计数和计价更准。</strong> 继续或分叉的 Claude Code 对话里，复制来的回复只算一次。Codex 子代理不再把父会话已经累计的用量再算一遍，归档会话也会读。Claude Code 的输出不再只读回复的第一行。缓存写入、长上下文档，以及几处算了两遍的代理已改正。没有记录的缓存写「未记录」。</li><li><strong>没登录时不再拿昨天的百分比充数。</strong> 没有会话、没有保存的登录、或找不到应用时，会请你登录。续期登录也不会把已经删掉的账号写回去。</li><li><strong>更省资源。</strong> 读取用量记录、汇总 Token 消耗、面板跟随鼠标时，少做了很多重复的工作。</li><li><strong>贡献不再要求先有已接受的 issue。</strong> 审查和证据要求仍在。</li><li><strong>简体和繁体中文更顺</strong>，原先写成「供应商」「账户」的地方改为「服务商」「账号」。</li><li><strong>同步上游 qunqin24/Pulse</strong>（26 个提交，直到其 1.7.2，含版权声明）。本仓库版本为 <strong>1.4.13</strong>。没有抄入上游的 Sparkle 推送；<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。</li><li><strong>这次同步里为本仓库补上的衔接：</strong> 服务故障通知和限额恢复彩带、提前提醒放在一起，各写各的文件；环颜色方案仍给拆开后的面板上每一个圆环、进度条和数字上色；Codex 的重置预测、最近一次重置和提醒，在卡片已经打开时仍会画出来；Kimi 的设备码登录和多账号仍在。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.13">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.13/Pulse-1.4.13.zip"
+                       length="14012246"
+                       type="application/octet-stream"
+                       sparkle:edSignature="WhTjVLA5FDKnMG5Z0Tg24YnsU1HLMBzj3Mgl7MqjUpBwfKJmilfXmuO1wlmiHNEcO6i72wV1eUVz/6Jm2oypCA==" />
+        </item>
+        <item>
             <title>1.4.12</title>
             <pubDate>Fri, 02 Oct 2026 01:37:08 -0000</pubDate>
             <sparkle:version>1.4.12</sparkle:version>
