@@ -60,10 +60,12 @@ struct TokenActivity: Equatable, Sendable {
         let position: Double
     }
 
-    /// A month label under the chart: the column it starts in, and a date in it.
+    /// A month label under the chart: the column its first day falls in, that
+    /// day, and where it sits in week columns (`column + weekday row / 7`).
     struct Mark: Equatable, Sendable {
         let column: Int
         let date: Date
+        let position: Double
     }
 
     /// The columns, oldest first. Empty when there is no record at all.
@@ -102,23 +104,28 @@ struct TokenActivity: Equatable, Sendable {
         return result
     }
 
-    /// Month labels: the first column in which each month begins, counting the
-    /// days before the first record so they are labelled too, through to the
-    /// running month. When two labels are closer than `minimumGap` columns (a
-    /// month is never shorter than four) the earlier one goes, so the newest
-    /// month is always named; the view keeps the last one inside the edge.
-    func monthMarks(calendar: Calendar, minimumGap: Int = 4) -> [Mark] {
+    /// Month labels at each month's first day — the 1st, or the window's first
+    /// day for the month the window opens in — through to the running month.
+    /// A label sits where that day sits (`position`), not at the start of its
+    /// column, so months read as evenly spaced as the calendar is: 28 to 31
+    /// days is 4 to 4.4 columns, where snapping to week columns gave 4 or 5.
+    /// Days before the first record count, so they are labelled too. When two
+    /// labels are closer than `minimumGap` columns the earlier one goes, so the
+    /// newest month is always named; the view keeps the last one in reach.
+    func monthMarks(calendar: Calendar, minimumGap: Double = 3) -> [Mark] {
         var kept: [Mark] = []
         var previous: Int?
         for (column, week) in weeks.enumerated() {
-            guard let row = week.days.indices.first(where: { week.days[$0] != nil || week.unrecorded[$0] }),
-                  let date = calendar.date(byAdding: .day, value: row, to: week.start) else { continue }
-            let month = calendar.component(.month, from: date)
-            if month != previous {
-                if let last = kept.last, column - last.column < minimumGap { kept.removeLast() }
-                kept.append(Mark(column: column, date: date))
+            for row in week.days.indices where week.days[row] != nil || week.unrecorded[row] {
+                guard let date = calendar.date(byAdding: .day, value: row, to: week.start) else { continue }
+                let month = calendar.component(.month, from: date)
+                if month != previous {
+                    let position = Double(column) + Double(row) / 7
+                    if let last = kept.last, position - last.position < minimumGap { kept.removeLast() }
+                    kept.append(Mark(column: column, date: date, position: position))
+                }
+                previous = month
             }
-            previous = month
         }
         return kept
     }

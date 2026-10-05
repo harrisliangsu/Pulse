@@ -265,31 +265,34 @@ struct TokenActivityTests {
 
     // MARK: - Month labels
 
-    @Test("Month labels fall at each month's first column and drop one that would crowd or overflow")
+    @Test("Month labels sit at each month's first day, evenly as the calendar, and drop one that would crowd")
     func monthLabels() {
         let result = Self.activity([(Self.date(2024, 1, 1), 1)])
         let marks = result.monthMarks(calendar: Self.monday)
         let months = marks.map { Self.monday.component(.month, from: $0.date) }
         // October 2025 through the running October 2026, which is named even
-        // though it starts in the last column.
+        // though it starts in the last columns.
         #expect(months == [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        #expect(marks.last?.column == result.weeks.count - 1)
-        #expect(marks.first?.column == 0)
-        #expect(zip(marks, marks.dropFirst()).allSatisfy { $1.column - $0.column >= 4 })
+        #expect(marks.first?.position == 0)
+        // Thursday 1 October 2026 is the fourth day of the column before today's.
+        #expect(marks.last?.column == result.weeks.count - 2)
+        #expect(marks.last?.position == Double(result.weeks.count - 2) + 3.0 / 7)
+        // Every whole month is 28 to 31 days: 4 to 4 3/7 columns, never 5.
+        let gaps = zip(marks.dropFirst(), marks.dropFirst(2)).map { $1.position - $0.position }
+        #expect(gaps.allSatisfy { $0 >= 4 && $0 <= 31.0 / 7 + 1e-9 })
     }
 
-    @Test("A partial first month that leaves under four columns is not labelled")
+    @Test("A partial first month too short to hold its label is not labelled")
     func crowdedFirstLabel() {
         // Asked on Wednesday 28 October, the window starts on Wednesday 29
-        // October 2025: its first column holds three days of October and the
-        // next column already begins November.
+        // October 2025: three days of October before Saturday 1 November.
         let wednesday = Self.date(2026, 10, 28, hour: 9)
         let result = TokenActivity.of(
             [.claudeCode: Self.ledger([(Self.date(2020, 1, 1), 1)])], now: wednesday, calendar: Self.monday
         )
         let marks = result.monthMarks(calendar: Self.monday)
         #expect(marks.first.map { Self.monday.component(.month, from: $0.date) } == 11)
-        #expect(marks.first?.column == 1)
+        #expect(marks.first?.position == 5.0 / 7)
     }
 }
 

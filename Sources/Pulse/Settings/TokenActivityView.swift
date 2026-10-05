@@ -149,9 +149,9 @@ struct TokenActivitySection: View {
         .accessibilityHidden(true)
     }
 
-    /// Each label left-aligned on its column. The last may run up to
+    /// Each label left-aligned on its month's first day. The last may run up to
     /// `labelOverhang` into the card's own padding before it is pulled back, so
-    /// the running month, which starts in the last column, does not push into
+    /// the running month, which starts in the last columns, does not push into
     /// the month before it. Where a label would still touch the next, the
     /// earlier one goes, so the running month is always named.
     private static func placedMonths(
@@ -161,8 +161,8 @@ struct TokenActivitySection: View {
         var placed: [(mark: TokenActivity.Mark, x: CGFloat, width: CGFloat)] = []
         for mark in marks.reversed() {
             let labelWidth = monthWidth(mark.date)
-            let x = max(min(CGFloat(mark.column) * pitch, width + labelOverhang - labelWidth), 0)
-            if let next = placed.last, x + labelWidth + 6 > next.x { continue }
+            let x = max(min(CGFloat(mark.position) * pitch, width + labelOverhang - labelWidth), 0)
+            if let next = placed.last, x + labelWidth + 4 > next.x { continue }
             placed.append((mark, x, labelWidth))
         }
         return placed.reversed()
