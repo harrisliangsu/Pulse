@@ -10,6 +10,25 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.13
+
+- **The panel can lie across, or sit on the bottom edge.** Position is Left, Top, Bottom, Free across, Free upright, Right. Free across is the top dock’s shape placed anywhere; Bottom sits on the screen’s own edge, in the empty space either side of the Dock. A rail lying across can put the percentage to the right of each ring. With the time arc on, figures stand clear of it. A card taller than the room on that side of the screen scrolls instead of being cut off. Thanks to [@GinWU05](https://github.com/qunqin24/Pulse/issues/70) and [@tyrival](https://github.com/qunqin24/Pulse/issues/73).
+- **Usage history by model, and speeds.** Claude Code and Codex settings add a Models card: each model’s share, cache hit rate, and output tokens per second over the last 24 hours. Codex also shows the wait for the first token. Conversations that still hold a prompt cache are listed with how long it has left.
+- **OpenCode Go can read its console.** With the browser sign-in, limits and the request log come from the console — every device, at what was actually charged. OpenCode 2’s new tables are read, and a message counts once.
+- **DeepSeek’s console.** Read the browser sign-in and Pulse shows the last 30 days — spend and tokens by day and by model, in the account’s currency — and the balance when no API key is set.
+- **Signs of a weaker Codex model.** Codex settings read this Mac’s sessions and send nothing: long replies whose reasoning stopped on 516, 1,034, 1,552 and so on, and turns that ran on a different model, lower reasoning, or a smaller context than you set. These are signs, not proof.
+- **Service status.** Codex, Claude Code, and DeepSeek settings show each provider’s own status page: the state now, a bar a day for about 90 days, and the page’s uptime. Notifications gain When a service is down, off by default. It checks every five minutes and says once when a part the tool runs on goes down, gets worse, or comes back.
+- **Opening About checks for an update now.** The version row is this check, not the last scheduled one.
+- **A Dock icon while Settings is open**, on by default, so a covered settings window can be found with Cmd-Tab. It goes away when the window closes.
+- **Token spend counts and prices more carefully.** A resumed or forked Claude Code session’s copied replies count once. Codex sub-agents no longer inherit the parent’s running total, and archived sessions are read. Claude Code’s output is no longer taken from only the first line of a reply. Cache writes, long-context tiers, and several agents that counted twice are corrected. A cache nobody records says Not reported.
+- **A missing sign-in is no longer hidden behind yesterday’s percentage.** A missing session, saved login, or app asks you to sign in. Renewing a login no longer writes back an account you already removed.
+- **Lighter on the Mac.** Usage scans, token-spend totals, and the panel following the pointer do less repeated work.
+- **Contributions no longer need an accepted issue first.** Review and evidence rules stay.
+- **Simplified and Traditional Chinese copy is plainer**, including 服务商 and 账号 where the text used to say 供应商 and 账户.
+- **Synced from upstream qunqin24/Pulse** (26 commits, through their 1.7.2 line, including copyright headers). This fork’s version is **1.4.13**. Their Sparkle offers were not copied; `appcast.xml` is unchanged until this version is tagged.
+- **Fork fixes in this sync:** service-outage alerts sit beside reset ribbons and advance reminders, each with its own file; ring colour schemes still paint every ring, bar, and figure on the split panel view; the Codex reset forecast, the latest-reset row, and reminders still draw on a card that is already open; Kimi’s device-code login and extra accounts stay.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen’s cookie store; bilingual release notes; and this repo’s Sparkle feed and signing key.
+
 ## 1.4.12
 
 - **Codex’s prompt cache is timed by OpenAI’s stated floor.** On GPT-5.6 and later, the detailed card and Settings show how long that cache is still guaranteed, worded “at least”, counted from the request that last touched it. When the floor has passed, the line says “May have lapsed”. Earlier models have no stated lifetime and are not timed.
