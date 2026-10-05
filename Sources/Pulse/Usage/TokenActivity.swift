@@ -11,10 +11,13 @@ import Foundation
 /// ledgers the pane already holds (`LedgerDay` is one row per local midnight,
 /// priced or not), so there is no further read of any store.
 ///
-/// **A day nobody worked is quiet; a day nothing was recorded for is not drawn.**
-/// Days before the first record Pulse has (across the agents counted) and days
-/// after today are `nil` in `Week.days`: no cell, no bar, no point. Only days from
-/// the first record on can be quiet, and only those carry a zero.
+/// **A day nobody worked is quiet; a day nothing was recorded for carries no
+/// number.** Days before the first record Pulse has (across the agents counted)
+/// and days after today are `nil` in `Week.days`: no bar, no point, no zero. Only
+/// days from the first record on can be quiet, and only those carry a zero. The
+/// grid still draws the window's days before the first record as the faintest
+/// placeholder squares (`Week.unrecorded`), so a short history fills the row
+/// without claiming a count for days Pulse never saw.
 ///
 /// **The window is the last twelve months in at most 53 week columns.** It
 /// starts at `today − 1 year + 1 day`, pulled forward when that would need a
@@ -34,6 +37,9 @@ struct TokenActivity: Equatable, Sendable {
         let start: Date
         /// Exactly seven entries; nil where nothing is drawn.
         let days: [Day?]
+        /// Exactly seven entries; true where a day is inside the window and not
+        /// after today but has no record yet: a placeholder, never a count.
+        var unrecorded: [Bool] = Array(repeating: false, count: 7)
 
         var id: Date { start }
         var drawn: [Day] { days.compactMap { $0 } }
@@ -96,23 +102,23 @@ struct TokenActivity: Equatable, Sendable {
         return result
     }
 
-    /// Month labels: the first column in which each month begins. A label is
-    /// dropped when the next one is closer than `minimumGap` columns (a month
-    /// is never shorter than four), and the last when fewer than that remain,
-    /// so no label crowds its neighbour or runs off the right edge.
+    /// Month labels: the first column in which each month begins, counting the
+    /// days before the first record so they are labelled too, through to the
+    /// running month. When two labels are closer than `minimumGap` columns (a
+    /// month is never shorter than four) the earlier one goes, so the newest
+    /// month is always named; the view keeps the last one inside the edge.
     func monthMarks(calendar: Calendar, minimumGap: Int = 4) -> [Mark] {
-        var marks: [Mark] = []
+        var kept: [Mark] = []
         var previous: Int?
         for (column, week) in weeks.enumerated() {
-            guard let first = week.drawn.first else { continue }
-            let month = calendar.component(.month, from: first.date)
-            if month != previous { marks.append(Mark(column: column, date: first.date)) }
+            guard let row = week.days.indices.first(where: { week.days[$0] != nil || week.unrecorded[$0] }),
+                  let date = calendar.date(byAdding: .day, value: row, to: week.start) else { continue }
+            let month = calendar.component(.month, from: date)
+            if month != previous {
+                if let last = kept.last, column - last.column < minimumGap { kept.removeLast() }
+                kept.append(Mark(column: column, date: date))
+            }
             previous = month
-        }
-        var kept: [Mark] = []
-        for (index, mark) in marks.enumerated() {
-            let next = index + 1 < marks.count ? marks[index + 1].column : weeks.count
-            if next - mark.column >= minimumGap { kept.append(mark) }
         }
         return kept
     }
@@ -163,6 +169,7 @@ struct TokenActivity: Equatable, Sendable {
         var cursor = gridStart
         while cursor <= today {
             var days: [Day?] = []
+            var unrecorded: [Bool] = []
             var date = cursor
             for _ in 0..<7 {
                 if date >= firstDrawn, date <= today {
@@ -170,11 +177,13 @@ struct TokenActivity: Equatable, Sendable {
                 } else {
                     days.append(nil)
                 }
+                unrecorded.append(date >= start && date < firstDrawn)
                 guard let next = calendar.date(byAdding: .day, value: 1, to: date) else { break }
                 date = next
             }
             while days.count < 7 { days.append(nil) }
-            activity.weeks.append(Week(start: cursor, days: days))
+            while unrecorded.count < 7 { unrecorded.append(false) }
+            activity.weeks.append(Week(start: cursor, days: days, unrecorded: unrecorded))
             cursor = date
         }
 

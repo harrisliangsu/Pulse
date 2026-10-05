@@ -147,6 +147,23 @@ struct TokenActivityTests {
         #expect(last.days.compactMap { $0 }.count == 1)
     }
 
+    @Test("Days in the window before the first record are outlines, never days with a count")
+    func unrecordedOutlines() throws {
+        let first = Self.date(2026, 1, 15)
+        let result = Self.activity([(first, 40)])
+        let early = try #require(result.weeks.first)
+        #expect(early.unrecorded == Array(repeating: true, count: 7))
+        // The column holding the first record: Mon 12 – Wed 14 outlined, Thu 15 on drawn.
+        let column = try #require(result.weeks.first { $0.days.contains { $0?.date == first } })
+        #expect(column.unrecorded == [true, true, true, false, false, false, false])
+        // Today's column: today is drawn, the days after it are nothing at all.
+        let last = try #require(result.weeks.last)
+        #expect(last.unrecorded == Array(repeating: false, count: 7))
+        // A history longer than the window has nothing to outline.
+        let long = Self.activity([(Self.date(2020, 1, 1), 1)])
+        #expect(long.weeks.allSatisfy { !$0.unrecorded.contains(true) })
+    }
+
     @Test("Nothing read, only future work, or only a provider's own statistics draws nothing")
     func noData() {
         #expect(TokenActivity.of([:], now: Self.now, calendar: Self.monday).isEmpty)
@@ -253,9 +270,10 @@ struct TokenActivityTests {
         let result = Self.activity([(Self.date(2024, 1, 1), 1)])
         let marks = result.monthMarks(calendar: Self.monday)
         let months = marks.map { Self.monday.component(.month, from: $0.date) }
-        // October 2025 through September 2026; the running October has fewer
-        // than four columns left and is not labelled.
-        #expect(months == [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        // October 2025 through the running October 2026, which is named even
+        // though it starts in the last column.
+        #expect(months == [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        #expect(marks.last?.column == result.weeks.count - 1)
         #expect(marks.first?.column == 0)
         #expect(zip(marks, marks.dropFirst()).allSatisfy { $1.column - $0.column >= 4 })
     }

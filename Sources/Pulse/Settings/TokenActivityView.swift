@@ -26,21 +26,23 @@ enum ActivityView: String, CaseIterable, Identifiable, Sendable {
 ///
 /// **One horizontal scale for all three.** Every view is `activity.columnCount`
 /// week columns wide, so the month labels under the plot are the same for each
-/// and switching views moves nothing sideways. Cells shrink with the pane
-/// (down to the 720pt settings window) and stop growing at `maxPitch`, so a
-/// wide window does not draw a poster.
+/// and switching views moves nothing sideways. The columns always fill the
+/// row: cells shrink with the pane (down to the 720pt settings window) and
+/// grow with it, so a wide window leaves no empty strip on the right.
 ///
-/// **Nothing is invented.** A day before the first record, or after today, has
-/// no cell; a quiet day is a real zero and drawn as one. The pointer reads out
+/// **Nothing is invented.** A day before the first record is a placeholder
+/// square fainter than a quiet one and a day after today has no cell; a quiet
+/// day is a real zero and drawn as one. The pointer reads out
 /// the date (or week) and its count the way every other chart in the pane does.
 struct TokenActivitySection: View {
     let activity: TokenActivity
     @Binding var view: ActivityView
     var calendar: Calendar = .current
 
-    /// Widest a week column grows: the grid never exceeds 53 of these.
-    private static let maxPitch: CGFloat = 13
     private static let labelHeight: CGFloat = 13
+    /// How far a month label may run past the plot's right edge: inside the
+    /// group's 16pt horizontal padding.
+    private static let labelOverhang: CGFloat = 12
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -117,10 +119,10 @@ struct TokenActivitySection: View {
         .accessibilityHidden(true)
     }
 
-    /// A column as wide as the pane allows, within the cap, and as tall as seven
-    /// of them: the grid's own proportions, which the bars and the line borrow.
+    /// A column as wide as the pane allows, and as tall as seven of them: the
+    /// grid's own proportions, which the bars and the line borrow.
     private var plot: some View {
-        ColumnsLayout(columns: columns, maxPitch: Self.maxPitch, height: nil) {
+        ColumnsLayout(columns: columns, height: nil) {
             GeometryReader { proxy in
                 let pitch = proxy.size.width / columns
                 switch view {
@@ -133,20 +135,37 @@ struct TokenActivitySection: View {
     }
 
     private var monthLabels: some View {
-        ColumnsLayout(columns: columns, maxPitch: Self.maxPitch, height: Self.labelHeight) {
+        ColumnsLayout(columns: columns, height: Self.labelHeight) {
             GeometryReader { proxy in
-                let pitch = proxy.size.width / columns
-                ForEach(activity.monthMarks(calendar: calendar), id: \.column) { mark in
-                    Text(Self.month(mark.date))
+                ForEach(Self.placedMonths(activity.monthMarks(calendar: calendar), width: proxy.size.width, columns: columns), id: \.mark.column) { placed in
+                    Text(Self.month(placed.mark.date))
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                         .fixedSize()
-                        .position(x: CGFloat(mark.column) * pitch, y: Self.labelHeight / 2)
-                        .offset(x: Self.monthWidth(mark.date) / 2)
+                        .position(x: placed.x + placed.width / 2, y: Self.labelHeight / 2)
                 }
             }
         }
         .accessibilityHidden(true)
+    }
+
+    /// Each label left-aligned on its column. The last may run up to
+    /// `labelOverhang` into the card's own padding before it is pulled back, so
+    /// the running month, which starts in the last column, does not push into
+    /// the month before it. Where a label would still touch the next, the
+    /// earlier one goes, so the running month is always named.
+    private static func placedMonths(
+        _ marks: [TokenActivity.Mark], width: CGFloat, columns: CGFloat
+    ) -> [(mark: TokenActivity.Mark, x: CGFloat, width: CGFloat)] {
+        let pitch = width / columns
+        var placed: [(mark: TokenActivity.Mark, x: CGFloat, width: CGFloat)] = []
+        for mark in marks.reversed() {
+            let labelWidth = monthWidth(mark.date)
+            let x = max(min(CGFloat(mark.column) * pitch, width + labelOverhang - labelWidth), 0)
+            if let next = placed.last, x + labelWidth + 6 > next.x { continue }
+            placed.append((mark, x, labelWidth))
+        }
+        return placed.reversed()
     }
 
     /// The month as the reader's calendar abbreviates it: "11月", "Nov".
@@ -176,6 +195,10 @@ struct TokenActivitySection: View {
         }
     }
 
+    /// A day before the first record: half a quiet day's strength, so the row
+    /// is full and the difference still reads.
+    static let unrecordedFill = Color.primary.opacity(0.04)
+
     /// "Oct 6 – 12, 2025", or the one day where a clipped week holds only one.
     static func weekTitle(_ range: ClosedRange<Date>) -> String {
         guard range.lowerBound < range.upperBound else { return SpendFormat.chartDate(range.lowerBound) }
@@ -185,18 +208,18 @@ struct TokenActivitySection: View {
     }
 }
 
-/// A box as wide as the pane allows, within `maxPitch` a column, and as tall as
-/// seven columns (or `height`): the grid's own proportions, which the bars and
-/// the line borrow. A layout rather than an aspect ratio, which sizes a
-/// flexible child from its own ideal and not from the width it was offered.
+/// A box as wide as the pane offers and as tall as seven columns (or
+/// `height`): the grid's own proportions, which the bars and the line borrow.
+/// A layout rather than an aspect ratio, which sizes a flexible child from its
+/// own ideal and not from the width it was offered. With no finite width on
+/// offer it falls back to 13pt a column, the grid's natural size.
 private struct ColumnsLayout: Layout {
     let columns: CGFloat
-    let maxPitch: CGFloat
     let height: CGFloat?
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let widest = columns * maxPitch
-        let width = min(max(proposal.width ?? widest, 0), widest)
+        let offered = proposal.width.flatMap { $0.isFinite ? $0 : nil }
+        let width = max(offered ?? columns * 13, 0)
         return CGSize(width: width, height: height ?? width * 7 / columns)
     }
 
@@ -229,8 +252,18 @@ private struct DailyGrid: View {
             let radius = max((pitch - gap) * 0.24, 1)
             for (column, week) in activity.weeks.enumerated() {
                 for (row, day) in week.days.enumerated() {
-                    guard let day else { continue }
                     let rect = frame(of: Cell(column: column, row: row))
+                    guard let day else {
+                        // Before the first record: a fainter square than a
+                        // quiet day holds the place and says nothing about it.
+                        if week.unrecorded[row] {
+                            context.fill(
+                                Path(roundedRect: rect, cornerRadius: radius, style: .continuous),
+                                with: .color(TokenActivitySection.unrecordedFill)
+                            )
+                        }
+                        continue
+                    }
                     context.fill(
                         Path(roundedRect: rect, cornerRadius: radius, style: .continuous),
                         with: .color(TokenActivitySection.fill(step: activity.step(for: day.tokens)))
