@@ -114,7 +114,7 @@ The agents do not all write a model id the same way, and a name that misses the 
 
 ## Titles and projects come from the transcript
 
-Project identity is separate from its display name. Readers retain the full stated working directory; `/work/client-a/api` and `/work/client-b/api` are separate projects, while the same directory used by two agents is one project. Repeated/trailing separators are normalized without resolving symlinks, changing case, or consulting the current filesystem. The pane normally shows the basename and adds parent components when directory names collide. Session rows use the same names as the project list.
+Project identity is separate from its display name. Readers retain the full stated working directory; `/work/client-a/api` and `/work/client-b/api` are separate projects, while the same directory used by two agents is one project. Repeated/trailing separators are normalized without resolving symlinks, changing case, or consulting the current filesystem. A directory under `<repo>/.claude/worktrees/<name>` — the worktree Claude Code gives a subagent — counts as `<repo>`, read fresh or from an older cache, so each agent run is not a project of its own (`UsageProject.repository(of:)`). The pane normally shows the basename and adds parent components when directory names collide. Session rows use the same names as the project list.
 
 Display names are resolved in basename groups once per summary. Unrelated projects do not scan one another for collisions; labels remain agent-scoped and ambiguous directories still use their shortest distinct suffix.
 

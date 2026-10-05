@@ -115,4 +115,18 @@ struct ProjectIdentityTests {
         #expect(one?.identity == .label("vscode-remote://ssh-remote%2Bhost-a/home/me/proj"))
         #expect(one != two)
     }
+
+    @Test("An agent worktree is its repository's project, read fresh or from an old cache")
+    func agentWorktreeFoldsIntoRepository() throws {
+        let worktree = UsageProject("/Users/me/Pulse/.claude/worktrees/agent-a4734cf379be4c74a/Sources")
+        #expect(worktree == UsageProject("/Users/me/Pulse"))
+        #expect(worktree?.name == "Pulse")
+        // Not a worktree: a folder that only looks like one is left alone.
+        #expect(UsageProject("/.claude/worktrees/x")?.name == "x")
+        #expect(UsageProject("/Users/me/claude/worktrees/x")?.name == "x")
+
+        let cached = #"{"identity":{"directory":{"_0":"/Users/me/Pulse/.claude/worktrees/agent-x"}},"name":"agent-x"}"#
+        let decoded = try JSONDecoder().decode(UsageProject.self, from: Data(cached.utf8))
+        #expect(decoded == UsageProject("/Users/me/Pulse"))
+    }
 }

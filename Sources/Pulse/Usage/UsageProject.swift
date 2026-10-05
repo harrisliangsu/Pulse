@@ -18,10 +18,9 @@ struct UsageProject: Hashable, Codable, Sendable {
         if value.hasPrefix("/") {
             // Normalize separators only. Resolving symlinks or `..` would make
             // historical attribution depend on the current filesystem.
-            let parts = value.split(separator: "/")
-            let path = "/" + parts.joined(separator: "/")
+            let path = Self.repository(of: "/" + value.split(separator: "/").joined(separator: "/"))
             identity = .directory(path)
-            name = parts.last.map(String.init) ?? "/"
+            name = path.split(separator: "/").last.map(String.init) ?? "/"
         } else {
             identity = .label(value)
             // A workspace URI that is not a local path — VS Code's Remote-SSH
@@ -45,6 +44,34 @@ struct UsageProject: Hashable, Codable, Sendable {
     var path: String? {
         if case .directory(let path) = identity { return path }
         return nil
+    }
+
+    /// **A worktree an agent works in is its repository's work.** Claude
+    /// Code puts each one at `<repo>/.claude/worktrees/<name>`, and named by
+    /// its last folder every subagent's run was a project of its own
+    /// ("agent-a4734cf…") beside the repository it was done for. A string
+    /// rule, like the rest of this type: nothing on disk is consulted.
+    static func repository(of path: String) -> String {
+        guard let range = path.range(of: "/.claude/worktrees/"), range.lowerBound > path.startIndex else { return path }
+        return String(path[..<range.lowerBound])
+    }
+
+    private enum CodingKeys: String, CodingKey { case identity, name }
+
+    /// Ledgers cached before `repository(of:)` existed hold worktree paths;
+    /// they are folded in as they are read rather than waiting for a rescan.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let identity = try container.decode(Identity.self, forKey: .identity)
+        let name = try container.decode(String.self, forKey: .name)
+        if case .directory(let path) = identity, Self.repository(of: path) != path {
+            let repository = Self.repository(of: path)
+            self.identity = .directory(repository)
+            self.name = repository.split(separator: "/").last.map(String.init) ?? "/"
+        } else {
+            self.identity = identity
+            self.name = name
+        }
     }
 
     /// Extend only ambiguous directory names, using the shortest distinct suffix.

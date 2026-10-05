@@ -175,4 +175,4 @@ Captured payloads carry no account name, email, or token — check before commit
 
 `SessionPricingTests` checks unknown, mixed and published zero prices through normalized records, Claude/Codex transcripts, cache reloads and Today. It covers event and aggregate timing and rejects missing cache coverage. `AgentSessionTests` also exercises unpriced OpenCode, Grok, Devin and Kimi sessions. These are synthetic-store checks, not live-client validation.
 
-`ProjectIdentityTests` covers same-name transcript directories through both cache layers, repeated paths across agents, source-only labels and Claude fallback folders. These are synthetic-store checks, not live-client validation.
+`ProjectIdentityTests` covers same-name transcript directories through both cache layers, repeated paths across agents, source-only labels, Claude fallback folders, and agent worktrees folding into their repository. These are synthetic-store checks, not live-client validation.
