@@ -24,7 +24,7 @@ cd "$(dirname "$0")/.."
 VERSION="$(tr -d '[:space:]' < VERSION)"
 APP="build.noindex/Pulse.app"
 BUNDLE_ID="io.github.qunqin24.Pulse"
-FEED_URL="https://update.qunqin.org/appcast.xml"
+FEED_URL="https://raw.githubusercontent.com/qunqin24/Pulse/main/appcast.xml"
 # Public half of the EdDSA key updates are signed with. Safe to commit — it is
 # what *verifies* an update, and Sparkle refuses anything not signed by its
 # private half. See Scripts/appcast.py.

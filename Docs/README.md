@@ -24,7 +24,7 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 | [window-starter.md](window-starter.md) | Starting Claude Code's and Codex's usage windows after a reset: the risk confirmation, when, and what is sent |
 | [build-from-source.md](build-from-source.md) | Toolchain, `swift build`, `#Preview`, local run |
 | [releasing.md](releasing.md) | Tag, bundle, Sparkle, DMG, CI |
-| [update-mirror.md](update-mirror.md) | update.qunqin.org: the Cloudflare mirror of the feed and downloads, deploying it, how the app falls back to GitHub |
+| [update-mirror.md](update-mirror.md) | update.qunqin.org: the Cloudflare mirror of the feed and downloads, deploying it, how the app picks GitHub or the mirror |
 | [providers/README.md](providers/README.md) | Per-provider routes, auth, cookies, extra accounts |
 | [setup/](setup/) | Per-provider setup pages for users — what the in-app **Setup help** link opens |
 | [decisions/README.md](decisions/README.md) | Why / failure lessons (historical) |

@@ -65,34 +65,103 @@ final class AppUpdate {
 
         relay.owner = self
         controller = SPUStandardUpdaterController(
-            startingUpdater: true,
+            startingUpdater: false,
             updaterDelegate: relay,
             userDriverDelegate: nil
         )
+        // Started once GitHub has been tried, so a check due at launch reads
+        // the host that answers rather than finding out by failing.
+        Task { [weak self] in
+            let reachable = await Self.githubReachable()
+            guard let self else { return }
+            self.route.probed(githubReachable: reachable)
+            self.startIfNeeded()
+        }
     }
 
-    /// Where the feed is read from. **The mirror first**: update.qunqin.org, a
-    /// Cloudflare Worker in front of GitHub (`Scripts/update-mirror`), for
-    /// places that cannot reach GitHub. A check that cannot reach the feed or
-    /// the download switches to the other for the next one, so either being
-    /// down costs one check, not every update. Not kept across launches: each
-    /// launch starts on the mirror. [Docs/update-mirror.md]
+    /// Where the feed is read from: GitHub, or **update.qunqin.org**, a
+    /// Cloudflare Worker that passes it through (`Scripts/update-mirror`) for
+    /// places that cannot reach GitHub. Which one is `FeedRoute`'s call.
+    /// [Docs/update-mirror.md]
     enum FeedHost: Equatable, Sendable {
-        case mirror
         case github
+        case mirror
 
         var base: String {
             switch self {
-            case .mirror: "https://update.qunqin.org/"
             case .github: "https://raw.githubusercontent.com/qunqin24/Pulse/main/"
+            case .mirror: "https://update.qunqin.org/"
             }
         }
 
-        var other: FeedHost { self == .mirror ? .github : .mirror }
+        var other: FeedHost { self == .github ? .mirror : .github }
     }
 
+    /// Which host the next check reads, and whether a failed check is tried
+    /// again at once on the other. Pure, so the rules can be pinned.
+    ///
+    /// **GitHub whenever it answers.** A five-second request for the feed
+    /// decides before the updater starts and again after every check, so a
+    /// Mac that moves between networks follows. **A check that fails is tried
+    /// again straight away on the other host** — not two hours later at the
+    /// next scheduled one — once: when that fails too, nothing more is tried
+    /// until the next check.
+    struct FeedRoute: Equatable, Sendable {
+        private(set) var host: FeedHost = .github
+        private(set) var retried = false
+
+        /// GitHub's feed answered within the timeout, or did not.
+        mutating func probed(githubReachable: Bool) {
+            host = githubReachable ? .github : .mirror
+        }
+
+        /// A check could not reach the feed or the archive. True when it
+        /// should be tried again now, on the host this switched to.
+        mutating func failed() -> Bool {
+            host = host.other
+            if retried {
+                retried = false
+                return false
+            }
+            retried = true
+            return true
+        }
+
+        /// A check got an answer, update or not.
+        mutating func answered() {
+            retried = false
+        }
+    }
+
+    private var route = FeedRoute()
     /// The feed to read next.
-    private(set) var host: FeedHost = .mirror
+    var host: FeedHost { route.host }
+    /// A failed check is to be tried again once Sparkle has ended its cycle.
+    private var retryPending = false
+    /// The check under way is `probe()`'s, so a retry stays quiet too.
+    private var quietCheck = false
+    /// Sparkle's updater has been started: after the launch probe, or sooner
+    /// when somebody asks for a check before it is back.
+    private var isStarted = false
+
+    private func startIfNeeded() {
+        guard !isStarted, let controller else { return }
+        isStarted = true
+        controller.startUpdater()
+    }
+
+    /// Whether GitHub's feed answers within five seconds.
+    nonisolated static func githubReachable() async -> Bool {
+        guard let url = URL(string: FeedHost.github.base + "appcast.xml") else { return false }
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 5)
+        request.httpMethod = "HEAD"
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForResource = 5
+        let session = URLSession(configuration: configuration)
+        defer { session.finishTasksAndInvalidate() }
+        guard let (_, response) = try? await session.data(for: request) else { return false }
+        return (response as? HTTPURLResponse)?.statusCode == 200
+    }
 
     /// The feed for a host and the language Pulse is set to.
     ///
@@ -115,8 +184,10 @@ final class AppUpdate {
     /// Asks now, and shows Sparkle's own window with whatever it finds.
     func check() {
         guard let controller else { return }
+        startIfNeeded()
         isChecking = true
         didFail = false
+        quietCheck = false
         controller.updater.checkForUpdates()
     }
 
@@ -126,6 +197,7 @@ final class AppUpdate {
     /// Skipped while any check or update is already under way — that one will
     /// report, and starting another would only abort it.
     func probe() {
+        startIfNeeded()
         guard
             let updater = controller?.updater,
             !isChecking,
@@ -134,6 +206,7 @@ final class AppUpdate {
         else { return }
         isChecking = true
         didFail = false
+        quietCheck = true
         updater.checkForUpdateInformation()
     }
 
@@ -145,13 +218,18 @@ final class AppUpdate {
     fileprivate func finishCheck(found item: SUAppcastItem?) {
         isChecking = false
         didFail = false
+        route.answered()
         newer = item.map { Release(version: $0.displayVersionString) }
     }
 
     fileprivate func failCheck(_ failed: Bool, unreachable: Bool) {
+        // Tried again on the other host before anything says it failed.
+        if unreachable, route.failed() {
+            retryPending = true
+            return
+        }
         isChecking = false
         if failed { didFail = true }
-        if unreachable { host = host.other }
     }
 
     /// The feed Sparkle asks for at the start of each check.
@@ -162,7 +240,27 @@ final class AppUpdate {
     /// Every cycle ends here, whichever of the calls above it made first, so a
     /// cycle that made none of them cannot leave the row saying "Checking…".
     fileprivate func endCycle() {
+        if retryPending {
+            retryPending = false
+            let quiet = quietCheck
+            // On the next turn, once Sparkle has wound this cycle down.
+            Task { @MainActor [weak self] in
+                guard let self, let updater = self.controller?.updater, !updater.sessionInProgress else {
+                    self?.isChecking = false
+                    return
+                }
+                if quiet { updater.checkForUpdateInformation() } else { updater.checkForUpdatesInBackground() }
+            }
+            return
+        }
         isChecking = false
+        quietCheck = false
+        // Asked again after every check, so the next one takes GitHub
+        // whenever it answers.
+        Task { [weak self] in
+            let reachable = await Self.githubReachable()
+            self?.route.probed(githubReachable: reachable)
+        }
     }
 }
 
@@ -197,9 +295,9 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
         // failure to *reach or read* the feed counts.
         let failed = (error as NSError).domain == NSURLErrorDomain
             || (error as NSError).code == Int(SUError.appcastError.rawValue)
-        // A feed or an archive that could not be fetched: the next check
-        // tries the other host (`FeedHost`). The archive comes from the host
-        // the feed did — the mirror rewrites the feed's downloads to itself.
+        // A feed or an archive that could not be fetched: tried again on the
+        // other host (`FeedRoute`). The archive comes from the host the feed
+        // did — the mirror rewrites the feed's downloads to itself.
         let unreachable = failed || (error as NSError).code == Int(SUError.downloadError.rawValue)
         MainActor.assumeIsolated { owner?.failCheck(failed, unreachable: unreachable) }
     }

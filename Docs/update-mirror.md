@@ -19,7 +19,13 @@ A cache at the edge and a `/download/latest` redirect were written first and tak
 
 ## How the app uses it
 
-`SUFeedURL` (`Scripts/bundle.sh`) is the mirror, but the feed is chosen per check by `feedURLStringForUpdater:` (`AppUpdate.feedURL(for:host:)`): the host and Pulse's language ([releasing.md](releasing.md#sparkle) on the per-language feeds). **Every launch starts on the mirror.** A check that cannot reach the feed, or cannot download the archive (`NSURLErrorDomain`, `SUAppcastError`, `SUDownloadError`), switches `AppUpdate.host` to the other for the next check — so either host being down costs one check, not every update. Pinned by `AppUpdateFeedTests`.
+**GitHub whenever it answers, the mirror when it does not** (`AppUpdate.FeedRoute`, pinned by `AppUpdateFeedTests`):
+
+- **Asked before the updater starts.** A HEAD for GitHub's `appcast.xml` with a five-second timeout (`AppUpdate.githubReachable`) picks the host, and only then is Sparkle started (`startingUpdater: false`, then `startUpdater()`), so a check due at launch reads the host that answers instead of finding out by failing. A check asked for before the probe is back starts the updater at once.
+- **Asked again after every check**, so a Mac that moves between networks follows on its next one.
+- **A failed check is tried again straight away on the other host**, not two hours later: a feed or an archive that could not be fetched (`NSURLErrorDomain`, `SUAppcastError`, `SUDownloadError`) switches the host and, once Sparkle has ended the cycle, checks again — quietly if the first was About's quiet check, otherwise as a background check, which still puts up the update window when it finds one. Once only: when that fails too, the failure is reported and nothing more is tried until the next check.
+
+The feed is chosen per check by `feedURLStringForUpdater:` (`AppUpdate.feedURL(for:host:)`), the host together with Pulse's language ([releasing.md](releasing.md#sparkle) on the per-language feeds). `SUFeedURL` in `Info.plist` stays GitHub's: it is what a build without the delegate would read, and what tells `AppUpdate` it is running from a bundle.
 
 **Copies before 1.8.1 read GitHub only** (their `SUFeedURL` is `raw.githubusercontent.com`). Where GitHub is unreachable they never see the update that moves them to the mirror: those people download the new version once by hand (through the mirror, `https://update.qunqin.org/download/v<version>/Pulse-<version>.dmg`, if GitHub is out of reach).
 

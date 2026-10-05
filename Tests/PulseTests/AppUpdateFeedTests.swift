@@ -20,12 +20,34 @@ struct AppUpdateFeedTests {
         #expect(AppUpdate.feedURL(for: .korean, host: .mirror) == "https://update.qunqin.org/appcast-en.xml")
     }
 
-    @Test func aFailedHostHandsOverToTheOther() {
-        #expect(AppUpdate.FeedHost.mirror.other == .github)
-        #expect(AppUpdate.FeedHost.github.other == .mirror)
+    @Test func gitHubWhenItAnswersTheMirrorWhenNot() {
+        var route = AppUpdate.FeedRoute()
+        #expect(route.host == .github)
+        route.probed(githubReachable: false)
+        #expect(route.host == .mirror)
+        route.probed(githubReachable: true)
+        #expect(route.host == .github)
     }
 
-    @Test @MainActor func theMirrorIsFirst() {
-        #expect(AppUpdate().host == .mirror)
+    @Test func aFailedCheckIsTriedOnceMoreOnTheOtherHost() {
+        var route = AppUpdate.FeedRoute()
+        // GitHub fails: straight away on the mirror.
+        let first = route.failed()
+        #expect(first)
+        #expect(route.host == .mirror)
+        // The mirror fails too: nothing more until the next check.
+        let second = route.failed()
+        #expect(!second)
+        #expect(route.host == .github)
+        // A new check that fails is retried again, and an answer resets it.
+        let third = route.failed()
+        #expect(third)
+        route.answered()
+        let fourth = route.failed()
+        #expect(fourth)
+    }
+
+    @Test @MainActor func gitHubIsFirst() {
+        #expect(AppUpdate().host == .github)
     }
 }
