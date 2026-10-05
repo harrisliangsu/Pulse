@@ -25,12 +25,16 @@ A year calendar was drawn both as twelve month grids and as one 53-week strip. T
 
 `RecapDeck` (`RecapDeck.swift`) returns the cards in order. **A card whose data is nil is not drawn**, and a figure inside a card whose data is nil is not drawn with a zero:
 
-- no agents, no opener; no hour shape, no timetable; no cost or no price (`monthlyPrice`, typed by the reader, in `Recap.currency`), no payback — and no money figure anywhere, including the poster's tiles and the scorecard's cells;
+- no agents, no opener; no hour shape, no timetable; no cost, no price (`monthlyPrice`, typed by the reader, in `Recap.currency`) or 1% or more of the tokens unpriced, no payback — and, with no cost, no money figure anywhere, including the poster's tiles and the scorecard's cells;
 - an empty recap has no deck;
 - the poster is a stack of rows that appear only when their facts exist; the rows that remain share the height, so a thin recap is a shorter poster, not one with holes;
 - the scorecard drops a cell it cannot fill, and pairs an odd one out with the busiest day.
 
-Payback is `cost / (price × months)`: one month for a month, twelve for a year, or as many as have started when the year is still running. Below 1 it is shown as it is.
+Payback is `cost / (price × months)` (`RecapPayback`): one month for a month, twelve for a year. **A period still running is prorated by days**, not by whole months started: `months = (1 or 12) × elapsed days ÷ days in the month (or the year)`, so the 5th of a 31-day month is 5/31 of the price and March 1 of a 365-day year is 12 × 60/365 — and the payback card says "Figures are to date, and the plan price is prorated by the days so far." Below 1 it is shown as it is.
+
+**Partly unpriced money.** `Recap.unpricedTokens` is the tokens with no published price behind them. Above zero, `cost` is only the priced part — a floor — and the poster's footer, the payback card's footnote and the scorecard say "Some work had no published price, so the money is a floor." At **1% or more** of the tokens the payback card is left out (`RecapDeck.maximumUnpricedShare`): dividing a price into a floor that loose would state a multiple that may be far off. Cost stays nil when nothing was priced. The poster's cost line under the total is not drawn if any day (or month) *with work* has no cost — quiet days are a real zero, unpriced ones are not drawn as one. The cache sentence and the "cache saved you" row appear only from $0.50 (`RecapDeck.minimumSavings`); "saving about $0.00" is not written.
+
+**Streaks belong to the period.** `currentStreak` and `longestStreak` are counted over the recap's own `days` (`Recap.streaks`), never the whole history: the longest run of days with work inside the period, and the run that ends on the period's last day — a past period's final day; a running one's today, or yesterday while today is quiet ("today is not over"), counted inside the period only. Only a running period's current run is "still going": a past period's card says **Longest streak** and nothing about the run still going.
 
 `hidesProjects` replaces project names with "Project 1", "Project 2"… (`RecapDeck.projectName`). The footer says when figures are to date (`isInProgress`) and when the total is a floor (`isPartial`), and that money is an estimate at API prices.
 
@@ -41,6 +45,10 @@ Flat colour and type only — paper `#F5F5F1`, white cards with a hairline, ink 
 Hero numbers are set tight and trimmed to their digits (`RecapFigureText.trimmed`; the ascender and descender fractions are measured against the system font). `minimumScaleFactor` on a `Text` inside an `HStack` with a `Spacer` can be shrunk to its floor for no visible reason; give such a row a fixed frame or leave the factor off.
 
 `RecapRenderer.png(of:in:)` renders a card at scale 1.
+
+## One calendar
+
+Recaps are built, offered and named in `Recap.calendar` — Gregorian, weeks from Monday, the system's time zone — **not** `Calendar.current`: a Buddhist or Japanese system calendar numbers the year 2569 or Reiwa 8 while the cards print the Gregorian year, so a recap asked for as "2026" would be built over another span than the one it names. `Recap.build`, `RecapPeriods`, `RecapNoticeRule` and `--recap` all default to it, `RecapFormat.calendar(locale:)` is it with a locale, and a `Recap` carries the calendar it was built with: the year calendar derives its twelve months from `start` by month offsets in it (`Recap.monthStarts`) rather than from the year number. Every busiest-day highlight (poster and month calendar) marks only `recap.busiestDay`, the earliest of a tie.
 
 ## Language
 
@@ -58,7 +66,9 @@ Persona names are written per language (`Recap.Persona.title`), not translated f
 PULSE_RECAP_PREVIEW=/tmp/recap swift test --filter RecapRenderTests
 ```
 
-writes every card of the sample month and year in all five languages to `/tmp/recap/<language>/<deck>-<n>-<card>.png`, one `sheet.png` contact sheet per language, and `/tmp/recap/edge/` for recaps with a field missing (no price, unpriced, bare, in progress). The samples are `RecapSamples` (`#if DEBUG`), which the `#Preview` blocks in `RecapRenderer.swift` share. The test pins nothing about pixels: a card either fits its language or it does not, and the only judge is reading it.
+writes every card of the sample month and year in all five languages to `/tmp/recap/<language>/<deck>-<n>-<card>.png`, one `sheet.png` contact sheet per language, and `/tmp/recap/edge/` for recaps with a field missing (no price, unpriced, bare, in progress, a floor, mostly unpriced). The samples are `RecapSamples` (`#if DEBUG`), which the `#Preview` blocks in `RecapRenderer.swift` share. The test pins nothing about pixels: a card either fits its language or it does not, and the only judge is reading it.
+
+`RecapTests` pins the streaks of a past and a running month, `unpricedTokens`, and a Buddhist-calendar build whose year months follow the calendar; `RecapWindowTests` the price grammar, `RecapPeriods.earliest`, the read-generation race and `takesArrows`; `RecapDeckTests` the payback rules (unpriced share, proration), the cost line, the savings floor and the streak wording. The edge renders are in English and, for `in-progress`, `floor` and `mostly-unpriced`, also in `edge-zh-Hans`, `edge-ja` and `edge-ko`.
 
 `RecapFormatTests` and `RecapDeckTests` pin the number split per locale, the date and hour formats, the ruler, and which cards each recap gets.
 
@@ -68,22 +78,22 @@ writes every card of the sample month and year in all five languages to `/tmp/re
 
 **Entry points** — both open the same window, and neither menu carries one (the rail's and the menu bar's menus stay to the panel, Settings and Quit):
 
-- the Token spend pane's **Monthly Recap** row, whose button reads **View September recap** and opens on that month (`SettingsView.recapPeriod`, the window's own default rule);
+- the Token spend pane's **Monthly and Yearly Recap** row, with two buttons side by side so the yearly recap is not found only inside the window: **View September recap** opens on that month (`SettingsView.recapPeriod`, the window's own default rule) and **View 2026 recap** on the year by the same rule (`RecapPeriods.defaultYear`: January 1–7 opens the year that just ended, any other day this one, in progress; the year is a plain string, never "2,026");
 - a clicked "recap is ready" notification, on the month it names ([notifications.md](notifications.md#the-monthly-recap)).
 
 **Layout.** The deck on the left, one card at a time, drawn live and scaled to fit (`RecapCardView` at 1080 × 1920, `scaleEffect`), with previous / next buttons beside it and dots with a "1 / 5" counter under it; **← and →** turn the page. On the right: the period, the price, the privacy switch and four buttons. The window follows the system's light or dark; only the cards are paper.
 
-**Keys are the window's own.** `RecapWindow.sendEvent` takes a bare ← or → while this window is key and **no text field is being edited** (the price field keeps its caret keys). No global monitor and no `NSEvent.addLocalMonitorForEvents`. The same method ends field editing on a click outside the field (`NSWindow.endFieldEditing(ifOutside:)`, shared with the settings window).
+**Keys are the window's own.** `RecapWindow.sendEvent` takes a bare ← or → while this window is key, **no text field is being edited** (the price field keeps its caret keys) and the first responder is not a control that uses the arrows itself — the Month / Year segments, a popup, a slider, a stepper, a text view (`RecapWindow.takesArrows`). No global monitor and no `NSEvent.addLocalMonitorForEvents`. The same method ends field editing on a click outside the field (`NSWindow.endFieldEditing(ifOutside:)`, shared with the settings window).
 
 ### Which period
 
-- **Offered:** every month, and every year, from the earliest record on this Mac to now, newest first (`RecapPeriods.months` / `years`; the earliest is the earliest of the ledgers' `earliest`). Nothing before the first record, nothing after today. Until the read has finished only the default is offered.
+- **Offered:** every month, and every year, from the earliest record on this Mac to now, newest first (`RecapPeriods.months` / `years`; the earliest is the earliest of the `earliest` of the ledgers the Token spend pane may show — `Origin.supportsTokenSpend`, so a provider's own statistics do not decide it — and never before 2020-01-01 (`RecapPeriods.floor`), so a bogus timestamp cannot produce hundreds of empty months). Nothing before the first record, nothing after today. Until the read has finished only the default is offered.
 - **Opened on:** the month that **just ended during the first seven days of a month** (October 1–7 opens on September), **the running month from the 8th**. For years the same rule with January 1–7. If that falls before the earliest record it moves up to it; until the read has said where records begin (the Token spend button's label, a window still reading) the rule stands alone, so the button can read "View September recap" first and move to October if records only begin then. `RecapPeriods.defaultMonth` / `defaultYear`; a period asked for (the notification's, the Token spend button's) is kept over the default.
 - **Month / Year** is a segmented control; switching keeps the year (a month becomes its year, a year becomes its last offered month). The window title follows it.
 
 ### The price and the privacy switch
 
-- **Monthly price**, in US dollars, typed into the window (a "$" before the field and one line saying it is only used for the payback card). Stored as `AppSettings.recapMonthlyPrice` (`Double?`): **empty and 0 both mean no price**, and no payback card is drawn — never a guess, never a zero. Only a positive amount up to `RecapPrice.maximum` (10,000) is kept; a negative, a word or a larger figure is refused and the field goes back to what was kept. It is taken on Return, when the field loses focus, and before any export — so a price typed and a button pressed straight away exports the payback card.
+- **Monthly price**, in US dollars, typed into the window (a "$" before the field and one line saying it is only used for the payback card). Stored as `AppSettings.recapMonthlyPrice` (`Double?`): **empty and 0 both mean no price**, and no payback card is drawn — never a guess, never a zero. **Parsing is strict and does not guess the locale** (`RecapPrice.entry`): after trimming whitespace and one leading "$", either plain digits with an optional "." or "," and one or two decimals (`20`, `12.5`, `12,5` = 12.5), or digits grouped by "," in valid groups of three with an optional ".dd" (`1,200`, `1,200.50`). Anything else — `abc`, `free`, a lone `$`, `1e3`, `20 USD`, `-5`, `1,2,3`, `12.345`, `>10000` — and anything over `RecapPrice.maximum` (10,000) is refused and the field goes back to what was kept. It is taken on Return, when the field loses focus, and before any export — so a price typed and a button pressed straight away exports the payback card.
 - **Hide project names** (`AppSettings.recapHidesProjects`, **off**: names are shown) is `RecapDeck.hidesProjects`.
 - Both are stored and read back whole-app, like every setting, and both change the deck live.
 
@@ -98,7 +108,7 @@ writes every card of the sample month and year in all five languages to `/tmp/re
 | Could not read (`failed`) | A message and **Retry**. | |
 | Ready | The card. | all four buttons |
 
-**Cancellation.** The read is one read for every period, so changing period never restarts it — a month change only rebuilds a `Recap`, and a rebuild for a period no longer on screen is dropped. **Closing the window cancels a read in progress** and drops the ledgers and every recap built from them (`RecapWindowModel.windowDidClose`); nothing is read while it is closed. Switching Token spend reading off under an open window drops them too.
+**Cancellation.** Each read carries a generation (`RecapWindowModel.loadGeneration`): a cancelled read that finishes after a newer one has started — close and reopen, or reading switched off and on — neither clears the newer read's reference nor hands over its result. The read is one read for every period, so changing period never restarts it — a month change only rebuilds a `Recap`, and a rebuild for a period no longer on screen is dropped. **Closing the window cancels a read in progress** and drops the ledgers and every recap built from them (`RecapWindowModel.windowDidClose`); nothing is read while it is closed. Switching Token spend reading off under an open window drops them too.
 
 ### The ledgers
 
@@ -111,9 +121,9 @@ All of it renders the card again at full size with `RecapRenderer` — never a s
 | Button | Does |
 |---|---|
 | **Save image** | The card on screen → `NSSavePanel` (a sheet on the window), `pulse-recap-2026-09-02-opener.png` |
-| **Save all** | `NSOpenPanel` for a folder, then every card including the poster, `pulse-recap-<period>-<nn>-<card>.png` in deck order |
+| **Save all** | `NSOpenPanel` for a folder, then every card including the poster, `pulse-recap-<period>-<nn>-<card>.png` in deck order. **It overwrites** a file of the same name in that folder (a second save of the same recap lands on the first); nothing else in the folder is touched |
 | **Copy image** | PNG (and TIFF, for apps that read only that) on `NSPasteboard.general`; "Copied" |
-| **Share image** | One PNG written to `…/Pulse Recap/` in the temporary folder (replaced on the next share) and handed to `NSSharingServicePicker`, anchored to the button |
+| **Share image** | One PNG written to its own folder, `…/Pulse Recap/<UUID>/`, in the temporary folder — a later share never removes an earlier one's, since the app it went to may still be reading it — and handed to `NSSharingServicePicker`, anchored to the button. The whole `Pulse Recap` folder is deleted when the recap window closes (`RecapExport.removeShareFolder`) |
 
 A line under the buttons says "Saved", "Copied" or "Couldn't make the image." for three seconds; cancelling a panel and opening the share sheet say nothing.
 

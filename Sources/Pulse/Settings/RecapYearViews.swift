@@ -56,7 +56,7 @@ struct RecapYearCalendarView: View {
             RecapTotalHero(deck: deck, numberSize: 210, unitSize: 100).padding(.top, 48)
             Rectangle().fill(RecapColor.ink).frame(height: 2).padding(.top, 48)
             HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: RecapFormat.yearName(year))
+                Text(verbatim: RecapFormat.yearName(recap.period.year))
                     .font(.recap(26, .bold))
                 Spacer()
                 Text(localized: "Darker days used more")
@@ -73,29 +73,21 @@ struct RecapYearCalendarView: View {
         }
     }
 
-    private var year: Int {
-        if case .year(let year) = recap.period { return year }
-        return Calendar.current.component(.year, from: recap.start)
-    }
-
     private var maximum: Int { recap.days.map(\.tokens).max() ?? 0 }
 
     private var months: some View {
-        let calendar = RecapFormat.calendar()
+        let calendar = recap.calendar
+        let starts = recap.monthStarts
         let columns = Array(repeating: GridItem(.flexible(), spacing: 30, alignment: .top), count: 3)
         return LazyVGrid(columns: columns, spacing: 24) {
-            ForEach(1...12, id: \.self) { month in
-                monthBlock(month, calendar: calendar)
+            ForEach(starts.indices, id: \.self) { index in
+                monthBlock(starts[index], calendar: calendar)
             }
         }
     }
 
-    private func monthBlock(_ month: Int, calendar: Calendar) -> some View {
-        var components = DateComponents()
-        components.year = year
-        components.month = month
-        components.day = 1
-        let first = calendar.date(from: components) ?? recap.start
+    private func monthBlock(_ first: Date, calendar: Calendar) -> some View {
+        let month = calendar.component(.month, from: first)
         let grid = RecapMonthGrid(monthStart: first, days: recap.days, calendar: calendar)
         let cell: CGFloat = 34, gap: CGFloat = 6
         return VStack(alignment: .leading, spacing: 10) {

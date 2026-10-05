@@ -1009,6 +1009,7 @@
 "Counted from this Mac's local records · money estimated at API prices" = "이 Mac의 로컬 기록 기준 · 금액은 API 요금으로 추산";
 "Counted from this Mac's local records" = "이 Mac의 로컬 기록 기준";
 "Figures are to date." = "수치는 오늘까지의 기준입니다.";
+"Some work had no published price, so the money is a floor." = "일부 사용분은 공개된 가격이 없어, 금액은 실제보다 적을 수 있습니다.";
 "Some tools' counts may be missing, so the total is a floor." = "일부 도구의 기록이 빠졌을 수 있어, 실제 사용량은 이보다 많을 수 있습니다.";
 "Project %@" = "프로젝트 %@";
 "%@ a day on average" = "하루 평균 %@";
@@ -1024,11 +1025,11 @@
 "Model ranking" = "모델 순위";
 "By token share" = "토큰 비중순";
 "Other" = "기타";
-"%@ agents" = "%@개";
+"%@ agents" = "도구 %@개";
 "Repeated context is read from the cache, saving about %@" = "반복되는 맥락은 캐시에서 읽어, 약 %@ 절약";
 "days" = "일";
 "Still going · longest %@" = "진행 중 · 최장 %@";
-"Top projects" = "시간을 가장 많이 쓴 프로젝트";
+"Top projects" = "가장 많이 쓴 프로젝트";
 "In %@," = "%@에는";
 "%@ AI tools coded with you." = "AI 도구 %@개와 함께 코딩했습니다.";
 "One AI tool coded with you." = "AI 도구 하나와 함께 코딩했습니다.";
@@ -1045,6 +1046,7 @@
 "Where the money went" = "금액은 어디에";
 "The cache saved you" = "캐시로 아낀 금액";
 "Estimated at each model's published API price. The plan price is the one you typed in Pulse." = "각 모델이 공개한 API 요금으로 추산했습니다. 요금제 가격은 Pulse에 입력한 값입니다.";
+"Figures are to date, and the plan price is prorated by the days so far." = "수치는 오늘까지의 기준이며, 요금제 가격은 지금까지 지난 일수로 나눠 계산했습니다.";
 "That was" = "이것이";
 "your %@." = "당신의 %@입니다.";
 "Tokens" = "토큰";
@@ -1061,7 +1063,9 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "월간 리포트";
 "Yearly Recap" = "연간 리포트";
+"Monthly and Yearly Recap" = "월간·연간 리포트";
 "View %@ recap" = "%@ 리포트 보기";
+"View %@ yearly recap" = "%@ 연간 리포트 보기";
 "Shareable cards for a month or a year, from this Mac's records." = "이 Mac의 기록으로 한 달 또는 한 해의 공유용 카드를 만듭니다.";
 "When a recap is ready" = "리포트가 준비되었을 때";
 "Last month's recap, at the start of the month. Needs Token spend reading." = "매월 초에 지난달 리포트가 준비되었음을 알립니다. ‘로컬 사용량 기록 읽기’가 켜져 있어야 합니다.";

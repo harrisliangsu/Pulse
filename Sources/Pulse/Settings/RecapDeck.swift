@@ -26,10 +26,17 @@ enum RecapCard: String, Hashable, CaseIterable, Sendable {
 struct RecapPayback: Equatable, Sendable {
     /// What the period's work would have cost at API prices.
     let used: Double
-    /// The monthly price the reader typed, times the months the period spans.
-    let paid: Double
-    /// Months of subscription the period covers: 1 for a month recap.
-    let months: Int
+    /// The monthly price the reader typed.
+    let monthlyPrice: Double
+    /// Months of subscription the period covers: 1 for a month recap, 12 for a
+    /// year, and for a period still running that share of them the days so far
+    /// make (`RecapDeck.paidMonths`) — so 5 days into a 31-day month is 5/31.
+    let months: Double
+    /// Whether the period is still running: both figures are to date.
+    let isToDate: Bool
+
+    /// What the subscription cost over the span: the price times `months`.
+    var paid: Double { monthlyPrice * months }
 
     /// `used / paid`, under 1 when the subscription cost more than the work did.
     var multiple: Double { used / paid }
@@ -39,8 +46,8 @@ struct RecapPayback: Equatable, Sendable {
 ///
 /// **A card whose data is missing is left out, never drawn empty or with a
 /// zero.** No agents, no opener; no hour shape (`Recap.hours` is nil where a
-/// store only has session-level timing), no timetable; no cost or no price, no
-/// payback. An empty recap gets no deck at all. The page counter ("01 / 05")
+/// store only has session-level timing), no timetable; no cost, no price or too
+/// much unpriced work (`maximumUnpricedShare`), no payback. An empty recap gets no deck at all. The page counter ("01 / 05")
 /// counts the numbered cards the deck really has.
 struct RecapDeck: Sendable {
     let recap: Recap
@@ -106,20 +113,47 @@ struct RecapDeck: Sendable {
         return cards
     }
 
-    /// Needs a priced period and a price. A price of nothing is not a
-    /// subscription, and a period priced at nothing has no payback to state.
+    /// A payback card needs a priced period, a price, and **a period that is
+    /// priced nearly whole**: with 1% or more of its tokens unpriced the money
+    /// is a floor too loose to divide a price into, so the card is left out
+    /// rather than state a multiple that may be far off. (Below that the figures
+    /// carry the floor note.) A price of nothing is not a subscription, and a
+    /// period priced at nothing has no payback to state.
     static func payback(recap: Recap, monthlyPrice: Double?) -> RecapPayback? {
-        guard let cost = recap.cost, cost > 0, let price = monthlyPrice, price > 0 else { return nil }
+        guard let cost = recap.cost, cost > 0, let price = monthlyPrice, price > 0,
+              recap.tokens > 0,
+              Double(recap.unpricedTokens) / Double(recap.tokens) < maximumUnpricedShare else { return nil }
         let months = paidMonths(recap)
-        return RecapPayback(used: cost, paid: price * Double(months), months: months)
+        guard months > 0 else { return nil }
+        return RecapPayback(used: cost, monthlyPrice: price, months: months, isToDate: recap.isInProgress)
     }
 
-    /// Months of subscription the period spans. A month is one; a year is
-    /// twelve, or as many as have started when it is still running.
-    static func paidMonths(_ recap: Recap) -> Int {
-        guard case .year = recap.period else { return 1 }
-        guard recap.isInProgress else { return 12 }
-        let lastDay = recap.end.addingTimeInterval(-1)
-        return max(1, Calendar.current.component(.month, from: lastDay))
+    /// The share of tokens without a price at which the payback card is dropped.
+    static let maximumUnpricedShare = 0.01
+
+    /// Months of subscription the period spans: one for a month, twelve for a
+    /// year. **A period still running is prorated by days** — the days so far
+    /// over the days in the month (or the year) — not by whole months started,
+    /// which would charge a year in March for three full months, or a month's
+    /// fifth day for all of it.
+    static func paidMonths(_ recap: Recap) -> Double {
+        let whole: Double = recap.period.isYear ? 12 : 1
+        guard recap.isInProgress,
+              let full = recap.period.bounds(calendar: recap.calendar),
+              let total = recap.calendar.dateComponents([.day], from: full.start, to: full.end).day,
+              total > 0 else { return whole }
+        return whole * Double(min(recap.elapsedDays, total)) / Double(total)
     }
+
+    /// Whether some of the money is a floor because part of the work had no
+    /// published price, where there is money to say it about.
+    var costIsFloor: Bool { recap.cost != nil && recap.unpricedTokens > 0 }
+
+    /// The cache's saving worth saying: nil below fifty cents, where "about
+    /// $0.00" would be the sentence.
+    var cacheSavings: Double? {
+        recap.cacheSavings.flatMap { $0 >= Self.minimumSavings ? $0 : nil }
+    }
+
+    static let minimumSavings = 0.5
 }

@@ -46,21 +46,27 @@ struct RecapRenderTests {
             try write(try #require(Self.sheet(rows)), to: directory.appendingPathComponent("sheet.png"))
         }
 
-        // A recap with fields missing, in the one language that is quickest to read.
-        LocalizationSource.use(.english)
-        let edge = destination.appendingPathComponent("edge")
-        try FileManager.default.createDirectory(at: edge, withIntermediateDirectories: true)
-        let cases: [(String, RecapDeck)] = [
-            ("no-price", RecapDeck(recap: RecapSamples.month(), monthlyPrice: nil, hidesProjects: false)),
-            ("unpriced", RecapDeck(recap: RecapSamples.month(priced: false), monthlyPrice: 200, hidesProjects: false)),
-            ("bare", RecapDeck(recap: RecapSamples.month(priced: false, hasHours: false, hasAgents: false, hasCache: false, persona: nil),
-                               monthlyPrice: nil, hidesProjects: true)),
-            ("in-progress", RecapDeck(recap: RecapSamples.month(isInProgress: true), monthlyPrice: 200, hidesProjects: false)),
-        ]
-        for (name, deck) in cases {
-            for card in deck.cards {
-                let image = try #require(RecapRenderer.image(of: card, in: deck))
-                try write(image, to: edge.appendingPathComponent("\(name)-\(card.rawValue).png"))
+        // A recap with fields missing: English in `edge`, and the three that run
+        // longest or wrap differently in `edge-<language>`.
+        for (folder, language) in [("edge", AppLanguage.english), ("edge-zh-Hans", .chineseSimplified),
+                                   ("edge-ja", .japanese), ("edge-ko", .korean)] {
+            LocalizationSource.use(language)
+            let edge = destination.appendingPathComponent(folder)
+            try FileManager.default.createDirectory(at: edge, withIntermediateDirectories: true)
+            let cases: [(String, RecapDeck)] = [
+                ("no-price", RecapDeck(recap: RecapSamples.month(), monthlyPrice: nil, hidesProjects: false)),
+                ("unpriced", RecapDeck(recap: RecapSamples.month(priced: false), monthlyPrice: 200, hidesProjects: false)),
+                ("bare", RecapDeck(recap: RecapSamples.month(priced: false, hasHours: false, hasAgents: false, hasCache: false, persona: nil),
+                                   monthlyPrice: nil, hidesProjects: true)),
+                ("in-progress", RecapDeck(recap: RecapSamples.month(isInProgress: true, unpricedShare: 0.004), monthlyPrice: 200, hidesProjects: false)),
+                ("floor", RecapDeck(recap: RecapSamples.month(unpricedShare: 0.004), monthlyPrice: 200, hidesProjects: false)),
+                ("mostly-unpriced", RecapDeck(recap: RecapSamples.month(unpricedShare: 0.2), monthlyPrice: 200, hidesProjects: false)),
+            ]
+            for (name, deck) in cases {
+                for card in deck.cards {
+                    let image = try #require(RecapRenderer.image(of: card, in: deck))
+                    try write(image, to: edge.appendingPathComponent("\(name)-\(card.rawValue).png"))
+                }
             }
         }
     }

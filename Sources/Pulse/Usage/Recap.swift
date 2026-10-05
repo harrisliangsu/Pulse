@@ -95,6 +95,11 @@ struct Recap: Sendable, Equatable {
     /// Estimated at published API prices (`ModelPrices`); nil when nothing
     /// was priced. Always labelled as an estimate on the cards.
     let cost: Double?
+    /// Tokens of the period with no published price behind them
+    /// (`SpendSummary.unpricedTokens`). Above zero, `cost` is the priced part
+    /// only — a floor — and the cards say so; at 1% or more of `tokens` the
+    /// payback card is left out (`RecapDeck.payback`).
+    let unpricedTokens: Int
     /// The same span of the previous period, for "up 38% on August". Nil when
     /// nothing was recorded then.
     let previousTokens: Int?
@@ -135,7 +140,16 @@ struct Recap: Sendable, Equatable {
     /// what they did cost at its cache-read rate. Nil when unpriced.
     let cacheSavings: Double?
 
-    /// Streaks are facts about the whole history, as in `SpendSummary`.
+    /// **Streaks belong to the period**, counted over `days` and nothing outside
+    /// it (not `SpendSummary`'s whole-history ones): a past month's card must
+    /// not carry October's streak, nor an all-time record longer than the month.
+    ///
+    /// `longestStreak` is the longest run of days with work inside the period.
+    /// `currentStreak` is the run that ends on the period's last day — for a
+    /// past period, its final day; for a running one, today, or yesterday while
+    /// today has had no work yet ("today is not over") — counted inside the
+    /// period only. Only a running period's is "still going"
+    /// (`isInProgress`); a past period's says how it ended.
     let currentStreak: Int
     let longestStreak: Int
     let busiestDay: Day?
@@ -145,5 +159,56 @@ struct Recap: Sendable, Equatable {
     /// Whether some store behind it may be missing counts: the total is a floor.
     let isPartial: Bool
 
+    /// The calendar the recap was built with, so the cards that lay out its
+    /// days (the year's twelve months) count them the way it did.
+    var calendar: Calendar = Recap.calendar
+
     var isEmpty: Bool { tokens == 0 }
+
+    /// The calendar every recap is built, offered and drawn in: Gregorian,
+    /// weeks from Monday, the system's time zone. **Not `Calendar.current`** —
+    /// a Buddhist or Japanese system calendar would number the year 2569 or
+    /// Reiwa 8 while the cards print the Gregorian year, and a recap asked for
+    /// as "2026" would be built over another span than the one it names.
+    static var calendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        calendar.firstWeekday = 2
+        calendar.minimumDaysInFirstWeek = 4
+        return calendar
+    }
+
+    /// The first day of each month the period covers — twelve for a year, one
+    /// for a month — found from `start` by whole-month offsets in the calendar
+    /// the recap was built with, never rebuilt from the year's number (which a
+    /// calendar of another era would read as a different year).
+    var monthStarts: [Date] {
+        let count: Int
+        switch period {
+        case .year: count = 12
+        case .month: count = 1
+        }
+        return (0..<count).compactMap { calendar.date(byAdding: .month, value: $0, to: start) }
+    }
+
+    /// The streaks of `days` (oldest first, one entry per calendar day, quiet
+    /// ones included): see `currentStreak` and `longestStreak`. A running
+    /// period's last day is today, and a quiet today does not break the run
+    /// until it has passed.
+    static func streaks(of days: [Day], isInProgress: Bool) -> (current: Int, longest: Int) {
+        var longest = 0
+        var run = 0
+        for day in days {
+            run = day.tokens > 0 ? run + 1 : 0
+            longest = max(longest, run)
+        }
+        var current = 0
+        var index = days.count - 1
+        if isInProgress, index >= 0, days[index].tokens == 0 { index -= 1 }
+        while index >= 0, days[index].tokens > 0 {
+            current += 1
+            index -= 1
+        }
+        return (current, longest)
+    }
 }

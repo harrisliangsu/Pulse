@@ -11,8 +11,17 @@ import UniformTypeIdentifiers
 /// second, and "Save all" yields between cards so the window keeps answering.
 ///
 /// **Nothing is kept.** A file is written where the person chose. Sharing
-/// writes one PNG to a temporary folder (the share sheet takes a file) and
-/// replaces it on the next share; macOS clears that folder itself.
+/// writes one PNG into its own folder (a UUID) under `Pulse Recap/` in the
+/// temporary folder, because the share sheet takes a file and the app it hands
+/// the file to may still be reading it when the next share is made — an earlier
+/// share's folder is never removed by a later one. The whole `Pulse Recap`
+/// folder goes when the recap window closes (`removeShareFolder`), and macOS
+/// clears the temporary folder itself.
+///
+/// **Save all overwrites.** A file of the same name in the folder the person
+/// picked is replaced (the names carry the period and the card, so a second
+/// save of the same recap lands on the first); the open panel has already asked
+/// where, and nothing else in that folder is touched.
 @MainActor
 enum RecapExport {
     enum Outcome: Equatable {
@@ -101,15 +110,21 @@ enum RecapExport {
     /// Opens the system share sheet on the card's PNG, anchored to `view`.
     static func share(_ card: RecapCard, of deck: RecapDeck, from view: NSView) -> Outcome {
         guard let data = RecapRenderer.png(of: card, in: deck) else { return .failed }
-        try? FileManager.default.removeItem(at: shareFolder)
-        let url = shareFolder.appendingPathComponent(fileName(for: card, in: deck))
+        let folder = shareFolder.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = folder.appendingPathComponent(fileName(for: card, in: deck))
         do {
-            try FileManager.default.createDirectory(at: shareFolder, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             try data.write(to: url, options: .atomic)
         } catch {
             return .failed
         }
         NSSharingServicePicker(items: [url]).show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
         return .presented
+    }
+
+    /// Removes every file this window handed to the share sheet. Called when
+    /// the recap window closes, never between shares.
+    static func removeShareFolder() {
+        try? FileManager.default.removeItem(at: shareFolder)
     }
 }

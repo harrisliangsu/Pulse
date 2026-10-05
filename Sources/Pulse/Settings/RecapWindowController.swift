@@ -76,6 +76,8 @@ final class RecapWindowController {
         window.isReleasedWhenClosed = false
         window.onClose = { [weak self, weak window] in
             self?.model.windowDidClose()
+            // The files handed to the share sheet are not kept past the window.
+            RecapExport.removeShareFolder()
             // `close()` runs this before the window is off screen.
             self?.dock.apply(closing: window)
         }
@@ -108,11 +110,31 @@ final class RecapWindow: NSWindow {
 
     override func sendEvent(_ event: NSEvent) {
         endFieldEditing(ifOutside: event)
-        if event.type == .keyDown, isKeyWindow, let direction = Self.direction(of: event, editing: fieldBeingEdited() != nil) {
+        if event.type == .keyDown, isKeyWindow,
+           let direction = Self.direction(of: event, editing: fieldBeingEdited() != nil),
+           Self.takesArrows(firstResponder) {
             onArrow?(direction)
             return
         }
         super.sendEvent(event)
+    }
+
+    /// Whether the first responder leaves ← and → to the window. Not a control
+    /// that uses them itself — the Month / Year segments, a popup, a slider, a
+    /// stepper, a text view — and not any other control but a plain button
+    /// (arrows mean nothing to one); the window itself, its content and the
+    /// views drawn in it do.
+    static func takesArrows(_ responder: NSResponder?) -> Bool {
+        switch responder {
+        case nil: return true
+        case is NSText, is NSSegmentedControl, is NSPopUpButton, is NSSlider, is NSStepper, is NSTextField,
+             is NSComboBox, is NSDatePicker, is NSTableView, is NSOutlineView:
+            return false
+        case let control as NSControl:
+            return control is NSButton
+        default:
+            return true
+        }
     }
 
     /// ← or → pressed alone and not inside a field, which keeps its caret keys.

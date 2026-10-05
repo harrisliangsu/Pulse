@@ -79,15 +79,40 @@ extension RecapDeck {
         recap.elapsedDays > 0 ? recap.tokens / recap.elapsedDays : nil
     }
 
+    /// Cost per day, or per month for a year, to draw under the poster's total.
+    /// Empty where fewer than two points carry a price, and **where any point
+    /// with work has none**: a line through a zero for a day that was merely
+    /// unpriced would be a figure Pulse made up. A quiet point (no tokens) is a
+    /// real zero.
+    var costSeries: [Double] {
+        let series: [(tokens: Int, cost: Double?)] = isYear
+            ? recap.months.map { ($0.tokens, $0.cost) }
+            : recap.days.map { ($0.tokens, $0.cost) }
+        guard !series.contains(where: { $0.tokens > 0 && $0.cost == nil }) else { return [] }
+        return series.filter { $0.cost != nil }.count > 1 ? series.map { $0.cost ?? 0 } : []
+    }
+
+    /// The streak a card shows, of the period's own days: the one still going
+    /// while the period is running and today or yesterday ended a run, else the
+    /// longest the period had. A past period is never "still going". Nil when
+    /// no day had work.
+    var streak: (days: Int, isCurrent: Bool)? {
+        guard recap.longestStreak > 0 else { return nil }
+        if recap.isInProgress, recap.currentStreak > 0 { return (recap.currentStreak, true) }
+        return (recap.longestStreak, false)
+    }
+
     /// The lines at the foot of a card that shows money: where the numbers come
     /// from, that the money is an estimate, and — only when it is so — that the
-    /// period is not over or that a store may be missing counts.
+    /// period is not over, that some work had no price (money is a floor), or that
+    /// a store may be missing counts.
     var provenance: [String] {
         let source: String = recap.cost != nil
             ? .localized("Counted from this Mac's local records · money estimated at API prices")
             : .localized("Counted from this Mac's local records")
         var lines = [source]
         if recap.isInProgress { lines.append(.localized("Figures are to date.")) }
+        if costIsFloor { lines.append(.localized("Some work had no published price, so the money is a floor.")) }
         if recap.isPartial { lines.append(.localized("Some tools' counts may be missing, so the total is a floor.")) }
         return lines
     }

@@ -57,21 +57,21 @@ enum RecapPeriods {
     }
 
     /// Months with records possible, newest first.
-    static func months(earliest: Date?, now: Date = Date(), calendar: Calendar = .current) -> [Recap.Period] {
+    static func months(earliest: Date?, now: Date = Date(), calendar: Calendar = Recap.calendar) -> [Recap.Period] {
         let current = index(now, calendar: calendar)
         let first = earliest.map { min(index($0, calendar: calendar), current) } ?? current
         return (first...current).reversed().map(month(at:))
     }
 
     /// Years with records possible, newest first.
-    static func years(earliest: Date?, now: Date = Date(), calendar: Calendar = .current) -> [Recap.Period] {
+    static func years(earliest: Date?, now: Date = Date(), calendar: Calendar = Recap.calendar) -> [Recap.Period] {
         let current = calendar.component(.year, from: now)
         let first = earliest.map { min(calendar.component(.year, from: $0), current) } ?? current
         return (first...current).reversed().map { .year($0) }
     }
 
     /// The month to open on: see the type's note.
-    static func defaultMonth(earliest: Date?, now: Date = Date(), calendar: Calendar = .current) -> Recap.Period {
+    static func defaultMonth(earliest: Date?, now: Date = Date(), calendar: Calendar = Recap.calendar) -> Recap.Period {
         let current = index(now, calendar: calendar)
         let early = calendar.component(.day, from: now) <= earlyDays
         let wanted = early ? current - 1 : current
@@ -81,7 +81,7 @@ enum RecapPeriods {
     }
 
     /// The year to open on.
-    static func defaultYear(earliest: Date?, now: Date = Date(), calendar: Calendar = .current) -> Recap.Period {
+    static func defaultYear(earliest: Date?, now: Date = Date(), calendar: Calendar = Recap.calendar) -> Recap.Period {
         let current = calendar.component(.year, from: now)
         let parts = calendar.dateComponents([.month, .day], from: now)
         let early = parts.month == 1 && (parts.day ?? 1) <= earlyDays
@@ -93,7 +93,7 @@ enum RecapPeriods {
     /// The period of the other kind that goes with this one: the year a month
     /// belongs to, and the last month of a year that is offered.
     static func switched(
-        _ period: Recap.Period, earliest: Date?, now: Date = Date(), calendar: Calendar = .current
+        _ period: Recap.Period, earliest: Date?, now: Date = Date(), calendar: Calendar = Recap.calendar
     ) -> Recap.Period {
         switch period {
         case .month(let year, _):
@@ -104,19 +104,41 @@ enum RecapPeriods {
         }
     }
 
-    /// The earliest day any ledger holds a record for.
-    static func earliest(in ledgers: [SpendAgent: UsageLedger]) -> Date? {
-        ledgers.values.compactMap { $0.earliest ?? $0.days.first?.date }.min()
+    /// No recap is offered before this: a bogus timestamp in some store (an
+    /// epoch of zero, a clock that was wrong) must not turn into hundreds of
+    /// empty months in the picker.
+    static func floor(calendar: Calendar = Recap.calendar) -> Date? {
+        calendar.date(from: DateComponents(year: 2020, month: 1, day: 1))
+    }
+
+    /// The earliest day any ledger the Token spend pane may show holds a
+    /// record for, and not before `floor`. A provider's own statistics
+    /// (`UsageLedger.Origin.supportsTokenSpend`) are not records of this Mac's
+    /// work and do not decide where the recap begins.
+    static func earliest(in ledgers: [SpendAgent: UsageLedger], calendar: Calendar = Recap.calendar) -> Date? {
+        let found = ledgers.values
+            .filter { $0.origin.supportsTokenSpend }
+            .compactMap { $0.earliest ?? $0.days.first?.date }
+            .min()
+        guard let found else { return nil }
+        return floor(calendar: calendar).map { max(found, $0) } ?? found
     }
 }
 
 /// The monthly subscription price typed into the recap window, as text and as
 /// the figure it stands for.
 ///
+/// **Strict, and no locale guessing.** After trimming whitespace and one
+/// leading "$", the text is either plain digits with an optional "." or ","
+/// and one or two decimals ("20", "12.5", "12,5" is 12.5), or digits grouped by
+/// "," in valid groups of three with an optional ".dd" ("1,200", "1,200.50").
+/// Anything else — a word, "1e3", "20 USD", "-5", "1,2,3", three decimals — is
+/// refused and the field goes back to what was kept, rather than being read as
+/// some other number by a formatter's idea of the locale.
+///
 /// **Nothing is not zero.** Empty clears it, and so does 0: a price of nothing
 /// is not a subscription, and `RecapDeck.payback` would draw no card for it
-/// either way. Something that is not a positive amount — a minus sign, a word,
-/// more than `maximum` — is refused, and the field goes back to what was kept.
+/// either way. More than `maximum` is refused too.
 enum RecapPrice {
     /// A month's price in US dollars. Well past anything sold, and low enough
     /// that a stray extra digit is refused rather than drawn on a card.
@@ -128,17 +150,24 @@ enum RecapPrice {
         case refused
     }
 
-    static func entry(_ typed: String, locale: Locale = LocalizationSource.locale) -> Entry {
-        let kept = typed.filter { $0.isNumber || $0 == "." || $0 == "," || $0 == "-" }
-        guard !kept.isEmpty else { return .none }
+    static func entry(_ typed: String) -> Entry {
+        var text = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return .none }
+        if text.hasPrefix("$") {
+            text.removeFirst()
+            text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
 
-        let formatter = NumberFormatter()
-        formatter.locale = locale
-        formatter.numberStyle = .decimal
-        let value = formatter.number(from: kept)?.doubleValue
-            ?? Double(kept.replacingOccurrences(of: ",", with: "."))
+        let number: String
+        if let plain = text.wholeMatch(of: /([0-9]+)(?:[.,]([0-9]{1,2}))?/) {
+            number = plain.1 + (plain.2.map { "." + $0 } ?? "")
+        } else if let grouped = text.wholeMatch(of: /([0-9]{1,3}(?:,[0-9]{3})+)(?:\.([0-9]{1,2}))?/) {
+            number = grouped.1.replacingOccurrences(of: ",", with: "") + (grouped.2.map { "." + $0 } ?? "")
+        } else {
+            return .refused
+        }
 
-        guard let value, value.isFinite, value >= 0, value <= maximum else { return .refused }
+        guard let value = Double(number), value.isFinite, value <= maximum else { return .refused }
         return value == 0 ? .none : .amount(value)
     }
 
@@ -176,7 +205,7 @@ enum RecapNoticeRule {
     static let identifierPrefix = "recap-ready-"
 
     /// The month a notification may be about today, or nil outside the window.
-    static func candidate(now: Date, calendar: Calendar = .current) -> Recap.Period? {
+    static func candidate(now: Date, calendar: Calendar = Recap.calendar) -> Recap.Period? {
         guard calendar.component(.day, from: now) <= windowDays,
               let previous = calendar.date(byAdding: .month, value: -1, to: now) else { return nil }
         let parts = calendar.dateComponents([.year, .month], from: previous)
@@ -189,7 +218,7 @@ enum RecapNoticeRule {
         now: Date,
         announced: Recap.Period?,
         tokens: (Recap.Period) -> Int?,
-        calendar: Calendar = .current
+        calendar: Calendar = Recap.calendar
     ) -> Recap.Period? {
         guard let month = candidate(now: now, calendar: calendar), announced != month,
               let counted = tokens(month), counted > 0 else { return nil }

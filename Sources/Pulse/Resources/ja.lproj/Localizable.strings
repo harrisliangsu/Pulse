@@ -1009,6 +1009,7 @@
 "Counted from this Mac's local records · money estimated at API prices" = "この Mac のローカル記録から集計 · 金額は API 料金で概算";
 "Counted from this Mac's local records" = "この Mac のローカル記録から集計";
 "Figures are to date." = "数字は本日までのものです。";
+"Some work had no published price, so the money is a floor." = "一部の利用分には公開価格がないため、金額は実際より少なくなっています。";
 "Some tools' counts may be missing, so the total is a floor." = "一部のツールの記録が欠けている可能性があり、実際の量はこれ以上です。";
 "Project %@" = "プロジェクト %@";
 "%@ a day on average" = "1 日平均 %@";
@@ -1024,11 +1025,11 @@
 "Model ranking" = "モデルランキング";
 "By token share" = "トークンの割合順";
 "Other" = "その他";
-"%@ agents" = "%@ 個";
+"%@ agents" = "%@ 個のツール";
 "Repeated context is read from the cache, saving about %@" = "くり返す文脈はキャッシュから読むので、約 %@ の節約";
 "days" = "日";
 "Still going · longest %@" = "継続中 · 最長 %@";
-"Top projects" = "時間をかけたプロジェクト";
+"Top projects" = "よく使ったプロジェクト";
 "In %@," = "%@、";
 "%@ AI tools coded with you." = "%@ つの AI と一緒にコードを書いた。";
 "One AI tool coded with you." = "ひとつの AI と一緒にコードを書いた。";
@@ -1045,6 +1046,7 @@
 "Where the money went" = "金額の内訳";
 "The cache saved you" = "キャッシュで節約できた額";
 "Estimated at each model's published API price. The plan price is the one you typed in Pulse." = "各モデルが公開している API 料金で概算しています。プランの料金は Pulse に入力された値です。";
+"Figures are to date, and the plan price is prorated by the days so far." = "数字は本日までのもので、プランの料金は経過日数で日割りにしています。";
 "That was" = "これが";
 "your %@." = "あなたの%@。";
 "Tokens" = "トークン";
@@ -1061,7 +1063,9 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "月間まとめ";
 "Yearly Recap" = "年間まとめ";
+"Monthly and Yearly Recap" = "月間まとめ・年間まとめ";
 "View %@ recap" = "%@のまとめを見る";
+"View %@ yearly recap" = "%@年の年間まとめを見る";
 "Shareable cards for a month or a year, from this Mac's records." = "この Mac の記録から、1か月または1年分の共有用カードを作ります。";
 "When a recap is ready" = "まとめができたとき";
 "Last month's recap, at the start of the month. Needs Token spend reading." = "月初に、先月のまとめができたことを知らせます。「ローカルの使用量記録を読み取る」がオンのときだけ使えます。";

@@ -1009,6 +1009,7 @@
 "Counted from this Mac's local records · money estimated at API prices" = "数据来自这台 Mac 的本机记录 · 金额按 API 价格估算";
 "Counted from this Mac's local records" = "数据来自这台 Mac 的本机记录";
 "Figures are to date." = "数字截至今天。";
+"Some work had no published price, so the money is a floor." = "部分用量没有公开价格，金额只会偏低。";
 "Some tools' counts may be missing, so the total is a floor." = "部分工具的记录可能不全，实际用量只会更多。";
 "Project %@" = "项目 %@";
 "%@ a day on average" = "平均每天 %@";
@@ -1024,11 +1025,11 @@
 "Model ranking" = "模型排行";
 "By token share" = "按 token 占比";
 "Other" = "其他";
-"%@ agents" = "%@ 个";
+"%@ agents" = "%@ 个工具";
 "Repeated context is read from the cache, saving about %@" = "重复的上下文直接读缓存，约省下 %@";
 "days" = "天";
 "Still going · longest %@" = "还在继续 · 最长一次 %@";
-"Top projects" = "花时间最多的项目";
+"Top projects" = "用得最多的项目";
 "In %@," = "%@，";
 "%@ AI tools coded with you." = "有 %@ 个 AI 和你一起写代码。";
 "One AI tool coded with you." = "有 1 个 AI 和你一起写代码。";
@@ -1045,6 +1046,7 @@
 "Where the money went" = "钱花在了哪";
 "The cache saved you" = "缓存命中帮你省下";
 "Estimated at each model's published API price. The plan price is the one you typed in Pulse." = "按各模型官方 API 价格估算；订阅价格由你在 Pulse 里填写。";
+"Figures are to date, and the plan price is prorated by the days so far." = "数字截至今天，订阅价格按已过去的天数折算。";
 "That was" = "这就是";
 "your %@." = "你的%@。";
 "Tokens" = "Token";
@@ -1061,7 +1063,9 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "月报";
 "Yearly Recap" = "年报";
+"Monthly and Yearly Recap" = "月报与年报";
 "View %@ recap" = "查看%@的月报";
+"View %@ yearly recap" = "查看 %@ 年报";
 "Shareable cards for a month or a year, from this Mac's records." = "用这台 Mac 的本机记录，生成可以分享的月度和年度卡片。";
 "When a recap is ready" = "月报生成时";
 "Last month's recap, at the start of the month. Needs Token spend reading." = "每月月初告诉你上个月的月报好了。需要先开启“读取本机用量记录”。";

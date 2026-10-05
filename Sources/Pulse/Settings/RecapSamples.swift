@@ -55,7 +55,9 @@ enum RecapSamples {
         hasAgents: Bool = true,
         hasCache: Bool = true,
         persona: Recap.Persona? = .nightOwl,
-        isInProgress: Bool = false
+        isInProgress: Bool = false,
+        unpricedShare: Double = 0,
+        cacheSavings: Double = 410
     ) -> Recap {
         // The 1st is a Tuesday; days 4, 10 and 11 are quiet.
         let weights: [Double] = [
@@ -71,10 +73,12 @@ enum RecapSamples {
         }
         let total = days.reduce(0) { $0 + $1.tokens }
         let busiest = days.max { $0.tokens < $1.tokens }
+        let streaks = Recap.streaks(of: days, isInProgress: isInProgress)
         return Recap(
             period: .month(year: 2026, month: 9),
             start: date(2026, 9, 1), end: date(2026, 10, 1), isInProgress: isInProgress,
-            tokens: total, cost: priced ? 1342 : nil, previousTokens: Int(Double(total) / 1.38),
+            tokens: total, cost: priced ? 1342 : nil, unpricedTokens: Int(unpricedShare * Double(total)),
+            previousTokens: Int(Double(total) / 1.38),
             activeDays: days.filter { $0.tokens > 0 }.count, elapsedDays: 30, sessions: 412,
             days: days, months: [],
             hours: hasHours ? hours(total: total) : nil,
@@ -89,8 +93,8 @@ enum RecapSamples {
             projects: sampleProjects.map {
                 Recap.ProjectShare(name: $0.0, tokens: Int($0.1 * Double(total)), share: $0.1, sessions: $0.2)
             },
-            cacheHitRate: hasCache ? 0.91 : nil, cacheSavings: hasCache && priced ? 410 : nil,
-            currentStreak: 19, longestStreak: 41, busiestDay: busiest,
+            cacheHitRate: hasCache ? 0.91 : nil, cacheSavings: hasCache && priced ? cacheSavings : nil,
+            currentStreak: streaks.current, longestStreak: streaks.longest, busiestDay: busiest,
             currency: "USD", isPartial: false
         )
     }
@@ -123,10 +127,11 @@ enum RecapSamples {
                                       activeDays: monthDays.filter { $0.tokens > 0 }.count))
         }
         let total = days.reduce(0) { $0 + $1.tokens }
+        let streaks = Recap.streaks(of: days, isInProgress: false)
         return Recap(
             period: .year(2025),
             start: date(2025, 1, 1), end: date(2026, 1, 1), isInProgress: false,
-            tokens: total, cost: priced ? 9820 : nil, previousTokens: Int(Double(total) / 2.4),
+            tokens: total, cost: priced ? 9820 : nil, unpricedTokens: 0, previousTokens: Int(Double(total) / 2.4),
             activeDays: days.filter { $0.tokens > 0 }.count, elapsedDays: 365, sessions: 3214,
             days: days, months: months,
             hours: hours(total: total), peakHour: 23, lateShare: 0.62,
@@ -141,7 +146,7 @@ enum RecapSamples {
                 Recap.ProjectShare(name: $0.0, tokens: Int($0.1 * Double(total)), share: $0.1, sessions: $0.2 * 7)
             },
             cacheHitRate: 0.89, cacheSavings: priced ? 3120 : nil,
-            currentStreak: 19, longestStreak: 41, busiestDay: days.max { $0.tokens < $1.tokens },
+            currentStreak: streaks.current, longestStreak: streaks.longest, busiestDay: days.max { $0.tokens < $1.tokens },
             currency: "USD", isPartial: false
         )
     }
@@ -151,7 +156,7 @@ enum RecapSamples {
         Recap(
             period: .month(year: 2026, month: 9),
             start: date(2026, 9, 1), end: date(2026, 10, 1), isInProgress: false,
-            tokens: 0, cost: nil, previousTokens: nil, activeDays: 0, elapsedDays: 30, sessions: 0,
+            tokens: 0, cost: nil, unpricedTokens: 0, previousTokens: nil, activeDays: 0, elapsedDays: 30, sessions: 0,
             days: [], months: [], hours: nil, peakHour: nil, lateShare: nil, latestMinute: nil, lateNights: 0,
             persona: nil, models: [], agents: [], projects: [], cacheHitRate: nil, cacheSavings: nil,
             currentStreak: 0, longestStreak: 0, busiestDay: nil, currency: "USD", isPartial: false

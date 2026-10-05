@@ -57,25 +57,36 @@ final class RecapNotice {
 
         Task { @MainActor in
             guard let kept = await AgentLedgers.shared.keptSnapshot() else { return }
-            let calendar = Calendar.current
             let announced = settings.recapAnnouncedMonth.flatMap(Recap.Period.init(key:))
-            guard let month = RecapNoticeRule.due(
-                now: now,
-                announced: announced,
-                tokens: { period in
-                    guard let bounds = period.bounds(calendar: calendar) else { return nil }
-                    return SpendSummary.of(
-                        kept.snapshot.ledgers, from: bounds.start, until: bounds.end, now: now, calendar: calendar
-                    ).tokens
-                },
-                calendar: calendar
-            ), settings.alertsOnRecap else { return }
+            // The month's summary is arithmetic over every day of every
+            // ledger: off the main actor, then back for the decision.
+            let ledgers = kept.snapshot.ledgers
+            let due = await Task.detached(priority: .utility) {
+                Self.dueMonth(now: now, announced: announced, ledgers: ledgers)
+            }.value
+            guard let month = due, settings.alertsOnRecap else { return }
 
             // Remembered before it is posted, and whether or not the system
             // will show it: a month is announced once.
             settings.recapAnnouncedMonth = month.key
             post(month)
         }
+    }
+
+    /// `RecapNoticeRule.due` over the ledgers, in the recap's calendar. Pure
+    /// and `nonisolated`, so it can run off the main actor.
+    nonisolated static func dueMonth(
+        now: Date, announced: Recap.Period?, ledgers: [SpendAgent: UsageLedger], calendar: Calendar = Recap.calendar
+    ) -> Recap.Period? {
+        RecapNoticeRule.due(
+            now: now,
+            announced: announced,
+            tokens: { period in
+                guard let bounds = period.bounds(calendar: calendar) else { return nil }
+                return SpendSummary.of(ledgers, from: bounds.start, until: bounds.end, now: now, calendar: calendar).tokens
+            },
+            calendar: calendar
+        )
     }
 
     private func post(_ month: Recap.Period) {

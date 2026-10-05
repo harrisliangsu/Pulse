@@ -114,30 +114,35 @@ struct RecapWindowTests {
 
     @Test("Nothing typed is no price, and so is zero")
     func emptyPrice() {
-        let us = Locale(identifier: "en_US")
-        #expect(RecapPrice.entry("", locale: us) == .none)
-        #expect(RecapPrice.entry("   ", locale: us) == .none)
-        #expect(RecapPrice.entry("0", locale: us) == .none)
-        #expect(RecapPrice.entry("$", locale: us) == .none)
+        #expect(RecapPrice.entry("") == .none)
+        #expect(RecapPrice.entry("   ") == .none)
+        #expect(RecapPrice.entry("0") == .none)
+        #expect(RecapPrice.entry("0.00") == .none)
     }
 
     @Test("An amount is read the way it was typed, with or without the dollar sign")
     func typedPrice() {
-        let us = Locale(identifier: "en_US")
-        #expect(RecapPrice.entry("200", locale: us) == .amount(200))
-        #expect(RecapPrice.entry("$20", locale: us) == .amount(20))
-        #expect(RecapPrice.entry(" 17.5 ", locale: us) == .amount(17.5))
-        #expect(RecapPrice.entry("1,200", locale: us) == .amount(1200))
-        #expect(RecapPrice.entry("12,5", locale: Locale(identifier: "de_DE")) == .amount(12.5))
+        #expect(RecapPrice.entry("200") == .amount(200))
+        #expect(RecapPrice.entry("$20") == .amount(20))
+        #expect(RecapPrice.entry("$ 20") == .amount(20))
+        #expect(RecapPrice.entry(" 17.5 ") == .amount(17.5))
+        #expect(RecapPrice.entry("17.50") == .amount(17.5))
+        // A comma and one or two digits is a decimal comma, in any language.
+        #expect(RecapPrice.entry("12,5") == .amount(12.5))
+        #expect(RecapPrice.entry("12,50") == .amount(12.5))
+        // A comma and three digits is a thousands separator, with or without cents.
+        #expect(RecapPrice.entry("1,200") == .amount(1200))
+        #expect(RecapPrice.entry("1,200.50") == .amount(1200.5))
+        #expect(RecapPrice.entry("$1,200") == .amount(1200))
     }
 
-    @Test("A negative amount, a word and more than the maximum are refused")
+    @Test("Words, exponents, units, signs, odd grouping and a third decimal are refused")
     func refusedPrice() {
-        let us = Locale(identifier: "en_US")
-        #expect(RecapPrice.entry("-5", locale: us) == .refused)
-        #expect(RecapPrice.entry("1.2.3", locale: us) == .refused)
-        #expect(RecapPrice.entry("10001", locale: us) == .refused)
-        #expect(RecapPrice.entry("10000", locale: us) == .amount(10_000))
+        for text in ["abc", "free", "$", "1e3", "20 USD", "-5", "+5", ">10000", "1.2.3", "1,2,3", "12.345",
+                     "12,345,67", "1,20,000", ",5", ".5", "5.", "1 000", "٣٤", "10001", "$$5"] {
+            #expect(RecapPrice.entry(text) == .refused, "\(text) should be refused")
+        }
+        #expect(RecapPrice.entry("10000") == .amount(10_000))
     }
 
     @Test("The kept price is nil unless it is a positive amount within range")
@@ -185,6 +190,31 @@ struct RecapWindowTests {
         #expect(changes == 1)
         #expect(settings.wantsAlerts, "permission is worth asking for")
         #expect(!settings.wantsUsageAlerts, "and no reading is tracked for it")
+    }
+
+    // MARK: - Where records begin
+
+    @Test("Statistics are not records of this Mac, and a bogus date cannot offer hundreds of months")
+    func earliestRecord() {
+        func ledger(_ origin: UsageLedger.Origin, _ earliest: Date?) -> UsageLedger {
+            var ledger = UsageLedgerReader.price([:], with: [:], calendar: Self.calendar)
+            ledger.origin = origin
+            ledger.earliest = earliest
+            return ledger
+        }
+        let local = ledger(.localTranscripts, Self.at(2026, 3, 4))
+        let statistics = ledger(.providerStatistics, Self.at(2023, 1, 1))
+        #expect(RecapPeriods.earliest(in: [.claudeCode: local, .openCode: statistics], calendar: Self.calendar) == Self.at(2026, 3, 4))
+        #expect(RecapPeriods.earliest(in: [.openCode: statistics], calendar: Self.calendar) == nil)
+
+        let bogus = ledger(.localTranscripts, Date(timeIntervalSince1970: 0))
+        let floor = RecapPeriods.floor(calendar: Self.calendar)
+        #expect(RecapPeriods.earliest(in: [.claudeCode: bogus], calendar: Self.calendar) == floor)
+        let months = RecapPeriods.months(
+            earliest: RecapPeriods.earliest(in: [.claudeCode: bogus], calendar: Self.calendar),
+            now: Self.at(2026, 10, 5), calendar: Self.calendar
+        )
+        #expect(months.count == 6 * 12 + 10)
     }
 
     // MARK: - The notification
@@ -267,6 +297,38 @@ struct RecapWindowTests {
         #expect(model.deck == nil)
     }
 
+    @Test("A cancelled read that ends late does not clear the newer read's reference")
+    @MainActor
+    func staleReadDoesNotClearTheNewer() async throws {
+        final class Count { var loads = 0 }
+        let count = Count()
+        let model = RecapWindowModel(
+            settings: AppSettings(readsTokenSpend: true),
+            now: { Self.at(2026, 10, 3) },
+            load: { _ async throws -> RecapSource.Loaded in
+                count.loads += 1
+                try await Task.sleep(for: .seconds(60))
+                throw CancellationError()
+            }
+        )
+        model.begin(on: nil)
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(count.loads == 1)
+
+        // Closed and opened again: the first read is cancelled, a second runs.
+        model.windowDidClose()
+        model.begin(on: nil)
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(count.loads == 2)
+
+        // The first read's cancellation has been handled by now. Asking again
+        // must find the second still running, not start a third.
+        model.start()
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(count.loads == 2)
+        model.windowDidClose()
+    }
+
     @Test("The card on screen is kept by identity, and falls back to the first when it goes")
     @MainActor
     func cardIsKeptByIdentity() {
@@ -331,6 +393,20 @@ struct RecapWindowTests {
         #expect(RecapWindow.direction(of: try key(124, .command), editing: false) == nil)
         #expect(RecapWindow.direction(of: try key(124, .shift), editing: false) == nil)
         #expect(RecapWindow.direction(of: try key(0), editing: false) == nil)
+    }
+
+    @Test("Controls that use the arrows keep them; the window and plain views leave them to the deck")
+    @MainActor
+    func arrowsAreLeftToControlsThatUseThem() {
+        #expect(RecapWindow.takesArrows(nil))
+        #expect(RecapWindow.takesArrows(NSView()))
+        #expect(RecapWindow.takesArrows(NSButton()))
+        #expect(!RecapWindow.takesArrows(NSSegmentedControl()))
+        #expect(!RecapWindow.takesArrows(NSPopUpButton()))
+        #expect(!RecapWindow.takesArrows(NSSlider()))
+        #expect(!RecapWindow.takesArrows(NSTextView()))
+        #expect(!RecapWindow.takesArrows(NSTextField()))
+        #expect(!RecapWindow.takesArrows(NSStepper()))
     }
 }
 

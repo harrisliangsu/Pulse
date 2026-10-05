@@ -556,7 +556,7 @@ struct RecapTests {
         #expect(try abs(#require(recap.projects.last).share - 1.0 / 3.0) < 0.0001)
     }
 
-    @Test("The busiest day is the earliest of the heaviest, streaks are the whole history")
+    @Test("The busiest day is the earliest of the heaviest; streaks are the period's own")
     func busiestAndStreaks() {
         let recap = Self.october([
             Self.event(Self.at(2026, 9, 29), 10),
@@ -568,12 +568,138 @@ struct RecapTests {
         ])
         #expect(recap.busiestDay?.date == Self.at(2026, 10, 2, 0))
         #expect(recap.busiestDay?.tokens == 400)
-        // 29 Sep through 3 Oct is five days running; the 5th is a new run that
-        // is still going (today), so the current one is one day.
-        #expect(recap.longestStreak == 5)
+        // 29 Sep is September's: the run inside October is the 1st to the 3rd.
+        // The 5th is a new run that is still going (today), one day.
+        #expect(recap.longestStreak == 3)
         #expect(recap.currentStreak == 1)
         #expect(recap.currency == "USD")
         #expect(!recap.isPartial)
+    }
+
+    @Test("A past month's streaks stop at the month's edges, and its current one is how it ended")
+    func pastMonthStreaks() {
+        let days = [1, 2, 3, 10, 11, 12, 13, 14, 28, 29, 30]
+        let recap = Self.build(
+            .month(year: 2026, month: 9),
+            [.claudeCode: Self.ledger(
+                days.map { Self.event(Self.at(2026, 9, $0), 10) }
+                    // October's own run must not reach back, nor add to September.
+                    + (1...4).map { Self.event(Self.at(2026, 10, $0), 10) }
+                    + [Self.event(Self.at(2026, 8, 30), 10), Self.event(Self.at(2026, 8, 31), 10)]
+            )]
+        )
+        #expect(!recap.isInProgress)
+        #expect(recap.longestStreak == 5)
+        // The run that ends on 30 September (28, 29, 30), not October's.
+        #expect(recap.currentStreak == 3)
+        #expect(recap.longestStreak <= recap.elapsedDays)
+    }
+
+    @Test("A past month that ended on a quiet day has no current run; a running month's grace is today only")
+    func streakEdges() {
+        let quietEnd = Self.build(
+            .month(year: 2026, month: 9),
+            [.claudeCode: Self.ledger([Self.event(Self.at(2026, 9, 20), 10), Self.event(Self.at(2026, 9, 21), 10)])]
+        )
+        #expect(quietEnd.longestStreak == 2)
+        #expect(quietEnd.currentStreak == 0)
+
+        // Today (5 Oct) has had nothing yet: yesterday's run is still current.
+        let before = Self.october((2...4).map { Self.event(Self.at(2026, 10, $0), 10) })
+        #expect(before.currentStreak == 3)
+        // Two quiet days end it.
+        let lapsed = Self.october((1...3).map { Self.event(Self.at(2026, 10, $0), 10) })
+        #expect(lapsed.currentStreak == 0)
+        #expect(lapsed.longestStreak == 3)
+        // The first of the month with nothing yet: yesterday is not in the period.
+        let first = Self.build(
+            .month(year: 2026, month: 10),
+            [.claudeCode: Self.ledger([Self.event(Self.at(2026, 9, 30), 10)])],
+            now: Self.at(2026, 10, 1)
+        )
+        #expect(first.tokens == 0)
+        #expect(first.currentStreak == 0)
+    }
+
+    @Test("The streak helper counts runs of days with tokens, with today's grace only while running")
+    func streakHelper() {
+        func days(_ tokens: [Int]) -> [Recap.Day] {
+            tokens.enumerated().map { Recap.Day(date: Date(timeIntervalSince1970: Double($0.offset) * 86_400), tokens: $0.element, cost: nil) }
+        }
+        #expect(Recap.streaks(of: [], isInProgress: true) == (0, 0))
+        let shape = days([1, 1, 0, 1, 1, 1, 0])
+        #expect(Recap.streaks(of: shape, isInProgress: false) == (0, 3))
+        #expect(Recap.streaks(of: shape, isInProgress: true) == (3, 3))
+        #expect(Recap.streaks(of: days([0, 0, 5, 5]), isInProgress: true) == (2, 2))
+    }
+
+    @Test("Tokens with no published price are carried, so the money can be called a floor")
+    func unpricedTokensAreCarried() {
+        let mixed = Self.build(.month(year: 2026, month: 10), [.claudeCode: Self.ledger([
+            Event(at: Self.at(2026, 10, 2), model: "claude", tally: TokenTally(input: 1_000_000)),
+            Event(at: Self.at(2026, 10, 2), model: "mystery", tally: TokenTally(input: 500)),
+        ])])
+        #expect(mixed.unpricedTokens == 500)
+        #expect(mixed.cost == 3)
+
+        let none = Self.build(.month(year: 2026, month: 10), [.claudeCode: Self.ledger([
+            Event(at: Self.at(2026, 10, 2), model: "claude", tally: TokenTally(input: 1_000)),
+        ])])
+        #expect(none.unpricedTokens == 0)
+
+        let allUnpriced = Self.build(.month(year: 2026, month: 10), [.claudeCode: Self.ledger([
+            Event(at: Self.at(2026, 10, 2), model: "mystery", tally: TokenTally(input: 1_000)),
+        ])])
+        #expect(allUnpriced.unpricedTokens == 1_000)
+        #expect(allUnpriced.cost == nil)
+    }
+
+    @Test("One unpriced day takes the poster's cost line away rather than drawing a zero for it")
+    func unpricedDayWithholdsTheCostLine() {
+        func series(_ mysteryDay: Int?) -> [Double] {
+            var events = [Self.event(Self.at(2026, 10, 1), 1_000_000), Self.event(Self.at(2026, 10, 3), 1_000_000)]
+            if let mysteryDay {
+                events.append(Event(at: Self.at(2026, 10, mysteryDay), model: "mystery", tally: TokenTally(input: 500)))
+            }
+            let recap = Self.build(.month(year: 2026, month: 10), [.claudeCode: Self.ledger(events)])
+            return RecapDeck(recap: recap, monthlyPrice: nil, hidesProjects: false).costSeries
+        }
+        // October 2nd is quiet: a real zero between priced days.
+        #expect(series(nil) == [3, 0, 3, 0, 0])
+        // On the 4th there was work with no price: no line.
+        #expect(series(4).isEmpty)
+    }
+
+    @Test("A system calendar of another era builds the span the period names, and the year's months follow it")
+    func buddhistCalendar() throws {
+        var buddhist = Calendar(identifier: .buddhist)
+        buddhist.timeZone = TimeZone(identifier: "UTC")!
+        let ledger = Self.ledger([Self.event(Self.at(2026, 3, 15), 100), Self.event(Self.at(2026, 10, 3), 200)])
+        // 2569 is 2026 in the Buddhist era.
+        let recap = try #require(Recap.build(
+            .year(2569), from: [.claudeCode: ledger], prices: Self.prices, now: Self.at(2026, 10, 5), calendar: buddhist
+        ))
+        #expect(recap.start == Self.at(2026, 1, 1, 0))
+        #expect(recap.tokens == 300)
+        #expect(recap.calendar.identifier == .buddhist)
+        let starts = recap.monthStarts
+        #expect(starts.count == 12)
+        #expect(starts == (1...12).map { Self.at(2026, $0, 1, 0) })
+        #expect(recap.months.map(\.tokens) == [0, 0, 100, 0, 0, 0, 0, 0, 0, 200, 0, 0])
+
+        let month = try #require(Recap.build(
+            .month(year: 2569, month: 10), from: [.claudeCode: ledger], prices: Self.prices, now: Self.at(2026, 10, 5), calendar: buddhist
+        ))
+        #expect(month.monthStarts == [Self.at(2026, 10, 1, 0)])
+        #expect(month.tokens == 200)
+    }
+
+    @Test("A recap is built, offered and named in one calendar: Gregorian, weeks from Monday")
+    func oneCalendar() {
+        #expect(Recap.calendar.identifier == .gregorian)
+        #expect(Recap.calendar.firstWeekday == 2)
+        #expect(RecapFormat.calendar().identifier == .gregorian)
+        #expect(RecapPeriods.earliest(in: [:]) == nil)
     }
 
     // MARK: - The command

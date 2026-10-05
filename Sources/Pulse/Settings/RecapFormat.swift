@@ -133,12 +133,12 @@ enum RecapFormat {
 
     // MARK: - Calendar
 
-    /// A calendar that starts the week on Monday and speaks the locale.
+    /// The recap's calendar (`Recap.calendar`: Gregorian, weeks from Monday)
+    /// speaking the locale. Periods are built, offered and named in this one
+    /// calendar, so what a card prints and what it counted never differ.
     static func calendar(locale: Locale = LocalizationSource.locale) -> Calendar {
-        var calendar = Calendar(identifier: .gregorian)
+        var calendar = Recap.calendar
         calendar.locale = locale
-        calendar.firstWeekday = 2
-        calendar.minimumDaysInFirstWeek = 4
         return calendar
     }
 

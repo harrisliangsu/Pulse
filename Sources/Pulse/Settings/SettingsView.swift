@@ -313,10 +313,17 @@ struct SettingsView: View {
                                 if settings.readsTokenSpend {
                                     SettingsRowDivider()
                                     SettingsRow(
-                                        String.localized("Monthly Recap"),
+                                        String.localized("Monthly and Yearly Recap"),
                                         subtitle: String.localized("Shareable cards for a month or a year, from this Mac's records.")
                                     ) {
-                                        Button(recapButtonTitle) { openRecap(recapPeriod) }
+                                        // Both are visible here, so the yearly recap is
+                                        // not something found only inside the window.
+                                        HStack(spacing: 8) {
+                                            Button(recapButtonTitle) { openRecap(recapPeriod) }
+                                            Button(recapYearButtonTitle) { openRecap(recapYearPeriod) }
+                                        }
+                                        .lineLimit(1)
+                                        .fixedSize()
                                     }
                                 }
                             }
@@ -1159,10 +1166,23 @@ struct SettingsView: View {
         RecapPeriods.defaultMonth(earliest: RecapPeriods.earliest(in: spendLedgers))
     }
 
+    /// The year the second button opens, by the same rule: January 1–7 opens
+    /// on the year that just ended, any other day on this one, in progress
+    /// (`RecapPeriods.defaultYear`).
+    private var recapYearPeriod: Recap.Period {
+        RecapPeriods.defaultYear(earliest: RecapPeriods.earliest(in: spendLedgers))
+    }
+
     /// "View September recap".
     private var recapButtonTitle: String {
         guard case .month(_, let number) = recapPeriod else { return String.localized("Monthly Recap") }
         return String.localized("View \(RecapFormat.monthName(number)) recap")
+    }
+
+    /// "View 2026 recap": the year as a plain string, never grouped ("2,026").
+    private var recapYearButtonTitle: String {
+        guard case .year(let year) = recapYearPeriod else { return String.localized("Yearly Recap") }
+        return String.localized("View \("\(year)") yearly recap")
     }
 
     private var notificationsPane: some View {
@@ -1277,8 +1297,10 @@ struct SettingsView: View {
                     ))
                     .labelsHidden()
                     .toggleStyle(.switch)
-                    // The month is only known from records Pulse has read.
-                    .disabled(!UsageAlerts.isSupported || !settings.readsTokenSpend)
+                    // The month is only known from records Pulse has read — but
+                    // a switch that is on can always be turned off, whatever
+                    // Token spend reading says.
+                    .disabled(!UsageAlerts.isSupported || (!settings.readsTokenSpend && !settings.alertsOnRecap))
                 }
             }
         }

@@ -63,7 +63,7 @@ Rules pinned by `OutageMemoryTests`.
 
 ### The monthly recap
 
-"Your September recap is ready", about the month that just ended. Off by default, in the Notifications pane as **When a recap is ready** (greyed out in an unbundled build and while Token spend reading is off). The window it opens is [recap.md](recap.md#the-window); the rules are `RecapNoticeRule` (pure, in `Usage/RecapPeriods.swift`) and the clock is `RecapNotice` (`Usage/RecapNotice.swift`).
+"Your September recap is ready", about the month that just ended. Off by default, in the Notifications pane as **When a recap is ready** (greyed out in an unbundled build, and while Token spend reading is off — but a switch already on stays operable so it can be turned off). The month's token count is worked out off the main actor. The window it opens is [recap.md](recap.md#the-window); the rules are `RecapNoticeRule` (pure, in `Usage/RecapPeriods.swift`) and the clock is `RecapNotice` (`Usage/RecapNotice.swift`).
 
 - **Only what Pulse witnessed.** It reads **only the scan `SpendWarmer` already keeps** (`AgentLedgers.keptSnapshot`) — it never starts a read of its own, and it works only while Token spend reading is on, which is the reader's own decision. Last month's tokens are counted from that scan (`SpendSummary.of`). No kept scan yet is "not known", not "no records": nothing is said, nothing is remembered, and the next check (every 30 minutes, the first 90 seconds after launch) asks again.
 - **Only when the month had records.** A month with zero tokens is never announced; there is no "you used nothing" notification.

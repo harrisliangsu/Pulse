@@ -105,6 +105,9 @@ extension Recap {
     ///   detail, adds nothing: the figure is a floor, and nil where no priced
     ///   cache read exists at all. A model that states no cache rate is billed
     ///   at its input rate, which saves nothing — a real zero for it.
+    /// - Streaks are of the period's own days (`Recap.streaks`), not the whole
+    ///   history `SpendSummary` counts.
+    /// - `unpricedTokens` is the summary's: above zero, money is a floor.
     /// - Money is nil where nothing behind it was priced (`UsageLedger.shownCost`)
     ///   and for a day or month with no work; a part-priced total is its priced
     ///   subtotal, as the pane shows it.
@@ -113,7 +116,7 @@ extension Recap {
         from ledgers: [SpendAgent: UsageLedger],
         prices: [String: ModelPrice],
         now: Date = Date(),
-        calendar: Calendar = .current
+        calendar: Calendar = Recap.calendar
     ) -> Recap? {
         guard let bounds = period.bounds(calendar: calendar) else { return nil }
         let start = bounds.start
@@ -250,6 +253,8 @@ extension Recap {
             )
         }
 
+        let streaks = Self.streaks(of: days, isInProgress: isInProgress)
+
         return Recap(
             period: period,
             start: start,
@@ -257,6 +262,7 @@ extension Recap {
             isInProgress: isInProgress,
             tokens: tokens,
             cost: Self.cost(summary.cost, tokens: tokens, unpriced: summary.unpricedTokens),
+            unpricedTokens: summary.unpricedTokens,
             previousTokens: previousTokens,
             activeDays: summary.activeDays,
             elapsedDays: elapsedDays,
@@ -278,11 +284,12 @@ extension Recap {
             },
             cacheHitRate: cacheHitRate,
             cacheSavings: pricedCacheReads > 0 ? savings : nil,
-            currentStreak: summary.currentStreak,
-            longestStreak: summary.longestStreak,
+            currentStreak: streaks.current,
+            longestStreak: streaks.longest,
             busiestDay: busiest,
             currency: "USD",
-            isPartial: summary.hasPartialCounts
+            isPartial: summary.hasPartialCounts,
+            calendar: calendar
         )
     }
 

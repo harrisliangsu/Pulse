@@ -55,14 +55,27 @@ final class RecapWindowModel {
     /// Token spend switch starts nothing, while it is not.
     private var isOpen = false
     private var loadTask: Task<Void, Never>?
+    /// Which read `loadTask` is. A cancelled read finishes (or throws) after a
+    /// newer one has started — close and reopen, or off and on — and must not
+    /// clear the newer one's reference or hand over its result.
+    private var loadGeneration = 0
+    private let load: Loader
     private var buildTask: Task<Void, Never>?
     /// Whether the person (or an entry point) named a period, so the read
     /// finishing does not move them off it onto the default.
     private var periodChosen = false
 
-    init(settings: AppSettings, now: @escaping () -> Date = Date.init) {
+    /// How the ledgers are read; `RecapSource.load` unless a test says otherwise.
+    typealias Loader = @MainActor (@escaping @MainActor @Sendable (AgentLedgers.Progress) -> Void) async throws -> RecapSource.Loaded
+
+    init(
+        settings: AppSettings,
+        now: @escaping () -> Date = Date.init,
+        load: @escaping Loader = { progress in try await RecapSource.load(progress: progress) }
+    ) {
         self.settings = settings
         self.now = now
+        self.load = load
         phase = settings.readsTokenSpend ? .loading : .needsReading
         period = RecapPeriods.defaultMonth(earliest: nil, now: now())
     }
@@ -113,6 +126,7 @@ final class RecapWindowModel {
     /// The window closed: nothing is read for it any more, and nothing is kept.
     func windowDidClose() {
         isOpen = false
+        loadGeneration += 1
         loadTask?.cancel()
         buildTask?.cancel()
         loadTask = nil
@@ -135,6 +149,7 @@ final class RecapWindowModel {
         guard isOpen else { return }
         guard settings.readsTokenSpend else {
             // Switched off under an open window: what was read goes too.
+            loadGeneration += 1
             loadTask?.cancel()
             buildTask?.cancel()
             loadTask = nil
@@ -155,25 +170,31 @@ final class RecapWindowModel {
         guard loadTask == nil else { return }
         phase = .loading
         readProgress = nil
+        loadGeneration += 1
+        let generation = loadGeneration
+        let load = self.load
         loadTask = Task { [weak self] in
             do {
-                let result = try await RecapSource.load { progress in
+                let result = try await load { progress in
+                    guard self?.loadGeneration == generation else { return }
                     self?.readProgress = ReadProgress(
                         agent: progress.agent.displayName, index: progress.index, total: progress.total
                     )
                 }
-                self?.finishedReading(result)
+                self?.finishedReading(result, generation: generation)
             } catch is CancellationError {
-                self?.loadTask = nil
+                // Only this read's own reference: a newer read may be running.
+                if self?.loadGeneration == generation { self?.loadTask = nil }
             } catch {
-                self?.failedReading()
+                self?.failedReading(generation: generation)
             }
         }
     }
 
-    private func finishedReading(_ result: RecapSource.Loaded) {
+    private func finishedReading(_ result: RecapSource.Loaded, generation: Int) {
+        guard generation == loadGeneration else { return }
         loadTask = nil
-        guard settings.readsTokenSpend else { return }
+        guard isOpen, settings.readsTokenSpend else { return }
         loaded = result
         earliest = result.earliest
         if !periodChosen { period = RecapPeriods.defaultMonth(earliest: result.earliest, now: now()) }
@@ -182,7 +203,8 @@ final class RecapWindowModel {
         rebuild()
     }
 
-    private func failedReading() {
+    private func failedReading(generation: Int) {
+        guard generation == loadGeneration else { return }
         loadTask = nil
         readProgress = nil
         phase = .failed
@@ -266,7 +288,7 @@ extension Recap.Period {
     var title: String {
         switch self {
         case .month:
-            bounds(calendar: .current).map { RecapFormat.monthYear($0.start) } ?? key
+            bounds(calendar: Recap.calendar).map { RecapFormat.monthYear($0.start) } ?? key
         case .year(let year):
             RecapFormat.yearName(year)
         }

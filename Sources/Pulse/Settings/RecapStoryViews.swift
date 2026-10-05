@@ -207,6 +207,7 @@ struct RecapCalendarView: View {
         let calendar = RecapFormat.calendar()
         let grid = RecapMonthGrid(monthStart: recap.start, days: recap.days, calendar: calendar)
         let maximum = recap.days.map(\.tokens).max() ?? 0
+        let busiest = recap.busiestDay?.date
         let cellHeight: CGFloat = grid.rows > 5 ? 136 : 168
         RecapStoryPage(page: deck.page(of: .calendar)) {
             RecapTotalHero(deck: deck).padding(.top, 52)
@@ -236,7 +237,7 @@ struct RecapCalendarView: View {
                 ForEach(0..<grid.rows, id: \.self) { row in
                     HStack(spacing: 10) {
                         ForEach(0..<7, id: \.self) { column in
-                            cell(grid.cells[row * 7 + column], maximum: maximum, height: cellHeight)
+                            cell(grid.cells[row * 7 + column], maximum: maximum, busiest: busiest, height: cellHeight)
                         }
                     }
                 }
@@ -249,11 +250,12 @@ struct RecapCalendarView: View {
     }
 
     @ViewBuilder
-    private func cell(_ day: Recap.Day?, maximum: Int, height: CGFloat) -> some View {
+    private func cell(_ day: Recap.Day?, maximum: Int, busiest busiestDate: Date?, height: CGFloat) -> some View {
         if let day {
-            let number = Calendar.current.component(.day, from: day.date)
+            let number = recap.calendar.component(.day, from: day.date)
             let quiet = day.tokens == 0
-            let busiest = !quiet && day.tokens >= maximum
+            // Only the one day `Recap.busiestDay` names, not every tie.
+            let busiest = !quiet && day.date == busiestDate
             let foreground = busiest ? RecapColor.paper : (quiet ? RecapColor.faint : RecapColor.ink)
             ZStack(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -405,7 +407,7 @@ struct RecapPaybackView: View {
 
     @ViewBuilder
     private func content(_ payback: RecapPayback) -> some View {
-        let kicker: String = .localized("On a plan of \(money(payback.paid / Double(payback.months))) a month, you used")
+        let kicker: String = .localized("On a plan of \(money(payback.monthlyPrice)) a month, you used")
         Text(kicker)
             .font(.recap(34))
             .foregroundStyle(Color(recap: 0x55554F))
@@ -539,7 +541,7 @@ struct RecapPaybackView: View {
                 }
             }
             RecapRule(strong: true)
-            if let saved = recap.cacheSavings, saved > 0 {
+            if let saved = deck.cacheSavings {
                 HStack(alignment: .firstTextBaseline) {
                     Text(localized: "The cache saved you")
                         .font(.recap(24))
@@ -552,12 +554,21 @@ struct RecapPaybackView: View {
                 }
                 .padding(.top, 22)
             }
-            Text(localized: "Estimated at each model's published API price. The plan price is the one you typed in Pulse.")
-                .font(.recap(16))
-                .foregroundStyle(RecapColor.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 18)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(localized: "Estimated at each model's published API price. The plan price is the one you typed in Pulse.")
+                // A period still running: both figures stop today.
+                if deck.payback?.isToDate == true {
+                    Text(localized: "Figures are to date, and the plan price is prorated by the days so far.")
+                }
+                if deck.costIsFloor {
+                    Text(localized: "Some work had no published price, so the money is a floor.")
+                }
+            }
+            .font(.recap(16))
+            .foregroundStyle(RecapColor.tertiary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 18)
         }
     }
 }
@@ -584,6 +595,14 @@ struct RecapScorecardView: View {
             RecapRule()
             facts
             Spacer(minLength: 24)
+            if deck.costIsFloor {
+                Text(localized: "Some work had no published price, so the money is a floor.")
+                    .font(.recap(16))
+                    .foregroundStyle(RecapColor.tertiary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 14)
+            }
             RecapRule(strong: true)
             footer.padding(.top, 30)
         }
@@ -614,11 +633,14 @@ struct RecapScorecardView: View {
         if let payback = deck.payback { add(.init(number: RecapFormat.multiple(payback.multiple), unit: "×"), .localized("Subscription payback")) }
         add(.init(number: "\(recap.activeDays)", unit: .localized("days")), .localized("Active days"), word: true)
         if let peak = recap.peakHour, recap.hours != nil { add(RecapFormat.hour(peak), .localized("Busiest hour")) }
-        if let rate = recap.cacheHitRate { add(.init(number: "\(Int((rate * 100).rounded()))", unit: "%"), .localized("Cache hit")) }
-        if recap.longestStreak > 0 {
-            let current = recap.currentStreak
-            add(.init(number: "\(current > 0 ? current : recap.longestStreak)", unit: .localized("days")),
-                current > 0 ? .localized("Current streak") : .localized("Longest streak"), word: true)
+        if let rate = recap.cacheHitRate {
+            // "41%" or "<1%", as the poster prints it: split at the sign.
+            let percent = RecapFormat.percent(rate)
+            add(.init(number: String(percent.dropLast()), unit: "%"), .localized("Cache hit"))
+        }
+        if let streak = deck.streak {
+            add(.init(number: "\(streak.days)", unit: .localized("days")),
+                streak.isCurrent ? .localized("Current streak") : .localized("Longest streak"), word: true)
         }
         add(.init(number: "\(recap.sessions)", unit: ""), .localized("Sessions"))
         // An odd one out is paired with the busiest day rather than left

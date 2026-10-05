@@ -22,7 +22,7 @@ enum RecapReport {
     static let modeArgument = "--recap"
 
     /// "2026-09" is a month, "2026" a year, and nothing at all is this month.
-    static func period(from text: String?, now: Date = Date(), calendar: Calendar = .current) -> Recap.Period? {
+    static func period(from text: String?, now: Date = Date(), calendar: Calendar = Recap.calendar) -> Recap.Period? {
         guard let text else {
             let parts = calendar.dateComponents([.year, .month], from: now)
             return parts.year.flatMap { year in parts.month.map { .month(year: year, month: $0) } }
@@ -90,7 +90,7 @@ enum RecapReport {
         FileHandle.standardError.write(Data("Pulse: \(message)\n".utf8))
     }
 
-    static func encode(_ recap: Recap, calendar: Calendar = .current) -> Data? {
+    static func encode(_ recap: Recap, calendar: Calendar = Recap.calendar) -> Data? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
         return try? encoder.encode(Report(recap, calendar: calendar))
@@ -149,6 +149,8 @@ enum RecapReport {
         let inProgress: Bool
         let tokens: Int
         let cost: Double?
+        /// Tokens with no published price: above zero, `cost` is a floor.
+        let unpricedTokens: Int
         let currency: String
         let partial: Bool
         let previousTokens: Int?
@@ -183,6 +185,7 @@ enum RecapReport {
             inProgress = recap.isInProgress
             tokens = recap.tokens
             cost = recap.cost
+            unpricedTokens = recap.unpricedTokens
             currency = recap.currency
             partial = recap.isPartial
             previousTokens = recap.previousTokens

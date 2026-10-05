@@ -154,20 +154,12 @@ struct RecapPosterView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 Spacer(minLength: 0)
-                RecapSparkline(values: costSeries)
+                RecapSparkline(values: deck.costSeries)
                     .frame(height: 46)
                     .padding(.horizontal, -4)
                     .padding(.bottom, -6)
             }
         }
-    }
-
-    /// Cost per day, or per month for a year, to draw under the total. Empty
-    /// where fewer than two points carry a price.
-    private var costSeries: [Double] {
-        let series: [Double?] = deck.isYear ? recap.months.map(\.cost) : recap.days.map(\.cost)
-        let values = series.map { $0 ?? 0 }
-        return series.compactMap { $0 }.count > 1 ? values : []
     }
 
     private func paybackCard(_ payback: RecapPayback) -> some View {
@@ -219,6 +211,7 @@ struct RecapPosterView: View {
         let calendar = RecapFormat.calendar()
         let grid = RecapMonthGrid(monthStart: recap.start, days: recap.days, calendar: calendar)
         let maximum = recap.days.map(\.tokens).max() ?? 0
+        let busiest = recap.busiestDay?.date
         let cell: CGFloat = wide ? 54 : (grid.rows > 5 ? 32 : 36)
         let gap: CGFloat = wide ? 12 : (grid.rows > 5 ? 7 : 8)
         return RecapBox(padding: EdgeInsets(top: 24, leading: 26, bottom: 24, trailing: 26)) {
@@ -238,7 +231,7 @@ struct RecapPosterView: View {
                     ForEach(0..<grid.rows, id: \.self) { row in
                         HStack(spacing: gap) {
                             ForEach(0..<7, id: \.self) { column in
-                                dayCell(grid.cells[row * 7 + column], maximum: maximum, side: cell)
+                                dayCell(grid.cells[row * 7 + column], maximum: maximum, busiest: busiest, side: cell)
                             }
                         }
                     }
@@ -249,9 +242,10 @@ struct RecapPosterView: View {
     }
 
     @ViewBuilder
-    private func dayCell(_ day: Recap.Day?, maximum: Int, side: CGFloat) -> some View {
+    private func dayCell(_ day: Recap.Day?, maximum: Int, busiest: Date?, side: CGFloat) -> some View {
         if let day {
-            let isBusiest = day.tokens > 0 && day.tokens >= maximum
+            // Only the one day `Recap.busiestDay` names, not every tie.
+            let isBusiest = day.tokens > 0 && day.date == busiest
             RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(RecapHeat.color(tokens: day.tokens, maximum: maximum))
                 .frame(width: side, height: side)
@@ -348,7 +342,7 @@ struct RecapPosterView: View {
         var tiles: [AnyView] = []
         if !recap.agents.isEmpty { tiles.append(AnyView(agentsTile)) }
         if let rate = recap.cacheHitRate { tiles.append(AnyView(cacheTile(rate))) }
-        if recap.longestStreak > 0 { tiles.append(AnyView(streakTile)) }
+        if deck.streak != nil { tiles.append(AnyView(streakTile)) }
         return tiles
     }
 
@@ -416,7 +410,7 @@ struct RecapPosterView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 Spacer(minLength: 0)
-                if let saved = recap.cacheSavings {
+                if let saved = deck.cacheSavings {
                     RecapRichText(
                         text: .localized("Repeated context is read from the cache, saving about \(RecapEmphasis.mark(RecapFormat.money(saved, currency: recap.currency)))"),
                         size: 15, color: RecapColor.paper.opacity(0.72), emphasisWeight: .bold, highlights: false
@@ -428,9 +422,8 @@ struct RecapPosterView: View {
     }
 
     private var streakTile: some View {
-        let current = recap.currentStreak
-        let title: String = current > 0 ? .localized("Current streak") : .localized("Longest streak")
-        let days = current > 0 ? current : recap.longestStreak
+        let streak = deck.streak ?? (days: 0, isCurrent: false)
+        let title: String = streak.isCurrent ? .localized("Current streak") : .localized("Longest streak")
         return RecapBox(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(title)
@@ -439,7 +432,7 @@ struct RecapPosterView: View {
                     .minimumScaleFactor(0.7)
                 Spacer(minLength: 0)
                 HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text(verbatim: "\(days)")
+                    Text(verbatim: "\(streak.days)")
                         .font(.recap(76, .semibold))
                         .tracking(-76 * 0.04)
                         .lineLimit(1)
@@ -453,7 +446,8 @@ struct RecapPosterView: View {
                 }
                 .fixedSize()
                 Spacer(minLength: 0)
-                if current > 0 {
+                // Only a running period has a streak that is still going.
+                if streak.isCurrent {
                     Text(String.localized("Still going · longest \(String.localized("\("\(recap.longestStreak)") days"))"))
                         .font(.recap(15))
                         .foregroundStyle(RecapColor.secondary)

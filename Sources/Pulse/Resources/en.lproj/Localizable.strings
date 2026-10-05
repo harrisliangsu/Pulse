@@ -1009,6 +1009,7 @@
 "Counted from this Mac's local records · money estimated at API prices" = "Counted from this Mac's local records · money estimated at API prices";
 "Counted from this Mac's local records" = "Counted from this Mac's local records";
 "Figures are to date." = "Figures are to date.";
+"Some work had no published price, so the money is a floor." = "Some work had no published price, so the money is a floor.";
 "Some tools' counts may be missing, so the total is a floor." = "Some tools' counts may be missing, so the total is a floor.";
 "Project %@" = "Project %@";
 "%@ a day on average" = "%@ a day on average";
@@ -1045,6 +1046,7 @@
 "Where the money went" = "Where the money went";
 "The cache saved you" = "The cache saved you";
 "Estimated at each model's published API price. The plan price is the one you typed in Pulse." = "Estimated at each model's published API price. The plan price is the one you typed in Pulse.";
+"Figures are to date, and the plan price is prorated by the days so far." = "Figures are to date, and the plan price is prorated by the days so far.";
 "That was" = "That was";
 "your %@." = "your %@.";
 "Tokens" = "Tokens";
@@ -1061,7 +1063,9 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "Monthly Recap";
 "Yearly Recap" = "Yearly Recap";
+"Monthly and Yearly Recap" = "Monthly and Yearly Recap";
 "View %@ recap" = "View %@ recap";
+"View %@ yearly recap" = "View %@ recap";
 "Shareable cards for a month or a year, from this Mac's records." = "Shareable cards for a month or a year, from this Mac's records.";
 "When a recap is ready" = "When a recap is ready";
 "Last month's recap, at the start of the month. Needs Token spend reading." = "Last month's recap, at the start of the month. Needs Token spend reading.";
