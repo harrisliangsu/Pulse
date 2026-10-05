@@ -120,5 +120,5 @@ A line under the buttons says "Saved", "Copied" or "Couldn't make the image." fo
 
 ### The Dock icon
 
-The window shares the Dock-icon-while-open rule with Settings, through one owner, `DockPresence` (`App/DockPresence.swift`): Pulse is a regular app (Dock icon, ⌘-Tab) while **any** of its windows is on screen and `AppSettings.showsDockIconInSettings` allows it, and a menu bar app again when the last closes. With one controller per window, closing Settings under an open recap took the icon from the recap. The setting keeps its name and label ("Show Dock icon while Settings is open"); it governs the recap window too.
+The window shares the Dock-icon-while-open rule with Settings, through one owner, `DockPresence` (`App/DockPresence.swift`): Pulse is a regular app (Dock icon, ⌘-Tab) while **any** of its windows is on screen and `AppSettings.showsDockIconInSettings` allows it, and a menu bar app again when the last closes. With one controller per window, closing Settings under an open recap took the icon from the recap. Its label says so: "Show Dock icon while Settings or a recap is open".
 

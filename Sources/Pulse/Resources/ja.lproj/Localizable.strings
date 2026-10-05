@@ -296,8 +296,8 @@
 "Start Pulse automatically when you log in." = "macOS にログインすると Pulse を自動的に起動します。";
 "Waiting for approval in System Settings › General › Login Items." = "「システム設定 › 一般 › ログイン項目」での許可を待っています。";
 
-"Show Dock icon while Settings is open" = "設定を開いている間 Dock にアイコンを表示";
-"So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes." = "他のウインドウに隠れても Dock や ⌘-Tab から戻れます。ウインドウを閉じるとアイコンも消えます。";
+"Show Dock icon while Settings or a recap is open" = "設定や月間まとめを開いている間 Dock にアイコンを表示";
+"So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close." = "他のウインドウに隠れても Dock や ⌘-Tab から戻れます。どちらも閉じるとアイコンも消えます。";
 
 /* メニューバーのアイコン */
 "Hide menu bar icon" = "メニューバーのアイコンを隠す";

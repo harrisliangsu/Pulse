@@ -296,8 +296,8 @@
 "Start Pulse automatically when you log in." = "Start Pulse automatically when you log in.";
 "Waiting for approval in System Settings › General › Login Items." = "Waiting for approval in System Settings › General › Login Items.";
 
-"Show Dock icon while Settings is open" = "Show Dock icon while Settings is open";
-"So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes." = "So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes.";
+"Show Dock icon while Settings or a recap is open" = "Show Dock icon while Settings or a recap is open";
+"So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close." = "So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close.";
 
 /* Menu bar icon */
 "Hide menu bar icon" = "Hide menu bar icon";

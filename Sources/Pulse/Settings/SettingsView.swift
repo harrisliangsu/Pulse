@@ -982,8 +982,8 @@ struct SettingsView: View {
                 SettingsRowDivider()
 
                 SettingsRow(
-                    String.localized("Show Dock icon while Settings is open"),
-                    subtitle: String.localized("So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes.")
+                    String.localized("Show Dock icon while Settings or a recap is open"),
+                    subtitle: String.localized("So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { settings.showsDockIconInSettings },

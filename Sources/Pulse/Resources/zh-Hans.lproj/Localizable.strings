@@ -296,8 +296,8 @@
 "Start Pulse automatically when you log in." = "登录 macOS 后自动启动 Pulse。";
 "Waiting for approval in System Settings › General › Login Items." = "等待在「系统设置 › 通用 › 登录项」中允许。";
 
-"Show Dock icon while Settings is open" = "打开设置时显示 Dock 图标";
-"So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes." = "设置窗口被盖住时，可从 Dock 或 ⌘-Tab 找回；窗口关闭后图标随之消失。";
+"Show Dock icon while Settings or a recap is open" = "打开设置或月报时显示 Dock 图标";
+"So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close." = "窗口被盖住时，可从 Dock 或 ⌘-Tab 找回；窗口都关闭后图标随之消失。";
 
 /* 菜单栏图标 */
 "Hide menu bar icon" = "隐藏菜单栏图标";
