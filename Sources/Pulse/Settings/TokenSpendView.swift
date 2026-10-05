@@ -432,9 +432,12 @@ struct TokenSpendView: View {
     /// chart above is the one that has to keep its gaps to stay a calendar,
     /// and a table of empty rows is a table you have to read past.
     private func daily(_ summary: SpendSummary) -> some View {
+        // No cache column in any store behind it: a zero hit is unrecorded,
+        // blank in the cell as in the sort.
+        let cacheUnreported = !summary.agents.isEmpty && summary.agents.allSatisfy { !$0.agent.reportsCacheReads }
         let rows = SpendSummary.sorted(
             summary.days.filter { $0.tokens > 0 }, by: sort, ascending: ascending,
-            cacheUnreported: !summary.agents.isEmpty && summary.agents.allSatisfy { !$0.agent.reportsCacheReads }
+            cacheUnreported: cacheUnreported
         )
         let pages = max((rows.count + pageSize - 1) / pageSize, 1)
         // Clamped rather than trusted: the span and the sort can both shorten
@@ -465,7 +468,7 @@ struct TokenSpendView: View {
                             // own figure and always stands.
                             let complete = day.tally.total == day.tokens
                             cell(complete ? day.tally.fresh : nil)
-                            cell(complete ? day.tally.cacheRead : nil)
+                            cell(complete && !(cacheUnreported && day.tally.cacheRead == 0) ? day.tally.cacheRead : nil)
                             cell(complete ? day.tally.output : nil)
                             cell(day.tokens)
                             // **An all-unpriced day is not a free day.** The
