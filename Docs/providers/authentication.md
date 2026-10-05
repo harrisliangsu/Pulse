@@ -12,7 +12,7 @@ This is not a catalogue of secrets. Client ids below are public (they ship in ev
 |---|---|---|
 | Pasted API key or Ollama session cookie | `keys.dat` (`APIKeyStore`) | Nobody. User pastes or re-reads the browser. |
 | Copilot GitHub token | `keys.dat` as well (`keepsOwnCredential`) | Sign in again. Device tokens here are not the CLI refresh path. |
-| Extra-account logins (Claude Code, Codex, Grok, Grok Bot) | `accounts.dat` (`AccountCredentialStore`) | `UsageStore.fetchAdded` via `OAuthLogin.refresh` for the three OAuth providers. Grok Bot has **no** refresh endpoint in Cursor’s client. |
+| Extra-account logins (Claude Code, Codex, Grok, Grok Bot) | `accounts.dat` (`AccountCredentialStore`) | `LiveUsageServices.fetchAdded` (`UsageServices.swift`) via `OAuthLogin.refresh` for the three OAuth providers. Grok Bot has **no** refresh endpoint in Cursor’s client. |
 
 Both files are AES-GCM boxes in Pulse’s Application Support folder, owner-only, key derived from this Mac rather than stored. `LocalSecrets` is shared so there is one copy of the crypto; a different derived key per purpose means a box from one store cannot be opened by the other.
 
