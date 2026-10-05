@@ -58,7 +58,10 @@ struct RecapRenderTests {
                 ("unpriced", RecapDeck(recap: RecapSamples.month(priced: false), monthlyPrice: 200, hidesProjects: false)),
                 ("bare", RecapDeck(recap: RecapSamples.month(priced: false, hasHours: false, hasAgents: false, hasCache: false, persona: nil),
                                    monthlyPrice: nil, hidesProjects: true)),
-                ("in-progress", RecapDeck(recap: RecapSamples.month(isInProgress: true, unpricedShare: 0.004), monthlyPrice: 200, hidesProjects: false)),
+                ("in-progress", RecapDeck(recap: RecapSamples.month(isInProgress: true, unpricedShare: 0.004, throughDay: 12), monthlyPrice: 200, hidesProjects: false)),
+                ("year-in-progress", RecapDeck(recap: RecapSamples.year(throughMonth: 7), monthlyPrice: 200, hidesProjects: false)),
+                ("no-hours", RecapDeck(recap: RecapSamples.month(hasHours: false), monthlyPrice: 200, hidesProjects: false)),
+                ("no-cache", RecapDeck(recap: RecapSamples.month(hasCache: false), monthlyPrice: 200, hidesProjects: false)),
                 ("floor", RecapDeck(recap: RecapSamples.month(unpricedShare: 0.004), monthlyPrice: 200, hidesProjects: false)),
                 ("mostly-unpriced", RecapDeck(recap: RecapSamples.month(unpricedShare: 0.2), monthlyPrice: 200, hidesProjects: false)),
             ]

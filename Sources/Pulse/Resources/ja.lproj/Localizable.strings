@@ -1060,6 +1060,14 @@
 "Over %@ days, you used AI on %@ of them." = "%@ 日のうち、%@ 日 AI を使いました。";
 "Busiest was %@: %@ in a single day." = "いちばん多かったのは %@、1 日で %@ でした。";
 "Rest" = "休み";
+"vs same period in %@" = "%@同期比";
+"Tokens · to %@" = "トークン · %@まで";
+"Estimated at API prices · daily" = "API 料金で概算 · 日別";
+"Estimated at API prices · monthly" = "API 料金で概算 · 月別";
+"%@ per active day" = "記録のある日は平均 %@ 件";
+"Tools" = "ツール";
+"Every day of %@" = "%@の毎日";
+"Busiest %@ · %@" = "最多 %@ · %@";
 
 // Recap window, entry points and notification
 "Monthly Recap" = "月間まとめ";

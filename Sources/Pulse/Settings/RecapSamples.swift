@@ -57,13 +57,16 @@ enum RecapSamples {
         persona: Recap.Persona? = .nightOwl,
         isInProgress: Bool = false,
         unpricedShare: Double = 0,
-        cacheSavings: Double = 410
+        cacheSavings: Double = 410,
+        throughDay: Int? = nil
     ) -> Recap {
         // The 1st is a Tuesday; days 4, 10 and 11 are quiet.
-        let weights: [Double] = [
+        // `throughDay` is a month still running: only the days so far, so the
+        // rest are to come.
+        let weights: [Double] = Array([
             55, 70, 40, 0, 35, 90, 80, 62, 66, 0, 0, 74, 100, 88, 60,
             45, 120, 96, 60, 72, 84, 64, 78, 92, 86, 58, 66, 70, 82, 66,
-        ]
+        ].prefix(throughDay ?? 30))
         let tokensPerWeight = 428_800.0
         let costPerToken = 1342.0 / 840_019_200.0
         let days = weights.enumerated().map { index, weight -> Recap.Day in
@@ -76,10 +79,11 @@ enum RecapSamples {
         let streaks = Recap.streaks(of: days, isInProgress: isInProgress)
         return Recap(
             period: .month(year: 2026, month: 9),
-            start: date(2026, 9, 1), end: date(2026, 10, 1), isInProgress: isInProgress,
-            tokens: total, cost: priced ? 1342 : nil, unpricedTokens: Int(unpricedShare * Double(total)),
+            start: date(2026, 9, 1), end: throughDay.map { date(2026, 9, $0 + 1) } ?? date(2026, 10, 1), isInProgress: isInProgress,
+            tokens: total, cost: priced ? (throughDay == nil ? 1342 : Double(total) * costPerToken) : nil,
+            unpricedTokens: Int(unpricedShare * Double(total)),
             previousTokens: Int(Double(total) / 1.38),
-            activeDays: days.filter { $0.tokens > 0 }.count, elapsedDays: 30, sessions: 412,
+            activeDays: days.filter { $0.tokens > 0 }.count, elapsedDays: weights.count, sessions: throughDay == nil ? 412 : 14 * weights.count,
             days: days, months: [],
             hours: hasHours ? hours(total: total) : nil,
             peakHour: hasHours ? 23 : nil, lateShare: hasHours ? 0.62 : nil,
@@ -102,13 +106,18 @@ enum RecapSamples {
     // MARK: - Year
 
     /// 2025, finished: 6.76 billion tokens, September the busiest month.
-    static func year(priced: Bool = true) -> Recap {
+    static func year(priced: Bool = true, throughMonth: Int? = nil) -> Recap {
         let monthTotals: [Double] = [310, 280, 420, 390, 520, 610, 580, 640, 840, 770, 710, 690].map { $0 * 1_000_000 }
         let costPerToken = 9820.0 / monthTotals.reduce(0, +)
         var random = Lehmer(state: 2025)
         var days: [Recap.Day] = []
         var months: [Recap.Month] = []
         for month in 1...12 {
+            // A year still running has nothing in the months to come.
+            if let through = throughMonth, month > through {
+                months.append(Recap.Month(month: month, tokens: 0, cost: nil, activeDays: 0))
+                continue
+            }
             let count = calendar.range(of: .day, in: .month, for: date(2025, month, 1))?.count ?? 30
             let weights = (1...count).map { day -> Double in
                 let weekday = calendar.component(.weekday, from: date(2025, month, day))
@@ -130,9 +139,9 @@ enum RecapSamples {
         let streaks = Recap.streaks(of: days, isInProgress: false)
         return Recap(
             period: .year(2025),
-            start: date(2025, 1, 1), end: date(2026, 1, 1), isInProgress: false,
+            start: date(2025, 1, 1), end: date(2026, 1, 1), isInProgress: throughMonth != nil,
             tokens: total, cost: priced ? 9820 : nil, unpricedTokens: 0, previousTokens: Int(Double(total) / 2.4),
-            activeDays: days.filter { $0.tokens > 0 }.count, elapsedDays: 365, sessions: 3214,
+            activeDays: days.filter { $0.tokens > 0 }.count, elapsedDays: days.count, sessions: 3214,
             days: days, months: months,
             hours: hours(total: total), peakHour: 23, lateShare: 0.62,
             latestMinute: 207, lateNights: 96, persona: .nightOwl,

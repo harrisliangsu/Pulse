@@ -1060,6 +1060,14 @@
 "Over %@ days, you used AI on %@ of them." = "%@ 天裡，你有 %@ 天在用 AI。";
 "Busiest was %@: %@ in a single day." = "最忙的是 %@，一天就處理了 %@。";
 "Rest" = "休息";
+"vs same period in %@" = "比%@同期";
+"Tokens · to %@" = "Token · 截至%@";
+"Estimated at API prices · daily" = "依 API 價格估算 · 每天";
+"Estimated at API prices · monthly" = "依 API 價格估算 · 每月";
+"%@ per active day" = "有記錄的日子平均 %@ 個";
+"Tools" = "工具";
+"Every day of %@" = "%@每一天";
+"Busiest %@ · %@" = "最多 %@ · %@";
 
 // Recap window, entry points and notification
 "Monthly Recap" = "月報";

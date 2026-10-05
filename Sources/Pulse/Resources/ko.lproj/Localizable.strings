@@ -1060,6 +1060,14 @@
 "Over %@ days, you used AI on %@ of them." = "%@일 중 %@일 AI를 사용했습니다.";
 "Busiest was %@: %@ in a single day." = "가장 바빴던 날은 %@, 하루에 처리한 양은 %@입니다.";
 "Rest" = "휴식";
+"vs same period in %@" = "%@ 같은 기간 대비";
+"Tokens · to %@" = "토큰 · %@ 기준";
+"Estimated at API prices · daily" = "API 요금 기준 추산 · 일별";
+"Estimated at API prices · monthly" = "API 요금 기준 추산 · 월별";
+"%@ per active day" = "기록이 있는 날 평균 %@개";
+"Tools" = "도구";
+"Every day of %@" = "%@ 하루하루";
+"Busiest %@ · %@" = "최다 %@ · %@";
 
 // Recap window, entry points and notification
 "Monthly Recap" = "월간 리포트";

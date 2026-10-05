@@ -74,6 +74,17 @@ enum RecapRenderer {
     RecapCardView(deck: RecapSamples.monthDeck, card: .scorecard)
 }
 
+#Preview("Scorecard · running month") {
+    RecapCardView(
+        deck: RecapDeck(recap: RecapSamples.month(isInProgress: true, throughDay: 12), monthlyPrice: 200, hidesProjects: false),
+        card: .scorecard
+    )
+}
+
+#Preview("Scorecard · year") {
+    RecapCardView(deck: RecapSamples.yearDeck, card: .scorecard)
+}
+
 #Preview("Poster · year") {
     RecapCardView(deck: RecapSamples.yearDeck, card: .poster)
 }

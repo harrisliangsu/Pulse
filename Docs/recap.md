@@ -15,7 +15,7 @@ Called **月报** in Chinese (`Monthly Recap` in English; the year is `Yearly Re
 | Months (`months`) | — | twelve rows, busiest in ink | twelve months |
 | Timetable (`timetable`) | peak hour, 24 rows | same | `hours` and `peakHour` |
 | Payback (`payback`) | cost against the price, ruler, spend by model, cache savings | against twelve months of it | `cost` **and** a price |
-| Scorecard (`scorecard`) | eight figures, top model, persona | same | any tokens |
+| Scorecard (`scorecard`) | the total with its change, money with its daily line, days / sessions / peak hour / cache, a bar per day, tools, top model, persona | same, with a bar per month | any tokens |
 
 The poster stands alone and is not numbered; the others carry "01 / 05", counted over the cards the deck really has.
 
@@ -28,7 +28,7 @@ A year calendar was drawn both as twelve month grids and as one 53-week strip. T
 - no agents, no opener; no hour shape, no timetable; no cost, no price (`monthlyPrice`, typed by the reader, in `Recap.currency`) or 1% or more of the tokens unpriced, no payback — and, with no cost, no money figure anywhere, including the poster's tiles and the scorecard's cells;
 - an empty recap has no deck;
 - the poster is a stack of rows that appear only when their facts exist; the rows that remain share the height, so a thin recap is a shorter poster, not one with holes;
-- the scorecard drops a cell it cannot fill, and pairs an odd one out with the busiest day.
+- the scorecard (below) drops a row, a cell or a chart it cannot fill.
 
 Payback is `cost / (price × months)` (`RecapPayback`): one month for a month, twelve for a year. **A period still running is prorated by days**, not by whole months started: `months = (1 or 12) × elapsed days ÷ days in the month (or the year)`, so the 5th of a 31-day month is 5/31 of the price and March 1 of a 365-day year is 12 × 60/365 — and the payback card says "Figures are to date, and the plan price is prorated by the days so far." Below 1 it is shown as it is.
 
@@ -37,6 +37,14 @@ Payback is `cost / (price × months)` (`RecapPayback`): one month for a month, t
 **Streaks belong to the period.** `currentStreak` and `longestStreak` are counted over the recap's own `days` (`Recap.streaks`), never the whole history: the longest run of days with work inside the period, and the run that ends on the period's last day — a past period's final day; a running one's today, or yesterday while today is quiet ("today is not over"), counted inside the period only. Only a running period's current run is "still going": a past period's card says **Longest streak** and nothing about the run still going.
 
 `hidesProjects` replaces project names with "Project 1", "Project 2"… (`RecapDeck.projectName`). The footer says when figures are to date (`isInProgress`) and when the total is a floor (`isPartial`), and that money is an estimate at API prices.
+
+## The scorecard
+
+`RecapScorecardView` (`RecapScorecardView.swift`; what its charts are built from is `RecapScoreData.swift`, tested in `RecapScoreDataTests`). Top to bottom: the running head with an outlined stamp for the period (`NO. 2026·10`, a year `NO. 2026`) and the page counter; the headline; **the total** huge on a lime bar, with a dark chip for the change on the same stretch of the period before and the label (`Token · to Oct 5` only while the period runs); **the money** and a mini line of cost per day (per month in a year); a **2 × 2** of active days (one pip per day — ink for work, grey for a quiet day that is over, hollow for a day to come; a year's twelve months in two rows), sessions (with the average per day *with work*, rounded, left out where it rounds to nothing), peak hour (24 bars, the peak in ink, hours with work lime) and cache hit (a thin meter); **a bar per day** of the month (a bar per month in a year) with a grey slot behind each, the busiest in ink, a day to come a dashed outline, the busiest named on the right; **tools** as one segmented bar (top lime, second ink, third grey, and past three everything after the second grouped as "Other") with a legend of shares; the **top model** with its share and the **persona** as a dark chip; the footnotes; the footer.
+
+Nothing here is invented. **The chip** is `Recap.previousTokens`, which is counted over the *same number of days* of the period before, so "same period" is literal; it is left out without it. **A day to come is not a quiet day**: in a running month the days after today (and in a running year the months that have not begun) are `future`, are drawn hollow or dashed, and are not points on the cost line. The cost line follows the poster's rule (`RecapDeck.costSeries`): none where any point with work has no price. Heights in the strip are tokens over the busiest slot's, each against a grey slot of full height, so a quiet day reads as an empty slot, not a short bar. A cell whose fact is nil (no hour shape, no cache) is not drawn, and an odd one out takes the whole row. The payback and the streak have their own card and the poster, and are not repeated here.
+
+Every picture shrinks before a figure does, and a figure before it is dropped (`ViewThatFits`), so a long English chip, a four-digit session count or a 6,240万 total never run into their neighbours.
 
 ## Drawing
 
@@ -66,9 +74,9 @@ Persona names are written per language (`Recap.Persona.title`), not translated f
 PULSE_RECAP_PREVIEW=/tmp/recap swift test --filter RecapRenderTests
 ```
 
-writes every card of the sample month and year in all five languages to `/tmp/recap/<language>/<deck>-<n>-<card>.png`, one `sheet.png` contact sheet per language, and `/tmp/recap/edge/` for recaps with a field missing (no price, unpriced, bare, in progress, a floor, mostly unpriced). The samples are `RecapSamples` (`#if DEBUG`), which the `#Preview` blocks in `RecapRenderer.swift` share. The test pins nothing about pixels: a card either fits its language or it does not, and the only judge is reading it.
+writes every card of the sample month and year in all five languages to `/tmp/recap/<language>/<deck>-<n>-<card>.png`, one `sheet.png` contact sheet per language, and `/tmp/recap/edge/` for recaps with a field missing (no price, unpriced, bare, in progress, a year in progress, no hours, no cache, a floor, mostly unpriced). The samples are `RecapSamples` (`#if DEBUG`), which the `#Preview` blocks in `RecapRenderer.swift` share. The test pins nothing about pixels: a card either fits its language or it does not, and the only judge is reading it.
 
-`RecapTests` pins the streaks of a past and a running month, `unpricedTokens`, and a Buddhist-calendar build whose year months follow the calendar; `RecapWindowTests` the price grammar, `RecapPeriods.earliest`, the read-generation race and `takesArrows`; `RecapDeckTests` the payback rules (unpriced share, proration), the cost line, the savings floor and the streak wording. The edge renders are in English and, for `in-progress`, `floor` and `mostly-unpriced`, also in `edge-zh-Hans`, `edge-ja` and `edge-ko`.
+`RecapTests` pins the streaks of a past and a running month, `unpricedTokens`, and a Buddhist-calendar build whose year months follow the calendar; `RecapWindowTests` the price grammar, `RecapPeriods.earliest`, the read-generation race and `takesArrows`; `RecapDeckTests` the payback rules (unpriced share, proration), the cost line, the savings floor and the streak wording; `RecapScoreDataTests` the stamp, which slots are quiet, future or busiest in a running month and year, the per-day session average and the tools' grouping. The edge renders are in English and, for `in-progress`, `floor` and `mostly-unpriced`, also in `edge-zh-Hans`, `edge-ja` and `edge-ko`.
 
 `RecapFormatTests` and `RecapDeckTests` pin the number split per locale, the date and hour formats, the ruler, and which cards each recap gets.
 

@@ -83,11 +83,20 @@ extension RecapDeck {
     /// Empty where fewer than two points carry a price, and **where any point
     /// with work has none**: a line through a zero for a day that was merely
     /// unpriced would be a figure Pulse made up. A quiet point (no tokens) is a
-    /// real zero.
+    /// real zero, and a month (or day) still to come is not drawn at all.
     var costSeries: [Double] {
-        let series: [(tokens: Int, cost: Double?)] = isYear
-            ? recap.months.map { ($0.tokens, $0.cost) }
-            : recap.days.map { ($0.tokens, $0.cost) }
+        let series: [(tokens: Int, cost: Double?)]
+        if isYear {
+            // A year still running has no months to come: those are not zeros.
+            let starts = recap.monthStarts
+            let last = recap.days.last?.date
+            series = recap.months.enumerated().compactMap { index, month in
+                if recap.isInProgress, let last, index < starts.count, starts[index] > last { return nil }
+                return (month.tokens, month.cost)
+            }
+        } else {
+            series = recap.days.map { ($0.tokens, $0.cost) }
+        }
         guard !series.contains(where: { $0.tokens > 0 && $0.cost == nil }) else { return [] }
         return series.filter { $0.cost != nil }.count > 1 ? series.map { $0.cost ?? 0 } : []
     }

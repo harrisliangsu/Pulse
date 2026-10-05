@@ -1060,6 +1060,14 @@
 "Over %@ days, you used AI on %@ of them." = "Over %@ days, you used AI on %@ of them.";
 "Busiest was %@: %@ in a single day." = "Busiest was %@: %@ in a single day.";
 "Rest" = "Rest";
+"vs same period in %@" = "vs same period in %@";
+"Tokens · to %@" = "Tokens · to %@";
+"Estimated at API prices · daily" = "Estimated at API prices · daily";
+"Estimated at API prices · monthly" = "Estimated at API prices · monthly";
+"%@ per active day" = "%@ per active day";
+"Tools" = "Tools";
+"Every day of %@" = "Every day of %@";
+"Busiest %@ · %@" = "Busiest %@ · %@";
 
 // Recap window, entry points and notification
 "Monthly Recap" = "Monthly Recap";

@@ -221,6 +221,8 @@ struct RecapBox<Content: View>: View {
 /// The frame of a numbered card: paper, the running head, the page counter.
 struct RecapStoryPage<Content: View>: View {
     let page: (number: Int, count: Int)?
+    /// A small outlined mono stamp centred in the running head ("NO. 2026·10").
+    var stamp: String?
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -235,6 +237,16 @@ struct RecapStoryPage<Content: View>: View {
                         .font(.recap(20, .regular, mono: true))
                         .tracking(1.6)
                         .foregroundStyle(RecapColor.tertiary)
+                }
+            }
+            .overlay {
+                if let stamp {
+                    Text(verbatim: stamp)
+                        .font(.recap(16, .regular, mono: true))
+                        .tracking(1.3)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .overlay { RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(RecapColor.ink, lineWidth: 1.5) }
                 }
             }
             content
