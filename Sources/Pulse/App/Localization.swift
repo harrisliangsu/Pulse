@@ -75,6 +75,11 @@ enum LocalizationSource {
         lock.withLock { override } ?? .module
     }
 
+    /// The language Pulse is set to, `.system` when it follows macOS.
+    static var language: AppLanguage {
+        lock.withLock { chosen }
+    }
+
     /// The locale that goes with the language the strings are coming from.
     static var locale: Locale {
         lock.withLock { chosen }.locale

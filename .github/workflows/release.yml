@@ -175,14 +175,16 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add appcast.xml
+          # The main feed and its one-language copies (appcast-zh.xml,
+          # appcast-en.xml), which a Pulse set to a language reads.
+          git add appcast.xml appcast-zh.xml appcast-en.xml
 
           # Staged first, and compared against the index rather than the
           # working tree: `git diff` only looks at *tracked* files, so on the
           # very first release — when the feed is brand new — it reported no
           # change, the step exited green, and nothing was ever committed. A
           # step that succeeds without doing its job is the worst kind.
-          if git diff --cached --quiet -- appcast.xml; then
+          if git diff --cached --quiet -- appcast.xml appcast-zh.xml appcast-en.xml; then
             echo "Feed already offers $VERSION."
           else
             git commit -m "Offer $VERSION to Sparkle"

@@ -71,6 +71,27 @@ final class AppUpdate {
         )
     }
 
+    /// The feed to read for the language Pulse is set to, or nil to read
+    /// Info.plist's.
+    ///
+    /// The notes in the update window come in one language: each item in
+    /// `appcast.xml` carries one `<description xml:lang>` per language and
+    /// Sparkle shows the one the **system's** languages pick, which Pulse's own
+    /// language setting cannot reach. So a Pulse set to a language reads that
+    /// language's copy of the feed (`appcast-zh.xml`, `appcast-en.xml`, written
+    /// by `Scripts/appcast.py` beside the main one). The changelog is written in
+    /// Chinese and English; Japanese and Korean read the English.
+    nonisolated static func feedURL(for language: AppLanguage, base: String?) -> String? {
+        guard let base, base.hasSuffix("/appcast.xml") else { return nil }
+        let file: String
+        switch language {
+        case .system: return nil
+        case .chineseSimplified, .chineseTraditional: file = "appcast-zh.xml"
+        case .english, .japanese, .korean: file = "appcast-en.xml"
+        }
+        return String(base.dropLast("appcast.xml".count)) + file
+    }
+
     /// Asks now, and shows Sparkle's own window with whatever it finds.
     func check() {
         guard let controller else { return }
@@ -128,6 +149,15 @@ final class AppUpdate {
 private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
     /// Weak: the app owns the updater, not the other way round.
     weak var owner: AppUpdate?
+
+    /// Read at every check, so a language changed in Settings applies to the
+    /// next one.
+    nonisolated func feedURLString(for updater: SPUUpdater) -> String? {
+        AppUpdate.feedURL(
+            for: LocalizationSource.language,
+            base: Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String
+        )
+    }
 
     nonisolated func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
         MainActor.assumeIsolated { owner?.finishCheck(found: item) }
