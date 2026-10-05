@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>en</language>
         <item>
+            <title>1.7.3</title>
+            <pubDate>Mon, 05 Oct 2026 06:52:15 -0000</pubDate>
+            <sparkle:version>1.7.3</sparkle:version>
+            <sparkle:shortVersionString>1.7.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/qunqin24/Pulse/releases/tag/v1.7.3</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.7.3</h2><p><strong>中文</strong></p><p><strong>新功能</strong></p><ul><li><strong>设置打开时显示 Dock 图标。</strong> 设置窗口被别的窗口挡住后，可以从 Dock 或 ⌘-Tab 找回来；窗口关上，图标随之消失。在「设置 › 通用」的「应用」一组里，默认打开。</li></ul><p><strong>改进与修复</strong></p><ul><li><strong>Token 消耗更准确。</strong> Codex 桌面版的子任务会带上主任务至今的全部记录，之前被当成子任务自己的用量重复计算，Codex 的数字因此严重偏高，现已去掉；已归档的 Codex 会话也会计入。Claude Code 保留一小时的缓存写入按官方的两倍输入价计算，OpenAI 的长上下文请求按长上下文价格计算。Devin CLI、OpenCode、Codebuff 和 Copilot 各有一处重复计算，已修正。更新后第一次打开会重新读取一遍本机记录。</li><li><strong>Token 分类更好懂。</strong> 分为「新内容」「缓存命中」「输出」三类，缓存写入算在新内容里。工具没有记录缓存时显示「未记录」，不再显示 0 或 0%。</li><li><strong>卡片上的统计按日历计算。</strong> 「最近 7 天」「最近 31 天」就是日历上的这些天，休息一阵回来不会再显示休息前的数字。没有价格的模型显示「—」，不再显示 $0.00。连续使用天数按全部记录计算，当天还没用也不会清零。「最常用模型」改名为「用量最多的模型」。</li><li><strong>其他修复。</strong> 删除账号后，正在进行的登录续期不会再把登录写回来；OpenCode 换了控制台账号后，卡片不再显示上一个账号的记录；登录或会话失效时会提示重新登录，不再一直显示旧数字；只有额外账号时也会按你设定的刷新间隔刷新；关掉窗口启动器后不再频繁唤醒；OpenCode Go 的月度窗口不再按 30 天算；服务商返回异常数据时不会再让 Pulse 崩溃。</li><li><strong>中文翻译更自然。</strong> 简体和繁体中文统一用「服务商」「账号」，诊断、集成和刷新设置里的句子也改得更顺。</li></ul><p><strong>English</strong></p><p><strong>New</strong></p><ul><li><strong>A Dock icon while Settings is open.</strong> A settings window another app has covered can be found again from the Dock or with ⌘-Tab; the icon goes when the window closes. In Settings › General, under Application, on by default.</li></ul><p><strong>Changed and fixed</strong></p><ul><li><strong>More accurate token spend.</strong> Codex Desktop&#x27;s sub-agents start with their parent&#x27;s whole history, which was counted again as their own work and made Codex&#x27;s figures far too high; that copy is now left out, and archived Codex sessions are counted. Claude Code&#x27;s one-hour cache writes are priced at twice the input rate, as Anthropic bills them, and OpenAI&#x27;s long-context requests at the long-context rate. Devin CLI, OpenCode, Codebuff and Copilot each counted something twice; fixed. The first launch after updating reads this Mac&#x27;s records again.</li><li><strong>Token kinds that read plainly.</strong> Fresh input, cache hits and output, with cache writes counted as fresh input. A tool that records no cache shows Not reported rather than 0 or 0%.</li><li><strong>Card figures follow the calendar.</strong> Last 7 days and Last 31 days are those calendar days, so coming back from a break no longer shows the days before it. A model with no price shows a dash rather than $0.00. Streaks count your whole history and no longer drop to zero before you have worked today. Favourite model is now Most tokens.</li><li><strong>Other fixes.</strong> Removing an account no longer lets a renewal still in flight write its login back; switching OpenCode console accounts no longer leaves the card on the old account&#x27;s history; a lost sign-in asks you to sign in again instead of showing the last figures; a rail of added accounts alone follows the refresh interval you set; a switched-off window starter no longer wakes the app every few seconds; OpenCode Go&#x27;s monthly window is no longer taken as 30 days; and a malformed reply from a provider can no longer crash Pulse.</li><li><strong>More natural Chinese.</strong> Simplified and Traditional Chinese settle on one word each for provider and account, with plainer sentences across diagnostics, integrations and refresh settings.</li></ul><p><a href="https://github.com/qunqin24/Pulse/releases/tag/v1.7.3">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/qunqin24/Pulse/releases/download/v1.7.3/Pulse-1.7.3.zip"
+                       length="13534197"
+                       type="application/octet-stream"
+                       sparkle:edSignature="4owBqvVbrISxvwMtuRW3usIrYI/pMCMIix4BUtcXFEElbyY0PkPc3H07E+KSEVlm65jkq7tAKbTMeypCKDZeBg==" />
+        </item>
+        <item>
             <title>1.7.2</title>
             <pubDate>Sun, 04 Oct 2026 12:08:20 -0000</pubDate>
             <sparkle:version>1.7.2</sparkle:version>
