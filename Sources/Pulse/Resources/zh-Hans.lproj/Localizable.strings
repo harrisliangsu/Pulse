@@ -998,10 +998,10 @@
 "%@ (%@)" = "%@（%@）";
 
 // Recap cards
-"Night owl" = "深夜工匠";
-"Early bird" = "早起开工";
-"Day shift" = "朝九晚五";
-"All day" = "全天在线";
+"Night owl" = "夜间型";
+"Early bird" = "早起型";
+"Day shift" = "白天型";
+"All day" = "全天型";
 "In %@, you and AI worked through" = "%@，你和 AI 一起处理了";
 "Active %@ of %@ days" = "活跃 %@ / %@ 天";
 "%@ sessions" = "%@ 个会话";
