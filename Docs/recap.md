@@ -66,9 +66,8 @@ writes every card of the sample month and year in all five languages to `/tmp/re
 
 `RecapWindowController` (`Settings/RecapWindowController.swift`) owns an AppKit window, as the settings window is owned, for the same reason: Pulse is an `.accessory` app and has to activate itself or the window opens behind everything. `RecapWindowModel` is its state, `RecapWindowView` its SwiftUI, `RecapExport` its way out.
 
-**Entry points** — all three open the same window:
+**Entry points** — both open the same window, and neither menu carries one (the rail's and the menu bar's menus stay to the panel, Settings and Quit):
 
-- the menu bar menu's **Monthly Recap…** (next to Settings…; the rail's menu is the same menu);
 - the Token spend pane's **Monthly Recap** row, whose button reads **View September recap** and opens on that month (`SettingsView.recapPeriod`, the window's own default rule);
 - a clicked "recap is ready" notification, on the month it names ([notifications.md](notifications.md#the-monthly-recap)).
 

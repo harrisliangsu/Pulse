@@ -1061,7 +1061,6 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "月間まとめ";
 "Yearly Recap" = "年間まとめ";
-"Monthly Recap…" = "月間まとめ…";
 "View %@ recap" = "%@のまとめを見る";
 "Shareable cards for a month or a year, from this Mac's records." = "この Mac の記録から、1か月または1年分の共有用カードを作ります。";
 "When a recap is ready" = "まとめができたとき";

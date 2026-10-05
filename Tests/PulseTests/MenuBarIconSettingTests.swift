@@ -68,10 +68,8 @@ struct MenuBarIconSettingTests {
             #expect(rest.first?.state == (delegate.settings.isPanelVisible ? .on : .off))
             rest.removeFirst()
         }
-        // The recap sits just above Settings…, with no shortcut of its own.
-        #expect(rest.first?.title == String.localized("Monthly Recap…"))
-        #expect(rest.map(\.keyEquivalent) == ["", ",", "", "q"])
-        #expect(rest[1].keyEquivalentModifierMask == .command)
-        #expect(rest[3].keyEquivalentModifierMask == .command)
+        #expect(rest.map(\.keyEquivalent) == [",", "", "q"])
+        #expect(rest[0].keyEquivalentModifierMask == .command)
+        #expect(rest[2].keyEquivalentModifierMask == .command)
     }
 }

@@ -1061,7 +1061,6 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "월간 리포트";
 "Yearly Recap" = "연간 리포트";
-"Monthly Recap…" = "월간 리포트…";
 "View %@ recap" = "%@ 리포트 보기";
 "Shareable cards for a month or a year, from this Mac's records." = "이 Mac의 기록으로 한 달 또는 한 해의 공유용 카드를 만듭니다.";
 "When a recap is ready" = "리포트가 준비되었을 때";

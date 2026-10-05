@@ -1061,7 +1061,6 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "月报";
 "Yearly Recap" = "年报";
-"Monthly Recap…" = "月报…";
 "View %@ recap" = "查看%@的月报";
 "Shareable cards for a month or a year, from this Mac's records." = "用这台 Mac 的本机记录，生成可以分享的月度和年度卡片。";
 "When a recap is ready" = "月报生成时";

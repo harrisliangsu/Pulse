@@ -393,16 +393,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(panelItem)
         }
 
-        // Next to Settings: the window shows what the Token spend pane counts,
-        // and says so itself when reading is off.
-        let recapItem = NSMenuItem(
-            title: .localized("Monthly Recap…"),
-            action: #selector(openRecapFromMenu),
-            keyEquivalent: ""
-        )
-        recapItem.target = self
-        menu.addItem(recapItem)
-
         let settingsItem = NSMenuItem(
             title: .localized("Settings…"),
             action: #selector(openSettingsFromMenu),
@@ -429,10 +419,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openSettingsFromMenu() {
         showSettings()
-    }
-
-    @objc private func openRecapFromMenu() {
-        showRecap(period: nil)
     }
 
     @objc private func checkForUpdate() {
