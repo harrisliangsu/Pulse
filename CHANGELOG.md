@@ -7,6 +7,36 @@ shows in the update window — see [Scripts/changelog.py](Scripts/changelog.py).
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.7.3
+
+**中文**
+
+**新功能**
+
+- **设置打开时显示 Dock 图标。** 设置窗口被别的窗口挡住后，可以从 Dock 或 ⌘-Tab 找回来；窗口关上，图标随之消失。在「设置 › 通用」的「应用」一组里，默认打开。
+
+**改进与修复**
+
+- **Token 消耗更准确。** Codex 桌面版的子任务会带上主任务至今的全部记录，之前被当成子任务自己的用量重复计算，Codex 的数字因此严重偏高，现已去掉；已归档的 Codex 会话也会计入。Claude Code 保留一小时的缓存写入按官方的两倍输入价计算，OpenAI 的长上下文请求按长上下文价格计算。Devin CLI、OpenCode、Codebuff 和 Copilot 各有一处重复计算，已修正。更新后第一次打开会重新读取一遍本机记录。
+- **Token 分类更好懂。** 分为「新内容」「缓存命中」「输出」三类，缓存写入算在新内容里。工具没有记录缓存时显示「未记录」，不再显示 0 或 0%。
+- **卡片上的统计按日历计算。** 「最近 7 天」「最近 31 天」就是日历上的这些天，休息一阵回来不会再显示休息前的数字。没有价格的模型显示「—」，不再显示 $0.00。连续使用天数按全部记录计算，当天还没用也不会清零。「最常用模型」改名为「用量最多的模型」。
+- **其他修复。** 删除账号后，正在进行的登录续期不会再把登录写回来；OpenCode 换了控制台账号后，卡片不再显示上一个账号的记录；登录或会话失效时会提示重新登录，不再一直显示旧数字；只有额外账号时也会按你设定的刷新间隔刷新；关掉窗口启动器后不再频繁唤醒；OpenCode Go 的月度窗口不再按 30 天算；服务商返回异常数据时不会再让 Pulse 崩溃。
+- **中文翻译更自然。** 简体和繁体中文统一用「服务商」「账号」，诊断、集成和刷新设置里的句子也改得更顺。
+
+**English**
+
+**New**
+
+- **A Dock icon while Settings is open.** A settings window another app has covered can be found again from the Dock or with ⌘-Tab; the icon goes when the window closes. In Settings › General, under Application, on by default.
+
+**Changed and fixed**
+
+- **More accurate token spend.** Codex Desktop's sub-agents start with their parent's whole history, which was counted again as their own work and made Codex's figures far too high; that copy is now left out, and archived Codex sessions are counted. Claude Code's one-hour cache writes are priced at twice the input rate, as Anthropic bills them, and OpenAI's long-context requests at the long-context rate. Devin CLI, OpenCode, Codebuff and Copilot each counted something twice; fixed. The first launch after updating reads this Mac's records again.
+- **Token kinds that read plainly.** Fresh input, cache hits and output, with cache writes counted as fresh input. A tool that records no cache shows Not reported rather than 0 or 0%.
+- **Card figures follow the calendar.** Last 7 days and Last 31 days are those calendar days, so coming back from a break no longer shows the days before it. A model with no price shows a dash rather than $0.00. Streaks count your whole history and no longer drop to zero before you have worked today. Favourite model is now Most tokens.
+- **Other fixes.** Removing an account no longer lets a renewal still in flight write its login back; switching OpenCode console accounts no longer leaves the card on the old account's history; a lost sign-in asks you to sign in again instead of showing the last figures; a rail of added accounts alone follows the refresh interval you set; a switched-off window starter no longer wakes the app every few seconds; OpenCode Go's monthly window is no longer taken as 30 days; and a malformed reply from a provider can no longer crash Pulse.
+- **More natural Chinese.** Simplified and Traditional Chinese settle on one word each for provider and account, with plainer sentences across diagnostics, integrations and refresh settings.
+
 ## 1.7.2
 
 **中文**
