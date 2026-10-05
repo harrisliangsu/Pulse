@@ -9,12 +9,12 @@ Called **月报** in Chinese (`Monthly Recap` in English; the year is `Yearly Re
 | Card | Month | Year | Needs |
 |---|---|---|---|
 | Poster (`poster`) | yes | yes, with twelve month bars where the month has its calendar | any tokens |
-| Opener (`opener`) | month number, headline, agents | the year, headline, agents | `agents` |
-| Calendar (`calendar`) | every day, quiet days dashed, busiest in ink | — | a day with tokens |
-| Year calendar (`yearCalendar`) | — | twelve small calendars | a day with tokens |
-| Months (`months`) | — | twelve rows, busiest in ink | twelve months |
-| Timetable (`timetable`) | peak hour, 24 rows | same | `hours` and `peakHour` |
-| Payback (`payback`) | cost against the price, ruler, spend by model, cache savings | against twelve months of it | `cost` **and** a price |
+| Opener (`opener`) | month number, headline, an agent lineup (the top agent a big ink tile, up to three more, a lime "in all" tile), a roster with each agent's days as a strip | the year, the same, the strip a cell per month | `agents` |
+| Calendar (`calendar`) | the total with its change on the month before, every day a cell, three tiles (active days ring, streak chain, busiest day), the weeks, weekdays against the weekend | — | a day with tokens |
+| Year calendar (`yearCalendar`) | — | the total, twelve small calendars, the same three tiles | a day with tokens |
+| Months (`months`) | — | twelve rows (busiest in ink) and weekdays against the weekend | twelve months |
+| Timetable (`timetable`) | peak hour, a 24-hour dial, when the day starts and ends, four parts of the day, 24 bars, seven weekdays | same | `hours` and `peakHour` |
+| Payback (`payback`) | cost and multiple, a ruler (the used bar cut by model), three tiles, cache against no cache, spend by model with the maker's mark, money by day | the same, money by month | `cost` **and** a price |
 | Scorecard (`scorecard`) | the total with its change, money with its daily line, days / sessions / peak hour / cache, a bar per day, tools, top model, persona | same, with a bar per month | any tokens |
 
 The poster stands alone and is not numbered; the others carry "01 / 05", counted over the cards the deck really has.
@@ -46,6 +46,20 @@ Nothing here is invented. **The chip** is `Recap.previousTokens`, which is count
 
 Every picture shrinks before a figure does, and a figure before it is dropped (`ViewThatFits`), so a long English chip, a four-digit session count or a 6,240万 total never run into their neighbours.
 
+## The four redesigned cards
+
+The opener, calendar, timetable and payback follow the approved mockups (a lineup, a dial, tiles and rulers rather than rows of text). Each has its own file (`RecapOpenerView`, `RecapCalendarView`, `RecapTimetableView`, `RecapPaybackView`); the pieces they share — tiles, section heads, the segment ring, the streak chain, brand marks — are in `RecapTiles.swift`, and every figure they read that `Recap` does not carry is worked out in **`RecapInsights`** (`Usage/RecapInsights.swift`, tested in `RecapInsightsTests`), never in a view:
+
+- **Weekdays and weeks.** `weekdayTokens` (Monday first; **nil for a weekday the period never had a day of**, which is unknown and not quiet), `workSplit` (weekday against weekend tokens, the days the period has had of each and the days used — Saturday and Sunday are the weekend), `weeks` (Monday to Sunday, **clipped to the period**, the first and last may be short), `busiestWeek` / `busiestWeekday` (the earliest of a tie).
+- **The streak.** `longestRun` is the earliest of equal runs; `streakChain` is a window of nine days around it, kept inside the period (against the edge where it cannot be centred), with the run's days marked. A run of nine or more shows its first nine and the label names where the run really ends.
+- **Time of day.** `firstHour` is the earliest hour from 05:00 with any work (the after-midnight tail belongs to the night before; nil when only that tail has work), `quarters` the four six-hour shares of the hour shape and `leadingQuarter` its largest. "Under one" is `RecapFormat.percent`'s `<1%`, never a zero.
+- **Money.** `costPerMillion` is the cost over the **priced** tokens (a floor over every token would understate the rate); `costPerActiveDay`; `costliestDay` and `costBars` (money by day, or by month for a year) exist **only when every day or month with work has a cost** — the dearest might be the unpriced one, and a bar for it would be a zero. A quiet day is a real zero. The cache tile and the cache against no-cache bars appear from $0.50 (`RecapDeck.cacheSavings`), and the "N× what you spent" line only when the saving is more than the spend.
+- **Who worked when.** `Recap.AgentShare.activeDates` (the agent's own days; also `days` in `--recap`) feed `dayMarks` (used / another agent / quiet weekend / quiet weekday) for a month and `monthMarks` (used / another agent / quiet) for a year. An agent with no dates gets no strip.
+
+**Brand marks.** An agent's mark is `SpendAgent.iconResource` through `LobeIconView` (a template image, tinted ink or lime); a model's is `RecapVendorMark.resource(forModel:)`, a table of name fragments (claude, gpt and the o-series, gemini, glm, kimi, deepseek, qwen, mistral, minimax, grok, and a few more). **No mark is guessed**: a name that matches nothing, or an agent with no mark, gets a tile with its first letter. Every resource the table names is checked to ship (`RecapVendorMarkTests`).
+
+**A scaled label is never squeezed vertically.** A `Text` with a scale floor inside a stack that is a few points short gives up its size, all the way to the floor, for no visible reason (it happened on the weekday headings, a tile's caption, the timetable's figures and the model names all at once). `View.recapFit(_:)` is `lineLimit(1)` + `minimumScaleFactor` + `fixedSize(horizontal: false, vertical: true)`; use it for any label that may shrink.
+
 ## Drawing
 
 Flat colour and type only — paper `#F5F5F1`, white cards with a hairline, ink `#1B1B1E`, lime `#C8F03C` (the icon's accent). **Lime is a fill, never text on paper.** No gradient, blur, shadow, material or emoji, and nothing `ImageRenderer` cannot draw. Type is the system face and its CJK fallback; labels and digits use the monospaced design. The Pulse mark is drawn from `AppIcon/pulse-mark.svg`'s path.
@@ -75,6 +89,8 @@ PULSE_RECAP_PREVIEW=/tmp/recap swift test --filter RecapRenderTests
 ```
 
 writes every card of the sample month and year in all five languages to `/tmp/recap/<language>/<deck>-<n>-<card>.png`, one `sheet.png` contact sheet per language, and `/tmp/recap/edge/` for recaps with a field missing (no price, unpriced, bare, in progress, a year in progress, no hours, no cache, a floor, mostly unpriced). The samples are `RecapSamples` (`#if DEBUG`), which the `#Preview` blocks in `RecapRenderer.swift` share. The test pins nothing about pixels: a card either fits its language or it does not, and the only judge is reading it.
+
+`RecapInsightsTests` pins everything in "The four redesigned cards" (weekday and week totals and their nil cases, the chain at the middle, the edge and in a short or long run, the first hour and the quarters, money per million over priced tokens, the dearest day and the daily and monthly bars with one unpriced day, the strips); `RecapVendorMarkTests` the model-to-mark table; the render also draws `edge/one-agent`, `two-agents`, `three-agents` (the lineup's other shapes) and `six-weeks` (August 2026, six rows of days and six weeks).
 
 `RecapTests` pins the streaks of a past and a running month, `unpricedTokens`, and a Buddhist-calendar build whose year months follow the calendar; `RecapWindowTests` the price grammar, `RecapPeriods.earliest`, the read-generation race and `takesArrows`; `RecapDeckTests` the payback rules (unpriced share, proration), the cost line, the savings floor and the streak wording; `RecapScoreDataTests` the stamp, which slots are quiet, future or busiest in a running month and year, the per-day session average and the tools' grouping. The edge renders are in English and, for `in-progress`, `floor` and `mostly-unpriced`, also in `edge-zh-Hans`, `edge-ja` and `edge-ko`.
 

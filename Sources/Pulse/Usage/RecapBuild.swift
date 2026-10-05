@@ -71,7 +71,7 @@ extension Recap {
     /// (`SpendSummary.of(_:from:until:)`) — totals, models, agents, projects,
     /// sessions, hours — so a recap and the Token spend pane cannot count one
     /// span two ways. What is worked out here is what the summary does not
-    /// carry: the previous period, per-agent active days, per-model money, the
+    /// carry: the previous period, per-agent active days and the dates of them, per-model money, the
     /// late-night figures, the cache savings and the persona.
     ///
     /// **Calendar-bounded, to today.** A period still running ends at the end of
@@ -246,10 +246,11 @@ extension Recap {
 
         let agents = summary.agents.map { row -> AgentShare in
             let only = ledgers.filter { $0.key == row.agent }
-            let active = SpendSummary.of(only, from: start, until: end, now: now, calendar: calendar).activeDays
+            let own = SpendSummary.of(only, from: start, until: end, now: now, calendar: calendar)
             return AgentShare(
-                agent: row.agent, tokens: row.tokens, share: share(row.tokens), activeDays: active,
-                cost: Self.cost(row.cost, tokens: row.tokens, unpriced: row.unpricedTokens)
+                agent: row.agent, tokens: row.tokens, share: share(row.tokens), activeDays: own.activeDays,
+                cost: Self.cost(row.cost, tokens: row.tokens, unpriced: row.unpricedTokens),
+                activeDates: Set(own.days.filter { $0.tokens > 0 }.map(\.date))
             )
         }
 

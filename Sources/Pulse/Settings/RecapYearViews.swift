@@ -53,23 +53,12 @@ struct RecapYearCalendarView: View {
 
     var body: some View {
         RecapStoryPage(page: deck.page(of: .yearCalendar)) {
-            RecapTotalHero(deck: deck, numberSize: 210, unitSize: 100).padding(.top, 48)
-            Rectangle().fill(RecapColor.ink).frame(height: 2).padding(.top, 48)
-            HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: RecapFormat.yearName(recap.period.year))
-                    .font(.recap(26, .bold))
-                Spacer()
-                Text(localized: "Darker days used more")
-                    .font(.recap(18))
-                    .foregroundStyle(RecapColor.tertiary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-            }
-            .padding(.top, 22)
-            months.padding(.top, 26)
+            RecapCalendarHero(deck: deck, numberSize: 190, unitSize: 92).padding(.top, 40)
             Spacer(minLength: 20)
-            Rectangle().fill(RecapColor.ink).frame(height: 2)
-            RecapDayCaption(deck: deck).padding(.top, 28)
+            RecapSectionHead(title: RecapFormat.yearName(recap.period.year), note: .localized("Darker days used more"))
+            months.padding(.top, 20)
+            Spacer(minLength: 20)
+            RecapCalendarTiles(deck: deck)
         }
     }
 
@@ -79,7 +68,7 @@ struct RecapYearCalendarView: View {
         let calendar = recap.calendar
         let starts = recap.monthStarts
         let columns = Array(repeating: GridItem(.flexible(), spacing: 30, alignment: .top), count: 3)
-        return LazyVGrid(columns: columns, spacing: 24) {
+        return LazyVGrid(columns: columns, spacing: 18) {
             ForEach(starts.indices, id: \.self) { index in
                 monthBlock(starts[index], calendar: calendar)
             }
@@ -89,7 +78,7 @@ struct RecapYearCalendarView: View {
     private func monthBlock(_ first: Date, calendar: Calendar) -> some View {
         let month = calendar.component(.month, from: first)
         let grid = RecapMonthGrid(monthStart: first, days: recap.days, calendar: calendar)
-        let cell: CGFloat = 34, gap: CGFloat = 6
+        let cell: CGFloat = 33, gap: CGFloat = 5
         return VStack(alignment: .leading, spacing: 10) {
             Text(verbatim: RecapFormat.monthName(month))
                 .font(.recap(22, .semibold))
@@ -132,7 +121,7 @@ struct RecapMonthsView: View {
             Text(localized: "Your busiest month")
                 .font(.recap(34))
                 .foregroundStyle(Color(recap: 0x55554F))
-                .padding(.top, 64)
+                .padding(.top, 52)
             if let busiest {
                 Text(verbatim: RecapFormat.monthName(busiest.month))
                     .font(.recap(230, .bold))
@@ -140,10 +129,10 @@ struct RecapMonthsView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.35)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 14 - 230 * RecapFigureText.ascenderRoom)
+                    .padding(.top, 30 - 230 * RecapFigureText.ascenderRoom)
                     .padding(.bottom, -230 * RecapFigureText.descenderRoom)
             }
-            Rectangle().fill(RecapColor.ink).frame(height: 2).padding(.top, 44)
+            Rectangle().fill(RecapColor.ink).frame(height: 2).padding(.top, 34)
             VStack(spacing: 0) {
                 ForEach(months) { month in
                     row(month, maximum: maximum, isBusiest: month.month == busiest?.month)
@@ -151,8 +140,7 @@ struct RecapMonthsView: View {
             }
             .padding(.top, 14)
             Spacer(minLength: 16)
-            Rectangle().fill(RecapColor.ink).frame(height: 2)
-            caption(busiest).padding(.top, 28)
+            RecapWorkSplitView(deck: deck)
         }
     }
 
@@ -179,42 +167,6 @@ struct RecapMonthsView: View {
                 .frame(maxHeight: .infinity)
             }
         }
-        .frame(height: 84)
-    }
-
-    private func caption(_ busiest: Recap.Month?) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if let busiest, busiest.tokens > 0 {
-                RecapRichText(
-                    text: .localized("\(RecapEmphasis.mark(RecapFormat.monthName(busiest.month))) was your busiest month, at \(RecapEmphasis.mark(RecapFormat.tokens(busiest.tokens).text))."),
-                    size: 30, lineSpacing: 6
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Shared caption
-
-/// The two sentences under a calendar: how many days you used AI, and the
-/// busiest of them.
-struct RecapDayCaption: View {
-    let deck: RecapDeck
-
-    private var recap: Recap { deck.recap }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            RecapRichText(
-                text: .localized("Over \("\(recap.elapsedDays)") days, you used AI on \(RecapEmphasis.mark("\(recap.activeDays)")) of them."),
-                size: 30, lineSpacing: 6
-            )
-            if let busiest = recap.busiestDay, busiest.tokens > 0 {
-                RecapRichText(
-                    text: .localized("Busiest was \(RecapEmphasis.mark(RecapFormat.day(busiest.date))): \(RecapEmphasis.mark(RecapFormat.tokens(busiest.tokens).text)) in a single day."),
-                    size: 30, highlights: false, lineSpacing: 6
-                )
-            }
-        }
+        .frame(height: 96)
     }
 }

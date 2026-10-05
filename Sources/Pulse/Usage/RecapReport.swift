@@ -131,6 +131,8 @@ enum RecapReport {
             let tokens: Int
             let share: Double
             let activeDays: Int
+            /// The days of those, as dates, oldest first.
+            let days: [String]
             let cost: Double?
         }
 
@@ -215,7 +217,8 @@ enum RecapReport {
             agents = recap.agents.map {
                 Agent(
                     agent: $0.agent.rawValue, name: $0.agent.displayName, tokens: $0.tokens,
-                    share: $0.share, activeDays: $0.activeDays, cost: $0.cost
+                    share: $0.share, activeDays: $0.activeDays,
+                    days: $0.activeDates.sorted().map { RecapReport.dateString($0, calendar: calendar) }, cost: $0.cost
                 )
             }
             projects = recap.projects.map {

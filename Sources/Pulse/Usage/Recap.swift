@@ -71,6 +71,9 @@ struct Recap: Sendable, Equatable {
         /// Calendar days in the period with any of this agent's work.
         let activeDays: Int
         let cost: Double?
+        /// Which days those were: local midnights, `activeDays` of them, all
+        /// inside the period. The opener's per-agent strip is drawn from them.
+        var activeDates: Set<Date> = []
         var id: SpendAgent { agent }
     }
 

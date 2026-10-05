@@ -64,6 +64,12 @@ struct RecapRenderTests {
                 ("no-cache", RecapDeck(recap: RecapSamples.month(hasCache: false), monthlyPrice: 200, hidesProjects: false)),
                 ("floor", RecapDeck(recap: RecapSamples.month(unpricedShare: 0.004), monthlyPrice: 200, hidesProjects: false)),
                 ("mostly-unpriced", RecapDeck(recap: RecapSamples.month(unpricedShare: 0.2), monthlyPrice: 200, hidesProjects: false)),
+                // One, two and three agents fill the opener's lineup differently,
+                // and August 2026 takes six weeks of rows.
+                ("one-agent", RecapDeck(recap: RecapSamples.month(agentCount: 1), monthlyPrice: 200, hidesProjects: false)),
+                ("two-agents", RecapDeck(recap: RecapSamples.month(agentCount: 2), monthlyPrice: 200, hidesProjects: false)),
+                ("three-agents", RecapDeck(recap: RecapSamples.month(agentCount: 3), monthlyPrice: 200, hidesProjects: false)),
+                ("six-weeks", RecapDeck(recap: RecapSamples.month(monthNumber: 8), monthlyPrice: 200, hidesProjects: false)),
             ]
             for (name, deck) in cases {
                 for card in deck.cards {

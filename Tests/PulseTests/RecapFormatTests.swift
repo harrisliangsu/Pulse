@@ -133,4 +133,39 @@ struct RecapFormatTests {
         #expect(RecapRulerScale(for: 9820).step == 2500)
         #expect(RecapRulerScale(for: 3.4).maximum >= 3.4)
     }
+
+    private static func september(_ day: Int) -> Date {
+        Recap.calendar.date(from: DateComponents(year: 2026, month: 9, day: day))!
+    }
+
+    @Test("Weekday names start on Monday and come from the locale, not from this code")
+    func weekdayNames() {
+        #expect(RecapFormat.weekdayNames(locale: Locale(identifier: "en_US")) == ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
+        #expect(RecapFormat.weekdayNames(locale: Locale(identifier: "zh_Hans")) == ["周一", "周二", "周三", "周四", "周五", "周六", "周日"])
+        #expect(RecapFormat.weekdayNames(locale: Locale(identifier: "ja_JP")).first == "月")
+        #expect(RecapFormat.weekdayNames(locale: Locale(identifier: "ko_KR")).last == "일")
+    }
+
+    @Test("The weekday of a date, in the locale")
+    func weekdayOfDate() {
+        // September 25, 2026 is a Friday.
+        #expect(RecapFormat.weekdayName(of: Self.september(25), locale: Locale(identifier: "en_US")) == "Fri")
+        #expect(RecapFormat.weekdayName(of: Self.september(25), locale: Locale(identifier: "zh_Hans")) == "周五")
+        #expect(RecapFormat.dayAndWeekday(Self.september(25), locale: Locale(identifier: "en_US")) == "Sep 25 · Fri")
+    }
+
+    @Test("A range is two short dates, and a single day stands alone")
+    func dayRange() {
+        let en = Locale(identifier: "en_US")
+        #expect(RecapFormat.dayRange(Self.september(21), Self.september(27), locale: en) == "9/21–9/27")
+        #expect(RecapFormat.dayRange(Self.september(30), Self.september(30), locale: en) == "9/30")
+        #expect(RecapFormat.shortDay(Self.september(5), locale: Locale(identifier: "zh_Hans")) == "9/5")
+    }
+
+    @Test("A share split for a figure keeps the sign apart, and a sliver reads under one")
+    func percentFigure() {
+        #expect(RecapFormat.percentFigure(0.41) == .init(number: "41", unit: "%"))
+        #expect(RecapFormat.percentFigure(0.002) == .init(number: "<1", unit: "%"))
+        #expect(RecapFormat.percentFigure(0) == .init(number: "0", unit: "%"))
+    }
 }

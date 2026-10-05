@@ -179,7 +179,7 @@ What `build` works out itself, and the rules it applies:
 - **Streaks are the period's own**, counted over `days` (`Recap.streaks`) rather than the whole-history streaks `SpendSummary` carries: the longest run inside the period, and the run ending on its last day (today, or yesterday while today is quiet, for a running one).
 - **`unpricedTokens`** is `SpendSummary.unpricedTokens`: above zero `cost` is a floor, and the cards say so ([recap.md](recap.md#nil-means-left-out)).
 - **Calendar**: `Recap.calendar` (Gregorian, Monday-first), not `Calendar.current`; the recap keeps the one it was built with ([recap.md](recap.md#one-calendar)).
-- Models, projects and agents are heaviest first, with shares **of the recap's tokens**; an agent's `activeDays` is `SpendSummary.activeDays` over that agent alone.
+- Models, projects and agents are heaviest first, with shares **of the recap's tokens**; an agent's `activeDays` is `SpendSummary.activeDays` over that agent alone, and its `activeDates` (`days` in the `--recap` JSON, oldest first) are those days — the opener's per-agent strips are drawn from them.
 
 ### The recap window
 

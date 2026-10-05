@@ -538,6 +538,13 @@ struct RecapTests {
         // Active days are the agent's own, not the span's: Codex on two days
         // (one shared with Claude Code), Claude Code on three.
         #expect(recap.agents.map(\.activeDays) == [2, 3])
+        // And which days: local midnights, one set per agent, each of the size
+        // its count says, the shared day in both.
+        #expect(recap.agents.map(\.activeDates) == [
+            [Self.at(2026, 10, 3, 0), Self.at(2026, 10, 4, 0)],
+            [Self.at(2026, 10, 1, 0), Self.at(2026, 10, 2, 0), Self.at(2026, 10, 3, 0)],
+        ])
+        #expect(recap.agents.allSatisfy { $0.activeDates.count == $0.activeDays })
         #expect(recap.activeDays == 4)
         #expect(try abs(#require(recap.agents.first).share - 2.0 / 3.0) < 0.0001)
 
@@ -738,5 +745,9 @@ struct RecapTests {
         #expect(object["persona"] as? String == "nightOwl")
         #expect(object["cost"] as? Double == 3)
         #expect((object["hours"] as? [Int])?.count == 24)
+        // Each agent carries the days it worked, as dates.
+        let agents = try #require(object["agents"] as? [[String: Any]])
+        #expect(agents.first?["days"] as? [String] == ["2026-10-02"])
+        #expect(agents.first?["activeDays"] as? Int == 1)
     }
 }

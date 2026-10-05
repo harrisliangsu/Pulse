@@ -82,6 +82,12 @@ enum RecapFormat {
         return "\(rounded)%"
     }
 
+    /// The same share split for a figure with its sign set small: ("41", "%"),
+    /// ("<1", "%").
+    static func percentFigure(_ share: Double) -> Figure {
+        Figure(number: String(percent(share).dropLast()), unit: "%")
+    }
+
     /// "6.7" under ten, "42" from ten up.
     static func multiple(_ value: Double) -> String {
         String(format: value < 10 ? "%.1f" : "%.0f", value)
@@ -172,6 +178,19 @@ enum RecapFormat {
         return [1, 2, 3, 4, 5, 6, 0].map { symbols[$0] }
     }
 
+    /// The weekdays' short names, Monday first: "Mon", "周一", "月", "월".
+    static func weekdayNames(locale: Locale = LocalizationSource.locale) -> [String] {
+        let symbols = calendar(locale: locale).shortStandaloneWeekdaySymbols
+        return [1, 2, 3, 4, 5, 6, 0].map { symbols[$0] }
+    }
+
+    /// The short name of the weekday a date falls on.
+    static func weekdayName(of date: Date, locale: Locale = LocalizationSource.locale) -> String {
+        let calendar = calendar(locale: locale)
+        let symbols = calendar.shortStandaloneWeekdaySymbols
+        return symbols[calendar.component(.weekday, from: date) - 1]
+    }
+
     /// "2026", "2026年", "2026년": how the language says which year.
     static func yearName(_ year: Int, locale: Locale = LocalizationSource.locale) -> String {
         var components = DateComponents()
@@ -190,6 +209,22 @@ enum RecapFormat {
     /// "Sep 17, Thu", "9月17日周四".
     static func dayWithWeekday(_ date: Date, locale: Locale = LocalizationSource.locale) -> String {
         formatted(date, template: "MMMdEEE", locale: locale)
+    }
+
+    /// "Sep 17 · Thu", "9月17日 · 周四".
+    static func dayAndWeekday(_ date: Date, locale: Locale = LocalizationSource.locale) -> String {
+        day(date, locale: locale) + " · " + weekdayName(of: date, locale: locale)
+    }
+
+    /// "9/21": month and day with no name, for a range or a chain.
+    static func shortDay(_ date: Date, locale: Locale = LocalizationSource.locale) -> String {
+        formatted(date, template: "Md", locale: locale)
+    }
+
+    /// "9/21–9/27", and a single day alone.
+    static func dayRange(_ first: Date, _ last: Date, locale: Locale = LocalizationSource.locale) -> String {
+        let start = shortDay(first, locale: locale)
+        return calendar(locale: locale).isDate(first, inSameDayAs: last) ? start : start + "–" + shortDay(last, locale: locale)
     }
 
     /// "Sep 17", "9月17日".
