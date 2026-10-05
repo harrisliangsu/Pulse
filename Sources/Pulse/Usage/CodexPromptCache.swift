@@ -136,9 +136,8 @@ enum CodexPromptCache {
                   let payload = root["payload"] as? [String: Any]
             else { continue }
             if cwd == nil, let found = payload["cwd"] as? String, !found.isEmpty { cwd = found }
-            if title == nil, payload["type"] as? String == "message", payload["role"] as? String == "user",
-               let words = UsageLedgerReader.text(in: payload["content"]) {
-                title = UsageLedgerReader.title(from: words)
+            if title == nil, payload["type"] as? String == "message", payload["role"] as? String == "user" {
+                title = UsageLedgerReader.codexTitle(in: payload["content"])
             }
         }
         return (title, cwd)

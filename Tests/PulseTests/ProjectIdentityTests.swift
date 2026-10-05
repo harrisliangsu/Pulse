@@ -50,7 +50,7 @@ struct ProjectIdentityTests {
             saved["version"] = 6
             try JSONSerialization.data(withJSONObject: saved).write(to: file)
             #expect(AgentCache.load(agent, at: file) == nil)
-            #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-7-\(provider.rawValue).json").path))
+            #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-8-\(provider.rawValue).json").path))
             if pass == 0 {
                 // Same size and mtime: only the per-file cache still knows the
                 // original directory. This makes its reuse observable.

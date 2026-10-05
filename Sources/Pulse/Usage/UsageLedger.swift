@@ -739,6 +739,9 @@ struct UsageLedger: Sendable, Equatable {
 actor UsageLedgerReader {
     static let shared = UsageLedgerReader()
 
+    /// The number in `ledger-<n>-<provider>.json`; see `FileCache.file`.
+    nonisolated static let cacheVersion = 8
+
     /// Tokens by quarter-hour (`yyyy-MM-dd HH:mm`, local) and then by model.
     private typealias Buckets = [String: [String: TokenTally]]
 
@@ -1020,72 +1023,118 @@ actor UsageLedgerReader {
         return (buckets, timings, counted)
     }
 
-    /// One row per transcript, priced the same way the days are.
+    /// One row per conversation, priced the same way the days are.
     ///
     /// The cache is keyed by path and holds each file's own buckets, so this
     /// is a second rollup of numbers already in hand rather than another pass
     /// over the transcripts.
+    ///
+    /// **A conversation can be several files.** Claude Code writes each
+    /// subagent's transcript beside its parent's (`sessionFile(of:)`); those
+    /// files' tokens are real and are in the days, models and projects like
+    /// any other, but as rows they were a "Pulse" session apiece. They are
+    /// folded into the parent's row here — summed, the span widened — after
+    /// `scan` has counted every reply once, so nothing is counted twice.
     private func sessions(
         _ files: [String: FileCache.Entry],
         provider: Provider,
         prices: [String: ModelPrice]
     ) -> [UsageLedger.Session] {
-        var sessions: [UsageLedger.Session] = []
-        var lookup = ModelPriceLookup(prices)
-
-        for (path, entry) in files {
-            guard !Task.isCancelled else { return [] }
+        /// One conversation's files, added up.
+        struct Rollup {
             var tokens = 0
             var cost = 0.0
-            var unpricedTokens = 0
+            var unpriced = 0
             var start: Date?
             var end: Date?
-            var slots: [UsageLedger.Slot] = []
+            /// By quarter-hour key (`slotKey(for:)`).
+            var slots: [String: (tokens: Int, cost: Double, unpriced: Int)] = [:]
+            /// Where the conversation ran and what it was called — the
+            /// parent's own when it has them, else the first subagent's (by
+            /// path, so the choice is stable).
+            var title: String?
+            var cwd: String?
+            var parentSeen = false
+        }
+
+        var rollups: [String: Rollup] = [:]
+        var lookup = ModelPriceLookup(prices)
+
+        for (path, entry) in files.sorted(by: { $0.key < $1.key }) {
+            guard !Task.isCancelled else { return [] }
+            let group = provider == .claudeCode ? Self.sessionFile(of: path) : path
+            var rollup = rollups[group] ?? Rollup()
 
             for (key, models) in entry.days {
                 guard let at = slotFormatter.date(from: key) else { continue }
-                start = min(start ?? at, at)
-                end = max(end ?? at, at)
 
-                var slotTokens = 0
-                var slotCost = 0.0
-                var slotUnpriced = 0
+                var slot = rollup.slots[key] ?? (0, 0, 0)
+                let before = slot.tokens
                 for (model, tally) in models {
-                    tokens += tally.total
-                    slotTokens += tally.total
+                    rollup.tokens += tally.total
+                    slot.tokens += tally.total
                     if let price = lookup.price(for: model) {
                         let money = tally.cost(at: price)
-                        cost += money
-                        slotCost += money
+                        rollup.cost += money
+                        slot.cost += money
                     } else {
-                        unpricedTokens += tally.total
-                        slotUnpriced += tally.total
+                        rollup.unpriced += tally.total
+                        slot.unpriced += tally.total
                     }
                 }
-                slots.append(.init(start: at, tokens: slotTokens, cost: slotCost, unpricedTokens: slotUnpriced))
+                rollup.slots[key] = slot
+                // A quarter-hour with no tokens in it is not when the
+                // conversation ran.
+                guard slot.tokens > before else { continue }
+                rollup.start = min(rollup.start ?? at, at)
+                rollup.end = max(rollup.end ?? at, at)
             }
+            // A parent whose every reply was counted in another file still
+            // names the conversation, so this is not skipped for having no
+            // work of its own left.
+            if group == path {
+                rollup.parentSeen = true
+                rollup.title = entry.title ?? rollup.title
+                rollup.cwd = entry.cwd ?? rollup.cwd
+            } else if !rollup.parentSeen {
+                rollup.title = rollup.title ?? entry.title
+                rollup.cwd = rollup.cwd ?? entry.cwd
+            }
+            rollups[group] = rollup
+        }
 
-            guard tokens > 0, let start, let end else { continue }
-
+        var sessions: [UsageLedger.Session] = []
+        for (path, rollup) in rollups {
+            guard rollup.tokens > 0, let start = rollup.start, let end = rollup.end else { continue }
             let url = URL(fileURLWithPath: path)
             sessions.append(
                 UsageLedger.Session(
                     id: path,
                     name: url.deletingPathExtension().lastPathComponent,
-                    title: entry.title,
-                    project: UsageProject(entry.cwd)
+                    title: rollup.title,
+                    project: UsageProject(rollup.cwd)
                         ?? Self.project(of: url, provider: provider),
                     start: start,
                     end: end,
-                    tokens: tokens,
-                    cost: cost,
-                    unpricedTokens: unpricedTokens,
-                    slots: slots.sorted { $0.start < $1.start }
+                    tokens: rollup.tokens,
+                    cost: rollup.cost,
+                    unpricedTokens: rollup.unpriced,
+                    slots: Self.sessionSlots(rollup.slots)
                 )
             )
         }
 
         return sessions.sorted { $0.end > $1.end }
+    }
+
+    /// The transcript a Claude Code file belongs to: its own path, or for a
+    /// subagent's — `<project>/<session>/subagents/agent-<id>.jsonl` — the
+    /// parent's, `<project>/<session>.jsonl`, whether or not that file is
+    /// still there. A string rule, like the rest of the grouping.
+    static func sessionFile(of path: String) -> String {
+        guard let range = path.range(of: "/subagents/"), range.lowerBound > path.startIndex, path.hasSuffix(".jsonl")
+        else { return path }
+        return String(path[..<range.lowerBound]) + ".jsonl"
     }
 
     /// The fallback for a transcript that states no `cwd`.
@@ -1237,6 +1286,36 @@ actor UsageLedgerReader {
         // A pasted file or a command envelope is not a title.
         guard !cleaned.hasPrefix("<"), !cleaned.hasPrefix("Caveat:") else { return nil }
         return cleaned.count <= 70 ? cleaned : String(cleaned.prefix(69)) + "…"
+    }
+
+    /// What a Codex user-role message says **in the user's own words**, as a
+    /// title, or nil when the message is context Codex put there itself.
+    ///
+    /// **Codex writes more user-role messages than the user does.** A rollout
+    /// opens with `# AGENTS.md instructions for …` and an
+    /// `<environment_context>` (or `<recommended_plugins>`), and the app adds
+    /// `<turn_aborted>`, `<subagent_notification>` and `<image>` envelopes
+    /// later; the IDE extension puts `# Context from my IDE setup:` before the
+    /// request, which follows `## My request for Codex:`. The first of these
+    /// used to be the title, so sessions were named for their instructions. A
+    /// session Codex runs to review another's planned action opens with a
+    /// message that says so, and that is not the user's either. Envelopes
+    /// start with `<`, which `title(from:)` already refuses.
+    ///
+    /// Only the message's first part is read, as for Claude Code: the rest of
+    /// an injected message can be a transcript.
+    static func codexTitle(in content: Any?) -> String? {
+        guard let text = text(in: content) else { return nil }
+        var opening = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if opening.hasPrefix("# AGENTS.md instructions")
+            || opening.hasPrefix("The following is the Codex agent history") {
+            return nil
+        }
+        if opening.hasPrefix("# Context from my IDE setup") || opening.hasPrefix("# Files mentioned by the user") {
+            guard let marker = opening.range(of: "## My request for Codex:") else { return nil }
+            opening = String(opening[marker.upperBound...])
+        }
+        return title(from: opening)
     }
 
     /// The first run of text in a message body, which is a string in the
@@ -1484,8 +1563,7 @@ actor UsageLedgerReader {
                         if scanned.title == nil,
                            payload["type"] as? String == "message",
                            payload["role"] as? String == "user",
-                           let text = Self.text(in: payload["content"]),
-                           let title = Self.title(from: text) {
+                           let title = Self.codexTitle(in: payload["content"]) {
                             scanned.title = title
                         }
                     }
@@ -1789,6 +1867,15 @@ private struct FileCache: Codable {
         // readings are dropped (`parseCodex`); Claude Code's cache writes now
         // keep their one-hour share (`TokenTally.cacheWrite1h`). Both need
         // every file read once more.
-        (directory ?? PulseStorage.directory).appending(path: "ledger-7-\(provider.rawValue).json")
+        //
+        // **`ledger-8`: Codex titles were its injected context.** An entry's
+        // title was the first user-role message, which for Codex is the
+        // AGENTS.md instructions or the environment (`codexTitle(in:)`), and
+        // a rollout that has not changed is never read again.
+        //
+        // **The number lives in `UsageLedgerReader.cacheVersion`**, where
+        // `PulseStorage.isSuperseded` reads it: every `ledger-<n>-*` below it
+        // is cleaned away without a name being added to a list.
+        (directory ?? PulseStorage.directory).appending(path: "ledger-\(UsageLedgerReader.cacheVersion)-\(provider.rawValue).json")
     }
 }
