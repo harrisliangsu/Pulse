@@ -121,8 +121,14 @@ enum RecapFormat {
         return figure.unit.isEmpty ? figure.number : figure.number + " " + figure.unit
     }
 
-    /// Minutes after midnight as a time of day in the locale's own clock.
+    /// Minutes after midnight as a time of day, on the same clock as `hour`:
+    /// "02:14" beside "05:00" in a 24-hour language, the locale's own "2:14 AM"
+    /// in English.
     static func clockTime(minutes: Int, locale: Locale = LocalizationSource.locale) -> String {
+        guard usesTwelveHourClock(locale) else {
+            let wrapped = ((minutes % 1440) + 1440) % 1440
+            return String(format: "%02d:%02d", wrapped / 60, wrapped % 60)
+        }
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "GMT") ?? .gmt
         let midnight = Date(timeIntervalSince1970: 0)

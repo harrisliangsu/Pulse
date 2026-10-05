@@ -76,7 +76,10 @@ struct RecapFormatTests {
         for identifier in ["zh_Hans", "zh_Hant", "ja_JP", "ko_KR"] {
             #expect(RecapFormat.hour(23, locale: Locale(identifier: identifier)) == .init(number: "23:00", unit: ""))
             #expect(RecapFormat.hourLabel(5, locale: Locale(identifier: identifier)) == "05:00")
+            // The latest finish sits under "05:00" on the same card: padded too.
+            #expect(RecapFormat.clockTime(minutes: 134, locale: Locale(identifier: identifier)) == "02:14")
         }
+        #expect(RecapFormat.clockTime(minutes: 134, locale: Locale(identifier: "en_US")).hasPrefix("2:14"))
     }
 
     @Test("Late is 21:00 to 04:59, the band the recap measures")
