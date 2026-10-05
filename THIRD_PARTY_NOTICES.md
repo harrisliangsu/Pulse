@@ -3,7 +3,8 @@
 ## Lobe Icons
 
 Pulse bundles provider marks taken from [Lobe Icons](https://github.com/lobehub/lobe-icons)
-(each matches the file of the same name in `@lobehub/icons-static-svg` 1.95.1):
+(each draws the same shape as the file of the same name in `@lobehub/icons-static-svg`
+1.95.1; path data is re-spaced so macOS's SVG renderer reads its arcs):
 
 - `Sources/Pulse/Resources/alibabacloud.svg`
 - `Sources/Pulse/Resources/amp.svg`
