@@ -51,8 +51,8 @@
 
 ### 한눈에 보는 상태 링
 - **사용량에 반응하는 색상**: 링은 사용률에 따라 부드럽게 색이 바뀌며(초록 → 노랑 → 빨강 → 다 쓰면 짙은 빨강), 계정마다 고유한 강조 색을 지정할 수도 있습니다.
-- **활성 턴 표시**: 링 가장자리를 도는 작은 점이 에이전트가 지금 실시간으로 응답을 생성 중인지 보여 줍니다(Claude Code와 Codex).
-- **경과 창 호**: 선택 사항인 바깥쪽 보조 호가 현재 한도 창에서 얼마나 시간이 지났는지 보여 줍니다.
+- **활성 턴 표시**: 링 가장자리를 도는 작은 점이 에이전트가 지금 실시간으로 응답을 생성 중인지 보여 줍니다(Claude Code, Codex, Kiro, Zhipu, z.ai).
+- **경과 창 호**: 선택 사항인 바깥쪽 보조 호가 현재 한도 창에서 지난 시간이나 남은 시간을 보여 줍니다.
 - **카운트다운 모드**: 사용한 비율(`75% used`)과 남은 양(`25% left`)을 전환할 수 있습니다.
 
 ### 호버 상세와 스마트 예측
@@ -67,7 +67,7 @@
 
 ### 네이티브하고 매끄럽고 방해되지 않게
 - **자유로운 가장자리 도킹**: 화면 왼쪽, 오른쪽, 위쪽(메뉴 막대 위), 아래쪽(Dock 옆)에 도킹하거나 세로 또는 가로로 어디든 자유롭게 띄울 수 있습니다.
-- **다중 모니터 지원**: Pulse를 아무 보조 디스플레이로나 끌어다 놓을 수 있고, 화면 위치를 기억하며 연결이 끊기면 자연스럽게 돌아옵니다. **활성 디스플레이 따라가기**를 켜면 하나뿐인 레일이 포인터가 있는 화면으로 스스로 옮겨 갑니다.
+- **다중 모니터 지원**: Pulse를 아무 보조 디스플레이로나 끌어다 놓을 수 있고, 화면 위치를 기억하며 연결이 끊기면 자연스럽게 돌아옵니다. **사용 중인 디스플레이 따라가기**를 켜면 하나뿐인 레일이 포인터가 있는 화면으로 스스로 옮겨 갑니다.
 - **자동 접기**: 유휴 상태에서는 아주 가느다란 선으로 접혀 방해하지 않으며, 한도가 심각하게 부족할 때만 붉게 빛납니다.
 - **선택적 알림**: 알리기를 원하는 것만 골라서 켭니다. 한도가 75/80/90/95%를 넘을 때, 제공업체가 다 썼다고 보고할 때, 경고했던 창이 돌아올 때, 검사가 여러 번 연달아 실패해(패널이 조용히 오래된 숫자를 보여 줄 때), 선불 잔액이 설정한 금액 아래로 떨어질 때, 그리고 Codex, Claude Code, DeepSeek의 공식 상태 페이지가 도구가 쓰는 서비스의 장애를 알릴 때(켜 둔 서비스만) 알려 줍니다. 각각 한 번만 말합니다: 이 기능을 켤 때 이미 선을 넘은 한도는 곧바로 한 번 알리고, 그 뒤로는 초기화될 때, 또는 더 나빠질 때 다시 알립니다.
 - **초기화 후 사용량 창 시작(선택)**: Claude Code와 Codex의 사용량 창은 초기화 뒤 첫 메시지를 보낼 때부터 시간이 흐릅니다. 이 기능을 켜면 Pulse가 초기화 직후, 정해 둔 시간대 안에서 제공업체의 명령줄 도구로 "hi"를 한 번 보내, 돌아왔을 때가 아니라 그때부터 창이 시작되게 합니다. 기본값은 꺼짐입니다. Anthropic이나 OpenAI가 제공하는 기능이 아니며, 사용량 제한을 우회하는 것으로 간주될 수 있다는 점을 확인해야 켜집니다.
@@ -80,7 +80,7 @@
 
 ### 다중 계정과 로컬 원장
 - **다중 계정 지원**: 같은 제공업체의 여러 구독(Claude Code, Codex, Grok, Grok Bot)을 나란히 모니터링하고 라벨을 붙일 수 있습니다.
-- **토큰 지출(설정에서만)**: 기본값은 꺼짐입니다. 페이지 상단에서 켜면 로컬 기록을 읽기 시작하며, 끄면 스캔을 중단합니다. **54개 클라이언트 소스**의 로컬 로그, 데이터베이스, 내보내기 파일을 지원합니다. Gemini CLI, Cline, Roo Code, OpenClaw, GitHub Copilot 등이 포함됩니다. Cursor, Trae 및 기타 내보내기 소스는 사전 내보내기나 캡처가 필요합니다. 이는 레일의 77개 할당량 제공업체와는 다르며, 지원 범위와 실제 클라이언트 검증 여부는 소스마다 다릅니다. [소스와 지원 범위](Docs/token-spend-sources.md).
+- **토큰 사용량(설정에서만)**: 기본값은 꺼짐입니다. 페이지 상단에서 켜면 로컬 기록을 읽기 시작하며, 끄면 스캔을 중단합니다. **54개 클라이언트 소스**의 로컬 로그, 데이터베이스, 내보내기 파일을 지원합니다. Gemini CLI, Cline, Roo Code, OpenClaw, GitHub Copilot 등이 포함됩니다. Cursor, Trae 및 기타 내보내기 소스는 사전 내보내기나 캡처가 필요합니다. 이는 레일의 77개 할당량 제공업체와는 다르며, 지원 범위와 실제 클라이언트 검증 여부는 소스마다 다릅니다. [소스와 지원 범위](Docs/token-spend-sources.md).
 - **명확한 사용량 추정**: 기본적으로 최근 7일을 보여 주며 선택한 기간을 기억합니다. 비용은 공개된 API 가격으로 계산한 추정치이며 구독 청구액이 아닙니다. 가격을 알 수 없거나 집계가 불완전한 경우, 세부 시간 정보가 없는 경우에는 이를 표시합니다. 토큰 수 정보가 없는 소스는 그대로 표시합니다.
 - **모델 상세와 차트**: 모델을 열면 입력/출력/캐시 수치와 추정 비용, 기록이 뒷받침하는 일별·시간별 차트, 에이전트별 기여, 정렬과 페이지 이동이 가능한 상세 표를 볼 수 있습니다. 차트를 가리키면 해당 날짜나 시간과 토큰 수를 읽을 수 있습니다. 제공되지 않는 일별·시간별 상세는 0이 아니라 사용할 수 없음으로 표시됩니다.
 - **일흔일곱 개 제공업체**: Claude Code, Codex, Kiro, Antigravity, Cursor, GitHub Copilot, Grok, Grok Bot, OpenCode Go, Kimi Code, Ollama Cloud, z.ai, Zhipu, MiniMax(국제 및 중국 본토), Volcengine, Command Code, DeepSeek, Devin, Xiaomi Coding Plan, sub2api, New API, V2EX, Qoder, StepFun. 그 밖에 Abacus AI, Aixy, Alibaba Coding Plan, Alibaba Token Plan, Amp, Atlas Cloud, Augment Code, Bifrost, Chutes, ClawRouter, ClinePass, Codebuff, DeepInfra, DevPass, ElevenLabs, Factory, Gemini, GitKraken AI, Hugging Face, Hyper, IBM Bob, JetBrains AI, Kilo Code, LiteLLM, LLM API Key Proxy, LongCat, Manus, Mistral, Moonshot, Neuralwatt, Notion AI, Nous Portal, OpenAI API, Perplexity, Poe, Qwen Cloud, Raycast AI, Replicate, Sakana AI, Synthetic, T3 Chat, TypeSafe, v0, Venice, Vercel AI Gateway, Warp, Windsurf, xAI API, xKiro, Zed, ZenMux, ZoomMate.
@@ -89,7 +89,7 @@
 - **확장**: 직접 만든 작은 프로그램으로 계정 하나의 사용량(사내 할당량 API 등)을 Pulse 링에 표시할 수 있습니다. 포크를 따로 관리할 필요가 없습니다. 켜기 전에는 실행되지 않고, Pulse가 인증 정보를 넘기지도 않습니다. [만드는 방법](Docs/extensions.md)(영문).
 - **서비스 상태**: Codex, Claude Code, DeepSeek 설정에 각 공식 상태 페이지와 같은 모습으로 서비스 상태를 보여 줍니다 — 각 항목이 지금 정상인지, 지난 90일을 하루 한 막대로, 그리고 상태 페이지가 공개한 가동률. 설정을 열 때 읽어 오고, 열려 있는 동안 5분마다 업데이트합니다.
 - **연결 진단**: 실제 읽기 출처, 캐시 사용, 최근 검사와 대체 결과를 확인합니다. 상황에 맞는 작업으로 다시 연결, 다시 로그인, 자격 증명 수정을 할 수 있고, 계정 정보나 비밀 없는 진단 보고서를 복사할 수 있습니다.
-- **개인정보 우선**: Pulse는 여러분의 Mac에서, 여러분 자신의 로그인으로 동작합니다. 연결하는 곳은 네 가지뿐이며 여기 적은 것이 전부입니다 — 이미 사용 중인 제공업체, 서비스 상태와 그 알림을 위한 공개 상태 페이지(status.openai.com, status.claude.com, status.deepseek.com), 토큰 지출 패널의 공개 모델 가격을 가져오는 [models.dev](https://models.dev), 그리고 앱 업데이트를 확인하는 GitHub/Sparkle. 제공업체 요청, 상태 페이지, 로그인 토큰 교환, models.dev에는 설정 › 네트워크 및 새로 고침에서 선택한 프록시가 사용되며, 수동 프록시는 지원되는 도우미 프로세스에도 전달됩니다. Sparkle 업데이트 확인은 항상 macOS 시스템 프록시 설정을 따릅니다.
+- **개인정보 우선**: Pulse는 여러분의 Mac에서, 여러분 자신의 로그인으로 동작합니다. 연결하는 곳은 네 가지뿐이며 여기 적은 것이 전부입니다 — 이미 사용 중인 제공업체, 서비스 상태와 그 알림을 위한 공개 상태 페이지(status.openai.com, status.claude.com, status.deepseek.com), 토큰 사용량 패널의 공개 모델 가격을 가져오는 [models.dev](https://models.dev), 그리고 앱 업데이트를 확인하는 GitHub/Sparkle. 제공업체 요청, 상태 페이지, 로그인 토큰 교환, models.dev에는 설정 › 네트워크 및 새로 고침에서 선택한 프록시가 사용되며, 수동 프록시는 지원되는 도우미 프로세스에도 전달됩니다. Sparkle 업데이트 확인은 항상 macOS 시스템 프록시 설정을 따릅니다.
 
 <p align="center">
   <img src="Docs/settings.webp" height="300" alt="Pulse 설정">
@@ -102,9 +102,9 @@
 </p>
 
 <p align="center">
-  <img src="Docs/spend.webp" height="290" alt="토큰 지출: 합계, 종류별 토큰, 일별 패턴">
+  <img src="Docs/spend.webp" height="290" alt="토큰 사용량: 합계, 종류별 토큰, 일별 패턴">
   &nbsp;&nbsp;
-  <img src="Docs/spend-history.webp" height="290" alt="토큰 지출: 일별, 월별, 에이전트별">
+  <img src="Docs/spend-history.webp" height="290" alt="토큰 사용량: 일별, 월별, 에이전트별">
 </p>
 
 <p align="center">
@@ -136,7 +136,7 @@ Pulse는 각 서비스가 보고하는 숫자를 그대로 보여 줍니다. 화
 | **MiniMax / MiniMax CN** | API 키 직접 입력 | 국제(`minimax.io`)와 중국 본토(`minimaxi.com`) 지원 |
 | **Ollama Cloud** | 브라우저 세션 쿠키 | 브라우저에서 로컬로 읽음. [Docs/ollama-cloud.md](Docs/ollama-cloud.md) 참고 |
 | **Volcengine** | `arkcli` 로그인, 없으면 붙여 넣은 액세스 키 쌍(Top OpenAPI 서명) | Ark Coding 및 Agent 플랜. 자동에서는 CLI보다 붙여 넣은 키를 우선 |
-| **Command Code** | 붙여 넣은 키, 없으면 `cmd auth login`이 이미 저장한 로그인 | 달러 단위 크레딧 잔액. 월간 플랜 행은 **추정**으로 표시 |
+| **Command Code** | 붙여 넣은 키, 없으면 `cmd login`이 이미 저장한 로그인 | 달러 단위 크레딧 잔액과 롤링 5시간·주간 한도. 월간 플랜 행은 **추정**으로 표시 |
 | **DeepSeek** | 붙여 넣은 키. 문서화된 `GET /user/balance` | 선불 잔액만 있고 한도는 없음. 링이 무엇을 기준으로 삼을지는 사용자가 선택 |
 | **Devin** | 입력할 것이 없음——브라우저 세션을 읽고 키체인 프롬프트도 없음 | Devin이 보고하는 일간·주간 한도. 브라우저 세션이나 붙여 넣은 자격 증명이 없으면 앱이 저장한 날짜별 플랜을 읽음. 엔드포인트 실패 시 일치하는 엔드포인트 캐시만 사용해 계정과 조직 경계를 유지([Docs/providers/devin.md](Docs/providers/devin.md)) |
 | **Xiaomi Coding Plan** | 입력할 것이 없음——로그인된 브라우저 세션을 읽음. `Cookie:` 헤더를 붙여 넣을 수도 있음 | Xiaomi MiMo 콘솔의 월간 토큰 한도. 기간 종료가 보고되면 함께 표시. 선불 잔액은 카드에 한 줄로 덧붙음. 플랜이 없는 계정은 0%를 그리지 않고 그렇다고 알림([Docs/providers/xiaomi-coding-plan.md](Docs/providers/xiaomi-coding-plan.md)) |
@@ -229,7 +229,7 @@ Pulse는 각 서비스가 보고하는 숫자를 그대로 보여 줍니다. 화
 ## 개인정보와 보안
 
 Pulse는 엄격한 로컬 우선 보안 원칙으로 설계되었습니다:
-- **Pulse 백엔드 없음**: 여러분의 Mac이 여러분 자신의 로그인으로 이미 사용 중인 제공업체에 연결합니다. 또한 서비스 상태를 위해 Codex, Claude Code, DeepSeek의 공개 상태 페이지를 (로그인 없이) 읽고, 토큰 지출 패널을 위해 [models.dev](https://models.dev)에서 공개 모델 가격을 가져오며 GitHub/Sparkle에서 앱 업데이트를 확인합니다. 제공업체 요청, 상태 페이지, 로그인 토큰 교환, models.dev에는 설정 › 네트워크 및 새로 고침에서 선택한 프록시가 사용되며, 수동 프록시는 지원되는 도우미 프로세스에도 전달됩니다. Sparkle 업데이트 확인은 항상 macOS 시스템 프록시 설정을 따릅니다.
+- **Pulse 백엔드 없음**: 여러분의 Mac이 여러분 자신의 로그인으로 이미 사용 중인 제공업체에 연결합니다. 또한 서비스 상태를 위해 Codex, Claude Code, DeepSeek의 공개 상태 페이지를 (로그인 없이) 읽고, 토큰 사용량 패널을 위해 [models.dev](https://models.dev)에서 공개 모델 가격을 가져오며 GitHub/Sparkle에서 앱 업데이트를 확인합니다. 제공업체 요청, 상태 페이지, 로그인 토큰 교환, models.dev에는 설정 › 네트워크 및 새로 고침에서 선택한 프록시가 사용되며, 수동 프록시는 지원되는 도우미 프로세스에도 전달됩니다. Sparkle 업데이트 확인은 항상 macOS 시스템 프록시 설정을 따릅니다.
 - **로컬 자격 증명**: 제품이 그렇게 동작하는 경우, 개발 도구가 이미 로컬에 저장한 자격 증명(`~/.claude`, `~/.codex`, Cursor 저장소 등)을 읽습니다. 일부 제공업체는 설정에서 입력하는 키나 로그인이 필요합니다.
 - **암호화된 로컬 저장**: 직접 입력한 API 키와 세션 토큰은 암호화되어 Pulse의 로컬 애플리케이션 디렉터리에 소유자 전용 권한으로만 저장됩니다.
 - **로컬 사용량 기록**: Pulse는 토큰 수와 제목, 작업 디렉터리 같은 세션 메타데이터를 얻기 위해 대화 기록, 데이터베이스, 내보내기 파일을 읽습니다. 이 기록에는 대화 텍스트가 들어 있을 수 있으며, 처리는 여러분의 Mac에서만 이루어지고 기록도 그대로 남습니다. Pulse가 읽는 것은 이 기록들뿐입니다.

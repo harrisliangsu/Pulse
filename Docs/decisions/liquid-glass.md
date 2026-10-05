@@ -4,7 +4,7 @@
 
 ## What we still believe
 
-Black default: the panel sits over work all day. ~~No scrim~~ — superseded once the glass rendered active (below): clear glass does not manage its own legibility, so it is dimmed (`PanelGlass.dim`, black 0.3) and the panel is pinned dark on both surfaces. Measured on 26.7 over white / busy / black: undimmed white text vanished over white; 0.15–0.35 all readable, 0.3 chosen as the least grey over white that still reads. (The historical "black tint barely moved luminance" was on the frosted rendering.)
+Black default: the panel sits over work all day. ~~No scrim~~ — superseded once the glass rendered active (below): clear glass does not manage its own legibility, so it is dimmed (`PanelGlass.dim`, black 0.3 at the slider's default; the reader now sets it, up to 0.6) and the panel is pinned dark on both surfaces. Measured on 26.7 over white / busy / black: undimmed white text vanished over white; 0.15–0.35 all readable, 0.3 chosen as the least grey over white that still reads. (The historical "black tint barely moved luminance" was on the frosted rendering.)
 
 `Glass.clear` not `.regular`. Historical: five variants in a transparent panel over a bright busy backdrop — SwiftUI `.regular` opaque milky white; `NSVisualEffectView` worse; `.clear` and `NSGlassEffectView` kept content visible. All five *did* sample behind the window, so a transparent `NSPanel` was not the problem. `NSGlassEffectView` was pixel-for-pixel the same material but only knows a corner radius; the modifier takes the morphing shape.
 

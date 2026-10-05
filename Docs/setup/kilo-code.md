@@ -9,7 +9,7 @@ A Kilo Code account. Either an API key from Kilo, or the Kilo CLI signed in on t
 ## Steps
 
 1. Sign in at [app.kilo.ai](https://app.kilo.ai) and copy your API key from your profile page. (Or skip this if you use the Kilo CLI and have run `kilo auth login`.)
-2. In Pulse: **Settings → Accounts → Kilo Code**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**. With no key, Pulse uses the Kilo CLI's login instead.
+2. In Pulse: **Settings → Kilo Code**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**. With no key, Pulse uses the Kilo CLI's login instead.
 3. Within a few seconds the account appears. With a Kilo Pass there is a ring for the pass; the balance is shown either way.
 
 ## If it doesn't work

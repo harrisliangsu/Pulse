@@ -9,7 +9,7 @@ A GitKraken account with AI credits. GitKraken issues no API key for this; Pulse
 ## Steps
 
 1. Sign in at [gitkraken.dev/account#ai-usage](https://gitkraken.dev/account#ai-usage). Open your browser's developer tools (Network tab), reload the page, and select the request to `api.gitkraken.dev/v1/ai-tasks/usage`. Copy the value of its **Authorization** header — everything after `Bearer `. (Pasting it with `Bearer ` in front is fine too.)
-2. In Pulse: **Settings → Accounts → GitKraken AI**. Turn on **Show in panel**. Under **Connection**, paste the token into **API key** and click **Save**.
+2. In Pulse: **Settings → GitKraken AI**. Turn on **Show in panel**. Under **Connection**, paste the token into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists your credits (and the organization's pool) and when they reset.
 
 ## If it doesn't work

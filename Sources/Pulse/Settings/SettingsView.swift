@@ -232,7 +232,7 @@ struct SettingsView: View {
             // A `minWidth` on the content is a layout constraint, so it is
             // re-applied on every rebuild, which is the property this needs.
             //
-            // 200 is measured, not guessed. Scanning the committed English
+            // 200 was measured, not guessed. Scanning the committed English
             // screenshot for the rightmost ink in the list puts the longest
             // label — `GitHub Copilot` — at **150.5pt**, so this leaves about
             // 50pt of trailing air. 240 was tried first and read as baggy:
@@ -852,9 +852,9 @@ struct SettingsView: View {
                 // the reasoning that four rows is not enough to make a drag
                 // worth learning and that an arrow which misses does nothing
                 // while a drag which misses does something. The first half of
-                // that stopped being true: there are seventeen providers now,
-                // plus every added account, and moving the bottom one to the
-                // top is sixteen clicks.
+                // that stopped being true at seventeen providers, plus every
+                // added account, when moving the bottom one to the top was
+                // already sixteen clicks.
                 //
                 // The arrows stay rather than being replaced. They are the
                 // precise way to move one place, they are the only way that

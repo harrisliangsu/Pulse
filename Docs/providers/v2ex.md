@@ -32,7 +32,7 @@ Authorization: Bearer <personal access token>
 
 Status handling is the ordinary one: `401`/`403` → `.apiKeyRefused`, `429` → `.rateLimited`, anything else → `.serverError`. `"success": false` over a 200 is read as `.apiKeyRefused` — the route is scoped to the token, so the one thing it can refuse is the token.
 
-**Asking never starts a window.** V2EX's help page says so explicitly, which is what makes this safe to poll on the ordinary 2–30 minute cadence.
+**Asking never starts a window.** V2EX's help page says so explicitly, which is what makes this safe to poll on the 2–5 minute cadence an unwatched provider gets (`AdaptiveRefresh.unwatchedCeiling`).
 
 ## The window has not started
 

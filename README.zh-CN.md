@@ -51,7 +51,7 @@
 
 ### 一目了然的用量圆环
 - **智能用量着色**：环形进度随使用率平滑变色（绿 → 琥珀 → 红 → 用尽深红），亦可按账号自定义专属高亮色。
-- **实时工作状态灯**：圆环边缘带动态旋转光点，实时指示 Agent 是否正在生成或执行任务（支持 Claude Code 与 Codex）。
+- **实时工作状态灯**：圆环边缘带动态旋转光点，实时指示 Agent 是否正在生成或执行任务（支持 Claude Code、Codex、Kiro、智谱与 z.ai）。
 - **时间窗口进度弧**：可选的外层时钟副弧线，可选择显示当前限额窗口已过去或剩余的时间比例。
 - **正数 / 倒数自由切换**：支持在“已消耗百分比（如 `75% used`）”与“剩余可用额度（如 `25% left`）”之间切换。
 
@@ -136,7 +136,7 @@ Pulse 只呈现各服务上报的数字，每个百分比都来自那份回复�
 | **MiniMax / MiniMax CN** | 设置中填入 API Key | 同时支持国际站（`minimax.io`）与国内站（`minimaxi.com`） |
 | **Ollama Cloud** | 本地读取浏览器登录会话 Cookies | 官方无配额 API。详见 [Docs/ollama-cloud.md](Docs/ollama-cloud.md) |
 | **Volcengine（火山引擎）** | `arkcli` 登录，或粘贴 Volcengine Access Key 对（签名走 Top OpenAPI） | Ark Coding / Agent 套餐；自动模式优先使用粘贴的密钥 |
-| **Command Code** | 设置中填入 API Key，或读取 `cmd auth login` 已保存的登录 | 以美元计费的余额；含滚动 5 小时 / 周限额与月度套餐行（标记为**估算**） |
+| **Command Code** | 设置中填入 API Key，或读取 `cmd login` 已保存的登录 | 以美元计费的余额；含滚动 5 小时 / 周限额与月度套餐行（标记为**估算**） |
 | **DeepSeek** | 设置中填入 API Key；官方文档化的 `GET /user/balance` | 仅报告预付余额、无额度；圆环的度量基准由你选择 |
 | **Devin** | 什么都不用填——读取浏览器里的登录会话，无需钥匙串授权 | 每日与每周额度均由 Devin 报告。没有浏览器会话或手填凭据时，读取应用存下的带日期套餐；接口失败只使用账户与组织匹配的接口缓存（[Docs/providers/devin.md](Docs/providers/devin.md)）|
 | **小米 Coding Plan** | 什么都不用填——读取浏览器里已登录的会话，也可以手动粘贴 `Cookie:` 头 | 小米 MiMo 控制台上的月度 token 额度，有结束时间就一并显示。预付余额作为一行附在卡片上。账号上没有 Coding Plan 时会直说，而不是画一个 0%（[Docs/providers/xiaomi-coding-plan.md](Docs/providers/xiaomi-coding-plan.md)） |

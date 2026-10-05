@@ -27,7 +27,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
-          # Release notes are generated from the history between tags.
           fetch-depth: 0
 
       # The version lives in VERSION and the tag has to agree with it: the

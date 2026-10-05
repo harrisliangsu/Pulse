@@ -1,6 +1,6 @@
 # Set up OpenAI API in Pulse
 
-Pulse shows the prepaid credit left on your OpenAI API account, as a dollar balance. There is no ring: the API has no allowance for a percentage to be of.
+Pulse shows the prepaid credit left on your OpenAI API account, as a dollar balance. The API has no allowance for a percentage to be of, so the balance is the reading. Any ring is Pulse's own estimate, not a figure OpenAI reported: **Ring measures** on the account's pane picks what it measures — **Since top-up** (the default), **My budget**, or **Balance only** for no ring.
 
 ## What you need
 
@@ -9,7 +9,7 @@ An OpenAI API account with prepaid credit, and an API key that can read the acco
 ## Steps
 
 1. Sign in at [platform.openai.com](https://platform.openai.com) and create an API key under **API keys**.
-2. In Pulse: **Settings → Accounts → OpenAI API**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → OpenAI API**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the account's card shows the balance.
 
 ## If it doesn't work

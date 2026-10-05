@@ -9,7 +9,7 @@ An xKiro account and an API key.
 ## Steps
 
 1. Sign in at [xkiro.com](https://xkiro.com) and create an API key.
-2. In Pulse: **Settings → Accounts → xKiro**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → xKiro**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears. The account's pane lists each window and when it resets, and the wallet balance.
 
 ## If it doesn't work

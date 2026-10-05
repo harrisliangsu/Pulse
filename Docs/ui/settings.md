@@ -20,11 +20,9 @@ Settings stays reachable after dismissing the initial chooser. Appearance points
 
 **Subtitles are one line.** Say what the control does. Reasoning belongs in docs, not on screen. Exceptions: the money card’s provenance and the estimate caption — those exist so an inferred figure is not read as reported.
 
-A joined sentence needs no extra space after a Chinese full stop (`。`). `glassSubtitle` only inserts a separator when the first half does not end in one.
+A joined sentence needs no extra space after a Chinese full stop (`。`). `UsageAlerts.joined` only inserts a separator when the first half does not end in one.
 
 While Liquid Glass is on, a **Transparency** slider appears under it (`glassTransparency`, 0–1, default 0.5): right is clearer, left dims the glass. It sets no `onChange` — that refetches every provider, and a slider fires continuously. Named Liquid Glass in every language (zh-Hans 液态玻璃); it was briefly 毛玻璃 while the panel rendered glass inactive and it really was frosted ([../decisions/liquid-glass.md](../decisions/liquid-glass.md)).
-
-While Liquid Glass is on, the caption still says to drag the panel by a ring. That is current UI. The historical “glass swallows input” diagnosis is uncertain; [rings-and-surface.md](rings-and-surface.md).
 
 **Panes.** What was one General pane of thirty-odd rows is split by subject (`SettingsPane`):
 
@@ -80,7 +78,7 @@ The manual proxy host and port are view-local text while they are being edited. 
 
 SwiftUI `Picker` / `Menu` on macOS **cannot be given a width**. `.frame`, min/max, `fixedSize`, and a fixed-width custom label were measured (historical) and none moved the control. Right-align at `SettingsLayout.controlWidth` as a *ceiling*; long labels truncate. An `NSPopUpButton` wrapper did give a true 180pt box and was removed: short labels floated in empty chrome. Don’t rebuild it without checking that first.
 
-Sidebar column: **min 220, ideal 240, max 320**. Sized to "Alibaba Coding Plan", the longest name in the list (121.4pt of text at 13pt, against "Xiaomi Coding Plan" at 117.3), with the scroller always showing now that there are seventy-odd rows; at 200 it read "Alibaba Coding Pl…". Sized to "Xiaomi Coding Plan", the longest name in the list at eighteen characters, with "GitHub Copilot" behind it — at the original 170/180/220 the long ones truncated to an ellipsis, on a list whose only job is telling twenty-five products apart. `ideal` went 200 → 240 when the eighteen-character name arrived; it is scaled from the fourteen-character one that fit rather than measured against a render, so a name longer than this wants checking in the running app rather than arithmetic. They are brand names, so the requirement does not move with the language. `min` is the half that matters: AppKit saves the divider position, so `ideal` is read once per install while `min` clamps everyone.
+Sidebar column: **min 220, ideal 240, max 320**. Sized to "Alibaba Coding Plan", the longest name in the list (121.4pt of text at 13pt, against "Xiaomi Coding Plan" at 117.3), with the scroller always showing now that there are seventy-odd rows; at 200 it read "Alibaba Coding Pl…". `ideal` went 200 → 240 when the eighteen-character name arrived; it is scaled from the fourteen-character one that fit rather than measured against a render, so a name longer than this wants checking in the running app rather than arithmetic. They are brand names, so the requirement does not move with the language. `min` is the half that matters: AppKit saves the divider position, so `ideal` is read once per install while `min` clamps everyone.
 
 Default window: **920 × 660**, set on the `NSWindow`'s `contentRect`; the view's `minWidth` / `minHeight` (720 × 460) are what it can be dragged down to. It opened at 760 × 500 when the sidebar held four rows — with twenty-five providers and a thirty-row general pane (since split) that meant a window that was scrolling in both columns the moment it appeared. The size is not remembered across launches: the window is rebuilt and `center()`ed on each one.
 

@@ -2,7 +2,7 @@
 
 Owns: the complete list of agent stores the Token spend pane can read — default macOS location, store format, the counters it really reports, and how well each one is evidenced. The pane itself and what may be said about its figures: [token-spend.md](token-spend.md).
 
-Pulse's catalog recognizes **54 agent sources**: the seven clients it read on a real machine before this change (`claudeCode`, `codex`, `openCode`, `kiloCLI`, `grok`, `kimiCLI`, `devinCLI`) and **47** added from second-hand format specifications of a compatibility target (Tokscale 4.17.0). Some sources require exports or do not report usable token counters; the table below distinguishes them. No upstream code, test or fixture is vendored; each added reader was written independently from file locations, field meanings, units and event identities, with original synthetic test data. The new readers have not been verified against live client stores.
+Pulse's catalog recognizes **54 agent sources**: the seven clients it read on a real machine before the catalogue grew (`claudeCode`, `codex`, `openCode`, `kiloCLI`, `grok`, `kimiCLI`, `devinCLI`) and **47** added from second-hand format specifications of a compatibility target (Tokscale 4.17.0). Some sources require exports or do not report usable token counters; the table below distinguishes them. No upstream code, test or fixture is vendored; each added reader was written independently from file locations, field meanings, units and event identities, with original synthetic test data. The new readers have not been verified against live client stores.
 
 The canonical id is `SpendAgent.sourceID` (the string the reader families dispatch on); the seven legacy cases keep their Swift `rawValue` identities. The cache format is versioned separately and older formats are reread. `hasCapturedValidation` is true only for those seven existing readers.
 
@@ -137,13 +137,13 @@ The seven existing clients retain these currently implemented locations:
 | `kimi` | `kimiCLI` | `~/.kimi/sessions` |
 | `devin-cli` | `devinCLI` | `~/.local/share/devin/cli/sessions.db` |
 
-The compatibility reference also describes additional locations and formats **not added to those seven readers in this change**:
+The compatibility reference also describes additional locations and formats **not implemented in those seven readers**:
 
 | Client | Additional sources (spec) |
 |---|---|
 | `claudeCode` | `$CLAUDE_CONFIG_DIR`; `<root>/transcripts`; cc-mirror variants; sidechain `subagents/**/agent-*.jsonl` (skip a `journal.jsonl`); tool-result usage |
 | `codex` | `$CODEX_HOME`; headless captures; `reasoning_output_tokens` subtraction; `session_meta.originator == "openclaw"` retags the rollout to `openclaw` |
-| `openCode` | channel DBs `opencode-<channel>.db`; v2 `session_message` schema; legacy `storage/message` JSON; cross-DB dedup by embedded message id |
+| `openCode` | channel DBs `opencode-<channel>.db`; legacy `storage/message` JSON; cross-DB dedup by embedded message id (the v2 `session_message` schema **is** read — see Cross-source routing) |
 | `kiloCLI` | Kilo's snake_case session id; a timestamp-less message needs an evidenced time, not the database's modification date |
 | `grok` | `logs/unified.jsonl`; sibling `signals.json` reconciliation; `GROK_HOME` |
 | `kimiCLI` | Kimi Code (`KIMI_CODE_HOME` or `~/.kimi-code`); Kimi Work desktop protocol; `config.json` model; `output` already includes reasoning |

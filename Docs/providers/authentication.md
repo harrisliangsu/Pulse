@@ -156,7 +156,7 @@ Parsers were driven against data built on purpose (synthetic `binarycookies`, Ch
 
 There is no way to ask the Keychain for an item silently (`SecKeychainSetUserInteractionAllowed` is deprecated with no replacement). [`AppDelegate`](../../Sources/Pulse/App/AppDelegate.swift) asks for `Claude Safe Storage` once at launch, fenced three ways: a desktop cookie store exists, Claude Code is enabled with source Automatic or Desktop App, and **once** — a refusal is a decision.
 
-`.automatic` then reads the remembered grant (`usageIfAlreadyPermitted`) rather than raising the dialog. Pinning `.desktopApp` calls `usage` directly, so a first-time pin can prompt there.
+`.automatic` then reads the remembered grant (`attemptIfAlreadyPermitted`) rather than raising the dialog. Pinning `.desktopApp` calls `usage` directly, so a first-time pin can prompt there.
 
 A grant that stops working is asked about again rather than treated as asked-and-refused: the Keychain ties the allowance to the code signature, and Pulse is ad-hoc signed, so every update is a different app as far as the ACL is concerned.
 

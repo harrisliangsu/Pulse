@@ -8,16 +8,16 @@ An Ark Coding Plan (or Agent Plan) on Volcengine (火山引擎), and either the 
 
 ## Steps
 
-Turn on the provider first: go to Settings → Accounts → Volcengine and turn on "Show in panel". Then connect it one of two ways — Pulse tries your pasted access keys first if you've entered them, and falls back to `arkcli`'s saved login otherwise.
+Turn on the provider first: go to Settings → Volcengine and turn on "Show in panel". Then connect it one of two ways — Pulse tries your pasted access keys first if you've entered them, and falls back to `arkcli`'s saved login otherwise.
 
 **Option A — arkcli (no pasting required)**
 1. Install: `npm install -g @volcengine/ark-cli@latest`. Check it worked with `arkcli --version`.
 2. Sign in: `arkcli auth login` (Volcengine SSO is the recommended option). When asked, choose the Coding Plan consumption type.
-3. Back in Settings → Accounts → Volcengine, leave "Read usage from" on "Automatic" (or choose "Provider tooling" to use arkcli only). Refresh Pulse and a ring for Volcengine fills in.
+3. Back in Settings → Volcengine, leave "Read usage from" on "Automatic" (or choose "Provider tooling" to use arkcli only). Refresh Pulse and a ring for Volcengine fills in.
 
 **Option B — a pasted access key pair**
 1. Log in to the [Volcengine console](https://console.volcengine.com/iam/keymanage/), go to IAM → Access Keys, and click "Create Key". Confirm the security prompt, then download or copy the AccessKeyId and SecretAccessKey shown.
-2. In Settings → Accounts → Volcengine, in the "Access keys" field, type them as `AccessKeyID:SecretAccessKey` (one colon between the two, no spaces), then click "Save".
+2. In Settings → Volcengine, in the "Access keys" field, type them as `AccessKeyID:SecretAccessKey` (one colon between the two, no spaces), then click "Save".
 3. Pulse now prefers this pasted key pair over `arkcli`'s login, even with both present — this is deliberate, so it reports on the account you typed the keys for rather than whichever one arkcli happens to be signed in to. "Read usage from" can stay on "Automatic".
 
 ## If it doesn't work

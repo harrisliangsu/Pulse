@@ -9,12 +9,12 @@ Grok Bot access through Cursor Pro, Cursor Pro+, Cursor Ultra, a Cursor Teams se
 ## Steps
 
 1. Make sure you're signed in to Cursor on this Mac — open Cursor (or the Grok Bot app) and sign in if you haven't already.
-2. In Pulse, go to Settings → Accounts → Grok Bot and turn on "Show in panel". There's nothing to paste: the "Read usage from" row says "Cursor's own login", because Pulse borrows the session Cursor already saved.
+2. In Pulse, go to Settings → Grok Bot and turn on "Show in panel". There's nothing to paste: the "Read usage from" row says "Cursor's own login", because Pulse borrows the session Cursor already saved.
 3. Refresh Pulse (or wait for its next automatic check). A ring for Grok Bot fills in on the Pulse panel once Cursor's login is readable.
 
 ### Adding another account
 
-If you have more than one Cursor account with Grok Bot, go to Settings → Accounts → Grok Bot, and click "Add another account" in its Accounts group, then "Sign in…". Pulse opens Cursor's own sign-in page in your browser — sign in there. This login is kept separately from the one Cursor's app uses, and lasts about 60 days before you'll need to sign in again.
+If you have more than one Cursor account with Grok Bot, go to Settings → Grok Bot, and click "Add another account" in its Accounts group, then "Sign in…". Pulse opens Cursor's own sign-in page in your browser — sign in there. This login is kept separately from the one Cursor's app uses, and lasts about 60 days before you'll need to sign in again.
 
 ## If it doesn't work
 

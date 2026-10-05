@@ -127,7 +127,7 @@ The third column is **not what Pulse shows** — it is the CLI's own display tab
 So this is the **second labelled exception** to "Pulse does not invent a percentage", alongside the money estimate. What that costs is bounded in three ways, and the bounds are the design:
 
 - **The numerator is reported.** `grant - monthlyCredits` subtracts the account's own figure; only the denominator is inferred.
-- **The row carries `isEstimated`**, so the card reads "Monthly limit · estimated" rather than passing for a reported limit. A flag and not a `scope`: [json-output.md](../json-output.md) promises `scope` is a product name that is the same in every language, and this marker's wording is translated. `--json` exposes it as `estimated`.
+- **The row carries `estimate = .planPrice`**, so the card reads "Monthly limit · estimated" rather than passing for a reported limit. A flag and not a `scope`: [json-output.md](../json-output.md) promises `scope` is a product name that is the same in every language, and this marker's wording is translated. `--json` exposes it as `estimated`.
 - **A plan this build cannot size draws nothing at all.** Not zero, not the pool. A missing row is this design's real failure mode and it is silent, so it must not be able to render as an untouched allowance for someone whose money is gone. CodexBar's table is missing `teams-pro` and `individual-provider` today, and its unsized plans fall through to a free-tier branch that draws exactly that.
 
 Matching is on the **whole** id, lowercased, with `_` folded to `-`. The CLI matches on a *prefix*, which would size a future `individual-pro-v2` as the $30 `individual-pro`; being wrong by $50 is worse here than saying nothing.

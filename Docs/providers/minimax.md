@@ -13,7 +13,7 @@ Extra accounts are not supported. `keepsLocalTranscripts` is false. No first-run
 
 ## Route
 
-`GET {host}/v1/token_plan/remains` with the key as a bearer token, falling back to the older `/v1/api/openplatform/coding_plan/remains` on a **404** (an older account, not a failure).
+`GET {host}/v1/token_plan/remains` with the key as a bearer token, falling back to the older `/v1/api/openplatform/coding_plan/remains` on **any** failure, not only a 404 — an account on the older plan answers 401 on the current path.
 
 Undocumented; can change without notice. Parsing follows CodexBar’s written account of the reply.
 
@@ -23,7 +23,7 @@ The **first** failure reason is kept, not the last: a `.apiKeyRefused` from the 
 
 ## Mapping
 
-**It reports what is left.** `current_*_remaining_percent` at 96 means 4% spent. Inversion happens here. (Copilot and Antigravity also invert remaining-style fields; MiniMax’s file comment that Antigravity is the only other one is slightly behind Copilot.)
+**It reports what is left.** `current_*_remaining_percent` at 96 means 4% spent. Inversion happens here. (Copilot and Antigravity also invert remaining-style fields.)
 
 **Every figure can be a string or a number**, the same field in different replies. CodexBar’s own two fixtures disagree (`"96"` and `75`). Reading only one shape blanks a window for whichever accounts get the other.
 

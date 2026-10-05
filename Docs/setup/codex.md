@@ -9,8 +9,8 @@ A ChatGPT plan that includes Codex, signed in to the Codex CLI (`codex`).
 ## Steps
 
 1. Install the Codex CLI and run `codex login` in Terminal. It opens your browser to sign in with your ChatGPT account; approve there. On a machine with no browser, run `codex login --device-auth` instead and enter the code at https://auth.openai.com/codex/device.
-2. In Pulse, go to Settings → Accounts → Codex and turn on "Show in panel". Nothing else is required — Pulse reads the login Codex already saved in `~/.codex/auth.json`. If you want to see or change which route Pulse uses, the Connection group's "Read usage from" picker offers Automatic, Usage endpoint, and Provider tooling (Codex's own app-server helper); Automatic is the right choice for almost everyone.
-3. To add a second Codex account, go to Settings → Accounts → Codex, and click "Add another account" in its Accounts group. Pulse shows a short code — type it on the page that opens. This is a separate device-code sign-in from the CLI's own login, so both accounts keep reporting even if the CLI's token later expires.
+2. In Pulse, go to Settings → Codex and turn on "Show in panel". Nothing else is required — Pulse reads the login Codex already saved in `~/.codex/auth.json`. If you want to see or change which route Pulse uses, the Connection group's "Read usage from" picker offers Automatic, Usage endpoint, and Provider tooling (Codex's own app-server helper); Automatic is the right choice for almost everyone.
+3. To add a second Codex account, go to Settings → Codex, and click "Add another account" in its Accounts group. Pulse shows a short code — type it on the page that opens. This is a separate device-code sign-in from the CLI's own login, so both accounts keep reporting even if the CLI's token later expires.
 4. Success looks like a ring for Codex on the Pulse panel, filled in with your usage windows.
 
 ## If it doesn't work

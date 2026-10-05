@@ -9,7 +9,7 @@ A Synthetic account with a subscription, and an API key from it.
 ## Steps
 
 1. Sign in at [synthetic.new](https://synthetic.new) and create an API key (Synthetic's [API guide](https://dev.synthetic.new/docs/api/getting-started) shows where).
-2. In Pulse: **Settings → Accounts → Synthetic**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Synthetic**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists each allowance. The hourly search allowance shows when it resets; the 5-hour and weekly allowances refill a slice at a time, so they show no single reset.
 
 ## If it doesn't work

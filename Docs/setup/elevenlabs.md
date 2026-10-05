@@ -9,7 +9,7 @@ An ElevenLabs account and an API key with the **user_read** permission (the "Use
 ## Steps
 
 1. Open [elevenlabs.io/app/settings/api-keys](https://elevenlabs.io/app/settings/api-keys), create a key and give it read access to **User**.
-2. In Pulse: **Settings → Accounts → ElevenLabs**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → ElevenLabs**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane shows the credit allowance and when it resets.
 
 ## If it doesn't work

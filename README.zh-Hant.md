@@ -51,13 +51,13 @@
 
 ### 一目了然的狀態圓環
 - **用量感知配色**：動態漸層會從綠色轉為琥珀、紅色，用盡時轉為深紅——也可依帳號自訂強調色。
-- **即時工作狀態指示**：圓環邊緣帶有緩慢旋轉的光點，即時顯示 agent 是否正在產生回應（Claude Code 與 Codex）。
-- **時間視窗進度弧**：可選的外層副弧線，呈現目前速率限制視窗已經過的時間比例。
+- **即時工作狀態指示**：圓環邊緣帶有緩慢旋轉的光點，即時顯示 agent 是否正在產生回應（Claude Code、Codex、Kiro、智譜與 z.ai）。
+- **時間視窗進度弧**：可選的外層副弧線，可選擇呈現目前速率限制視窗已經過或剩餘的時間比例。
 - **倒數模式**：可在顯示已消耗額度（`75% used`）或剩餘額度（`25% left`）之間切換。
 
 ### 懸停詳情與智慧預測
 - **完整額度明細**：將指標移到任一圓環上，即會展開詳情卡，列出所有回報的額度池、重設倒數與目前視窗狀態。
-- **詳細卡片（可選，依帳號開啟）**：替你最常看的帳號打開。卡片會加上方案名稱與數字的更新時間；這台 Mac 的紀錄能算出金額時，每條額度下還會給出額度價值推算。凡是 Pulse 拿得到用量紀錄的服務，還會顯示今天、7 天、31 天的 token 用量，附 31 天長條圖、主力模型，快取命中率（紀錄裡分得清快取的才顯示），還會顯示提示快取還剩多久（Claude Code 依每次回覆記下的快取檔位計算，Codex 依 OpenAI 對 GPT-5.6 及之後模型保證的至少 30 分鐘計算）：卡片上顯示最快過期的那個對話，設定裡列出所有對話：z.ai、智譜用的是它們自己的帳號統計；Claude Code、Codex、Kimi Code、Grok、OpenCode、Cursor、Devin、Antigravity、Command Code、Copilot 讀的是這台 Mac 的紀錄，需要先開啟「Token 用量支出」。
+- **詳細卡片（可選，依帳號開啟）**：替你最常看的帳號打開。卡片會加上方案名稱與數字的更新時間；這台 Mac 的紀錄能算出金額時，每條額度下還會給出額度價值推算。凡是 Pulse 拿得到用量紀錄的服務，還會顯示今天、7 天、31 天的 token 用量，附 31 天長條圖、主力模型，快取命中率（紀錄裡分得清快取的才顯示），還會顯示提示快取還剩多久（Claude Code 依每次回覆記下的快取檔位計算，Codex 依 OpenAI 對 GPT-5.6 及之後模型保證的至少 30 分鐘計算）：卡片上顯示最快過期的那個對話，設定裡列出所有對話：z.ai、智譜用的是它們自己的帳號統計；Claude Code、Codex、Kimi Code、Grok、OpenCode、Cursor、Devin、Antigravity、Command Code、Copilot 讀的是這台 Mac 的紀錄，需要先開啟「Token 消耗」。
 - **消耗速率與用盡預測（可選）**：開啟後會推估目前的使用節奏能否撐過本輪額度視窗，並在偵測到風險時顯示預估耗盡時間（ETA）。預設關閉。
 - **釘選主要視窗**：可將最在意的額度釘在圓環上，或讓 Pulse 自動追蹤最接近用盡的那一條。
 
@@ -80,7 +80,7 @@
 
 ### 多帳號與本機帳本
 - **多帳號支援**：可同時監看同一服務商的多個訂閱（Claude Code、Codex、Grok、Grok Bot），並排顯示並自訂標籤。
-- **Token 用量支出（僅限設定）**：預設關閉，在頁面頂端開啟後才讀取本機記錄，關閉即可停止掃描。支援本機日誌、資料庫與匯出檔，來源目錄涵蓋 **54 個用戶端來源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 與 GitHub Copilot。Cursor、Trae 等來源需要事先匯出或擷取記錄。這些來源與浮動膠囊上的 77 個配額服務商不同；各來源的支援程度與真實用戶端驗證情形不一。[來源與涵蓋範圍](Docs/token-spend-sources.md)。
+- **Token 消耗（僅限設定）**：預設關閉，在頁面頂端開啟後才讀取本機記錄，關閉即可停止掃描。支援本機日誌、資料庫與匯出檔，來源目錄涵蓋 **54 個用戶端來源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 與 GitHub Copilot。Cursor、Trae 等來源需要事先匯出或擷取記錄。這些來源與浮動膠囊上的 77 個配額服務商不同；各來源的支援程度與真實用戶端驗證情形不一。[來源與涵蓋範圍](Docs/token-spend-sources.md)。
 - **清楚的用量估算**：預設開啟最近 7 天，並記住你選擇的區間。費用採用公開的 API 價格，而非訂閱費用。未知價格會保留為不可用，計數不完整或時間粒度較粗者會明確標示；沒有 token 計數器的來源會如實標示為不可用。
 - **模型詳情與圖表**：點開單一模型可查看輸入／輸出／快取用量與估算費用、記錄足以支撐時的每日與每小時圖表、各 agent 的貢獻，以及可排序、分頁的明細表。將指標移到圖表上，即可讀取對應日期或小時及其 token 數量。無法取得的每日或每小時明細會標註為不可用。
 - **七十七個服務商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（國際與中國大陸）、Volcengine、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX、Qoder 與階躍星辰（StepFun）；另有 Abacus AI、Aixy、Alibaba Coding Plan、Alibaba Token Plan、Amp、Atlas Cloud、Augment Code、Bifrost、Chutes、ClawRouter、ClinePass、Codebuff、DeepInfra、DevPass、ElevenLabs、Factory、Gemini、GitKraken AI、Hugging Face、Hyper、IBM Bob、JetBrains AI、Kilo Code、LiteLLM、LLM API Key Proxy、LongCat、Manus、Mistral、Moonshot、Neuralwatt、Notion AI、Nous Portal、OpenAI API、Perplexity、Poe、Qwen Cloud、Raycast AI、Replicate、Sakana AI、Synthetic、T3 Chat、TypeSafe、v0、Venice、Vercel AI Gateway、Warp、Windsurf、xAI API、xKiro、Zed、ZenMux、ZoomMate。
@@ -89,7 +89,7 @@
 - **擴充功能**：自己寫個小程式，就能讓 Pulse 顯示某個帳號的用量，例如公司內部的額度 API，不必再維護一份分支。開啟之前不會執行，Pulse 也不會交給它任何憑證。[撰寫說明](Docs/extensions.md)（英文）。
 - **服務狀態**：Codex、Claude Code 和 DeepSeek 的設定頁照各自官方狀態頁的樣式顯示服務狀態——每一項現在是否正常、過去 90 天每天一根直條，以及狀態頁公布的可用率。開啟設定頁時讀取，開著時每 5 分鐘更新一次。
 - **連線診斷**：查看實際的讀取來源、快取使用情形、最近一次檢查與備援結果。情境化操作可協助重新連線、重新登入或修正憑證；可複製不含帳號資訊與金鑰的診斷報告。
-- **隱私優先**：Pulse 跑在你自己的 Mac 上，用你自己的登入狀態。它只發起四類連線，這裡列的就是全部——你原本就在使用的服務商、為「服務狀態」及其通知讀取的公開狀態頁（status.openai.com、status.claude.com、status.deepseek.com）、為 Token 用量支出頁取得公開模型價格的 [models.dev](https://models.dev)，以及檢查更新的 GitHub/Sparkle。服務商請求、狀態頁、登入時的權杖交換與 models.dev 會使用「設定 › 網路與重新整理」中選擇的代理，Pulse 也會把手動代理傳給支援的輔助程序。Sparkle 的更新檢查一律跟隨 macOS 系統代理設定。
+- **隱私優先**：Pulse 跑在你自己的 Mac 上，用你自己的登入狀態。它只發起四類連線，這裡列的就是全部——你原本就在使用的服務商、為「服務狀態」及其通知讀取的公開狀態頁（status.openai.com、status.claude.com、status.deepseek.com）、為 Token 消耗頁取得公開模型價格的 [models.dev](https://models.dev)，以及檢查更新的 GitHub/Sparkle。服務商請求、狀態頁、登入時的權杖交換與 models.dev 會使用「設定 › 網路與重新整理」中選擇的代理，Pulse 也會把手動代理傳給支援的輔助程序。Sparkle 的更新檢查一律跟隨 macOS 系統代理設定。
 
 <p align="center">
   <img src="Docs/settings.webp" height="300" alt="Pulse 設定">
@@ -102,9 +102,9 @@
 </p>
 
 <p align="center">
-  <img src="Docs/spend.webp" height="290" alt="Token 用量支出：總計、依類型的 token 與每日規律">
+  <img src="Docs/spend.webp" height="290" alt="Token 消耗：總計、依類型的 token 與每日規律">
   &nbsp;&nbsp;
-  <img src="Docs/spend-history.webp" height="290" alt="Token 用量支出：逐日、逐月、依 agent">
+  <img src="Docs/spend-history.webp" height="290" alt="Token 消耗：逐日、逐月、依 agent">
 </p>
 
 <p align="center">
@@ -136,7 +136,7 @@ Pulse 只呈現各服務回報的數字，每個百分比都來自那份回覆�
 | **MiniMax / MiniMax CN** | 直接使用 API 金鑰 | 支援國際站（`minimax.io`）與中國大陸站（`minimaxi.com`） |
 | **Ollama Cloud** | 瀏覽器工作階段 cookie | 從瀏覽器本機讀取。詳見 [Docs/ollama-cloud.md](Docs/ollama-cloud.md) |
 | **Volcengine（火山引擎）** | `arkcli` 登入，否則使用貼上的 access-key 組（簽署 Top OpenAPI） | Ark Coding 與 Agent 方案；自動模式偏好貼上的金鑰而非 CLI |
-| **Command Code** | 貼上的金鑰，否則使用 `cmd auth login` 已儲存的登入 | 以美元計價的額度餘額；每月方案列標示為**估算** |
+| **Command Code** | 貼上的金鑰，否則使用 `cmd login` 已儲存的登入 | 以美元計價的額度餘額，含滾動 5 小時／每週限額；每月方案列標示為**估算** |
 | **DeepSeek** | 貼上的金鑰；官方文件化的 `GET /user/balance` | 僅有預付餘額、沒有額度；圓環要對照什麼由你決定 |
 | **Devin** | 無需輸入——讀取你的瀏覽器工作階段，無需鑰匙圈授權 | Devin 回報的每日與每週額度。沒有瀏覽器工作階段或貼上的憑證時，讀取應用程式存下的帶日期方案。端點失敗時只使用相符的端點快取，保留帳號與組織界線（[Docs/providers/devin.md](Docs/providers/devin.md)） |
 | **小米 Coding Plan** | 無需輸入——讀取瀏覽器中已登入的工作階段，也可以手動貼上 `Cookie:` 標頭 | 小米 MiMo 主控台上的月度 token 額度，有結束時間就一併顯示。預付餘額會附在卡片上。帳號上沒有 Coding Plan 時會直接說明，而不是畫一個 0%（[Docs/providers/xiaomi-coding-plan.md](Docs/providers/xiaomi-coding-plan.md)） |
@@ -229,7 +229,7 @@ Pulse 只呈現各服務回報的數字，每個百分比都來自那份回覆�
 ## 隱私與安全
 
 Pulse 以嚴格的「本機優先」安全原則設計：
-- **沒有 Pulse 後端**：你的 Mac 用你自己的登入狀態連線至你原本就在使用的服務商。同時會為「服務狀態」讀取 Codex、Claude Code 和 DeepSeek 的公開狀態頁（無需登入），為 Token 用量支出頁從 [models.dev](https://models.dev) 取得公開模型價格，並向 GitHub/Sparkle 檢查應用程式更新。服務商請求、狀態頁、登入時的權杖交換與 models.dev 會使用「設定 › 網路與重新整理」中選擇的代理，Pulse 也會把手動代理傳給支援的輔助程序。Sparkle 的更新檢查一律跟隨 macOS 系統代理設定。
+- **沒有 Pulse 後端**：你的 Mac 用你自己的登入狀態連線至你原本就在使用的服務商。同時會為「服務狀態」讀取 Codex、Claude Code 和 DeepSeek 的公開狀態頁（無需登入），為 Token 消耗頁從 [models.dev](https://models.dev) 取得公開模型價格，並向 GitHub/Sparkle 檢查應用程式更新。服務商請求、狀態頁、登入時的權杖交換與 models.dev 會使用「設定 › 網路與重新整理」中選擇的代理，Pulse 也會把手動代理傳給支援的輔助程序。Sparkle 的更新檢查一律跟隨 macOS 系統代理設定。
 - **本機憑證**：在產品本身如此運作的前提下，讀取開發工具已存放在本機的憑證（`~/.claude`、`~/.codex`、Cursor 儲存空間等）；部分服務商需要你在設定中輸入金鑰或登入。
 - **加密的本機儲存**：手動輸入的 API 金鑰與工作階段權杖會加密，並嚴格存放於 Pulse 的本機應用程式目錄，權限僅限擁有者。
 - **本機用量記錄**：Pulse 會讀取對話記錄、資料庫與匯出檔，以取得 token 數量，以及標題、工作目錄等這類工作階段中介資料。這些記錄可能包含對話文字；處理完全在你的 Mac 上完成，記錄也留在本機。Pulse 只讀取這些記錄，僅此而已。

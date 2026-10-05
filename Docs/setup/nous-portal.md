@@ -9,7 +9,7 @@ Pulse shows your Nous Portal subscription's monthly credit grant as a ring (how 
 ## Steps
 
 1. In a terminal, run `hermes` and choose Nous Portal (or `hermes auth add nous`), and finish signing in. Hermes saves the login in `~/.hermes/auth.json`.
-2. In Pulse: **Settings → Accounts → Nous Portal**. Turn on **Show in panel**.
+2. In Pulse: **Settings → Nous Portal**. Turn on **Show in panel**.
 3. Within a few seconds the ring appears, and the account's pane shows the plan, the balance and when the grant renews.
 
 Hermes's login lasts about an hour, and Pulse never renews it (renewing it from a second app would sign Hermes out). Using Hermes renews it; any `hermes` command will do.

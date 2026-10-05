@@ -9,7 +9,7 @@ Antigravity (the desktop app or the standalone IDE), installed, signed in, and *
 ## Steps
 
 1. Download Antigravity from https://antigravity.google/download, install it, open it, and sign in.
-2. In Pulse, go to Settings → Accounts → Antigravity and turn on "Show in panel". There is nothing to paste — Pulse talks to Antigravity's own local server while it is running. If you want separate rings for your Gemini allowance and your Claude/GPT allowance instead of one combined ring, turn on "A ring for each model group" in the same pane.
+2. In Pulse, go to Settings → Antigravity and turn on "Show in panel". There is nothing to paste — Pulse talks to Antigravity's own local server while it is running. If you want separate rings for your Gemini allowance and your Claude/GPT allowance instead of one combined ring, turn on "A ring for each model group" in the same pane.
 3. Success looks like a ring for Antigravity on the Pulse panel while Antigravity is open. It shows no reading while Antigravity is closed — that is expected, not a fault.
 
 Antigravity does not support adding a second account in Pulse.

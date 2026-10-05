@@ -11,7 +11,7 @@ A GLM Coding Plan subscription bought through z.ai (see [z.ai/subscribe](https:/
 
 ### Steps
 1. Open [z.ai/manage-apikey/apikey-list](https://z.ai/manage-apikey/apikey-list), sign in, and click **+ Create a new API key**. Copy it.
-2. In Pulse: **Settings → Accounts → z.ai**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → z.ai**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the z.ai ring appears with your plan's windows.
 
 ## Zhipu (GLM Coding Plan, mainland)
@@ -21,7 +21,7 @@ A GLM Coding Plan subscription bought through BigModel/Zhipu (see [open.bigmodel
 
 ### Steps
 1. Open [open.bigmodel.cn](https://open.bigmodel.cn), sign in, and subscribe to (or confirm) your Coding Plan. Find your API key under your account's key management page (sometimes labelled "我的密钥" / My Plans → API Keys). Copy it. <!-- unverified: exact click path/labels on open.bigmodel.cn's key page — the site is a JS app that couldn't be scraped for exact menu text; based on third-party guides rather than a directly fetched page -->
-2. In Pulse: **Settings → Accounts → Zhipu**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Zhipu**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
    - If you've already saved a GLM key to disk with another coding tool — at `~/.coding-relay/glm-api-key`, `~/.config/bigmodel/api_key`, or `~/.config/zhipu/api_key` — Pulse finds it automatically and there's nothing to paste. This fallback is **mainland-only**; it's never used for the z.ai row.
 3. Within a few seconds the Zhipu ring appears with your plan's windows.
 

@@ -62,9 +62,7 @@ Windows are emitted shortest first.
 
 ### A wallet is money, not an allowance
 
-The same rule as [deepseek.md](deepseek.md), reached by the same road: the reply says how much is left and there is no ceiling anywhere in it. So the ring draws **no fraction** and the rail shows the money, exactly as DeepSeek's `balanceOnly` does. Pulse does not invent a denominator.
-
-DeepSeek's three-way `DeepSeekBasis` picker is deliberately **not** generalised to here yet. It is a working piece of machinery and sharing it is the obvious next step if anyone asks for a sub2api ring with a percentage on it — but nobody has, and one provider's setting quietly becoming two providers' setting is how a picker ends up in a pane it was never written for.
+The same rule as [deepseek.md](deepseek.md), reached by the same road: the reply says how much is left and there is no ceiling anywhere in it. So the service reports **no fraction** (no window), exactly as DeepSeek's `balanceOnly` does. Pulse does not invent a denominator. Any ring a wallet gets on the rail is `BalanceRing`'s — a peak Pulse watched or a budget the reader typed, labelled as such, with **Balance only** showing just the money (see [README.md](README.md#subscriptions-and-api-accounts)).
 
 `reportsSpendableBalance` is true, so the wallet gets the "warn me below" field like DeepSeek's and Command Code's. A quota or subscription group reports no wallet and simply never hands one over.
 

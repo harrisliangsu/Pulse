@@ -9,7 +9,7 @@ A Chutes subscription and an API key (`cpk_…`). Pay-as-you-go accounts without
 ## Steps
 
 1. Sign in at [chutes.ai](https://chutes.ai) and create an API key (see Chutes' [authentication guide](https://chutes.ai/docs/getting-started/authentication)).
-2. In Pulse: **Settings → Accounts → Chutes**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Chutes**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists each allowance and when it resets.
 
 ## If it doesn't work

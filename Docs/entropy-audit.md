@@ -4,7 +4,7 @@ Historical snapshot, not a contract. When this page and the code disagree, the c
 
 只读。源码 250 个 Swift 文件、64,485 行；测试 137 个文件、27,678 行；Docs 186 篇、7,756 行；提交 379。行号与计数对应当日工作树。
 
-高 4，中 10，低 4；另有 2 条原列为高、复核后撤回，见文末「复核更正」。`Sources` 与 `Tests` 内 `TODO` / `FIXME` / `HACK` 为 0。
+高 4，中 7，低 4；另有 2 条原列为高、复核后撤回，见文末「复核更正」。2026-10-05 删去了已在代码中修复的条目：16 处 `case .clinePass, .alibabaCodingPlan`、`removeAccount` 漏清的键、七个 provider 缺用量解析套件、`PointerEntryReporter` / `UsageDockView` / `UsageStore` 文件头 / `Package.swift` 的过时注释，以及已改正的文档条目。`Sources` 与 `Tests` 内 `TODO` / `FIXME` / `HACK` 为 0。
 
 本次未跑 `swift build` 与 `swift test`。Panel 的真实指针输入未在运行中的应用上复测。
 
@@ -44,24 +44,21 @@ Historical snapshot, not a contract. When this page and the code disagree, the c
 
 ### `UsageStore.swift`
 
-`Sources/Pulse/Usage/UsageStore.swift`。1,186 行，约 32 个存储属性。`refresh(dueOnly:)`（约 409–727）与 `refresh(_ account:)`（735–902）各写一套 20 余个服务构造和 `switch`；`fetchAdded`（941–989）第三次列出全部 profiled case。文件头 7–9 行仍写 “The two providers”。合并历史约 53 次提交触及。被测的是抽出去的纯函数（`AdaptiveRefresh`、`AlertMemory`、`UsageCache`）；队列、stall、one-shot timer 的编排没有集成测试。
+`Sources/Pulse/Usage/UsageStore.swift`。1,186 行，约 32 个存储属性。`refresh(dueOnly:)`（约 409–727）与 `refresh(_ account:)`（735–902）各写一套 20 余个服务构造和 `switch`；`fetchAdded`（941–989）第三次列出全部 profiled case。合并历史约 53 次提交触及。被测的是抽出去的纯函数（`AdaptiveRefresh`、`AlertMemory`、`UsageCache`）；队列、stall、one-shot timer 的编排没有集成测试。
 
-### `Provider` 的 exhaustive switch
+### `Provider` switch 的 `default` 分支
 
-`case .clinePass, .alibabaCodingPlan` 在 11 个文件出现 16 处。`UsageProvider.swift` 占 6 处，其余为 `UsageStore`、`UsageRoute`、`MonitoredAccount`、`AgentActivity`、`SettingsView`、`ProviderDiscovery`、`ProviderAccess`、`ConnectionRemedy`、`BotMarkTint`、`OAuthLogin` 各 1 处。`Docs/development.md` 写 profiled provider “touching no shared switch”。`SettingsView.swift:1442` 的 `default` 分支文案是 “No Ollama session found. Sign in at ollama.com first.”。`UsageProvider.billing` 的 `default` 返回 `.subscription`。`ProfiledProviders.profile` 的 `default` 为 `nil`，`UsageStore` 对走到该处的账户返回 `.loading`。
+`SettingsView.swift:1442` 的 `default` 分支文案是 “No Ollama session found. Sign in at ollama.com first.”。`UsageProvider.billing` 的 `default` 返回 `.subscription`。`ProfiledProviders.profile` 的 `default` 为 `nil`，`UsageStore` 对走到该处的账户返回 `.loading`。
 
 ## 中
 
 | 位置 | 事实 |
 |---|---|
-| `AppSettings.removeAccount` 1604–1627 | 注释写 “everything stored against it”。实现只清 `pinnedWindows`、`sources`、`ringTints`、`sessionBrowsers`。`balanceBases`、`balanceBudgets`、`lowBalanceAlerts`、`botMarks`、`botPersonas`、`botShapes`、`botColours`、`serverAddresses` 仍按 `account.id` 存取。 |
 | `Provider` 与 `SpendAgent` | `Provider.builtIn` 77 个环；`SpendAgent` 54 个 case。名字重叠，`sourceID` 与 inventory id 不同（`claude` 对 `claudeCode`）。Claude Code 与 Codex 走 `UsageLedgerReader` 与 `ledger-7-*.json`；其余走 `AgentLedgers`、`AgentCache` version 8，以及 5 个 legacy store。 |
 | `ProviderUsage.Unavailability` | 约 60 个 case。Ollama、Xiaomi、Qoder、StepFun 各有 missing / expired / no-plan 专名；profiled 侧已有共享的 `sessionMissing`、`sessionExpired`、`noPlan`。每个新 case 同时进入 `message` 与 `AlertMemory.standing` 的三分。 |
-| 手写用量解析，无 fixture | `Tests/PulseTests` 下没有 Cursor、Grok、Grok Bot、MiniMax、Kimi Code、OpenCode Go、Ollama Cloud 的用量套件。`CopilotLogReaderTests` 测的是 spend。`OpenCodeReviewReaderTests` 不是 OpenCode Go 的用量解析。`OllamaCloudClient` 用 `XMLDocument`、XPath 与 “% used” 正则。 |
-| Panel 输入路径 | `PointerEntryReporter`（只报 enter）+ `PanelPointerWatcher` 每 0.15s + `ActiveDisplayFollower` 每 0.25s + `FloatingPanel.sendEvent` + `PanelHitArea`。无 `.onHover`，无 global/local event monitor。`PointerEntryReporter.swift:14` 仍写面板在卡片打开时会 resize。`UsageDockView.swift:430` 仍写 berth 不参与 hit testing；`PanelSurface` 当前是可命中的。 |
+| Panel 输入路径 | `PointerEntryReporter`（只报 enter）+ `PanelPointerWatcher` 每 0.15s + `ActiveDisplayFollower` 每 0.25s + `FloatingPanel.sendEvent` + `PanelHitArea`。无 `.onHover`，无 global/local event monitor。 |
 | `Usage/UsageSource.swift:308` | `enum PanelMetrics` 定义在 Usage 目录。8 个 `nonisolated(unsafe)` 静态字段加 `NSLock`。`FloatingUsagePanelView` 用 `.id` 拼接 language 等字符串强制重建，因为 `PanelMetrics` 对 SwiftUI 不可观察。 |
 | `BotMarkEngine.swift` | 1,566 行，从 `grok-bot-engine.js` 移植。`updateStateTargets` 以字符串 `switch` 状态（`"sleeping"` 等 27 个以上 case），不是 enum。`BotMarkMorphs.swift` 另 477 行。每个启用的 ring 一个引擎，`TimelineView` 周期 1/30 秒。文件内注释写 7 个 mark 停稳约占一核 15%。 |
-| 文档与代码 | `Docs/architecture.md:3` 写 “one SwiftUI view per file”。`Docs/refresh-and-data.md:3` 仍把余额环写成 DeepSeek 的例外；`BalanceRing` 已用于 API 账户，`CLAUDE.md` 与 `Docs/providers/README.md` 已改。`Package.swift` 注释写 “sixty-nine files”，当前 250 个 Swift 文件。 |
 | 测试分布 | 约 52/137 个测试文件是 profiled provider 的二手 JSON 套件。`SettingsView` 无测试。Auth 无 `OAuthLogin`、`APIKeyStore`、`BrowserCookies`、`CursorWebLogin` 套件。App 无 `LoginItem`、`AppDelegate`、`AppUpdate`、`LegacyDefaults` 套件。`Docs/testing.md` 写明无 UI 测试。 |
 | CI 与打包 | `ci.yml` 对 `**/*.md` 使用 `paths-ignore`。`bundle.sh` 手写 `Info.plist`、拷贝 Sparkle、`install_name_tool`。`Package.swift` 用 `linkerSettings` 与 `unsafeFlags` 把 SDK stamp 钉在 26.0。Sparkle 依赖为 `from: "2.6.0"`。 |
 

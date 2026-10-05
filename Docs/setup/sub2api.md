@@ -10,7 +10,7 @@ Access to a running sub2api deployment (its web address) and an API key for a gr
 
 1. Get your key: sign in to your sub2api deployment's web console (the address your operator gave you) and open your API keys page — usually reachable from a "Use Key" or "API Keys" button on your dashboard. Copy the key for the group you were assigned. If you administer the deployment yourself, create a group under the Admin Dashboard first, then generate a key for it.
    <!-- unverified: exact on-screen button/page label for the end-user API key page. sub2api's own README calls it "the user API-key page" and mentions a "Use Key" button, but no screenshot or live deployment was checked, and the label is admin-configurable per deployment. -->
-2. In Pulse, go to Settings → Accounts → sub2api and turn on "Show in panel". Fill in "Server address" with your deployment's address (for example `https://gateway.example.com`) and click Save — if you don't type a scheme, Pulse assumes `https://`; plain `http://` is only accepted for an address on your own network, such as `localhost` or a `192.168.x.x` address. Then paste your group key into "API key" and click Save.
+2. In Pulse, go to Settings → sub2api and turn on "Show in panel". Fill in "Server address" with your deployment's address (for example `https://gateway.example.com`) and click Save — if you don't type a scheme, Pulse assumes `https://`; plain `http://` is only accepted for an address on your own network, such as `localhost` or a `192.168.x.x` address. Then paste your group key into "API key" and click Save.
 3. Success looks like a ring (or a balance, if your group is a prepaid wallet) for sub2api on the Pulse panel.
 
 ## If it doesn't work

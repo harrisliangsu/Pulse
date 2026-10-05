@@ -31,17 +31,17 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 
 Current routes and sign-in behaviour live in [providers/README.md](providers/README.md). Do not duplicate them in architecture or UI docs.
 
-Older investigation notes that are still useful as history (not the live contract):
+[ollama-cloud.md](ollama-cloud.md) is the current contract for Ollama Cloud — how usage is read from a signed-in page (no quota API); [providers/ollama-cloud.md](providers/ollama-cloud.md) only places it in the matrix.
 
-- [ollama-cloud.md](ollama-cloud.md) — how Ollama Cloud usage is read from a signed-in page (no quota API).
+An older investigation note that is still useful as history (not the live contract):
+
 - [grok-bot-usage.md](grok-bot-usage.md) — historical Grok Bot / Cursor “Sand” investigation.
 
-When those notes disagree with `providers/README.md` or the code, the code and the providers README win.
+When it disagrees with `providers/README.md` or the code, the code and the providers README win.
 
 ## Also in this folder
 
 - [entropy-audit.md](entropy-audit.md) — 2026-09-26 snapshot of structural debt. Historical, not a contract.
-- [plan.md](plan.md) — working notes, not a contract.
 - Screenshots, `demo.gif` and `bot-mark.gif` used by the READMEs and by [ui/rings-and-surface.md](ui/rings-and-surface.md).
 
 ## Release notes

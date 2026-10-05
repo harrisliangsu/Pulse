@@ -9,7 +9,7 @@ A Neuralwatt account with an API key. The subscription and the spending allowanc
 ## Steps
 
 1. Open [portal.neuralwatt.com](https://portal.neuralwatt.com/dashboard) and create or copy an API key.
-2. In Pulse: **Settings → Accounts → Neuralwatt**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Neuralwatt**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears (or the balance, with no subscription). The pane lists the monthly limit with its period end, and the key's spend limit.
 
 ## If it doesn't work

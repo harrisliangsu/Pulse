@@ -9,7 +9,7 @@ A Coding Plan subscription in Alibaba Cloud Model Studio (百炼), on either the
 ## Steps
 
 1. Open the Coding Plan page in Model Studio — [international](https://modelstudio.console.alibabacloud.com/ap-southeast-1/?tab=coding-plan#/efm/coding_plan) or [China mainland](https://bailian.console.aliyun.com/cn-beijing/?tab=model#/efm/coding_plan) — and copy the plan's API key.
-2. In Pulse: **Settings → Accounts → Alibaba Coding Plan**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Alibaba Coding Plan**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists the allowances and when each resets.
 
 There is no site to choose. Pulse asks the international console first and the China mainland console second, and reads whichever one knows your key.

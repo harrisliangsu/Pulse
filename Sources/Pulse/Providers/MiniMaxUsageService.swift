@@ -17,8 +17,8 @@ import Foundation
 /// Three things about the reply are worth knowing before changing anything here.
 ///
 /// - **It reports what is *left*, not what is gone.** `current_*_remaining_percent`
-///   at 96 means 4% spent. Antigravity is the only other provider that does
-///   this, and the inversion happens here so everything downstream stays in
+///   at 96 means 4% spent. Antigravity and Copilot do this too, and the
+///   inversion happens here so everything downstream stays in
 ///   terms of what has been used.
 /// - **Numbers arrive as strings or as numbers, interchangeably.** The same
 ///   field is `"96"` in one reply and `75` in another, so every figure goes

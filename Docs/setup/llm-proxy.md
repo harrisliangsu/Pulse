@@ -9,7 +9,7 @@ The proxy's address and the key it was started with (`PROXY_API_KEY`) — the sa
 ## Steps
 
 1. Get the proxy's address and key from whoever runs it. The address can be the proxy's root or its `/v1` base.
-2. In Pulse: **Settings → Accounts → LLM API Key Proxy**. Turn on **Show in panel**. Fill in **Server address** (for example `http://localhost:8000` for one on this Mac) and click **Save**. Then paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → LLM API Key Proxy**. Turn on **Show in panel**. Fill in **Server address** (for example `http://localhost:8000` for one on this Mac) and click **Save**. Then paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists one row per quota group, labelled with the upstream and group name.
 
 ## If it doesn't work

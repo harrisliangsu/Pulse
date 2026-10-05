@@ -9,7 +9,7 @@ The gateway's address and a **virtual key** on it that has at least one budget. 
 ## Steps
 
 1. Get the virtual key (it usually starts with `sk-bf-`) and the gateway's address from whoever runs it — the same address your AI client uses, with or without `/v1` on the end.
-2. In Pulse: **Settings → Accounts → Bifrost**. Turn on **Show in panel**. Fill in **Server address** (for example `https://bifrost.example.com`, or `http://localhost:8080` for one on this Mac) and click **Save**. Then paste the virtual key into **API key** and click **Save**.
+2. In Pulse: **Settings → Bifrost**. Turn on **Show in panel**. Fill in **Server address** (for example `https://bifrost.example.com`, or `http://localhost:8080` for one on this Mac) and click **Save**. Then paste the virtual key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists each budget. A budget set on a model or upstream provider is labelled with its name.
 
 ## If it doesn't work

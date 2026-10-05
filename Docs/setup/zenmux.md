@@ -9,7 +9,7 @@ A ZenMux subscription and a **Management API key**. Ordinary ZenMux API keys —
 ## Steps
 
 1. Open the [ZenMux Management Console](https://zenmux.ai/platform/management) and create a Management API key.
-2. In Pulse: **Settings → Accounts → ZenMux**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → ZenMux**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the pane lists the 5-hour and weekly limits with their resets, your plan, and the balance.
 
 ## If it doesn't work

@@ -478,7 +478,7 @@ struct AlertMemory: Codable, Sendable, Equatable {
 /// the card — and a silent banner on a second display, or behind a full-screen
 /// window, is a message that was never delivered.
 ///
-/// One rule for all four rather than sound for the consequential two: macOS
+/// One rule for all of them rather than sound for the consequential ones: macOS
 /// offers one switch per app, so a distinction Pulse drew here would be one
 /// nobody could turn off, and one nobody could discover either.
 @MainActor
@@ -811,7 +811,7 @@ final class UsageAlerts {
 
     /// Two sentences, with a space only where one is wanted. A Chinese full
     /// stop is full-width and carries its own trailing space; adding another
-    /// leaves a visible gap mid-line. Same rule as `glassSubtitle`.
+    /// leaves a visible gap mid-line.
     private static func joined(_ first: String, _ second: String) -> String {
         guard !second.isEmpty else { return first }
         guard !first.isEmpty else { return second }
