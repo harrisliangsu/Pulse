@@ -119,28 +119,34 @@ enum CodexPromptCache {
         }
         let names = names(inHead: head)
         return PromptCacheSession(
-            id: file.path, title: names.title, project: UsageProject(names.cwd)?.name, lapse: lapse
+            id: file.path, title: names.title, isReview: names.isReview,
+            project: UsageProject(names.cwd)?.name, lapse: lapse
         )
     }
 
     /// The directory from the session header, and the opening prompt: the
     /// first user message that is words rather than an envelope — the way the
     /// Token spend pane names a Codex session.
-    private static func names(inHead text: String) -> (title: String?, cwd: String?) {
+    private static func names(inHead text: String) -> (title: String?, cwd: String?, isReview: Bool) {
         var title: String?
         var cwd: String?
-        for line in text.split(separator: "\n") where title == nil || cwd == nil {
+        var isReview = false
+        for line in text.split(separator: "\n") where (title == nil && !isReview) || cwd == nil {
             guard line.contains("\"cwd\"") || line.contains("\"role\":\"user\""),
                   let data = line.data(using: .utf8),
                   let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let payload = root["payload"] as? [String: Any]
             else { continue }
             if cwd == nil, let found = payload["cwd"] as? String, !found.isEmpty { cwd = found }
-            if title == nil, payload["type"] as? String == "message", payload["role"] as? String == "user" {
-                title = UsageLedgerReader.codexTitle(in: payload["content"])
+            if title == nil, !isReview, payload["type"] as? String == "message", payload["role"] as? String == "user" {
+                if UsageLedgerReader.isCodexReview(in: payload["content"]) {
+                    isReview = true
+                } else {
+                    title = UsageLedgerReader.codexTitle(in: payload["content"])
+                }
             }
         }
-        return (title, cwd)
+        return (title, cwd, isReview)
     }
 
     /// From the end of a rollout backwards: the latest request that read or

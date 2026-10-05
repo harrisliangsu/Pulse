@@ -917,6 +917,7 @@
 "Prompt cache" = "Prompt cache";
 "No conversation is holding a cache" = "No conversation is holding a cache";
 "Untitled conversation" = "Untitled conversation";
+"Codex review" = "Codex review";
 "%@ cache" = "%@ cache";
 "Last used %@" = "Last used %@";
 "The latest one's cache lapsed at %@." = "The latest one's cache lapsed at %@.";

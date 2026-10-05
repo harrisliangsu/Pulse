@@ -917,6 +917,7 @@
 "Prompt cache" = "プロンプトキャッシュ";
 "No conversation is holding a cache" = "キャッシュが残っている会話はありません";
 "Untitled conversation" = "無題の会話";
+"Codex review" = "Codex の自動レビュー";
 "%@ cache" = "%@のキャッシュ";
 "Last used %@" = "最終使用 %@";
 "The latest one's cache lapsed at %@." = "直近の会話のキャッシュは %@ に期限切れになりました。";

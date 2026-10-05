@@ -428,6 +428,10 @@ struct UsageLedger: Sendable, Equatable {
         /// What the conversation was called: the title the user set, else the
         /// words it opened with. Nil for a transcript that carries neither.
         let title: String?
+        /// A session Codex ran itself to review another's planned action: no
+        /// words of the user's, and no project. Shown as "Codex review"
+        /// (`SessionLabel`) rather than as an unnamed file.
+        var isReview = false
         /// The stated directory or source-scoped project, with identity kept
         /// separately from the short name shown in the pane.
         let project: UsageProject?
@@ -740,7 +744,7 @@ actor UsageLedgerReader {
     static let shared = UsageLedgerReader()
 
     /// The number in `ledger-<n>-<provider>.json`; see `FileCache.file`.
-    nonisolated static let cacheVersion = 8
+    nonisolated static let cacheVersion = 9
 
     /// Tokens by quarter-hour (`yyyy-MM-dd HH:mm`, local) and then by model.
     private typealias Buckets = [String: [String: TokenTally]]
@@ -952,6 +956,7 @@ actor UsageLedgerReader {
                 guard !Task.isCancelled else { return ([:], [:], [:]) }
                 fresh[key] = FileCache.Entry(
                     stamp: stamp, days: scanned.days, title: scanned.title, cwd: scanned.cwd,
+                    isReview: scanned.isReview ? true : nil,
                     timings: scanned.timings, replies: scanned.replies,
                     runningTotals: scanned.runningTotals.isEmpty ? nil : scanned.runningTotals
                 )
@@ -998,7 +1003,8 @@ actor UsageLedgerReader {
                 }
             }
             counted[key] = FileCache.Entry(
-                stamp: entry.stamp, days: days, title: entry.title, cwd: entry.cwd, timings: fileTimings
+                stamp: entry.stamp, days: days, title: entry.title, cwd: entry.cwd,
+                isReview: entry.isReview, timings: fileTimings
             )
             for (day, models) in days {
                 for (model, tally) in models {
@@ -1054,6 +1060,7 @@ actor UsageLedgerReader {
             /// path, so the choice is stable).
             var title: String?
             var cwd: String?
+            var isReview = false
             var parentSeen = false
         }
 
@@ -1096,6 +1103,7 @@ actor UsageLedgerReader {
                 rollup.parentSeen = true
                 rollup.title = entry.title ?? rollup.title
                 rollup.cwd = entry.cwd ?? rollup.cwd
+                rollup.isReview = entry.isReview == true
             } else if !rollup.parentSeen {
                 rollup.title = rollup.title ?? entry.title
                 rollup.cwd = rollup.cwd ?? entry.cwd
@@ -1112,6 +1120,7 @@ actor UsageLedgerReader {
                     id: path,
                     name: url.deletingPathExtension().lastPathComponent,
                     title: rollup.title,
+                    isReview: rollup.isReview,
                     project: UsageProject(rollup.cwd)
                         ?? Self.project(of: url, provider: provider),
                     start: start,
@@ -1204,6 +1213,9 @@ actor UsageLedgerReader {
         /// reversed — a folder whose own name contains a dash is
         /// indistinguishable from a separator, and this Mac has several.
         var cwd: String?
+        /// A Codex session that opens with a review request instead of the
+        /// user's words (`codexReviewOpening`).
+        var isReview = false
         /// Timed replies by quarter-hour and then model (`ReplyTiming`).
         var timings: [String: [String: ReplyTiming]] = [:]
         /// Claude Code's replies by message id, and a Codex fork's readings by
@@ -1278,14 +1290,79 @@ actor UsageLedgerReader {
     /// **Not the whole message.** These are the user's own words and a row is
     /// one line; the point is to tell one conversation from another, which the
     /// first few words do.
+    ///
+    /// **Links are unwrapped, not shown as markup.** `[text](url)` reads as
+    /// its text and `[url]` or `<url>` as the url. A message that opens with a
+    /// line that is only a link and carries words below it is named for the
+    /// first of those lines — the link is what was pasted, the words are the
+    /// request. A message that is only a link reads as `host/first-segment/…`
+    /// (`compactLink(_:)`), never as a scheme and a long path.
     static func title(from text: String) -> String? {
-        let cleaned = text
-            .replacingOccurrences(of: "\n", with: " ")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        // A pasted file or a command envelope is not a title. A `<url>` is
+        // markdown's way to write a link, not an envelope.
+        guard !trimmed.hasPrefix("<") || trimmed.hasPrefix("<http"), !trimmed.hasPrefix("Caveat:") else { return nil }
+
+        let lines = trimmed.split(whereSeparator: \.isNewline)
+            .map { collapsingWhitespace(unwrappingLinks(String($0))) }
+            .filter { !$0.isEmpty }
+        guard let first = lines.first else { return nil }
+
+        let cleaned: String
+        if isLinkOnly(first) {
+            // The first line of words below the link, else the link itself.
+            cleaned = lines.first { !isLinkOnly($0) } ?? compactLink(first)
+        } else {
+            cleaned = lines.joined(separator: " ")
+        }
         guard !cleaned.isEmpty else { return nil }
-        // A pasted file or a command envelope is not a title.
-        guard !cleaned.hasPrefix("<"), !cleaned.hasPrefix("Caveat:") else { return nil }
         return cleaned.count <= 70 ? cleaned : String(cleaned.prefix(69)) + "…"
+    }
+
+    /// `[text](url)` as `text`, `[](url)` as `url`, `[url]` and `<url>` as the
+    /// url.
+    private static func unwrappingLinks(_ line: String) -> String {
+        var result = line
+        for (pattern, template) in [
+            (#"!?\[([^\]]+)\]\([^)]*\)"#, "$1"),
+            (#"!?\[\]\(([^)\s]+)[^)]*\)"#, "$1"),
+            (#"\[(https?://[^\]\s]+)\]"#, "$1"),
+            (#"<(https?://[^>\s]+)>"#, "$1"),
+        ] {
+            result = result.replacingOccurrences(of: pattern, with: template, options: .regularExpression)
+        }
+        return result
+    }
+
+    private static func collapsingWhitespace(_ text: String) -> String {
+        text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    private static func isLinkOnly(_ line: String) -> Bool {
+        line.range(of: #"^https?://\S+$"#, options: .regularExpression) != nil
+    }
+
+    /// `host/first-path-segment/…` for a link: no scheme, no brackets, no
+    /// query. The ellipsis marks that there is more path after the segment.
+    /// A link that cannot be read is shown without its scheme.
+    static func compactLink(_ link: String) -> String {
+        guard let components = URLComponents(string: link), let host = components.host, !host.isEmpty else {
+            return link.replacingOccurrences(of: #"^https?://"#, with: "", options: .regularExpression)
+        }
+        let segments = components.path.split(separator: "/", omittingEmptySubsequences: true)
+        guard let first = segments.first else { return host }
+        return "\(host)/\(first)" + (segments.count > 1 ? "/…" : "")
+    }
+
+    /// The opening of the message Codex puts first in a session it runs to
+    /// review another's planned action.
+    static let codexReviewOpening = "The following is the Codex agent history"
+
+    /// Whether a Codex user-role message is a review request rather than the
+    /// user's words (`codexTitle(in:)` gives such a message no title).
+    static func isCodexReview(in content: Any?) -> Bool {
+        text(in: content)?.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(codexReviewOpening) == true
     }
 
     /// What a Codex user-role message says **in the user's own words**, as a
@@ -1308,7 +1385,7 @@ actor UsageLedgerReader {
         guard let text = text(in: content) else { return nil }
         var opening = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if opening.hasPrefix("# AGENTS.md instructions")
-            || opening.hasPrefix("The following is the Codex agent history") {
+            || opening.hasPrefix(codexReviewOpening) {
             return nil
         }
         if opening.hasPrefix("# Context from my IDE setup") || opening.hasPrefix("# Files mentioned by the user") {
@@ -1548,7 +1625,7 @@ actor UsageLedgerReader {
                 }
             }
 
-            if scanned.title == nil || scanned.cwd == nil {
+            if (scanned.title == nil && !scanned.isReview) || scanned.cwd == nil {
                 // The directory is stated once in the session header; the
                 // opening prompt is a `response_item` whose payload is a
                 // message with the user's role on it — **not** an `event_msg`,
@@ -1560,11 +1637,16 @@ actor UsageLedgerReader {
                         if scanned.cwd == nil, let cwd = payload["cwd"] as? String, !cwd.isEmpty {
                             scanned.cwd = cwd
                         }
-                        if scanned.title == nil,
+                        if scanned.title == nil, !scanned.isReview,
                            payload["type"] as? String == "message",
-                           payload["role"] as? String == "user",
-                           let title = Self.codexTitle(in: payload["content"]) {
-                            scanned.title = title
+                           payload["role"] as? String == "user" {
+                            // A review session's first words are the review
+                            // request: it is marked, and has no title.
+                            if Self.isCodexReview(in: payload["content"]) {
+                                scanned.isReview = true
+                            } else if let title = Self.codexTitle(in: payload["content"]) {
+                                scanned.title = title
+                            }
                         }
                     }
                 }
@@ -1795,6 +1877,8 @@ private struct FileCache: Codable {
         /// predates them.
         var title: String?
         var cwd: String?
+        /// Set for a Codex review session; `ledger-9` is what makes it present.
+        var isReview: Bool?
         /// Optional for the same reason; `ledger-5` is what makes it present.
         var timings: [String: [String: ReplyTiming]]?
         /// Claude Code's replies and Codex's readings by id (`ScannedReply`),
@@ -1872,6 +1956,11 @@ private struct FileCache: Codable {
         // title was the first user-role message, which for Codex is the
         // AGENTS.md instructions or the environment (`codexTitle(in:)`), and
         // a rollout that has not changed is never read again.
+        //
+        // **`ledger-9`: Codex review sessions are marked.** Entries gained
+        // `isReview` (a session Codex ran to review another's action, which
+        // has no words of the user's), and titles now unwrap links; a rollout
+        // that has not changed is never read again.
         //
         // **The number lives in `UsageLedgerReader.cacheVersion`**, where
         // `PulseStorage.isSuperseded` reads it: every `ledger-<n>-*` below it

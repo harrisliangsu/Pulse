@@ -783,7 +783,7 @@ private struct PromptCacheRow: View {
                         lapsed: false
                     )
                     if live.count > 1 {
-                        Text(verbatim: urgent.displayName ?? String.localized("Untitled conversation"))
+                        Text(verbatim: urgent.displayName)
                             .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
                             .foregroundStyle(.primary.opacity(0.45))
                             .lineLimit(1)

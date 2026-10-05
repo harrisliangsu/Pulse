@@ -917,6 +917,7 @@
 "Prompt cache" = "프롬프트 캐시";
 "No conversation is holding a cache" = "캐시가 남아 있는 대화가 없습니다";
 "Untitled conversation" = "제목 없는 대화";
+"Codex review" = "Codex 자동 리뷰";
 "%@ cache" = "%@ 캐시";
 "Last used %@" = "마지막 사용 %@";
 "The latest one's cache lapsed at %@." = "가장 최근 대화의 캐시는 %@에 만료되었습니다.";

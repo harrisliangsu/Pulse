@@ -258,5 +258,153 @@ struct SpendDataQualityTests {
         #expect(!PulseStorage.isSuperseded("agent-\(AgentCache.version)-dsh.json"))
         #expect(!PulseStorage.isSuperseded("ledger-\(UsageLedgerReader.cacheVersion)-codex.json"))
         #expect(PulseStorage.isSuperseded("agent-\(AgentCache.version - 1)-dsh.json"))
+        // Entries gained the review flag in 9; an 8 never holds it.
+        #expect(PulseStorage.isSuperseded("ledger-8-codex.json"))
+    }
+
+    // MARK: - Titles that are links
+
+    @Test("A link on the first line is not the title when words follow it")
+    func linkOnlyFirstLine() {
+        #expect(UsageLedgerReader.title(from: "[https://example.com/a/b/c](https://example.com/a/b/c)\ncheck the proxy rules")
+            == "check the proxy rules")
+        #expect(UsageLedgerReader.title(from: "[https://example.com/a/b/c]\n\ncheck the proxy rules\nand the logs")
+            == "check the proxy rules")
+        #expect(UsageLedgerReader.title(from: "https://example.com/a/b/c\n帮我检查一下规则") == "帮我检查一下规则")
+        #expect(UsageLedgerReader.title(from: "<https://example.com/a>\nread this") == "read this")
+        // A first line of words keeps the whole message on one line, as before.
+        #expect(UsageLedgerReader.title(from: "read\nhttps://example.com/a") == "read https://example.com/a")
+    }
+
+    @Test("A message that is only a link reads as host/first-segment/…")
+    func linkOnlyMessage() {
+        #expect(UsageLedgerReader.title(from: "https://gist.example.org/someone/0123456789abcdef0123456789abcdef")
+            == "gist.example.org/someone/…")
+        #expect(UsageLedgerReader.title(from: "[https://gist.example.org/someone/0123456789abcdef](https://gist.example.org/someone/0123456789abcdef)")
+            == "gist.example.org/someone/…")
+        #expect(UsageLedgerReader.title(from: "[https://example.com/docs?q=1#top]") == "example.com/docs")
+        #expect(UsageLedgerReader.title(from: "https://example.com/docs/") == "example.com/docs")
+        #expect(UsageLedgerReader.title(from: "https://example.com") == "example.com")
+        #expect(UsageLedgerReader.title(from: "  https://example.com/a/b \n https://example.com/c ") == "example.com/a/…")
+    }
+
+    @Test("Markdown links read as their text, and whitespace is collapsed")
+    func markdownLinks() {
+        #expect(UsageLedgerReader.title(from: "see [the docs](https://example.com/docs) for  details")
+            == "see the docs for details")
+        #expect(UsageLedgerReader.title(from: "open [https://example.com/x] now") == "open https://example.com/x now")
+        #expect(UsageLedgerReader.title(from: "fix\t\tthe   ring\r\nand the card") == "fix the ring and the card")
+        #expect(UsageLedgerReader.title(from: "[](https://example.com/x)") == "example.com/x")
+        // A link is not an envelope, but a command envelope still is.
+        #expect(UsageLedgerReader.title(from: "<command-name>/init</command-name>") == nil)
+        // The length limit is the same after cleaning.
+        let long = UsageLedgerReader.title(from: "[" + String(repeating: "word ", count: 40) + "](https://example.com)")
+        #expect(long?.count == 70)
+        #expect(long?.hasSuffix("…") == true)
+    }
+
+    // MARK: - Codex review sessions
+
+    private static let reviewOpening = "The following is the Codex agent history whose request action you are assessing."
+
+    private static func codexMessage(_ text: String) throws -> String {
+        let object: [String: Any] = [
+            "timestamp": "2026-09-20T10:00:00Z", "type": "response_item",
+            "payload": ["type": "message", "role": "user", "content": [["type": "input_text", "text": text]]],
+        ]
+        return String(decoding: try JSONSerialization.data(withJSONObject: object), as: UTF8.self)
+    }
+
+    private static let codexCount = #"{"timestamp":"2026-09-20T10:00:00Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":100,"output_tokens":10},"last_token_usage":{"input_tokens":100,"output_tokens":10}}}}"#
+    private static let codexModel = #"{"timestamp":"2026-09-20T10:00:00Z","type":"turn_context","payload":{"model":"m"}}"#
+
+    @Test("A Codex session that opens with a review request is marked, and keeps no title")
+    func codexReviewSessionIsMarked() async throws {
+        #expect(UsageLedgerReader.isCodexReview(in: [["type": "input_text", "text": Self.reviewOpening]]))
+        #expect(!UsageLedgerReader.isCodexReview(in: [["type": "input_text", "text": "fix the ring"]]))
+        #expect(!UsageLedgerReader.isCodexReview(in: "# AGENTS.md instructions for /x"))
+
+        let home = Self.temporary("review")
+        defer { try? FileManager.default.removeItem(at: home) }
+        let scratch = "/Users/me/Documents/Codex/2026-10-04/some-prompt"
+        let header = #"{"timestamp":"2026-09-20T10:00:00Z","type":"session_meta","payload":{"id":"r1","cwd":"\#(scratch)"}}"#
+        try Self.write([
+            header, Self.codexModel,
+            try Self.codexMessage("# AGENTS.md instructions for /work/api"),
+            try Self.codexMessage(Self.reviewOpening),
+            // Anything after the request is the transcript under review.
+            try Self.codexMessage("fix the ring"),
+            Self.codexCount,
+        ], to: home.appending(path: ".codex/sessions/2026/09/20/rollout-2026-09-20T10-00-00-r1.jsonl"))
+        try Self.write([
+            #"{"timestamp":"2026-09-20T11:00:00Z","type":"session_meta","payload":{"id":"n1","cwd":"/work/api"}}"#,
+            Self.codexModel,
+            try Self.codexMessage("add a retry"),
+            Self.codexCount.replacingOccurrences(of: "10:00:00", with: "11:00:00"),
+        ], to: home.appending(path: ".codex/sessions/2026/09/20/rollout-2026-09-20T11-00-00-n1.jsonl"))
+
+        let cache = home.appending(path: "cache")
+        try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
+        // Read fresh, and again from the cache it wrote: the flag travels.
+        for pass in 0..<2 {
+            let ledger = await UsageLedgerReader(home: home, cacheDirectory: cache).ledger(for: .codex, prices: [:])
+            let review = try #require(ledger.sessions.first { $0.name.hasSuffix("r1") }, "pass \(pass)")
+            #expect(review.isReview)
+            #expect(review.title == nil)
+            #expect(review.project == nil)
+            let ordinary = try #require(ledger.sessions.first { $0.name.hasSuffix("n1") })
+            #expect(!ordinary.isReview)
+            #expect(ordinary.title == "add a retry")
+        }
+        #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-9-codex.json").path))
+    }
+
+    // MARK: - What a row says
+
+    @Test("A session is never named for its file")
+    func sessionLabels() {
+        #expect(SessionLabel.text(title: "Fix the ring", isReview: false, project: "Pulse") == "Fix the ring")
+        #expect(SessionLabel.text(title: nil, isReview: false, project: "Pulse") == "Pulse")
+        #expect(SessionLabel.text(title: nil, isReview: true, project: nil) == String.localized("Codex review"))
+        #expect(SessionLabel.text(title: nil, isReview: false, project: nil) == String.localized("Untitled conversation"))
+
+        let untitled = UsageLedger.Session(
+            id: "/h/.codex/sessions/rollout-2026-10-04T20-42-25-01a106ef.jsonl",
+            name: "rollout-2026-10-04T20-42-25-01a106ef", title: nil, project: nil,
+            start: Date(timeIntervalSince1970: 1_789_372_800), end: Date(timeIntervalSince1970: 1_789_372_900),
+            tokens: 10, cost: 0
+        )
+        #expect(untitled.label(projectName: nil) == String.localized("Untitled conversation"))
+        #expect(!untitled.label(projectName: nil).contains("rollout"))
+        #expect(!untitled.namesItself())
+        // The project is the label here, so a subtitle must not repeat it.
+        #expect(untitled.label(projectName: "Pulse") == "Pulse")
+
+        var review = untitled
+        review = UsageLedger.Session(
+            id: untitled.id, name: untitled.name, title: nil, isReview: true, project: nil,
+            start: untitled.start, end: untitled.end, tokens: 10, cost: 0
+        )
+        #expect(review.label(projectName: nil) == String.localized("Codex review"))
+        #expect(review.namesItself())
+
+        // The prompt-cache lists read through the same rule.
+        let lapse = PromptCacheLapse(lastRequest: .now, lifetime: PromptCacheLapse.hour)
+        #expect(PromptCacheSession(id: "a", title: nil, project: nil, lapse: lapse).displayName
+            == String.localized("Untitled conversation"))
+        #expect(PromptCacheSession(id: "a", title: nil, isReview: true, project: nil, lapse: lapse).displayName
+            == String.localized("Codex review"))
+    }
+
+    @Test("The summary's session rows keep the review flag")
+    func summaryKeepsReviewFlag() {
+        let day = Date(timeIntervalSince1970: 1_789_372_800)
+        var ledger = UsageLedger.empty
+        ledger.sessions = [UsageLedger.Session(
+            id: "a", name: "rollout-a", title: nil, isReview: true, project: nil,
+            start: day, end: day, tokens: 10, cost: 0
+        )]
+        let kept = SpendSummary.Session(agent: .codex, session: ledger.sessions[0])
+        #expect(kept.session.isReview)
     }
 }

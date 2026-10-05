@@ -67,6 +67,8 @@ struct PromptCacheSession: Identifiable, Equatable, Sendable {
     let id: String
     /// A rename, or the opening prompt cut to a line.
     let title: String?
+    /// A session Codex ran to review another's action (`SessionLabel`).
+    var isReview = false
     /// The directory it ran in, by its last folder.
     let project: String?
     let lapse: PromptCacheLapse
@@ -91,8 +93,8 @@ struct PromptCacheReading: Equatable, Sendable {
 
 extension PromptCacheSession {
     /// What to call this conversation on a line of its own: a rename or the
-    /// opening prompt, else the project it ran in.
-    var displayName: String? { title ?? project }
+    /// opening prompt, else the project it ran in, else "Untitled conversation".
+    var displayName: String { SessionLabel.text(title: title, isReview: isReview, project: project) }
 }
 
 enum ClaudePromptCache {

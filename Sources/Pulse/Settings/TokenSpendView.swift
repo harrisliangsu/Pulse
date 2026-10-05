@@ -822,11 +822,10 @@ struct TokenSpendView: View {
                     if index > 0 { SettingsRowDivider() }
 
                     SettingsRow(
-                        // What the conversation was called. The directory is
-                        // the fallback and the file's own name the last
-                        // resort — a uuid tells the reader nothing, but it is
-                        // at least what the session is called.
-                        row.session.title ?? summary.projectName(for: row) ?? row.session.name,
+                        // What the conversation was called (`SessionLabel`):
+                        // the directory is the fallback, then "Untitled
+                        // conversation" — never the transcript's file name.
+                        row.session.label(projectName: summary.projectName(for: row)),
                         subtitle: Self.sessionSubtitle(row, project: summary.projectName(for: row)),
                         icon: row.agent.iconResource
                     ) {
@@ -864,7 +863,7 @@ struct TokenSpendView: View {
         // The directory belongs here once the title has taken the row's own
         // line — it is what tells two conversations about the same thing
         // apart.
-        guard let project, row.session.title != nil else { return when }
+        guard let project, row.session.namesItself() else { return when }
         return "\(when) · \(project)"
     }
 

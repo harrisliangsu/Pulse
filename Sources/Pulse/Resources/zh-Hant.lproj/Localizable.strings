@@ -917,6 +917,7 @@
 "Prompt cache" = "提示快取";
 "No conversation is holding a cache" = "目前沒有對話還留著快取";
 "Untitled conversation" = "未命名對話";
+"Codex review" = "Codex 自動審查";
 "%@ cache" = "%@快取";
 "Last used %@" = "最後使用 %@";
 "The latest one's cache lapsed at %@." = "最近一個對話的快取已在 %@ 過期。";

@@ -424,7 +424,7 @@ struct SpendSummary: Equatable, Sendable {
                     Session(
                         agent: agent,
                         session: UsageLedger.Session(
-                            id: session.id, name: session.name, title: session.title,
+                            id: session.id, name: session.name, title: session.title, isReview: session.isReview,
                             project: session.project, start: session.start, end: session.end,
                             tokens: windowed.tokens, cost: windowed.cost, unpricedTokens: windowed.unpriced, slots: session.slots, days: session.days
                         )
