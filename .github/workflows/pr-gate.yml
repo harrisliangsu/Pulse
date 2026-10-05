@@ -1,8 +1,7 @@
 name: PR guidance
 
-# Advisory only: small bug fixes, docs and translations may be submitted directly.
-# Larger changes need an accepted issue; missing links and a busy review queue
-# receive a reminder, never an automatic closure.
+# Advisory only: all contributions may be submitted directly.
+# A busy review queue receives a reminder, never an automatic closure.
 # pull_request_target supplies a token for commenting on fork PRs. Read metadata
 # only: never check out or execute the contributor's code in this workflow.
 on:
@@ -38,24 +37,6 @@ jobs:
                 : 'You have more than two PRs awaiting review. Please consider waiting for existing reviews before submitting more, so the maintainer can work through them. This PR will stay open.');
             }
 
-            const numbers = [...new Set([...(pr.body || '').matchAll(/(?<![\w/])#(\d+)\b/g)].map(m => Number(m[1])))];
-            let accepted = false;
-            for (const number of numbers) {
-              try {
-                const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: number });
-                if (!issue.pull_request && issue.labels.some(l => (l.name || l) === 'accepted')) {
-                  accepted = true;
-                  break;
-                }
-              } catch (error) {
-                if (error.status !== 404) throw error;
-              }
-            }
-            if (!accepted) {
-              reminders.push(chinese
-                ? '欢迎直接提交小 bug 修复、文档和翻译，无需先开 Issue。新功能或大重构请先在 Issue 中讨论，等维护者标记 accepted 后，在 PR 描述中关联该 Issue（例如 Closes #123）。如果已经开了 PR，可以在这里补充链接，无需重新提交。这个 PR 会保持开放。'
-                : 'Small bug fixes, documentation and translations are welcome directly, without an issue first. For new features or major refactors, please discuss an issue first and link it here once a maintainer labels it accepted (for example, Closes #123). If this PR is already open, add the link here; you do not need to submit it again. This PR will stay open.');
-            }
             if (!reminders.length) return;
 
             // Reopening a PR must not post the same guidance again.

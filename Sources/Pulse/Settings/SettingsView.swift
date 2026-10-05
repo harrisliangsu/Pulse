@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import AppKit
 import SwiftUI
 
@@ -38,7 +39,11 @@ struct SettingsView: View {
     /// other than the most recent one.
     @State private var historyReads: [Provider: ZaiUsageService.HistoryRead] = [:]
     @State private var codexAccount: CodexAccountUsage?
+    /// Bumped when OpenCode Go's console session is read or removed, which
+    /// changes whether the pane has a history to show — and asks for it.
+    @State private var consoleRevision = 0
     @State private var loadingHistory: Provider?
+    @State private var historyReadID = UUID()
     /// The key field's contents. Seeded from the store when the pane opens;
     /// the store is a file, not something SwiftUI can observe.
     @State private var apiKey = ""
@@ -138,6 +143,8 @@ struct SettingsView: View {
     /// The provider whose window starter is waiting on the risk confirmation.
     @State private var confirmingStarter: Provider?
     @State private var modelSpend = ModelSpendSummary()
+    @State private var spendSummaryCache = SpendSummaryCache()
+    @State private var displayedSpendRequest: SpendSummaryCache.Request?
 
     var body: some View {
         NavigationSplitView {
@@ -320,6 +327,7 @@ struct SettingsView: View {
                                         set: { settings.spendSpan = $0 }
                                     ),
                                     isLoading: isScanningSpend,
+                                    isSummarizing: spendSummaryIsPending,
                                     refresh: { spendRescan += 1 }
                                 )
                             }
@@ -340,12 +348,10 @@ struct SettingsView: View {
                 // Only an initial visit or Rescan reads; changing the span
                 // re-adds up what is already in memory.
                 // **Two tasks, because they cost different things.** Reading
-                // every agent's store is seconds on a cold launch; adding the
-                // numbers up again for a different span is microseconds. Keyed
-                // together, changing the span put the spinner back on screen
-                // and made a cached read look like a rescan.
+                // stores and summarizing their cached ledgers have independent
+                // lifetimes. Changing the span must not start another scan.
                 .task(id: spendLoadKey) { await loadSpend() }
-                .onChange(of: spendKey) { _, _ in recomputeSpend() }
+                .task(id: spendSummaryRequest) { await recomputeSpend() }
                 // A model opened under one agent means nothing under another,
                 // so changing the agent drops back out of the model.
                 .onChange(of: spendFocus) { _, _ in selectedModel = nil }
@@ -599,8 +605,8 @@ struct SettingsView: View {
                 SettingsRowDivider()
 
                 SettingsRow(
-                    String.localized("Percentages on top"),
-                    subtitle: String.localized("Only when the panel is docked to the top.")
+                    String.localized("Percentages across"),
+                    subtitle: String.localized("When the panel lies across: docked to the top or bottom, or free.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { settings.topRailShowsPercentages },
@@ -609,6 +615,21 @@ struct SettingsView: View {
                     .labelsHidden()
                     .toggleStyle(.switch)
                     .disabled(!settings.isPanelVisible)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Figures beside the rings"),
+                    subtitle: String.localized("Only when the panel lies free across. A thinner, longer panel.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.freeAcrossFiguresBeside },
+                        set: { settings.freeAcrossFiguresBeside = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible || !settings.topRailShowsPercentages)
                 }
 
                 SettingsRowDivider()
@@ -829,12 +850,17 @@ struct SettingsView: View {
                     )) {
                         Text(localized: "Left").tag(PanelDock.edge(.left))
                         Text(localized: "Top").tag(PanelDock.edge(.top))
-                        Text(localized: "Free").tag(PanelDock.floating)
+                        Text(localized: "Bottom").tag(PanelDock.edge(.bottom))
+                        Text(localized: "Free across").tag(PanelDock.floating(.horizontal))
+                        Text(localized: "Free upright").tag(PanelDock.floating(.vertical))
                         Text(localized: "Right").tag(PanelDock.edge(.right))
                     }
                     .labelsHidden()
                     .pickerStyle(.segmented)
-                    .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                    // Six segments do not fit the usual ceiling without
+                    // truncating both free ones, so this one is as wide as
+                    // its labels.
+                    .fixedSize()
                 }
 
                 SettingsRowDivider()
@@ -977,6 +1003,20 @@ struct SettingsView: View {
                 SettingsRowDivider()
 
                 SettingsRow(
+                    String.localized("Show Dock icon while Settings is open"),
+                    subtitle: String.localized("So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.showsDockIconInSettings },
+                        set: { settings.showsDockIconInSettings = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
                     String.localized("Hide menu bar icon"),
                     subtitle: String.localized("Remove Pulse from the menu bar; use the panel menu or shortcut to open settings.")
                 ) {
@@ -1064,6 +1104,24 @@ struct SettingsView: View {
                         .fixedSize()
                     }
                 }
+
+                SettingsRowDivider()
+
+                // Its own switch, apart from the figure beside the icon: one
+                // is a glance, the other a sit-down, and either can be wanted
+                // alone. Greyed out with the icon hidden, like the figure.
+                SettingsRow(
+                    String.localized("Usage panel in the menu"),
+                    subtitle: String.localized("Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.showsMenuDashboard },
+                        set: { settings.showsMenuDashboard = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
+                .disabled(settings.hidesMenuBarIcon)
             }
 
             SettingsGroup(String.localized("Shortcuts")) {
@@ -1181,6 +1239,31 @@ struct SettingsView: View {
                                 if await alerts.requestAuthorizationIfNeeded() {
                                     store.reconsiderAlerts()
                                 }
+                            }
+                        }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!UsageAlerts.isSupported)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("When a service is down"),
+                    subtitle: String.localized("Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.alertsOnOutage },
+                        set: {
+                            settings.alertsOnOutage = $0
+                            // The status pages, not the readings: an outage
+                            // already under way is said now, and switching off
+                            // forgets what was said. `reconsiderAlerts` would
+                            // refetch every provider for nothing.
+                            Task {
+                                _ = await alerts.requestAuthorizationIfNeeded()
+                                alerts.checkServices()
                             }
                         }
                     ))
@@ -2002,6 +2085,12 @@ struct SettingsView: View {
                 liveUsage(for: account)
             }
 
+            // The service, not the account, so every account of it shows
+            // this; a switched-off one fetches nothing.
+            if let page = provider.statusPage, settings.isEnabled(account) {
+                ServiceStatusGroup(page: page)
+            }
+
             // Its own group rather than a row under Connection, which is
             // about credentials and routes. This is a notification, and the
             // general pane's group of them is the wrong home too: the figure
@@ -2020,6 +2109,16 @@ struct SettingsView: View {
             // transcripts belong to whichever account the CLI is signed in to,
             // which is not this one, so showing them here would report one
             // account's spending under another's name.
+            // OpenCode Go's request log is behind the console's session, a
+            // second credential beside the key.
+            if provider == .openCodeGo, account.isPrimary, settings.isEnabled(account) {
+                OpenCodeConsoleGroup(store: store, settings: settings) { consoleRevision += 1 }
+            }
+            // DeepSeek's usage is behind its console's sign-in in the same way.
+            if provider == .deepSeek, account.isPrimary, settings.isEnabled(account) {
+                DeepSeekConsoleGroup(store: store, settings: settings) { consoleRevision += 1 }
+            }
+
             if provider.providesHistory, account.isPrimary {
                 // Live, so ahead of the history: which conversations still
                 // hold a cache, and for how long — where the logs let it be
@@ -2037,6 +2136,12 @@ struct SettingsView: View {
                 }
 
                 history(for: account)
+            }
+
+            // Read from this Mac's sessions, like the history above: the
+            // signs belong to whatever Codex here ran, not to an account.
+            if provider == .codex, account.isPrimary, settings.isEnabled(account) {
+                CodexSignalsGroup()
             }
         }
         .onChange(of: "\(account.id)|\(settings.isEnabled(account))", initial: true) { _, _ in
@@ -2075,33 +2180,48 @@ struct SettingsView: View {
     @ViewBuilder
     private func estimatedValue(for account: AccountKey) -> some View {
         let ledger = ledgers[account.provider] ?? .empty
-        let estimates = store.usage(for: account).windows.compactMap { window in
-            BudgetEstimator.estimate(for: window, ledger: ledger).map { (window, $0) }
+        let usage = store.usage(for: account)
+        // A window seen spent off this Mac keeps its row, saying why there is
+        // no figure — a value that quietly vanished would read as a bug.
+        let entries: [(UsageWindow, BudgetEstimate?)] = usage.windows.compactMap { window in
+            if store.usedElsewhere(window, account: account) { return (window, nil) }
+            return BudgetEstimator.estimate(for: window, ledger: ledger, observedAt: usage.observedAt).map { (window, $0) }
         }
 
-        if !estimates.isEmpty {
+        if !entries.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 SettingsGroup(String.localized("Estimated value")) {
-                    ForEach(Array(estimates.enumerated()), id: \.element.0.id) { index, entry in
+                    ForEach(Array(entries.enumerated()), id: \.element.0.id) { index, entry in
                         if index > 0 { SettingsRowDivider() }
 
-                        SettingsRow(
-                            entry.0.name,
-                            subtitle: String.localized("\(BudgetEstimator.approximate(entry.1.spent)) used so far")
-                        ) {
-                            // Just what the whole window is worth. The
-                            // remainder used to sit here too, but it is only
-                            // the other two numbers subtracted — and the
-                            // percentage it comes from is already on screen,
-                            // in "Current usage" directly above.
-                            Text(BudgetEstimator.approximate(entry.1.full))
-                                .font(.system(size: 13, weight: .medium))
-                                .monospacedDigit()
+                        if let estimate = entry.1 {
+                            SettingsRow(
+                                entry.0.name,
+                                subtitle: String.localized("\(BudgetEstimator.approximate(estimate.spent)) used so far")
+                            ) {
+                                // Just what the whole window is worth. The
+                                // remainder used to sit here too, but it is only
+                                // the other two numbers subtracted — and the
+                                // percentage it comes from is already on screen,
+                                // in "Current usage" directly above.
+                                Text(BudgetEstimator.approximate(estimate.full))
+                                    .font(.system(size: 13, weight: .medium))
+                                    .monospacedDigit()
+                            }
+                        } else {
+                            SettingsRow(
+                                entry.0.name,
+                                subtitle: String.localized("Also used somewhere this Mac's logs can't see")
+                            ) {
+                                Text(localized: "Not estimated")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
 
-                Text(localized: "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out.")
+                Text(localized: "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. If both are in use at once, the figure reads low. Windows with too little use to extrapolate from are left out.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -2118,7 +2238,8 @@ struct SettingsView: View {
             AccountUsageCard(
                 provider: account.provider,
                 ledger: ledger,
-                credits: account.provider == .codex ? codexAccount : nil
+                credits: account.provider == .codex ? codexAccount : nil,
+                isReading: loadingHistory == account.provider
             )
         } else {
             SettingsGroup(String.localized("Usage history")) {
@@ -2145,7 +2266,15 @@ struct SettingsView: View {
     /// sentence on screen is about to describe a read that no longer applies.
     private var historyKey: String {
         guard case .account(let account) = pane else { return "\(pane)" }
-        return "\(account.id)|\(settings.isEnabled(account))"
+        // The reading's time too: the value estimate counts spend up to when
+        // the percentage was read, and a ledger read before that is short.
+        // Only where the estimate is this Mac's transcripts — another provider's
+        // history is asked of it, and need not be asked at every refresh.
+        let read = account.provider.keepsLocalTranscripts
+            ? store.usage(for: account).observedAt?.timeIntervalSince1970 ?? 0 : 0
+        // DeepSeek's money follows the currency the ring follows.
+        let currency = account.provider == .deepSeek ? settings.deepSeekCurrency ?? "" : ""
+        return "\(account.id)|\(settings.isEnabled(account))|\(consoleRevision)|\(read)|\(currency)"
     }
 
     /// One task owns opening, enabling and manual rescans. Leaving, disabling
@@ -2162,9 +2291,21 @@ struct SettingsView: View {
     }
 
     /// What the *figures* depend on, which is read back out of what was loaded.
-    private var spendKey: String {
-        guard case .spend = pane, settings.readsTokenSpend else { return "-" }
-        return "\(settings.spendSpan.rawValue)|\(spendFocus?.rawValue ?? "")|\(selectedModel ?? "")"
+    private var spendSummaryRequest: SpendSummaryCache.Request? {
+        guard case .spend = pane, settings.readsTokenSpend, navigation.isWindowVisible,
+              let snapshot = spendRead.snapshotID else { return nil }
+        let calendar = Calendar.current
+        return SpendSummaryCache.Request(
+            window: .init(snapshot: snapshot, days: settings.spendSpan.days,
+                          today: calendar.startOfDay(for: Date()), calendar: calendar,
+                          language: settings.language.rawValue),
+            agent: spendFocus, model: selectedModel
+        )
+    }
+
+    private var spendSummaryIsPending: Bool {
+        guard let request = spendSummaryRequest else { return false }
+        return displayedSpendRequest.map { !request.canKeepShowing($0) } ?? true
     }
 
     /// Every agent's ledger, added up.
@@ -2187,6 +2328,25 @@ struct SettingsView: View {
         case .scan(let nextID, let force):
             id = nextID
             refresh = force
+        }
+
+        // **The background read's scan first.** With Token spend on,
+        // `SpendWarmer` keeps one; the pane opens on it, and reads again
+        // behind the figures only when it is a few minutes old — no spinner,
+        // no progress row, nothing cleared. Rescan still reads from scratch.
+        var quiet = false
+        // Reading while the kept scan is asked for: the actor may be busy with
+        // the background read, and an empty pane meanwhile says "nothing yet".
+        isScanningSpend = true
+        if !refresh, let kept = await AgentLedgers.shared.keptSnapshot() {
+            guard !Task.isCancelled, spendRead.complete(kept.snapshot, for: id) else { return }
+            guard Date().timeIntervalSince(kept.at) >= SpendWarmer.paneFreshness else {
+                spendRead.finish(id)
+                isScanningSpend = false
+                return
+            }
+            quiet = true
+        } else {
             clearSpendSummaries()
         }
 
@@ -2201,7 +2361,7 @@ struct SettingsView: View {
         let result: AgentLedgers.Snapshot
         do {
             result = try await AgentLedgers.shared.scan(refresh: refresh) { progress in
-                guard spendRead.isCurrent(id), !Task.isCancelled else { return }
+                guard !quiet, spendRead.isCurrent(id), !Task.isCancelled else { return }
                 spendProgress = progress
             }
         } catch {
@@ -2209,10 +2369,11 @@ struct SettingsView: View {
         }
         guard !Task.isCancelled, settings.readsTokenSpend, navigation.isWindowVisible,
               pane == .spend, spendRead.complete(result, for: id) else { return }
-        recomputeSpend()
     }
 
     private func clearSpendSummaries() {
+        spendSummaryCache = SpendSummaryCache()
+        displayedSpendRequest = nil
         spend = SpendSummary()
         focusedSpend = SpendSummary()
         modelSpend = ModelSpendSummary()
@@ -2227,38 +2388,29 @@ struct SettingsView: View {
     /// screen first where there is one** — so a model opened from an agent's
     /// list reports that agent's work in it and never the other agents' same
     /// model. Nothing here reads a store: it is arithmetic over what was
-    /// already loaded, which is why opening a model costs no spinner.
+    /// already loaded, performed on the summary cache's actor.
     ///
     /// **One `now` and one calendar for all three.** Asked separately, a recompute
     /// that happens to straddle midnight can put the combined total on one day
     /// and the model on the next, so the drill-down no longer adds up to the row
     /// it was opened from.
-    private func recomputeSpend() {
-        guard settings.readsTokenSpend else { return }
-        let span = settings.spendSpan.days
-        let now = Date()
-        let calendar = Calendar.current
-        // The agent's ledgers, or all of them when no agent is open. Counted
-        // once and shared, so the agent summary and the model summary below
-        // cannot end up filtered differently.
-        let scoped = spendFocus.map { agent in
-            spendLedgers.filter { $0.key == agent }
-        } ?? spendLedgers
-
-        spend = SpendSummary.of(spendLedgers, overLast: span, now: now, calendar: calendar)
-        focusedSpend = spendFocus == nil
-            ? SpendSummary()
-            : SpendSummary.of(scoped, overLast: span, now: now, calendar: calendar)
-        modelSpend = selectedModel.map { name in
-            ModelSpendSummary.of(scoped, named: name, overLast: span, now: now, calendar: calendar)
-        } ?? ModelSpendSummary()
+    private func recomputeSpend() async {
+        guard let request = spendSummaryRequest else { return }
+        // The view task owns cancellation. A result from an earlier model,
+        // span or snapshot may finish, but cannot replace the current figures.
+        guard let result = try? await spendSummaryCache.summaries(for: request, ledgers: spendLedgers),
+              !Task.isCancelled, spendSummaryRequest == request else { return }
+        spend = result.overview
+        focusedSpend = result.agent
+        modelSpend = result.model
+        displayedSpendRequest = request
     }
 
     static func detailedCardSubtitle(_ history: CardHistorySource?) -> String {
         switch history {
         case nil:
             String.localized("Adds the plan and when the figures were read.")
-        case .accountStatistics:
+        case .accountStatistics, .accountLogs:
             String.localized("Adds the plan, when the figures were read and the account's usage over the last month.")
         case .transcripts, .agents:
             String.localized("Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity.")
@@ -2266,6 +2418,9 @@ struct SettingsView: View {
     }
 
     private func loadHistory() async {
+        let readID = UUID()
+        historyReadID = readID
+        loadingHistory = nil
         // History is per provider — it is read from that CLI's transcripts,
         // which do not say which account was signed in at the time.
         guard case .account(let account) = pane else { return }
@@ -2278,15 +2433,59 @@ struct SettingsView: View {
         }
 
         loadingHistory = provider
-        // Only if it is still ours. `saveKey` starts an unstructured reload
-        // that no pane switch cancels, so a returning older read would
-        // otherwise drop the spinner the *current* pane is showing and let it
-        // fall through to a sentence about an account nothing has read yet.
-        defer { if loadingHistory == provider { loadingHistory = nil } }
+        // `saveKey` can start a replacement without cancelling its predecessor.
+        // A read id fences both progress and cleanup, even for the same provider.
+        defer { if historyReadID == readID { loadingHistory = nil } }
 
         // Asked of the provider rather than scanned off disk. Their own
         // statistics cover the whole account, so there is nothing local to
         // read and nothing to cache between panes.
+        // OpenCode Go's comes from the console's request log, the same read
+        // the detailed card makes and shares.
+        if provider == .openCodeGo {
+            guard let cookie = APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot) else {
+                ledgers[provider] = .empty
+                historyReads[provider] = .notConfigured
+                return
+            }
+            let requestKey = historyKey
+            let read = await OpenCodeConsoleHistory.shared.ledger(cookie: cookie) { ledger in
+                guard historyReadID == readID, historyKey == requestKey else { return }
+                ledgers[provider] = ledger
+                historyReads[provider] = .answered(ledger)
+            }
+            guard !Task.isCancelled, historyReadID == readID, historyKey == requestKey else { return }
+            switch read {
+            case .answered(let ledger):
+                ledgers[provider] = ledger
+                historyReads[provider] = .answered(ledger)
+            case .signedOut, .failed:
+                ledgers[provider] = .empty
+                historyReads[provider] = .failed
+            }
+            return
+        }
+
+        if provider == .deepSeek {
+            guard let token = DeepSeekConsole.keptToken else {
+                ledgers[provider] = .empty
+                historyReads[provider] = .notConfigured
+                return
+            }
+            let requestKey = historyKey
+            let read = await DeepSeekConsoleHistory.shared.ledger(token: token, currency: settings.deepSeekCurrency)
+            guard !Task.isCancelled, historyReadID == readID, historyKey == requestKey else { return }
+            switch read {
+            case .answered(let ledger):
+                ledgers[provider] = ledger
+                historyReads[provider] = .answered(ledger)
+            case .signedOut, .failed:
+                ledgers[provider] = .empty
+                historyReads[provider] = .failed
+            }
+            return
+        }
+
         if provider == .zai || provider == .glmCoding {
             let key = APIKeyStore.key(for: provider)
             let read = await ZaiUsageService(provider: provider, enteredKey: key).history()
@@ -3703,6 +3902,9 @@ struct SettingsView: View {
                 }
             }
         }
+        // Without this the row says "up to date" on nothing but the last
+        // answer, however old. Quiet: the subtitle is where the result goes.
+        .onAppear { update.probe() }
     }
 
     /// The version, and what is known about a newer one. All four states are
@@ -3809,7 +4011,7 @@ enum SettingsPane: Hashable {
             [.localized("Size"), .localized("Spacing"), .localized("Round ends"),
              .localized("Appearance"), .localized("Transparency"), .localized("Ring activity animation")]
         case .rings:
-            [.localized("Percentages at the side"), .localized("Percentages on top"),
+            [.localized("Percentages at the side"), .localized("Percentages across"), .localized("Figures beside the rings"),
              .localized("Figure above the ring"), .localized("Show what's left"), .localized("Forecast"),
              .localized("Second limit inside the ring"), .localized("Time until reset"),
              .localized("Time ring direction"), .localized("Ring colour scheme"),
@@ -3823,6 +4025,7 @@ enum SettingsPane: Hashable {
              .localized("Interface language")]
         case .notifications:
             [.localized("Warn at"), .localized("When a limit comes back"), .localized("When a reading stops arriving"),
+             .localized("When a service is down"),
              .localized("Reset reminders"), .localized("Predicted reset"), .localized("Regular resets"),
              .localized("Celebrate a reset"), .localized("Also celebrate hourly quota resets")]
         case .network:

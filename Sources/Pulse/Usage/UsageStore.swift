@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import AppKit
 import Foundation
 import Observation
@@ -93,10 +94,16 @@ final class UsageStore {
     /// Watches live readings for a limit turning over, so the rail's mark can
     /// celebrate one. Independent of the alert rules; see `ResetWatch`.
     private let resetWatch = ResetWatch()
+    /// Whether a limit is being spent where this Mac's logs cannot see, which
+    /// takes the value estimate off it. The app's own; previews and tests
+    /// pass none, so they neither read the real transcripts nor write the file.
+    let elsewhere: ElsewhereWatch?
 
-    init(settings: AppSettings, alerts: UsageAlerts? = nil, activity: AgentActivityMonitor = AgentActivityMonitor()) {
+    init(settings: AppSettings, alerts: UsageAlerts? = nil, activity: AgentActivityMonitor = AgentActivityMonitor(),
+         elsewhere: ElsewhereWatch? = nil) {
         self.settings = settings
         self.activity = activity
+        self.elsewhere = elsewhere
         networkProxy = settings.networkProxy
         self.alerts = alerts
         codex = CodexUsageService(server: appServer)
@@ -291,6 +298,21 @@ final class UsageStore {
 
     /// Picks up a key that was just entered, or one that changed.
     func loadAPIKeys() {
+        OpenCodeConsole.refreshSession()
+        DeepSeekConsole.refreshSession()
+        // Read the console's log ahead of being asked, so the first card is
+        // not the one that waits half a minute for the month. Incremental and
+        // shared with the card, so a warm-up that finds it fresh costs a page.
+        if settings.isEnabled(AccountKey(.openCodeGo)),
+           let cookie = APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot) {
+            Task.detached(priority: .utility) { _ = await OpenCodeConsoleHistory.shared.ledger(cookie: cookie) }
+        }
+        if settings.isEnabled(AccountKey(.deepSeek)), let token = DeepSeekConsole.keptToken {
+            let currency = settings.deepSeekCurrency
+            Task.detached(priority: .utility) {
+                _ = await DeepSeekConsoleHistory.shared.ledger(token: token, currency: currency)
+            }
+        }
         apiKeys = Dictionary(
             uniqueKeysWithValues: Provider.builtIn
                 .filter { $0.keepsOwnCredential && settings.isEnabled(AccountKey($0)) }
@@ -416,6 +438,17 @@ final class UsageStore {
     private func interval(for provider: Provider) -> TimeInterval {
         settings.refreshInterval.seconds
             ?? AdaptiveRefresh.interval(for: signals, isWatched: provider.spendingIsWatchedLocally)
+    }
+
+    /// How long the loop's one timer waits: until the soonest primary account
+    /// is due, never under fifteen seconds.
+    ///
+    /// **No primary account is not no cadence.** Added accounts and extensions
+    /// are read on every tick, so a rail of only those still runs on the
+    /// interval the user chose — it fell to the adaptive one, and "every
+    /// minute" waited half an hour while Settings said a minute.
+    nonisolated static func timerWait(primaryWaits: [TimeInterval], fixed: TimeInterval?, adaptive: TimeInterval) -> TimeInterval {
+        max(primaryWaits.min() ?? fixed ?? adaptive, 15)
     }
 
     /// A second of slack, so a timer that fires a hair early does not skip the
@@ -556,7 +589,10 @@ final class UsageStore {
 
         // Read here rather than inside the services, which stay free of
         // storage concerns.
-        let openCode = OpenCodeGoUsageService(enteredKey: apiKeys[.openCodeGo])
+        let openCode = OpenCodeGoUsageService(
+            enteredKey: apiKeys[.openCodeGo],
+            consoleCookie: APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot)
+        )
         let kimi = KimiCodeUsageService(enteredKey: apiKeys[.kimiCode])
         let ollama = OllamaCloudUsageService(cookie: apiKeys[.ollamaCloud])
         let xiaomi = XiaomiMiMoUsageService(cookie: apiKeys[.xiaomiMiMo])
@@ -580,7 +616,8 @@ final class UsageStore {
             enteredKey: apiKeys[.deepSeek],
             basis: settings.deepSeekBasis,
             budget: settings.deepSeekBudget,
-            currency: settings.deepSeekCurrency
+            currency: settings.deepSeekCurrency,
+            consoleToken: DeepSeekConsole.keptToken
         )
         let sub2api = Sub2APIUsageService(
             enteredKey: apiKeys[.sub2api],
@@ -795,7 +832,10 @@ final class UsageStore {
         // A provider's own pane in Settings is reachable while it is switched
         // off, so its key will not be in the launch-time cache.
         let key = provider.keepsOwnCredential ? (apiKeys[provider] ?? APIKeyStore.key(for: provider)) : nil
-        let openCode = OpenCodeGoUsageService(enteredKey: key)
+        let openCode = OpenCodeGoUsageService(
+            enteredKey: key,
+            consoleCookie: provider == .openCodeGo ? APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot) : nil
+        )
         let kimi = KimiCodeUsageService(enteredKey: key)
         let ollama = OllamaCloudUsageService(cookie: key)
         let xiaomi = XiaomiMiMoUsageService(cookie: key)
@@ -813,7 +853,8 @@ final class UsageStore {
             enteredKey: key,
             basis: settings.deepSeekBasis,
             budget: settings.deepSeekBudget,
-            currency: settings.deepSeekCurrency
+            currency: settings.deepSeekCurrency,
+            consoleToken: DeepSeekConsole.keptToken
         )
         let sub2api = Sub2APIUsageService(
             enteredKey: key, address: settings.serverAddress(for: account)
@@ -1066,6 +1107,7 @@ final class UsageStore {
         // Before the alert rules, and regardless of whether they are on: the
         // mark's celebration is not a notification.
         resetWatch.observe(fetched, as: account)
+        elsewhere?.observe(fetched, as: account)
         guard let alerts else { return }
         // Both: the panel shows the reconciled reading, and the alert rules
         // need the answer the service actually gave — `reconciled` swaps a
@@ -1105,6 +1147,11 @@ final class UsageStore {
         if needsRefresh { refresh() }
     }
 
+    /// Whether this window's current cycle has been seen spent off this Mac.
+    func usedElsewhere(_ window: UsageWindow, account: AccountKey) -> Bool {
+        elsewhere?.usedElsewhere(window, account: account) ?? false
+    }
+
     func usage(for account: AccountKey) -> ProviderUsage {
         usage[account.id] ?? .unavailable(account, reason: .loading)
     }
@@ -1134,7 +1181,10 @@ final class UsageStore {
         // A floor on the *timer* rather than on any provider's cadence: with
         // nothing enabled, or with something perpetually due, this is what
         // stops the loop spinning.
-        let wait = max(waits.min() ?? AdaptiveRefresh.interval(for: signals), 15)
+        let wait = Self.timerWait(
+            primaryWaits: waits, fixed: settings.refreshInterval.seconds,
+            adaptive: AdaptiveRefresh.interval(for: signals)
+        )
 
         // **`currentInterval` is the cadence, not the countdown.** Settings
         // renders it as "Now: X minutes" and `isOverdue` multiplies it, and

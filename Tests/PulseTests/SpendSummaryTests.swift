@@ -280,8 +280,20 @@ struct SpendSummaryTests {
         // in a table like this is the biggest row.
         #expect(SpendSummary.sorted(days, by: .cost, ascending: false).first?.cost == 9)
         #expect(SpendSummary.sorted(days, by: .total, ascending: false).first?.tokens == 900)
-        #expect(SpendSummary.sorted(days, by: .input, ascending: true).first?.tally.input == 1)
+        #expect(SpendSummary.sorted(days, by: .fresh, ascending: true).first?.tally.fresh == 1)
         #expect(SpendSummary.sorted(days, by: .date, ascending: false).first?.date == Self.today)
+    }
+
+    @Test("A day the table shows blank sorts last, whichever way")
+    func blanksSortLast() {
+        let whole = SpendSummary.Day(date: Self.today, tokens: 10, cost: 1,
+                                     tally: TokenTally(input: 10))
+        // 500 tokens, of which only 5 have a kind: its kind cells are blank.
+        let partial = SpendSummary.Day(date: Self.calendar.date(byAdding: .day, value: -1, to: Self.today)!,
+                                       tokens: 500, cost: 2, tally: TokenTally(input: 5))
+        for ascending in [true, false] {
+            #expect(SpendSummary.sorted([partial, whole], by: .fresh, ascending: ascending).last?.tokens == 500)
+        }
     }
 
     // MARK: - Sessions and projects
@@ -351,15 +363,30 @@ struct SpendSummaryTests {
         #expect(summary.activeDays == 7)
     }
 
-    @Test("A streak that ended yesterday is not current")
-    func aBrokenStreakIsZero() {
-        let summary = Self.summary([
+    @Test("Today is not over: a run that reached yesterday is still current; a whole day off ends it")
+    func todayIsNotOver() {
+        let yesterday = Self.summary([
             .codex: Self.ledger((1..<5).map { Self.day($0, tokens: 10, cost: 1) }),
         ], overLast: 10)
+        #expect(yesterday.currentStreak == 4)
+        #expect(yesterday.longestStreak == 4)
 
-        // The series runs to today, and nothing was done today.
-        #expect(summary.currentStreak == 0)
-        #expect(summary.longestStreak == 4)
+        let broken = Self.summary([
+            .codex: Self.ledger((2..<6).map { Self.day($0, tokens: 10, cost: 1) }),
+        ], overLast: 10)
+        #expect(broken.currentStreak == 0)
+        #expect(broken.longestStreak == 4)
+    }
+
+    @Test("Streaks count the whole history, whatever the span")
+    func streaksIgnoreTheSpan() {
+        let summary = Self.summary([
+            .codex: Self.ledger((0..<20).map { Self.day($0, tokens: 10, cost: 1) }),
+        ], overLast: 1)
+        #expect(summary.currentStreak == 20)
+        #expect(summary.longestStreak == 20)
+        // What is added up is still the span's.
+        #expect(summary.tokens == 10)
     }
 
     @Test("The peak hour comes from the quarter-hour buckets, not the days")

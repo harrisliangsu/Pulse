@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// Grok Build's transcripts.
@@ -23,6 +24,7 @@ import Foundation
 /// it are used only when it is absent.
 enum GrokStore {
     static func ledger(at root: URL, prices: [String: ModelPrice]) -> UsageLedger {
+        var lookup = ModelPriceLookup(prices)
         var buckets: [String: [String: TokenTally]] = [:]
         var sessions: [UsageLedger.Session] = []
 
@@ -82,7 +84,7 @@ enum GrokStore {
                         )
                         guard tally.total > 0 else { continue }
 
-                        let price = ModelPrices.price(for: model, in: prices)
+                        let price = lookup.price(for: model)
                         let money = price.map { tally.cost(at: $0) } ?? 0
                         let unpriced = price == nil ? tally.total : 0
                         buckets[key, default: [:]][model] = (buckets[key]?[model] ?? TokenTally()) + tally

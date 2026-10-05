@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import AppKit
 import SwiftUI
 
@@ -185,8 +186,8 @@ struct UsageRingView: View {
 
     /// The clock arc's own geometry, measured out from the usage ring's outer
     /// edge. The rail is far wider than a ring — 64pt against 36 at standard
-    /// scale — so this costs the layout nothing; the rail's length, its width
-    /// and the ring centres are all unchanged.
+    /// scale — so its width is unchanged; the figures stand further off
+    /// while it is on (`DockLayout.ringToTextSpacing`), which is 5pt here.
     private static let clockGap: CGFloat = 3
     private static let clockLineWidth: CGFloat = 2
     /// The circle the clock arc is stroked along.

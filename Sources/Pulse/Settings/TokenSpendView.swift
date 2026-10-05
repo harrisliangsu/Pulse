@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import SwiftUI
 
 /// What every coding agent on this Mac has cost, added up.
@@ -49,6 +50,7 @@ struct TokenSpendView: View {
     let hasReadLimitations: Bool
     @Binding var span: SpendSpan
     let isLoading: Bool
+    var isSummarizing = false
     let refresh: () -> Void
 
     /// Which column the day table is sorted by. Its own state rather than a
@@ -119,7 +121,11 @@ struct TokenSpendView: View {
             // The span picker stays in every view, so narrowing the window
             // while looking at one agent or one model does not throw the reader
             // back out.
-            if let modelFocus {
+            if isSummarizing {
+                ProgressView()
+                    .controlSize(.small)
+                    .frame(maxWidth: .infinity)
+            } else if let modelFocus {
                 if modelSummary.isEmpty {
                     nothingForModel(modelFocus)
                 } else {
@@ -403,7 +409,13 @@ struct TokenSpendView: View {
             // drawing the shortfall as a zero would read as a measurement of
             // "none". The existing unavailable line says what is true instead.
             if summary.tally.total == summary.tokens {
-                TokenKindBreakdown(tally: summary.tally)
+                TokenKindBreakdown(
+                    tally: summary.tally,
+                    // No cache column in any store behind it, or replies
+                    // that never named the cache (a compatible endpoint).
+                    readsUnreported: summary.tally.reportsNoCache || !summary.agents.isEmpty
+                        && summary.agents.allSatisfy { !$0.agent.reportsCacheReads }
+                )
             } else {
                 SettingsRow(String.localized("Token breakdown unavailable.")) {
                     EmptyView()
@@ -420,7 +432,10 @@ struct TokenSpendView: View {
     /// chart above is the one that has to keep its gaps to stay a calendar,
     /// and a table of empty rows is a table you have to read past.
     private func daily(_ summary: SpendSummary) -> some View {
-        let rows = SpendSummary.sorted(summary.days.filter { $0.tokens > 0 }, by: sort, ascending: ascending)
+        let rows = SpendSummary.sorted(
+            summary.days.filter { $0.tokens > 0 }, by: sort, ascending: ascending,
+            cacheUnreported: !summary.agents.isEmpty && summary.agents.allSatisfy { !$0.agent.reportsCacheReads }
+        )
         let pages = max((rows.count + pageSize - 1) / pageSize, 1)
         // Clamped rather than trusted: the span and the sort can both shorten
         // the table under a page that is already on screen.
@@ -449,10 +464,9 @@ struct TokenSpendView: View {
                             // never measured. The total column is the day's
                             // own figure and always stands.
                             let complete = day.tally.total == day.tokens
-                            cell(complete ? day.tally.input : nil)
-                            cell(complete ? day.tally.output : nil)
+                            cell(complete ? day.tally.fresh : nil)
                             cell(complete ? day.tally.cacheRead : nil)
-                            cell(complete ? day.tally.cacheWrite : nil)
+                            cell(complete ? day.tally.output : nil)
                             cell(day.tokens)
                             // **An all-unpriced day is not a free day.** The
                             // day's own money is a priced subset; when nothing
@@ -622,8 +636,12 @@ struct TokenSpendView: View {
                 if Self.hoursComplete(summary), let hour = summary.peakHour {
                     SpendCaption(String.localized("Peak hour"), SpendFormat.hour(hour))
                 }
+                // Named for what it ranks by. "Favourite" read as the model
+                // used most often, and the ranking is tokens — cache reads
+                // and all, which puts whichever model re-reads the longest
+                // context first.
                 if let model = summary.models.first {
-                    SpendCaption(String.localized("Favourite model"), model.name)
+                    SpendCaption(String.localized("Most tokens"), model.name)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -757,7 +775,11 @@ struct TokenSpendView: View {
 
     /// One row per project identity, with ambiguous directory names expanded.
     private func projects(_ summary: SpendSummary) -> some View {
-        let total = max(summary.projects.reduce(0) { $0 + $1.tokens }, 1)
+        // **Of all the work, not of the work with a project.** Sessions with
+        // no directory (Codex's path carries none) have no row here, and
+        // dividing by the projects alone drew each bar larger than its share
+        // beside every other section's.
+        let total = max(summary.tokens, 1)
 
         return SettingsGroup(String.localized("By project")) {
             VStack(spacing: 0) {
@@ -948,10 +970,10 @@ enum SpendSpan: String, CaseIterable, Identifiable, Sendable {
 /// The day table's columns, which are also what it can be sorted by.
 enum DayColumn: String, CaseIterable, Identifiable, Sendable {
     case date
-    case input
-    case output
+    /// New input, cache writes included (`TokenTally.fresh`).
+    case fresh
     case cacheRead
-    case cacheWrite
+    case output
     case total
     case cost
 
@@ -960,12 +982,11 @@ enum DayColumn: String, CaseIterable, Identifiable, Sendable {
     var title: String {
         switch self {
         case .date: .localized("Date")
-        case .input: .localized("Input")
+        // Short, because columns of Chinese headings in a settings pane are a
+        // table that wraps.
+        case .fresh: .localized("Fresh")
+        case .cacheRead: .localized("Cached")
         case .output: .localized("Output")
-        // Short, because seven columns of Chinese headings in a settings pane
-        // is a table that wraps.
-        case .cacheRead: .localized("C. read")
-        case .cacheWrite: .localized("C. write")
         case .total: .localized("Total")
         case .cost: .localized("Cost")
         }

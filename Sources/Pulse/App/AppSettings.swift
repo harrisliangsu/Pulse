@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 import Observation
 import SwiftUI
@@ -28,6 +29,21 @@ final class AppSettings {
         }
     }
 
+    /// Whether Pulse shows a Dock icon for as long as the settings window is
+    /// open.
+    ///
+    /// On by default: an `.accessory` app has no Dock icon and no ⌘-Tab entry,
+    /// so a settings window that something else has covered cannot be found
+    /// again. The icon is there only while the window is, and goes with it.
+    /// Goes through its own callback, not `onChange`, which refetches.
+    var showsDockIconInSettings: Bool {
+        didSet {
+            guard showsDockIconInSettings != oldValue else { return }
+            UserDefaults.standard.set(showsDockIconInSettings, forKey: Key.showsDockIconInSettings)
+            onDockIconChange?()
+        }
+    }
+
     /// Whether the menu bar item also shows the tightest limit: the mark of
     /// the account whose ring is fullest, and its percentage.
     ///
@@ -40,6 +56,19 @@ final class AppSettings {
             guard showsUsageInMenuBar != oldValue else { return }
             UserDefaults.standard.set(showsUsageInMenuBar, forKey: Key.showsUsageInMenuBar)
             onMenuBarIconChange?()
+        }
+    }
+
+    /// Whether the menu bar item's menu opens on the usage dashboard — an
+    /// overview of every account, and a tab per account.
+    ///
+    /// Off by default, like every other addition to what Pulse puts on screen:
+    /// the menu is a few plain items until somebody asks for more. Read when
+    /// the menu opens, so it needs no callback.
+    var showsMenuDashboard = false {
+        didSet {
+            guard showsMenuDashboard != oldValue else { return }
+            UserDefaults.standard.set(showsMenuDashboard, forKey: Key.showsMenuDashboard)
         }
     }
 
@@ -152,6 +181,12 @@ final class AppSettings {
             UserDefaults.standard.set(deepSeekCurrency, forKey: Key.deepSeekCurrency)
             onChange?()
         }
+    }
+
+    /// The same choice read straight from the defaults, for a reader off the
+    /// main actor (the detailed card's DeepSeek history, whose money follows it).
+    nonisolated static var storedDeepSeekCurrency: String? {
+        UserDefaults.standard.string(forKey: Key.deepSeekCurrency)
     }
 
     /// Which Qoder site the saved session belongs to.
@@ -813,6 +848,24 @@ final class AppSettings {
         }
     }
 
+    /// Whether a rail lying free across puts each figure beside its ring
+    /// rather than under it.
+    ///
+    /// Off by default: under, with the rings drawn closer together than down
+    /// a side, is the free rail's own proportion. Beside makes the rail the
+    /// upright one's thickness and a good deal longer. Docked to the top the
+    /// figures stay under their rings either way. Moves where a ring sits, so
+    /// it goes to `PanelMetrics` before the change is announced, like
+    /// `labelAboveRing`.
+    var freeAcrossFiguresBeside: Bool {
+        didSet {
+            guard freeAcrossFiguresBeside != oldValue else { return }
+            PanelMetrics.putFreeAcrossFiguresBeside(freeAcrossFiguresBeside)
+            UserDefaults.standard.set(freeAcrossFiguresBeside, forKey: Key.freeAcrossFiguresBeside)
+            onChange?()
+        }
+    }
+
     /// Whether the rail's ends are half circles taken from the ring, rather
     /// than softened corners of their own.
     ///
@@ -851,10 +904,18 @@ final class AppSettings {
     /// Unlike the other panel settings this changes nothing about the layout —
     /// the arc is drawn in the margin the rail already has around a ring — so
     /// it needs no `PanelMetrics` entry and nothing has to be re-measured.
+    ///
+    /// **It moves the figures.** The arc is drawn 5pt outside the ring's own
+    /// edge, so a figure at the usual distance sat on it (issue #73); with
+    /// the arc on, figures stand that much further off and the rail is longer.
+    /// So it goes to `PanelMetrics` before the change is announced, like
+    /// `labelAboveRing`.
     var showsWindowClock: Bool {
         didSet {
             guard showsWindowClock != oldValue else { return }
+            PanelMetrics.showWindowClock(showsWindowClock)
             UserDefaults.standard.set(showsWindowClock, forKey: Key.showsWindowClock)
+            onChange?()
         }
     }
 
@@ -896,9 +957,8 @@ final class AppSettings {
     /// on these rings means how close the limit is, and that does not change
     /// because the number was flipped. So a nearly empty ring is still red.
     ///
-    /// Like `showsWindowClock` this changes nothing about the layout: "100%"
-    /// is the widest either way round, so no `PanelMetrics` entry and nothing
-    /// to re-measure.
+    /// This changes nothing about the layout: "100%" is the widest either
+    /// way round, so no `PanelMetrics` entry and nothing to re-measure.
     var showsRemaining: Bool {
         didSet {
             guard showsRemaining != oldValue else { return }
@@ -1253,11 +1313,28 @@ final class AppSettings {
         }
     }
 
-    /// Whether anything at all would be posted about a reading. What the
-    /// after-the-fact rules consult. Ribbons are not in here, and neither are
-    /// the advance reminders — those have their own switches.
-    var wantsAlerts: Bool {
+    /// Say when a provider's own status page — Codex's, Claude Code's,
+    /// DeepSeek's — reports an outage: for whichever is switched on, and only
+    /// about what it runs on (`StatusPage.notifiesAbout`). Rules: `OutageMemory`.
+    var alertsOnOutage = false {
+        didSet {
+            guard alertsOnOutage != oldValue else { return }
+            UserDefaults.standard.set(alertsOnOutage, forKey: Key.alertsOnOutage)
+        }
+    }
+
+    /// Whether any rule about readings is on. What `UsageAlerts.observe`
+    /// works for; the outage check reads status pages, not readings.
+    /// Ribbons are not in here, and neither are the advance reminders —
+    /// those have their own switches.
+    var wantsUsageAlerts: Bool {
         alertThreshold != .off || alertsOnReset || alertsOnFailure || !lowBalanceAlerts.isEmpty
+    }
+
+    /// Whether anything at all would be posted. What decides if permission is
+    /// worth asking for.
+    var wantsAlerts: Bool {
+        wantsUsageAlerts || alertsOnOutage
     }
 
     /// Advance reminders, which ask for notification permission on their own.
@@ -1375,10 +1452,13 @@ final class AppSettings {
     /// Kept separate from `onChange` so a presentation preference cannot start
     /// a provider refresh.
     var onMenuBarIconChange: (() -> Void)?
+    /// Called when the Dock icon the settings window brings should appear or go.
+    var onDockIconChange: (() -> Void)?
 
     init(
         isPanelVisible: Bool = true,
         hidesMenuBarIcon: Bool = false,
+        showsDockIconInSettings: Bool = true,
         hidesInFullScreen: Bool = true,
         followsActiveDisplay: Bool = false,
         openSettingsShortcut: GlobalShortcut? = nil,
@@ -1413,6 +1493,7 @@ final class AppSettings {
         topRailShowsPercentages: Bool = false,
         sideRailShowsPercentages: Bool = true,
         labelAboveRing: Bool = false,
+        freeAcrossFiguresBeside: Bool = false,
         usesRoundEnds: Bool = false,
         showsWindowClock: Bool = false,
         windowClockDirection: WindowClockDirection = .default,
@@ -1438,6 +1519,7 @@ final class AppSettings {
     ) {
         self.isPanelVisible = isPanelVisible
         self.hidesMenuBarIcon = hidesMenuBarIcon
+        self.showsDockIconInSettings = showsDockIconInSettings
         self.hidesInFullScreen = hidesInFullScreen
         self.followsActiveDisplay = followsActiveDisplay
         self.openSettingsShortcut = openSettingsShortcut
@@ -1471,6 +1553,7 @@ final class AppSettings {
         self.topRailShowsPercentages = topRailShowsPercentages
         self.sideRailShowsPercentages = sideRailShowsPercentages
         self.labelAboveRing = labelAboveRing
+        self.freeAcrossFiguresBeside = freeAcrossFiguresBeside
         self.usesRoundEnds = usesRoundEnds
         self.showsWindowClock = showsWindowClock
         self.windowClockDirection = windowClockDirection
@@ -1739,6 +1822,7 @@ final class AppSettings {
         let settings = AppSettings(
             isPanelVisible: visible,
             hidesMenuBarIcon: defaults.object(forKey: Key.hidesMenuBarIcon) as? Bool ?? false,
+            showsDockIconInSettings: defaults.object(forKey: Key.showsDockIconInSettings) as? Bool ?? true,
             hidesInFullScreen: defaults.object(forKey: Key.hidesInFullScreen) as? Bool ?? true,
             followsActiveDisplay: defaults.object(forKey: Key.followsActiveDisplay) as? Bool ?? false,
             openSettingsShortcut: defaults.string(forKey: Key.openSettingsShortcut)
@@ -1780,6 +1864,7 @@ final class AppSettings {
             topRailShowsPercentages: defaults.object(forKey: Key.topRailShowsPercentages) as? Bool ?? false,
             sideRailShowsPercentages: defaults.object(forKey: Key.sideRailShowsPercentages) as? Bool ?? true,
             labelAboveRing: defaults.object(forKey: Key.labelAboveRing) as? Bool ?? false,
+            freeAcrossFiguresBeside: defaults.object(forKey: Key.freeAcrossFiguresBeside) as? Bool ?? false,
             usesRoundEnds: defaults.object(forKey: Key.usesRoundEnds) as? Bool ?? false,
             showsWindowClock: defaults.object(forKey: Key.showsWindowClock) as? Bool ?? false,
             windowClockDirection: Self.storedWindowClockDirection(in: defaults),
@@ -1808,7 +1893,9 @@ final class AppSettings {
                 .flatMap(ResetLead.init(rawValue:)) ?? .default
         )
         settings.showsCodexResetCredits = defaults.bool(forKey: Key.showsCodexResetCredits)
+        settings.alertsOnOutage = defaults.bool(forKey: Key.alertsOnOutage)
         settings.showsUsageInMenuBar = defaults.bool(forKey: Key.showsUsageInMenuBar)
+        settings.showsMenuDashboard = defaults.bool(forKey: Key.showsMenuDashboard)
         settings.primedProviders = Set(defaults.stringArray(forKey: Key.primedProviders) ?? [])
         if let start = defaults.object(forKey: Key.primerStart) as? Int,
            let end = defaults.object(forKey: Key.primerEnd) as? Int,
@@ -1834,6 +1921,8 @@ final class AppSettings {
         PanelMetrics.showTopPercentages(settings.topRailShowsPercentages)
         PanelMetrics.showSidePercentages(settings.sideRailShowsPercentages)
         PanelMetrics.putLabelAboveRing(settings.labelAboveRing)
+        PanelMetrics.putFreeAcrossFiguresBeside(settings.freeAcrossFiguresBeside)
+        PanelMetrics.showWindowClock(settings.showsWindowClock)
         PanelMetrics.useRoundEnds(settings.usesRoundEnds)
         PanelMetrics.showForecast(settings.showsForecast)
         PanelMetrics.showDetailedCard(!settings.detailedCards.isEmpty)
@@ -1924,6 +2013,7 @@ final class AppSettings {
     private enum Key {
         static let panelVisible = "settings.panelVisible"
         static let hidesMenuBarIcon = "settings.hidesMenuBarIcon"
+        static let showsDockIconInSettings = "settings.showsDockIconInSettings"
         static let extraAccounts = "settings.extraAccounts"
         static let hidesInFullScreen = "settings.hidesInFullScreen"
         static let followsActiveDisplay = "settings.followsActiveDisplay"
@@ -1939,6 +2029,7 @@ final class AppSettings {
         static let balanceBases = "settings.balanceBases"
         static let showsCodexResetCredits = "settings.showsCodexResetCredits"
         static let showsUsageInMenuBar = "settings.showsUsageInMenuBar"
+        static let showsMenuDashboard = "settings.showsMenuDashboard"
         static let primedProviders = "settings.primedProviders"
         static let primerStart = "settings.primerStart"
         static let primerEnd = "settings.primerEnd"
@@ -1968,6 +2059,7 @@ final class AppSettings {
         static let topRailShowsPercentages = "settings.topRailShowsPercentages"
         static let sideRailShowsPercentages = "settings.sideRailShowsPercentages"
         static let labelAboveRing = "settings.labelAboveRing"
+        static let freeAcrossFiguresBeside = "settings.freeAcrossFiguresBeside"
         static let usesRoundEnds = "settings.usesRoundEnds"
         static let showsWindowClock = "settings.showsWindowClock"
         static let windowClockDirection = "settings.windowClockDirection"
@@ -1998,6 +2090,7 @@ final class AppSettings {
         static let remindsBeforeRegularReset = "settings.remindsBeforeRegularReset"
         static let regularResetLead = "settings.regularResetLead"
         static let offeredProviders = "settings.offeredProviders"
+        static let alertsOnOutage = "settings.alertsOnOutage"
         static let providerOrder = "settings.providerOrder"
     }
 }

@@ -81,7 +81,7 @@
 "With more than one display, the rail moves to the one the pointer is on." = "With more than one display, the rail moves to the one the pointer is on.";
 "Left" = "Left";
 "Top" = "Top";
-"Percentages on top" = "Percentages on top";
+"Percentages across" = "Percentages across";
 "Turn red at" = "Turn red at";
 "Where a ring turns from green to red." = "Where a ring turns from green to red.";
 "Where a ring turns from green to muted grey." = "Where a ring turns from green to muted grey.";
@@ -145,7 +145,10 @@
 "Whether each limit lasts its window, on the card." = "Whether each limit lasts its window, on the card.";
 "Counts down instead of up, figure and ring together." = "Counts down instead of up, figure and ring together.";
 "Swaps the two, wherever the panel is." = "Swaps the two, wherever the panel is.";
-"Only when the panel is docked to the top." = "Only when the panel is docked to the top.";
+"When the panel lies across: docked to the top or bottom, or free." = "When the panel lies across: docked to the top or bottom, or free.";
+"Bottom" = "Bottom";
+"Figures beside the rings" = "Figures beside the rings";
+"Only when the panel lies free across. A thinner, longer panel." = "Only when the panel lies free across. A thinner, longer panel.";
 "Drag it anywhere; near an edge it snaps on." = "Drag it anywhere; near an edge it snaps on.";
 "Right" = "Right";
 
@@ -262,10 +265,11 @@
 "Busiest day" = "Busiest day";
 "Next expires in %@" = "Next expires in %@";
 "Top model" = "Top model";
-"%@ · %@ of tokens" = "%@ · %@ of tokens";
 "Estimated value" = "Estimated value";
 "%@ used so far" = "%@ used so far";
-"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out." = "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. Work done on other machines isn't counted, which would put these low. Windows with too little use to extrapolate from are left out.";
+"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. If both are in use at once, the figure reads low. Windows with too little use to extrapolate from are left out." = "An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. If both are in use at once, the figure reads low. Windows with too little use to extrapolate from are left out.";
+"Also used somewhere this Mac's logs can't see" = "Also used somewhere this Mac's logs can't see";
+"Not estimated" = "Not estimated";
 
 /* Adaptive refresh */
 "2 to 30 minutes as needed. Now: %@ minutes." = "2 to 30 minutes as needed. Now: %@ minutes.";
@@ -277,7 +281,8 @@
 
 /* Free placement */
 "Position" = "Position";
-"Free" = "Free";
+"Free across" = "Free across";
+"Free upright" = "Free upright";
 "Last 31 days" = "Last 31 days";
 
 /* Panel size */
@@ -303,6 +308,9 @@
 "Open at login" = "Open at login";
 "Start Pulse automatically when you log in." = "Start Pulse automatically when you log in.";
 "Waiting for approval in System Settings › General › Login Items." = "Waiting for approval in System Settings › General › Login Items.";
+
+"Show Dock icon while Settings is open" = "Show Dock icon while Settings is open";
+"So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes." = "So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes.";
 
 /* Menu bar icon */
 "Hide menu bar icon" = "Hide menu bar icon";
@@ -573,15 +581,17 @@
 "Current streak" = "Current streak";
 "Longest streak" = "Longest streak";
 "Peak hour" = "Peak hour";
-"Favourite model" = "Favourite model";
+"Most tokens" = "Most tokens";
 "By kind" = "By kind";
-"Input" = "Input";
-"Sent fresh, not served from the cache." = "Sent fresh, not served from the cache.";
-"Cache write" = "Cache write";
-"Put into the prompt cache to be re-used." = "Put into the prompt cache to be re-used.";
-"Cache read" = "Cache read";
-"Served from the cache, and priced far lower." = "Served from the cache, and priced far lower.";
 "Output" = "Output";
+"Fresh input" = "Fresh input";
+"Sent this time and not read from the cache." = "Sent this time and not read from the cache.";
+"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher.";
+"Read back from the cache, usually at a lower price." = "Read back from the cache, usually at a lower price.";
+"These records carry no cache figures." = "These records carry no cache figures.";
+"Not reported" = "Not reported";
+"Fresh" = "Fresh";
+"Cached" = "Cached";
 "Written back by the model." = "Written back by the model.";
 "By hour" = "By hour";
 "By month" = "By month";
@@ -592,8 +602,6 @@
 "Busiest hour" = "Busiest hour";
 "Day by day" = "Day by day";
 "Date" = "Date";
-"C. read" = "C. read";
-"C. write" = "C. write";
 "Cost" = "Cost";
 "%@ per page" = "%@ per page";
 "%@–%@ of %@" = "%@–%@ of %@";
@@ -960,7 +968,17 @@
 "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity.";
 "Estimated value %@ · %@ used" = "Estimated value %@ · %@ used";
 "Cache hit rate" = "Cache hit rate";
-"Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out." = "Input read from the prompt cache, as a share of all input, over the last 31 days. A model whose records don't sort every token by kind is left out.";
+"Models" = "Models";
+"Share" = "Share";
+"Cache hit" = "Cache hit";
+"Tokens/s" = "Tokens/s";
+"First token" = "First token";
+"Share and cache hit cover the last 31 days." = "Share and cache hit cover the last 31 days.";
+"Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply." = "Share and cache hit cover the last 31 days; tokens per second only the last 24 hours, from sending a request to the end of its reply.";
+"Too few replies in the last 24 hours to time." = "Too few replies in the last 24 hours to time.";
+"First token is Codex's own measure of how long a turn waited for it." = "First token is Codex's own measure of how long a turn waited for it.";
+"Claude Code doesn't record when the first token arrived, so its wait isn't shown." = "Claude Code doesn't record when the first token arrived, so its wait isn't shown.";
+"%@ s" = "%@ s";
 "Prompt cache (%@)" = "Prompt cache (%@)";
 "%@ left" = "%@ left";
 "Expired" = "Expired";
@@ -979,3 +997,72 @@
 "No conversation is within its guaranteed cache time" = "No conversation is within its guaranteed cache time";
 "Kept at least %@" = "Kept at least %@";
 "The latest one's guaranteed time ended at %@." = "The latest one's guaranteed time ended at %@.";
+"Usage panel in the menu" = "Usage panel in the menu";
+"Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend." = "Opens the menu bar menu on an overview of every account, with a tab for each one's limits, plan and spend.";
+"OpenCode console" = "OpenCode console";
+"Account request log" = "Account request log";
+"Kept. The detailed card reads every request on the account with it." = "Kept. The detailed card reads every request on the account with it.";
+"No OpenCode console session found. Sign in at opencode.ai first." = "No OpenCode console session found. Sign in at opencode.ai first.";
+"Costs as %@ charged them, for the whole account." = "Costs as %@ charged them, for the whole account.";
+"The console session has expired. Read it again in Settings." = "The console session has expired. Read it again in Settings.";
+"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac.";
+"Turn on Detailed card above to see the request log on the card." = "Turn on Detailed card above to see the request log on the card.";
+"Read from %@ · workspace %@." = "Read from %@ · workspace %@.";
+"The console turned this session away. Sign in again at opencode.ai, then read it again." = "The console turned this session away. Sign in again at opencode.ai, then read it again.";
+"Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "Read from %@, but the console didn't answer. It will be tried again on the next refresh.";
+"Reading the account's records…" = "Reading the account's records…";
+"From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days.";
+
+"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days." = "From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days.";
+"DeepSeek console" = "DeepSeek console";
+"Account usage" = "Account usage";
+"Kept. The usage history below and the detailed card read the whole account with it." = "Kept. The usage history below and the detailed card read the whole account with it.";
+"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac." = "The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac.";
+"Reads Chrome, Edge, Brave, Arc and other Chromium browsers." = "Reads Chrome, Edge, Brave, Arc and other Chromium browsers.";
+"No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc." = "No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc.";
+"No DeepSeek console sign-in found. Sign in at platform.deepseek.com first." = "No DeepSeek console sign-in found. Sign in at platform.deepseek.com first.";
+"The console turned this sign-in away. Sign in again at platform.deepseek.com, then read it again." = "The console turned this sign-in away. Sign in again at platform.deepseek.com, then read it again.";
+
+"Last 30 days" = "Last 30 days";
+"Last 90 days" = "Last 90 days";
+"All sessions" = "All sessions";
+"Signs of a weaker model" = "Signs of a weaker model";
+"Period" = "Period";
+"No Codex replies with reasoning in this period" = "No Codex replies with reasoning in this period";
+"%@ of %@ long replies had their reasoning cut off" = "%@ of %@ long replies had their reasoning cut off";
+"Too few to tell" = "Too few to tell";
+"Possibly weakened" = "Possibly weakened";
+"Normal" = "Normal";
+"None found" = "None found";
+"%@ more" = "%@ more";
+"Checked %@ sessions." = "Checked %@ sessions.";
+"Read from this Mac's Codex records; nothing is sent." = "Read from this Mac's Codex records; nothing is sent.";
+"Reasoning cut off: the model's reasoning stopped at exactly 516, 1,034, 1,552… tokens, as if cut off. Only about 0.2% of replies would stop there by chance." = "Reasoning cut off: the model's reasoning stopped at exactly 516, 1,034, 1,552… tokens, as if cut off. Only about 0.2% of replies would stop there by chance.";
+"Settings quietly lowered: a turn ran on a worse model, lower reasoning or a smaller context than you chose, without you changing anything." = "Settings quietly lowered: a turn ran on a worse model, lower reasoning or a smaller context than you chose, without you changing anything.";
+"These are signs, not proof: Codex doesn't record which model the server actually used." = "These are signs, not proof: Codex doesn't record which model the server actually used.";
+"Reasoning cut off" = "Reasoning cut off";
+"%@ replies in all" = "%@ replies in all";
+"Settings quietly lowered" = "Settings quietly lowered";
+"Model: %@ swapped for %@" = "Model: %@ swapped for %@";
+"Reasoning: %@ lowered to %@" = "Reasoning: %@ lowered to %@";
+"Context: %@ cut to %@" = "Context: %@ cut to %@";
+"Checked %@ sessions: the model, reasoning and context you chose were never changed." = "Checked %@ sessions: the model, reasoning and context you chose were never changed.";
+"%@ other sessions can't be checked: older than Codex 0.144, or run by Codex itself." = "%@ other sessions can't be checked: older than Codex 0.144, or run by Codex itself.";
+"Service status" = "Service status";
+"Operational" = "Operational";
+"Degraded performance" = "Degraded performance";
+"Partial outage" = "Partial outage";
+"Full outage" = "Full outage";
+"Under maintenance" = "Under maintenance";
+"Unrecognised status" = "Unrecognised status";
+"Couldn't read the status page." = "Couldn't read the status page.";
+"Status page" = "Status page";
+"As %@ reports it on its status page, read when this page opens and every five minutes while it stays open." = "As %@ reports it on its status page, read when this page opens and every five minutes while it stays open.";
+"90 days ago" = "90 days ago";
+"%@ uptime" = "%@ uptime";
+"No data" = "No data";
+"When a service is down" = "When a service is down";
+"Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on." = "Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on.";
+"%@ reports %@." = "%@ reports %@.";
+"Back to normal: %@." = "Back to normal: %@.";
+"%@ (%@)" = "%@ (%@)";

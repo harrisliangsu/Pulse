@@ -38,7 +38,7 @@
 - **Seventy-seven services at a glance** — Claude Code, Codex, Cursor, GitHub Copilot, Antigravity, Kiro, Grok, DeepSeek, Kimi Code and many more, each as its own ring.
 - **No Pulse account, no Pulse server** — it uses the logins you already have, and nothing is sent back.
 - **Real numbers only** — every usage percentage is the one the service itself reported. The few estimates are marked as such, and where a service reports nothing, Pulse says so instead of guessing.
-- **Native and quiet** — Swift and SwiftUI, Liquid Glass on macOS 26. Dock it left, right or along the top, let it fold to a sliver when idle, or keep it in the menu bar.
+- **Native and quiet** — Swift and SwiftUI, Liquid Glass on macOS 26. Dock it left, right, along the top or along the bottom beside the Dock, let it fold to a sliver when idle, or keep it in the menu bar.
 
 **Recently added:** usage in the menu bar with a dashboard for each account, starting usage windows after a reset, and animated bot marks. [What's new](https://github.com/harrisliangsu/Pulse/releases/latest).
 
@@ -71,16 +71,16 @@
 </p>
 
 ### Native, Fluid & Non-Intrusive
-- **Flexible Edge Docking**: Dock to the left, right, or top of your screen (above the menu bar), or float freely anywhere.
+- **Flexible Edge Docking**: Dock to the left, right, top (above the menu bar) or bottom of your screen (beside the Dock), or float it anywhere, standing upright or lying across.
 - **Multi-Monitor Native**: Drag Pulse to any secondary display; it remembers screen placement and gracefully returns if disconnected. Turn on **Follow the active display** and the single rail moves itself to whichever screen your pointer is on.
 - **Auto-Collapse**: Automatically folds into a razor-thin sliver when idle to eliminate distraction, glowing red only when quota runs critically low.
-- **Opt-In Notifications**: You choose which ones to switch on. Get told when a limit passes 75/80/90/95%, when the provider says it is spent, when a window you were warned about comes back, and when several checks in a row fail so the panel is quietly showing older figures, and — for the services that sell prepaid credit — when the balance falls under a figure you set. Each thing is said once: a limit already past the line when you switch this on is mentioned straight away, and again when it resets or gets worse.
+- **Opt-In Notifications**: You choose which ones to switch on. Get told when a limit passes 75/80/90/95%, when the provider says it is spent, when a window you were warned about comes back, and when several checks in a row fail so the panel is quietly showing older figures, and — for the services that sell prepaid credit — when the balance falls under a figure you set, and when Codex's, Claude Code's or DeepSeek's own status page reports what the tool runs on as down (only for the ones you have switched on). Each thing is said once: a limit already past the line when you switch this on is mentioned straight away, and again when it resets or gets worse.
 - **Start Usage Windows After a Reset (Optional)**: Claude Code's and Codex's windows only start at your first message after a reset. Switch this on and Pulse sends a single "hi" through the provider's own command-line tool just after each reset, within the hours you choose, so the clock starts then rather than whenever you come back. Off by default, and it is not a feature of Anthropic or OpenAI: switching it on asks you to confirm that it may be treated as getting around usage limits.
 - **Spaces-Friendly**: Keeps to the Space you are working in, leaving full-screen apps to themselves.
 - **macOS Aesthetic**: Classic solid obsidian surface or native **Liquid Glass** on macOS 26+.
 - **Animated Marks (Optional)**: Replace a provider's logo with a small bot that reacts to what that account is doing — working, fetching, spent, or quiet. Off by default and switched on per account, with eight personalities, eighteen body shapes and a colour of your own if you want one.
 - **Rail Menu & Shortcuts**: Right-click the floating rail — or the collapsed sliver; Control-click works too — for a menu with Settings and Quit. In **Settings › General › Shortcuts** you can optionally assign global shortcuts to **Open settings** and **Show or hide the panel**; both are unset until you set one.
-- **Menu Bar Usage (Optional)**: Show the fullest ring — or an account you pick — beside the menu bar icon as a figure, a small ring, or its five-hour and weekly limits side by side (`5h/9%  Wk/15%`), red past the warning line. Click it for a dashboard: an overview of every account, and a tab per account with each limit, its reset, credits, estimated spend (with Token spend on) and a link to the provider's own usage page. Turn the floating panel off from the same menu if you only want the menu bar.
+- **Menu Bar Usage (Optional)**: Show the fullest ring — or an account you pick — beside the menu bar icon as a figure, a small ring, or its five-hour and weekly limits side by side (`5h/9%  Wk/15%`), red past the warning line. Turn on **Usage panel in the menu** and clicking it opens a dashboard: an overview of every account, and a tab per account with each limit, its reset, credits, estimated spend (with Token spend on) and a link to the provider's own usage page. Turn the floating panel off from the same menu if you only want the menu bar.
 - **Five Interface Languages**: English, Simplified Chinese, Traditional Chinese, Japanese and Korean, with language-aware large-number units: K/M/B, 万/亿, 萬/億, 万/億 and 만/억 respectively.
 
 ### Multi-Account & Local Ledger
@@ -92,8 +92,9 @@
 - **Scriptable**: `Pulse --json` prints the last readings — plan, every limit, reset times, and how old the figures are — for tmux, sketchybar, Raycast, or a shell prompt. It reads the cache, so polling costs nothing.
 - **Developer Integrations**: Export a Raycast extension and ready-to-configure tmux, sketchybar and shell scripts from Settings. Account links open the right pane directly. [Setup guide](Docs/integrations.md).
 - **Extensions**: A small program of your own can report one account's usage — an internal quota endpoint, say — and Pulse draws it as a ring, with no fork to maintain. Nothing runs until you switch it on, and Pulse hands it no credentials. [How to write one](Docs/extensions.md).
+- **Service Status**: Codex's, Claude Code's and DeepSeek's settings show the provider's own status page the way it draws it — each part up or down now, a bar a day for the last 90 days, and the uptime the page reports — read when you open the pane and every five minutes while it stays open.
 - **Connection Diagnostics**: See the actual reading source, cache use, latest check and fallback outcomes. Contextual actions help reconnect, sign in again or fix credentials; copy a diagnostic report without account details or secrets.
-- **Privacy First**: Pulse runs on your Mac under your own provider logins. It makes three kinds of connection and they are all listed here: the providers you already use, [models.dev](https://models.dev) for public model prices in the token-spend pane, and GitHub/Sparkle for app updates. Provider requests, sign-in exchanges and models.dev use the proxy chosen under Settings › Network and refresh; supported helper processes receive the same manual proxy. Sparkle update checks always follow macOS system proxy settings.
+- **Privacy First**: Pulse runs on your Mac under your own provider logins. It makes four kinds of connection and they are all listed here: the providers you already use, their public status pages (status.openai.com, status.claude.com, status.deepseek.com) for Service status and its notification, [models.dev](https://models.dev) for public model prices in the token-spend pane, and GitHub/Sparkle for app updates. Provider requests, status pages, sign-in exchanges and models.dev use the proxy chosen under Settings › Network and refresh; supported helper processes receive the same manual proxy. Sparkle update checks always follow macOS system proxy settings.
 
 <p align="center">
   <img src="Docs/settings.webp" height="300" alt="Pulse Settings">
@@ -133,7 +134,7 @@ Pulse shows the figures each service reports, and every percentage comes from th
 | **Grok** | Grok Build CLI proxy (`cli-chat-proxy.grok.com`) | Single unified weekly pool shared across all Grok products |
 | **Grok Bot** | Cursor dashboard API | The xAI quota included with Cursor subscriptions |
 | **GitHub Copilot** | GitHub Device Code authentication | Requests the `read:user` scope alone |
-| **OpenCode Go** | API key or existing OpenCode CLI credentials | Fully configurable in Settings |
+| **OpenCode Go** | API key or existing OpenCode CLI credentials; or the console's signed-in browser session | The console session also brings the account's request log — every machine and app, with what each request cost — to the detailed card |
 | **Kimi Code** | Direct API key | Configured via Settings |
 | **z.ai** | Direct API key | International storefront (`api.z.ai`) |
 | **Zhipu** | Direct API key or saved GLM tooling credentials | Mainland storefront (`open.bigmodel.cn`) |
@@ -232,7 +233,7 @@ Ported by reading [CodexBar](https://github.com/steipete/CodexBar)'s providers. 
 ## Privacy & Security
 
 Pulse is designed with strict local-first security principles:
-- **No Pulse backend**: Your Mac talks to the providers you already use, under your own logins. It also fetches public model prices from [models.dev](https://models.dev) for the token-spend pane and checks GitHub/Sparkle for app updates. Provider requests, sign-in exchanges and models.dev use the proxy chosen under Settings › Network and refresh; supported helper processes receive the same manual proxy. Sparkle update checks always follow macOS system proxy settings.
+- **No Pulse backend**: Your Mac talks to the providers you already use, under your own logins. It also reads Codex's, Claude Code's and DeepSeek's public status pages for Service status (no login), fetches public model prices from [models.dev](https://models.dev) for the token-spend pane and checks GitHub/Sparkle for app updates. Provider requests, status pages, sign-in exchanges and models.dev use the proxy chosen under Settings › Network and refresh; supported helper processes receive the same manual proxy. Sparkle update checks always follow macOS system proxy settings.
 - **Local Credentials**: Reads credentials already stored locally by your development tools (`~/.claude`, `~/.codex`, Cursor storage, etc.) where that is how the product works; some providers need a key or sign-in you enter in Settings.
 - **Encrypted Local Storage**: Manually entered API keys and session tokens are encrypted and saved strictly in Pulse's local application directory with owner-only permissions.
 - **Local Usage Records**: Pulse reads transcripts, databases and exports to obtain token counts and session metadata such as titles and working directories. These records may contain conversation text; processing stays on your Mac and the records stay with it. Pulse reads those records and nothing else.

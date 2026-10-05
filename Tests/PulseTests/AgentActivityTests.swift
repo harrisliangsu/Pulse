@@ -6,6 +6,42 @@ import Testing
 struct AgentActivityTests {
     private static let now = Date(timeIntervalSince1970: 1_800_000_000)
 
+    @Test("Cached lifecycle facts still expire and changed, new or deleted files are noticed")
+    func cachedActivity() throws {
+        let home = try EditorTestSupport.temporary("activity-cache")
+        defer { try? FileManager.default.removeItem(at: home) }
+        let file = home.appending(path: ".codex/sessions/one.jsonl")
+        let stamp = ISO8601DateFormatter().string(from: Self.now)
+        try EditorTestSupport.jsonLines([
+            ["timestamp": stamp, "payload": ["type": "task_started"]],
+        ], to: file)
+        try FileManager.default.setAttributes([.modificationDate: Self.now], ofItemAtPath: file.path)
+        var cache = AgentActivity.Cache()
+        func state(_ elapsed: TimeInterval) -> AgentActivity.State? {
+            AgentActivity.states(for: [.codex], now: Self.now.addingTimeInterval(elapsed), home: home, cache: &cache)[.codex]
+        }
+        #expect(state(0)?.isWorking == true)
+        #expect(state(89)?.isWorking == true)
+        #expect(state(91)?.isWorking == false)
+        // Size alone invalidates even when a filesystem's mtime has not moved.
+        try EditorTestSupport.jsonLines([
+            ["timestamp": stamp, "payload": ["type": "task_started"]],
+            ["timestamp": stamp, "payload": ["type": "task_complete"]],
+        ], to: file)
+        try FileManager.default.setAttributes([.modificationDate: Self.now], ofItemAtPath: file.path)
+        #expect(state(0)?.isWorking == false)
+        let second = home.appending(path: ".codex/sessions/nested/two.jsonl")
+        try EditorTestSupport.jsonLines([
+            ["timestamp": stamp, "payload": ["type": "function_call"]],
+        ], to: second)
+        try FileManager.default.setAttributes([.modificationDate: Self.now.addingTimeInterval(-1)], ofItemAtPath: second.path)
+        #expect(state(100)?.isWorking == true, "An older live file still counts beside the newest finished file")
+        try FileManager.default.removeItem(at: second)
+        #expect(state(100)?.isWorking == false)
+        try FileManager.default.removeItem(at: file)
+        #expect(state(100)?.lastWrite == nil)
+    }
+
     @Test("The scanner reads only the selected activity providers", arguments: [
         Set<Provider>(), [.deepSeek], [.claudeCode], [.codex], [.kiro], [.claudeCode, .codex]
     ])

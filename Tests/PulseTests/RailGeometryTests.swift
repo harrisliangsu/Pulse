@@ -51,7 +51,7 @@ struct PanelChromeTests {
 
 @Suite("Rail geometry", .serialized)
 struct RailGeometryTests {
-    private static let edges: [PanelEdge] = [.left, .right, .top]
+    private static let edges: [PanelEdge] = [.left, .right, .top, .bottom]
     /// One, a handful, and a rail longer than any real one.
     private static let counts = [1, 2, 3, 7, 15, 16]
 
@@ -63,13 +63,32 @@ struct RailGeometryTests {
     /// only one of them is the default — so without this the other ships
     /// untested. The flag is a global on `PanelMetrics`, which is why the
     /// suite is serialized and why the original is put back.
+    ///
+    /// And once per way a lying rail lays out its figures: none (the top
+    /// rail's default), under the rings, and — free across only — beside
+    /// them. Each moves where every ring sits.
     private func underEachEndStyle(_ body: (String) -> Void) {
         let original = PanelMetrics.usesRoundEnds
-        defer { PanelMetrics.useRoundEnds(original) }
+        let labels = PanelMetrics.topRailShowsPercentages
+        let beside = PanelMetrics.freeAcrossFiguresBeside
+        defer {
+            PanelMetrics.useRoundEnds(original)
+            PanelMetrics.showTopPercentages(labels)
+            PanelMetrics.putFreeAcrossFiguresBeside(beside)
+        }
 
+        let clock = PanelMetrics.showsWindowClock
+        defer { PanelMetrics.showWindowClock(clock) }
         for round in [false, true] {
-            PanelMetrics.useRoundEnds(round)
-            body(round ? "round ends" : "softened ends")
+            for (shows, besideRings) in [(false, false), (true, false), (true, true)] {
+                // The time arc moves every figure further off (issue #73).
+                PanelMetrics.showWindowClock(round)
+                PanelMetrics.useRoundEnds(round)
+                PanelMetrics.showTopPercentages(shows)
+                PanelMetrics.putFreeAcrossFiguresBeside(besideRings)
+                let figures = !shows ? "no figures across" : besideRings ? "figures beside" : "figures under"
+                body("\(round ? "round ends" : "softened ends"), \(figures)")
+            }
         }
     }
 
@@ -86,8 +105,8 @@ struct RailGeometryTests {
     /// The centre of ring `index`, by the same sum the hit test uses.
     private func ringCentre(_ index: Int, in rail: CGRect, _ edge: PanelEdge, docked: Bool) -> CGPoint {
         let along = DockLayout.firstRingAlong(docked: docked, on: edge.axis)
-            + CGFloat(index) * DockLayout.ringStep(on: edge.axis)
-        let across = DockLayout.ringCentreAcross(on: edge.axis)
+            + CGFloat(index) * DockLayout.ringStep(on: edge.axis, docked: docked)
+        let across = DockLayout.ringCentreAcross(on: edge.axis, docked: docked)
         return edge.isVertical
             ? CGPoint(x: rail.minX + across, y: rail.minY + along)
             : CGPoint(x: rail.minX + along, y: rail.minY + across)
@@ -344,7 +363,7 @@ struct RailOffsetTests {
 
     @Test("Offsets put the rail where the layout meant it to be")
     func offsetsRoundTripAgainstTheGrantedFrame() {
-        let placement = PanelPlacement(dock: .floating, horizontalRatio: 0.8, verticalRatio: 0.44)
+        let placement = PanelPlacement(dock: .floating(.vertical), horizontalRatio: 0.8, verticalRatio: 0.44)
         let layout = placement.layout(in: visible, topEdge: 1134, panel: panel, rail: rail)
 
         // Granted as asked: the rail's top lands exactly where layout put it.
@@ -357,7 +376,7 @@ struct RailOffsetTests {
     /// The refusal this suite exists for, with the numbers the probe recorded.
     @Test("A frame the window was refused does not move the rail")
     func aRefusedFrameDoesNotMoveTheRail() {
-        let placement = PanelPlacement(dock: .floating, horizontalRatio: 0.8, verticalRatio: 0.44)
+        let placement = PanelPlacement(dock: .floating(.vertical), horizontalRatio: 0.8, verticalRatio: 0.44)
         let layout = placement.layout(in: visible, topEdge: 1134, panel: panel, rail: rail)
 
         // What AppKit actually grants: the top pinned under the menu bar.
@@ -394,5 +413,57 @@ struct RailOffsetTests {
         #expect(offsets.top <= max(tiny.height - rail.height, 0))
         #expect(offsets.leading >= 0)
         #expect(offsets.leading <= max(tiny.width - rail.width, 0))
+    }
+}
+
+/// The two proportions of a rail lying free across, and the top dock's,
+/// which neither may change.
+@Suite("Free lying rail proportions", .serialized)
+struct FreeLyingRailProportionTests {
+    @MainActor
+    @Test("Figures under: closer rings and more room above and below; beside: the upright rail's thickness; docked: untouched")
+    func proportions() {
+        let labels = PanelMetrics.topRailShowsPercentages
+        let beside = PanelMetrics.freeAcrossFiguresBeside
+        defer {
+            PanelMetrics.showTopPercentages(labels)
+            PanelMetrics.putFreeAcrossFiguresBeside(beside)
+        }
+        PanelMetrics.showTopPercentages(true)
+
+        PanelMetrics.putFreeAcrossFiguresBeside(false)
+        // Where the hit test puts a ring is where the drawing does: the
+        // stacked item centred in the free rail's own thickness, behind its
+        // own padding — not the top dock's.
+        if !DockLayout.labelLeads {
+            #expect(DockLayout.ringCentreAcross(on: .horizontal, docked: false)
+                == DockLayout.crossPadding(on: .horizontal, docked: false) + DockLayout.ringDiameter / 2)
+        }
+        let docked = DockLayout.thickness(on: .horizontal, docked: true)
+        let dockedStep = DockLayout.ringStep(on: .horizontal, docked: true)
+        #expect(DockLayout.thickness(on: .horizontal, docked: false) == docked + 8 * PanelMetrics.scale)
+        #expect(DockLayout.ringStep(on: .horizontal, docked: false) == dockedStep - 10 * PanelMetrics.scale * PanelMetrics.spacing)
+
+        PanelMetrics.putFreeAcrossFiguresBeside(true)
+        #expect(DockLayout.thickness(on: .horizontal, docked: false) == DockLayout.thickness(on: .vertical))
+        // Beside means right of the ring, even with figures set above
+        // (issue #73): the ring leads its item.
+        let above = PanelMetrics.labelAboveRing
+        PanelMetrics.putLabelAboveRing(true)
+        #expect(DockLayout.firstRingAlong(docked: false, on: .horizontal)
+            == DockLayout.endPadding(docked: false) + DockLayout.ringDiameter / 2)
+        PanelMetrics.putLabelAboveRing(above)
+        // The time arc moves a figure 5pt further from its ring.
+        let clock = PanelMetrics.showsWindowClock
+        PanelMetrics.showWindowClock(false)
+        let plain = DockLayout.ringToTextSpacing
+        PanelMetrics.showWindowClock(true)
+        #expect(DockLayout.ringToTextSpacing == plain + 5 * PanelMetrics.scale)
+        PanelMetrics.showWindowClock(clock)
+        #expect(DockLayout.thickness(on: .horizontal, docked: true) == docked)
+        #expect(DockLayout.ringStep(on: .horizontal, docked: true) == dockedStep)
+        // The window is budgeted for the longer and the thicker of the rails.
+        #expect(DockLayout.maximumLength(on: .horizontal, capacity: 7)
+            == DockLayout.length(for: 7, on: .horizontal, docked: false))
     }
 }

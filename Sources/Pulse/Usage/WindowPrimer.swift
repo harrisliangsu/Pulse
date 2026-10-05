@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 import Observation
 
@@ -90,6 +91,12 @@ final class WindowPrimer {
         return true
     }
 
+    /// The noted resets of the providers that will still be started.
+    nonisolated static func kept(_ resets: [String: Date], starting providers: Set<Provider>) -> [String: Date] {
+        let prefixes = providers.map { AccountKey($0).id + "|" }
+        return resets.filter { key, _ in prefixes.contains { key.hasPrefix($0) } }
+    }
+
     private static func key(_ account: AccountKey, _ window: UsageWindow) -> String {
         "\(account.id)|\(window.id)"
     }
@@ -130,6 +137,13 @@ final class WindowPrimer {
 
     private func schedule() {
         timer?.invalidate()
+        // **A reset nobody will act on is not something to wake for.** Turning
+        // the starter off, or the account, left its noted resets here; once
+        // they passed, every timer came due at once, `fire` skipped them, and
+        // the loop woke again in five seconds — for as long as Pulse ran.
+        resets = Self.kept(resets, starting: Set(Self.providers.filter {
+            settings.primesWindows(for: $0) && settings.isEnabled(AccountKey($0))
+        }))
         let hours = settings.primerHours
         let now = Date()
         let times = resets.values.map { hours.next(after: max($0.addingTimeInterval(Self.grace), now)) }

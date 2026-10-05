@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// The OpenCode Go plan's limits.
@@ -15,17 +16,41 @@ import Foundation
 /// The endpoint is `GET /zen/go/v1/usage`, which is not documented — OpenCode's
 /// own docs describe only the model endpoints — so it can change without
 /// notice, exactly like the two undocumented routes the CLIs use.
+///
+/// **A third way in: the console's session**, read from the browser in
+/// Settings for the request log (`OpenCodeConsole`). The console answers the
+/// same three limits at `GET /console/api/go/status`, in money rather than in
+/// percent. It is asked when there is no key at all, or when the key route
+/// turned the key away or did not answer — never instead of a key that works,
+/// so nobody who set one up is moved off it.
 struct OpenCodeGoUsageService: Sendable {
     /// The key the user entered, read by the caller so this stays free of
     /// both UI and storage concerns.
     let enteredKey: String?
+    /// The console's session, from its own slot beside the key.
+    var consoleCookie: String?
 
     private static let endpoint = URL(string: "https://opencode.ai/zen/go/v1/usage")!
 
     func fetch() async -> ProviderUsage {
         guard let key = enteredKey.flatMap({ $0.isEmpty ? nil : $0 }) ?? Self.storedKey() else {
+            if let consoleCookie { return await Self.fetchConsole(cookie: consoleCookie) }
             return .unavailable(.openCodeGo, reason: .apiKeyMissing)
         }
+
+        let byKey = await fetch(key: key)
+        // The console stands in only where the key could not answer. A
+        // reading the key did get — even one with no limits in it — stands.
+        if case .unavailable(let reason) = byKey.state,
+           [.apiKeyRefused, .unreachable, .serverError, .unreadableReply].contains(reason),
+           let consoleCookie {
+            let byConsole = await Self.fetchConsole(cookie: consoleCookie)
+            if case .live = byConsole.state { return byConsole }
+        }
+        return byKey
+    }
+
+    private func fetch(key: String) async -> ProviderUsage {
 
         var request = URLRequest(url: Self.endpoint)
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
@@ -82,6 +107,150 @@ struct OpenCodeGoUsageService: Sendable {
         return key
     }
 
+    // MARK: - The console
+
+    private static let consoleStatus = URL(string: "https://\(OpenCodeConsole.host)/console/api/go/status")!
+
+    static func fetchConsole(cookie: String) async -> ProviderUsage {
+        let org: String
+        switch await OpenCodeConsoleWorkspace.shared.resolve(cookie: cookie) {
+        case .workspace(let workspace): org = workspace.id
+        case .signedOut: return .unavailable(.openCodeGo, reason: .sessionExpired)
+        case .failed: return .unavailable(.openCodeGo, reason: .serverError)
+        }
+
+        var request = URLRequest(url: consoleStatus)
+        request.setValue(cookie, forHTTPHeaderField: "Cookie")
+        request.setValue(org, forHTTPHeaderField: "x-org-id")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 15
+
+        guard let (data, response) = try? await NetworkSession.shared.data(for: request) else {
+            return .unavailable(.openCodeGo, reason: .unreachable)
+        }
+        switch (response as? HTTPURLResponse)?.statusCode {
+        case 200: break
+        case 401, 403: return .unavailable(.openCodeGo, reason: .sessionExpired)
+        case 429: return .unavailable(.openCodeGo, reason: .rateLimited)
+        default: return .unavailable(.openCodeGo, reason: .serverError)
+        }
+        guard let status = try? JSONDecoder().decode(ConsoleStatus.self, from: data) else {
+            // Signed out, the console answers its sign-in page.
+            let text = String(decoding: data.prefix(64), as: UTF8.self)
+            return .unavailable(.openCodeGo, reason: text.contains("<") ? .sessionExpired : .unreadableReply)
+        }
+        let windows = windows(from: status)
+        guard !windows.isEmpty else {
+            return .unavailable(.openCodeGo, reason: status.access == nil ? .noPlan : .noLimitsReported)
+        }
+
+        var usage = ProviderUsage(
+            account: AccountKey(.openCodeGo),
+            windows: windows,
+            observedAt: Date(),
+            state: .live,
+            // The console names the product it bills; the key's reply names none.
+            plan: status.product == "go" ? "Go" : nil,
+            creditBalance: nil
+        )
+        usage.origin = .webSession
+        return usage
+    }
+
+    /// Whether a workspace holds a Go subscription, for choosing among several.
+    static func hasGoAccess(cookie: String, org: String) async -> Bool {
+        var request = URLRequest(url: consoleStatus)
+        request.setValue(cookie, forHTTPHeaderField: "Cookie")
+        request.setValue(org, forHTTPHeaderField: "x-org-id")
+        request.timeoutInterval = 15
+        guard let (data, response) = try? await NetworkSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let status = try? JSONDecoder().decode(ConsoleStatus.self, from: data)
+        else { return false }
+        return status.access != nil
+    }
+
+    /// The console's answer: the plan's three meters, each in micro-cents
+    /// used against a limit, with when it started and when it resets.
+    ///
+    /// Internal for the fixture test, like `Reply`. **Only these fields are
+    /// decoded**: the reply also names the payment method and the account,
+    /// which Pulse has no use for and does not hold.
+    struct ConsoleStatus: Decodable {
+        struct Meter: Decodable {
+            let startsAt: String?
+            let resetsAt: String?
+            /// Strings in the reply: a micro-cent count runs past what JSON
+            /// numbers carry exactly.
+            let limitMicroCents: String?
+            let usedMicroCents: String?
+        }
+
+        struct Meters: Decodable {
+            let fiveHour: Meter?
+            let week: Meter?
+            let month: Meter?
+        }
+
+        struct Access: Decodable {
+            let startsAt: String?
+            let endsAt: String?
+            let meters: Meters?
+        }
+
+        let product: String?
+        let access: Access?
+    }
+
+    /// The same three windows, under the same ids, as the key's reply — so a
+    /// pinned limit and the rest of the app see one plan whichever route
+    /// answered.
+    ///
+    /// **The fraction is the console's own two figures**, used over limit.
+    /// Its lengths are measured where it states a start: the five-hour and
+    /// weekly meters do; the monthly one starts with the billing period, which
+    /// is the subscription's access when the two end together.
+    static func windows(from status: ConsoleStatus) -> [UsageWindow] {
+        guard let meters = status.access?.meters else { return [] }
+        let periodStart = status.access?.endsAt == meters.month?.resetsAt ? status.access?.startsAt : nil
+        return [
+            consoleWindow(meters.fiveHour, id: "rolling", kind: .fiveHour, seconds: 5 * 3_600, startsAt: meters.fiveHour?.startsAt),
+            consoleWindow(meters.week, id: "weekly", kind: .weekly, seconds: 7 * 86_400, startsAt: meters.week?.startsAt),
+            consoleWindow(meters.month, id: "monthly", kind: .monthly, seconds: 30 * 86_400, startsAt: periodStart),
+        ].compactMap { $0 }
+    }
+
+    private static func consoleWindow(
+        _ meter: ConsoleStatus.Meter?,
+        id: String,
+        kind: UsageWindow.Kind,
+        seconds: Int,
+        startsAt: String?
+    ) -> UsageWindow? {
+        guard let meter,
+              let limit = meter.limitMicroCents.flatMap({ Decimal(string: $0) }), limit > 0,
+              let used = meter.usedMicroCents.flatMap({ Decimal(string: $0) })
+        else { return nil }
+
+        let fraction = NSDecimalNumber(decimal: used / limit).doubleValue
+        let resets = meter.resetsAt.flatMap(Self.date(from:))
+        let start = startsAt.flatMap(Self.date(from:))
+        let measured = resets.flatMap { end in start.map { Int(end.timeIntervalSince($0)) } }.flatMap { $0 > 0 ? $0 : nil }
+
+        return UsageWindow(
+            id: id,
+            kind: kind,
+            scope: nil,
+            usedFraction: min(max(fraction, 0), 1),
+            windowSeconds: measured ?? seconds,
+            resetsAt: resets,
+            // A length the console stated by giving a start; otherwise the
+            // nominal one, there to sort by and not to divide by.
+            reportsLength: measured != nil,
+            isExhausted: used >= limit
+        )
+    }
+
     // MARK: - Reading the reply
 
     /// Internal rather than private, and deliberately: this and `windows(from:)`
@@ -113,7 +282,11 @@ struct OpenCodeGoUsageService: Sendable {
         return [
             window(usage.rolling, id: "rolling", kind: .fiveHour, seconds: 5 * 3_600),
             window(usage.weekly, id: "weekly", kind: .weekly, seconds: 7 * 86_400),
-            window(usage.monthly, id: "monthly", kind: .monthly, seconds: 30 * 86_400),
+            // **A month is not thirty days.** The reply states its reset and
+            // no start, so the length only orders the row; claimed as reported
+            // it set a 28- or 31-day cycle's window clock and burn rate by 30.
+            // The console route already says the same when it has no start.
+            window(usage.monthly, id: "monthly", kind: .monthly, seconds: 30 * 86_400, reportsLength: false),
         ].compactMap { $0 }
     }
 
@@ -128,7 +301,8 @@ struct OpenCodeGoUsageService: Sendable {
         _ reported: Reply.Window?,
         id: String,
         kind: UsageWindow.Kind,
-        seconds: Int
+        seconds: Int,
+        reportsLength: Bool = true
     ) -> UsageWindow? {
         guard let reported, let percent = reported.percent else { return nil }
 
@@ -139,6 +313,7 @@ struct OpenCodeGoUsageService: Sendable {
             usedFraction: min(max(percent / 100, 0), 1),
             windowSeconds: seconds,
             resetsAt: reported.resetsAt.flatMap(Self.date(from:)),
+            reportsLength: reportsLength,
             // The provider's own verdict, not one inferred from the
             // percentage. Anything other than "ok" is treated as spent —
             // erring towards "you're blocked" is the safer way to be wrong.

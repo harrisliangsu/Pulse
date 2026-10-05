@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import CryptoKit
 import Foundation
 
@@ -11,8 +12,13 @@ import Foundation
 /// and the price table, not by the store root's own size and date.
 enum AgentCache {
     /// Also versions reader semantics: a valid old shape can contain totals
-    /// from the old pricing, source-precedence or rewind rules.
-    private static let version = 8
+    /// from the old pricing, source-precedence or rewind rules. 9: OpenCode 2
+    /// writes to new tables, and an 8 cache of a store that has not changed
+    /// since holds none of it. 10: Devin's CLI counted each message twice,
+    /// OpenCode's older rows their reasoning twice, Codebuff and Copilot
+    /// Desktop their cached prefix twice, VS Code Copilot's cache-holding
+    /// prompt was fresh input, and Gemini's headless thoughts were dropped.
+    private static let version = 10
 
     /// Whether the stores' real inputs, and the money behind their cost, are
     /// the same as when the ledger was kept.

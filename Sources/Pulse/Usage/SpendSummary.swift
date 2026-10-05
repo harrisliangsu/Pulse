@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// Every agent's spending added up, which is a different question from any one
@@ -159,30 +160,39 @@ struct SpendSummary: Equatable, Sendable {
         hours.max { $0.value < $1.value }.map(\.key)
     }
 
-    /// The run of days with work on them ending at the most recent day, and
-    /// the longest such run anywhere in the span.
+    /// The run of days with work on them that is still going, and the longest
+    /// run there has ever been.
     ///
-    /// **Counted back from the end of the series, not from today.** The series
-    /// runs to today, so a streak that ended yesterday is correctly zero — but
-    /// the same code over a ledger that stops earlier would otherwise report a
-    /// streak that ended weeks ago as current.
-    var currentStreak: Int {
-        var run = 0
-        for day in days.reversed() {
-            guard day.tokens > 0 else { break }
-            run += 1
-        }
-        return run
-    }
+    /// **Over the whole history, not the span.** Picking "last 7 days" capped
+    /// both at seven, and "today" at one, so a month-long habit read as a
+    /// week's. The span decides what is added up; a streak is a fact about
+    /// every day there are records for.
+    ///
+    /// **Today is not over.** A run that reached yesterday is still current
+    /// before anything has been done today — read first thing in the morning,
+    /// a thirty-day streak used to show zero. It ends only once a whole day
+    /// passes without work.
+    var currentStreak = 0
+    var longestStreak = 0
 
-    var longestStreak: Int {
-        var best = 0
-        var run = 0
-        for day in days {
-            run = day.tokens > 0 ? run + 1 : 0
-            best = max(best, run)
+    static func streaks(of worked: Set<Date>, today: Date, calendar: Calendar) -> (current: Int, longest: Int) {
+        var current = 0
+        var cursor = worked.contains(today) ? today : calendar.date(byAdding: .day, value: -1, to: today) ?? today
+        while worked.contains(cursor) {
+            current += 1
+            guard let previous = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
+            cursor = previous
         }
-        return best
+        var longest = 0
+        var run = 0
+        var last: Date?
+        for day in worked.sorted() {
+            let follows = last.flatMap { calendar.date(byAdding: .day, value: 1, to: $0) } == day
+            run = follows ? run + 1 : 1
+            longest = max(longest, run)
+            last = day
+        }
+        return (current, longest)
     }
 
     /// The day rows, in the order a column asks for.
@@ -194,20 +204,37 @@ struct SpendSummary: Equatable, Sendable {
     static func sorted(
         _ days: [Day],
         by column: DayColumn,
-        ascending: Bool
+        ascending: Bool,
+        cacheUnreported: Bool = false
     ) -> [Day] {
-        let ordered = days.sorted { lhs, rhs in
+        // **What the table shows blank sorts last, either way.** A day whose
+        // kinds do not add up to its total shows no kinds, and a day nothing
+        // in which had a price shows no money; ranked by the numbers behind
+        // the blanks, a "—" landed among real figures as if it were one.
+        func kind(_ day: Day, _ value: (TokenTally) -> Int) -> Int? {
+            day.tally.total == day.tokens ? value(day.tally) : nil
+        }
+        func value(_ day: Day) -> Double? {
             switch column {
-            case .date: lhs.date < rhs.date
-            case .input: lhs.tally.input < rhs.tally.input
-            case .output: lhs.tally.output < rhs.tally.output
-            case .cacheRead: lhs.tally.cacheRead < rhs.tally.cacheRead
-            case .cacheWrite: lhs.tally.cacheWrite < rhs.tally.cacheWrite
-            case .total: lhs.tokens < rhs.tokens
-            case .cost: lhs.cost < rhs.cost
+            case .date: day.date.timeIntervalSince1970
+            case .fresh: kind(day, \.fresh).map(Double.init)
+            // A store with no cache column has hits that were never recorded.
+            case .cacheRead: kind(day, \.cacheRead).flatMap { cacheUnreported && $0 == 0 ? nil : Double($0) }
+            case .output: kind(day, \.output).map(Double.init)
+            case .total: Double(day.tokens)
+            case .cost: day.tokens > 0 && day.unpricedTokens == day.tokens ? nil : day.cost
             }
         }
-        return ascending ? ordered : ordered.reversed()
+        return days.sorted { lhs, rhs in
+            switch (value(lhs), value(rhs)) {
+            case (nil, nil): return ascending ? lhs.date < rhs.date : lhs.date > rhs.date
+            case (nil, _): return false
+            case (_, nil): return true
+            case let (left?, right?):
+                guard left == right else { return ascending ? left < right : left > right }
+                return ascending ? lhs.date < rhs.date : lhs.date > rhs.date
+            }
+        }
     }
 
     /// The part of a session that falls inside the span, or nil where none
@@ -295,12 +322,16 @@ struct SpendSummary: Equatable, Sendable {
         var projectMetadata: [Project.ID: UsageProject] = [:]
         var hasAggregate = false
         var hasPartial = false
+        var worked: Set<Date> = []
 
         for (agent, ledger) in ledgers {
+            guard !Task.isCancelled else { return SpendSummary() }
             // A ledger that cannot be priced has no place in a combined cost.
             // Local records and imported ones can be; a provider's own
             // statistics carry one total per model and no money.
             guard ledger.origin.supportsTokenSpend else { continue }
+
+            for day in ledger.days where day.tokens > 0 { worked.insert(calendar.startOfDay(for: day.date)) }
 
             let window = cutoff.map { start in ledger.days.filter { $0.date >= start } } ?? ledger.days
             guard !window.isEmpty else { continue }
@@ -310,6 +341,7 @@ struct SpendSummary: Equatable, Sendable {
             var agentUnpriced = 0
 
             for day in window {
+                guard !Task.isCancelled else { return SpendSummary() }
                 agentTokens += day.tokens
                 agentCost += day.cost
                 agentUnpriced += day.unpricedTokens
@@ -331,6 +363,7 @@ struct SpendSummary: Equatable, Sendable {
             // Bucketed by the hour their start falls in: a bucket never
             // straddles one.
             for slot in ledger.slots where cutoff.map({ slot.start >= $0 }) ?? true {
+                guard !Task.isCancelled else { return SpendSummary() }
                 guard slot.tokens > 0 else { continue }
                 hourTokens[calendar.component(.hour, from: slot.start), default: 0] += slot.tokens
             }
@@ -343,6 +376,7 @@ struct SpendSummary: Equatable, Sendable {
             // are what make the window exact, and they are priced, so the
             // money is a sum rather than a proportion guessed from the total.
             for session in ledger.sessions {
+                guard !Task.isCancelled else { return SpendSummary() }
                 guard let windowed = Self.window(session, cutoff: cutoff) else { continue }
 
                 // The row carries the span's portion, so the list and the
@@ -403,6 +437,8 @@ struct SpendSummary: Equatable, Sendable {
             }
             .sorted { $0.tokens > $1.tokens }
 
+        (summary.currentStreak, summary.longestStreak) = Self.streaks(of: worked, today: today, calendar: calendar)
+
         // Every day in the window, including the empty ones: a chart whose
         // bars are only the days with work on them compresses a quiet
         // fortnight into nothing and reads as a busy one.
@@ -446,11 +482,13 @@ struct SpendSummary: Equatable, Sendable {
 
         summary.sessions.sort { $0.session.end > $1.session.end }
         let knownProjects = Set(projectMetadata.values)
+        let projectNames = UsageProject.displayNames(for: knownProjects)
+        let nameCounts = projectMetadata.values.reduce(into: [String: Int]()) { $0[$1.name, default: 0] += 1 }
         summary.projects = projectTokens
             .map { id, tokens in
                 let metadata = projectMetadata[id]!
-                var name = UsageProject.displayName(for: metadata, among: knownProjects)
-                if let agent = id.agent, projectMetadata.keys.contains(where: { $0 != id && projectMetadata[$0]?.name == name }) {
+                var name = projectNames[metadata] ?? metadata.name
+                if let agent = id.agent, (nameCounts[name] ?? 0) > (metadata.name == name ? 1 : 0) {
                     name += " · " + agent.displayName
                 }
                 return Project(

@@ -151,5 +151,13 @@ struct WindowPrimerTests {
         #expect(WindowStarter.claudeProjectFolder(for: folder, home: "/Users/me").path
             == "/Users/me/.claude/projects/-Users-me-Library-Application-Support-Pulse-Window-starter")
     }
-}
 
+    @Test("A provider no longer started keeps no noted reset to wake for")
+    func switchedOffForgetsResets() {
+        let reset = Date(timeIntervalSince1970: 1_800_000_000)
+        let claude = AccountKey(.claudeCode).id, codex = AccountKey(.codex).id
+        let noted = ["\(claude)|five_hour": reset, "\(codex)|primary": reset, "\(codex)|secondary": reset]
+        #expect(Set(WindowPrimer.kept(noted, starting: [.codex]).keys) == ["\(codex)|primary", "\(codex)|secondary"])
+        #expect(WindowPrimer.kept(noted, starting: []).isEmpty)
+    }
+}

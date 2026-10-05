@@ -37,7 +37,7 @@ Pi-shaped JSONL: a session header, assistant `message` records, and a `usage` ob
 | `senpi` | `~/.senpi/agent/sessions`, plus `.omo/senpi-task/children` for each recorded `cwd` | real | spec |
 | `kimchi` | `~/.config/kimchi/harness/sessions` | real | spec |
 | `prime-agent` | `~/.prime/agent/sessions` + `session-artifacts`, redirected by a `settings.json` `sessionDir` | real, after parent/child reconciliation | spec |
-| `gemini` | `~/.gemini/tmp` (legacy `session-*.json`, `tmp/<id>/chats/*.json`, headless `*.jsonl`) | real; the session shape folds tool tokens into fresh input, the headless shape ignores them; an unsettled cache relation marks records partial | spec |
+| `gemini` | `~/.gemini/tmp` (legacy `session-*.json`, `tmp/<id>/chats/*.json`, headless `*.jsonl`) | real; both shapes fold tool tokens into fresh input; `--output-format json` counts are read from `stats.models.<m>.tokens`; a `stream-json` result names neither thoughts nor tool tokens, so what its total holds beyond input and output is counted unclassified; an unsettled cache relation marks records partial | spec |
 | `qwen` | `~/.qwen/projects/<project>/chats/*.jsonl` | real; `cache_read` sits **inside** `promptTokenCount` per the documented `usageMetadata`, and a reported total proves or refutes the overlap; an unsettled line is partial | spec |
 | `amp` | `~/.local/share/amp/threads/T-*.json` | real | spec |
 | `droid` | `~/.factory/sessions/*.settings.json` + sibling `*.jsonl` | real session total; with no total and a positive cache, output is priced, input is unclassified and the record is partial | spec |
@@ -85,7 +85,7 @@ Hermes carries the reported `input_tokens` as **unclassified** once a cache colu
 | Client | Default macOS location | Counter status | Evidence |
 |---|---|---|---|
 | `mux` | `~/.mux/sessions/<workspaceId>/session-usage.json` | real session total per model; ambiguous reasoning is omitted and the record is partial | spec |
-| `codebuff` | `~/.config/manicode{,-dev,-staging}/projects/<project>/chats/<chatId>/chat-messages.json` | real | spec |
+| `codebuff` | `~/.config/manicode{,-dev,-staging}/projects/<project>/chats/<chatId>/chat-messages.json` | real; input is the provider's `prompt_tokens` and holds the cache read, which is taken out (Codebuff's own `tokens.ts`) | spec |
 | `freebuff` | the same Codebuff trees, `base2-free*` chats | **estimated only** — no persisted counters | spec |
 | `jcode` | `~/.jcode/sessions/session_*.json` + `session_*.journal.jsonl` | real; an ambiguous cache makes input unclassified and the record partial, as does omitted reasoning | spec |
 | `augment` | `~/.augment/sessions/<sessionId>.json` | real | spec |
@@ -123,7 +123,7 @@ None of these six products writes an unauthenticated native usage log Pulse can 
 |---|---|---|---|
 | `copilot` | `~/.copilot/otel/*.jsonl`; `~/.copilot/data.db` + `session-state/<id>/events.jsonl`; `~/Library/Application Support/Code/User/workspaceStorage/*/chatSessions/*.jsonl` | real; an OTEL record with no trace/response id, a desktop record with ambiguous reasoning, and OTEL covering only part of a desktop lifetime are all partial | spec |
 
-The three lanes do not share a dedup key across sources. An OTEL usage line with neither a trace id nor a response id is counted as its own event and marked `isPartial` — never folded onto another by a shared instant. The desktop SQLite row is a lifetime total and its sidecar writes cumulative running snapshots that are differenced per model; the database row remains the authority, and a session already seen in OTEL is dropped whole. When that desktop lifetime is larger than what OTEL recorded, the OTEL records are marked `isPartial`: the difference is stated, not subtracted, because an OTEL span and a desktop lifetime are not equal scopes. Desktop reasoning is ambiguous (the schema does not declare it a subset of output), so it is omitted and the record is partial. A VS Code request with no timestamp is **skipped**, not dated at the epoch.
+The three lanes do not share a dedup key across sources. An OTEL usage line with neither a trace id nor a response id is counted as its own event and marked `isPartial` — never folded onto another by a shared instant. The desktop SQLite row is a lifetime total and its sidecar writes cumulative running snapshots that are differenced per model; the database row remains the authority, and a session already seen in OTEL is dropped whole. When that desktop lifetime is larger than what OTEL recorded, the OTEL records are marked `isPartial`: the difference is stated, not subtracted, because an OTEL span and a desktop lifetime are not equal scopes. Desktop reasoning is ambiguous (the schema does not declare it a subset of output), so it is omitted and the record is partial. Desktop input — the row's and the sidecar's — holds the cache, as the API's `prompt_tokens` does; the budget compares gross with gross and the record takes the cache read and write out (a remainder has no write figure). VS Code's `promptTokens` is that same cache-holding figure with no cached count beside it, so it is counted **unclassified**, not as fresh input. A VS Code request with no timestamp is **skipped**, not dated at the epoch.
 
 The seven existing clients retain these currently implemented locations:
 
@@ -142,7 +142,7 @@ The compatibility reference also describes additional locations and formats **no
 | Client | Additional sources (spec) |
 |---|---|
 | `claudeCode` | `$CLAUDE_CONFIG_DIR`; `<root>/transcripts`; cc-mirror variants; sidechain `subagents/**/agent-*.jsonl` (skip a `journal.jsonl`); tool-result usage |
-| `codex` | `$CODEX_HOME`; `archived_sessions/**/*.jsonl`; headless captures; `reasoning_output_tokens` subtraction; `session_meta.originator == "openclaw"` retags the rollout to `openclaw` |
+| `codex` | `$CODEX_HOME`; headless captures; `reasoning_output_tokens` subtraction; `session_meta.originator == "openclaw"` retags the rollout to `openclaw` |
 | `openCode` | channel DBs `opencode-<channel>.db`; v2 `session_message` schema; legacy `storage/message` JSON; cross-DB dedup by embedded message id |
 | `kiloCLI` | Kilo's snake_case session id; a timestamp-less message needs an evidenced time, not the database's modification date |
 | `grok` | `logs/unified.jsonl`; sibling `signals.json` reconciliation; `GROK_HOME` |
@@ -158,7 +158,7 @@ DSH transcripts and Zed's `zstd` threads need a zstd decoder. Pulse does **not**
 ## Cross-source routing and dedup
 
 - **OpenClaw** deduplicates its native stores by recorded event identity. Retagging Codex app-server rollouts and reconciling those mirrors are not implemented; combined mirrored source sets need further validation.
-- **OpenCode** retains its existing database reader. Multi-channel and legacy-message reconciliation remain additional format work, rather than a property of this catalog expansion.
+- **OpenCode** retains its existing database reader, which also reads **OpenCode 2's** `session_message` (role in its `type` column, model under `model.id`) and `session_v2`: the upgrade copied history there under the same ids and stopped writing `message`, so the old query missed every request after the upgrade. Old rows the copy lacks are still read; an id counts once. Multi-channel and legacy-message reconciliation remain additional format work, rather than a property of this catalog expansion.
 - **Copilot OTEL → Desktop → VS Code**, filtered by session id and then by dedup key or `(session_id, timestamp)`.
 - **Kiro** reads explicit CLI counters. The estimate-based IDE and database snapshot variants are not parsed.
 - **Devin Desktop vs Devin**: the Desktop NDJSON resolves its session/model/workspace from the database by an unambiguous title. In the combined catalogue, a session with usable dated message counters in the native Devin database belongs to that database; its Desktop capture is a mirror and is excluded before pricing. The counted-session test uses `DevinCLIStore`'s actual message parser, not the existence of a metadata row. A metadata-only session still uses its capture, and a database used only for lookup cannot suppress work. Unresolved or ambiguous titles are not treated as identity matches. This is session-level source precedence, not subtraction of two differently scoped token totals.

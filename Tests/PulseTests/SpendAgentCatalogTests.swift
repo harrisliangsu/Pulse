@@ -135,7 +135,7 @@ struct SpendAgentCatalogTests {
         #expect(SpendAgent.claudeCode.inputs(home: home, environment: [:])
             == [home.appending(path: ".claude/projects")])
         #expect(SpendAgent.codex.inputs(home: home, environment: [:])
-            == [home.appending(path: ".codex/sessions")])
+            == [home.appending(path: ".codex/sessions"), home.appending(path: ".codex/archived_sessions")])
         #expect(SpendAgent.openCode.inputs(home: home, environment: [:])
             == [home.appending(path: ".local/share/opencode/opencode.db")])
         #expect(SpendAgent.kiloCLI.inputs(home: home, environment: [:])

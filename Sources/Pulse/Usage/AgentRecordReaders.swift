@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// The single catalogue every agent reader is dispatched from.
@@ -23,6 +24,21 @@ import Foundation
 /// `AgentUsageRecord`s; there is no `Provider` case, no ring and no rail slot
 /// anywhere on this path.
 enum AgentRecordReaders {
+    struct Read: Sendable {
+        let records: [AgentUsageRecord]
+        let notes: [String]
+    }
+
+    /// A scan's records and limits from the same decode. Compressed stores
+    /// must not be decompressed a second time just to discover their errors.
+    static func read(client: String, roots: [URL]) -> Read {
+        switch client {
+        case "dsh": return DSHUsageReader.readWithNotes(roots: roots)
+        case "zed": return ZedReader.readWithNotes(roots: roots)
+        default: return Read(records: records(client: client, roots: roots), notes: notes(client: client, roots: roots))
+        }
+    }
+
     /// One entry per reader family, so routing can be named and tested without
     /// a second list of client ids.
     enum Family: String, CaseIterable, Sendable {

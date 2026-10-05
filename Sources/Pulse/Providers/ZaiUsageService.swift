@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// The GLM Coding Plan's limits, from Zhipu's quota endpoint.
@@ -223,7 +224,7 @@ struct ZaiUsageService: Sendable {
 
         let perUnit: [Int: Int] = [1: 1440, 3: 60, 5: 1, 6: 10080]
         guard number > 0, let multiplier = perUnit[unit] else { return nil }
-        return number * multiplier
+        return UsageWindow.length(number, unitSeconds: multiplier * 60).map { $0 / 60 }
     }
 
     private static func kind(forMinutes minutes: Int) -> UsageWindow.Kind {

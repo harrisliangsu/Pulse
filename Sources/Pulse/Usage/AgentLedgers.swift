@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// One ledger per agent, however that agent keeps its records.
@@ -42,6 +43,15 @@ actor AgentLedgers {
         var notes: [SpendAgent: [String]] = [:]
     }
 
+    /// The last finished scan, kept while Token spend is on so the pane opens
+    /// on figures instead of a spinner (`SpendWarmer` keeps it current).
+    ///
+    /// **One snapshot, replaced, never a second copy.** The memory work on the
+    /// readers was about peaks during a read; a finished snapshot is ledgers,
+    /// not transcripts, and the floating panel's cards already hold the same
+    /// kind of thing. Dropped the moment Token spend is switched off.
+    private var kept: (snapshot: Snapshot, at: Date)?
+
     private let home: URL
     private let environment: [String: String]
     private let cacheDirectory: URL?
@@ -64,9 +74,16 @@ actor AgentLedgers {
             ? .shared : UsageLedgerReader(home: home, cacheDirectory: cacheDirectory)
     }
 
+    /// The last finished scan and when it finished, if Token spend is on and
+    /// one has.
+    func keptSnapshot() -> (snapshot: Snapshot, at: Date)? { kept }
+
+    /// Lets the kept scan go — Token spend was switched off.
+    func forget() { kept = nil }
+
     /// Runs in the caller's task: cancelling the pane propagates into the
     /// synchronous file/row loops. No detached worker can outlive that task.
-    /// The actor keeps no second copy of a finished scan after the pane closes.
+    /// A scan that finishes replaces the kept one (`keptSnapshot()`).
     func scan(
         refresh: Bool = false,
         progress: @MainActor @Sendable (Progress) -> Void = { _ in }
@@ -94,6 +111,7 @@ actor AgentLedgers {
             }
             try Task.checkCancellation()
         }
+        kept = (result, Date())
         return result
     }
 
@@ -210,9 +228,9 @@ actor AgentLedgers {
         // Every catalog client, from its family's normalized records.
         default:
             guard !stores.isEmpty else { return ReadResult(ledger: .empty, notes: []) }
-            let records = AgentRecordReaders.records(client: agent.sourceID, roots: stores)
+            let read = AgentRecordReaders.read(client: agent.sourceID, roots: stores)
             let ledger = AgentUsageLedger.build(
-                records,
+                read.records,
                 prices: prices,
                 namespace: agent.rawValue,
                 vendor: agent.priceVendor,
@@ -226,7 +244,7 @@ actor AgentLedgers {
             // and is left to the zero-record list instead. Only a source that
             // does report counts can have a decode limit worth stating.
             let notes = agent.reportsTokenCounts
-                ? AgentRecordReaders.notes(client: agent.sourceID, roots: stores)
+                ? read.notes
                 : []
             return ReadResult(ledger: ledger, notes: notes)
         }

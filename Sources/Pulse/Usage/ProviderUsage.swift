@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// One rate-limit window exactly as a provider reports it.
@@ -994,5 +995,24 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             plan: nil,
             creditBalance: nil
         )
+    }
+}
+
+extension UsageWindow {
+    /// The longest length a reply may state for a window: ten years.
+    static let longestLength = 10 * 366 * 86_400
+
+    /// `count` units of `unitSeconds` each, or nil when that overflows or runs
+    /// past any plausible window.
+    ///
+    /// **A malformed reply drops the window; it does not stop the app.** Four
+    /// readers multiplied a stated duration by its unit unchecked, and a
+    /// count near `Int.max` — which decodes as an `Int` without complaint —
+    /// trapped, ending the whole process rather than one provider's reading.
+    static func length(_ count: Int, unitSeconds: Int) -> Int? {
+        guard count > 0, unitSeconds > 0 else { return nil }
+        let (seconds, overflow) = count.multipliedReportingOverflow(by: unitSeconds)
+        guard !overflow, seconds <= longestLength else { return nil }
+        return seconds
     }
 }

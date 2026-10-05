@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// VS Code's Copilot chat-session logs.
@@ -11,9 +12,16 @@ import Foundation
 ///
 /// **Only Copilot's own requests count.** A request is Copilot-originated when
 /// it resolved a model or its `modelId` is a `copilot/` id; anything else the
-/// editor wrote is skipped. Prompt tokens are fresh input and there is no cache
-/// figure beside them, so cache read and write are zero. The thinking tokens a
-/// tool-call round reports are output work and are folded into output once.
+/// editor wrote is skipped. The thinking tokens a tool-call round reports are
+/// output work and are folded into output once.
+///
+/// **Prompt tokens are input with the cache still in it.** Copilot Chat writes
+/// the API's `prompt_tokens` here (`toolCallingLoop.ts`), which holds the
+/// cached prefix, and keeps no cached figure beside it. Taken as fresh input
+/// they were priced at the full rate, cache and all; split by a guess they
+/// would be invented. So they are counted and not sorted into a kind
+/// (`unclassifiedTokens`): in the totals, without a price, and the split for
+/// them says it is unavailable.
 ///
 /// **A request with no timestamp is skipped, not dated at the epoch.** The
 /// format carries no session- or report-level date to fall back to, so there is
@@ -103,13 +111,14 @@ enum CopilotVSCodeReader {
                 ?? AgentLogIO.timestamp(metadata?["timestamp"], milliseconds: true)
         else { return nil }
 
-        let tally = TokenTally(input: prompt, output: completion + thinking)
-        guard tally.total > 0 else { return nil }
+        let tally = TokenTally(output: completion + thinking)
+        guard tally.total > 0 || prompt > 0 else { return nil }
 
         return StructuredLogSupport.record(
             timestamp: timestamp,
             model: model,
             tally: tally,
+            unclassified: prompt,
             sessionID: session,
             sessionName: session,
             project: workspace,

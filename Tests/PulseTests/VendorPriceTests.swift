@@ -85,17 +85,17 @@ struct VendorPriceTests {
         #expect(withoutVendor.days.first?.unpricedTokens == tally.total)
     }
 
-    @Test("A pre-vendor price cache is only an offline fallback after upgrade")
+    @Test("A price cache without tiers is only an offline fallback after upgrade")
     func previousTableDoesNotBlockUpgrade() throws {
         let root = URL.temporaryDirectory.appending(path: "PulsePriceUpgrade-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let previous = ModelPrices.Cache(fetchedAt: Date(), prices: ["direct": Self.table["deepseek-v4-flash"]!])
-        try JSONEncoder().encode(previous).write(to: root.appending(path: "model-prices-3.json"))
+        try JSONEncoder().encode(previous).write(to: root.appending(path: "model-prices-4.json"))
         #expect(ModelPrices.readCache(in: root) == nil)
         #expect(ModelPrices.readCache(in: root, allowPreviousVersion: true)?.prices == previous.prices)
         let current = ModelPrices.Cache(fetchedAt: Date(), prices: Self.table)
-        try JSONEncoder().encode(current).write(to: root.appending(path: "model-prices-4.json"))
+        try JSONEncoder().encode(current).write(to: root.appending(path: "model-prices-5.json"))
         #expect(ModelPrices.readCache(in: root)?.prices == current.prices)
         #expect(ModelPrices.readCache(in: root, allowPreviousVersion: true)?.prices == current.prices)
     }

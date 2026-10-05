@@ -307,7 +307,9 @@ struct StructuredLogReadersTests {
         #expect(decoded.count == 1)
         let record = try #require(decoded.first)
         #expect(record.model == "claude-sonnet")
-        #expect(record.tally == TokenTally(input: 100, cacheWrite: 0, cacheRead: 30, output: 20))
+        // Codebuff's input already holds the cached prefix: 100 sent, 30 of
+        // it read from the cache, 70 fresh.
+        #expect(record.tally == TokenTally(input: 70, cacheWrite: 0, cacheRead: 30, output: 20))
         #expect(record.sessionID == "manicode/ring/\(chatID)")
         #expect(record.deduplicationID == "codebuff:manicode/ring/\(chatID):m1")
         #expect(record.timestamp == AgentLogIO.timestamp("2024-01-02T03:04:06Z"))
@@ -1100,6 +1102,9 @@ struct StructuredLogReadersTests {
         #expect(!StructuredLogReaders.notes(client: "dsh", roots: roots).isEmpty)
 
         // A plain JSONL that is malformed is not a compression failure.
+        let combined = AgentRecordReaders.read(client: "dsh", roots: roots)
+        #expect(combined.records.isEmpty)
+        #expect(!combined.notes.isEmpty)
         let plainHome = try makeStore()
         defer { cleanup(plainHome) }
         let plainRoots = StructuredLogReaders.inputs(
@@ -1111,6 +1116,7 @@ struct StructuredLogReadersTests {
             to: plainDirectory.appending(path: "session.jsonl"), atomically: true, encoding: .utf8
         )
         #expect(StructuredLogReaders.notes(client: "dsh", roots: plainRoots).isEmpty)
+        #expect(AgentRecordReaders.read(client: "dsh", roots: plainRoots).notes.isEmpty)
     }
 
     @Test("A compressed transcript past the decode ceiling is a surfaced failure")

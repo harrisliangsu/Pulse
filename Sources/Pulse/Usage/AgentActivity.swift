@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 import Observation
 
@@ -51,7 +52,7 @@ enum AgentActivity {
     /// - **a tool** — median 2s, but shells, builds and test runs write
     ///   nothing while they run and the longest here was 15 minutes. This is
     ///   the case the old single timeout was sized for, and it keeps it.
-    enum Wait: Equatable {
+    enum Wait: Equatable, Sendable {
         case tool
         case model
 
@@ -73,20 +74,69 @@ enum AgentActivity {
         now: Date = Date(),
         home: URL = URL(fileURLWithPath: NSHomeDirectory())
     ) -> [Provider: State] {
+        var cache = Cache()
+        return states(for: providers, now: now, home: home, cache: &cache)
+    }
+
+    /// Only parsed lifecycle facts are cached. Grace is reevaluated on every
+    /// sample, even when no bytes changed. No transcript contents are retained.
+    struct Cache: Sendable {
+        fileprivate var readings: [URL: (file: ActivityFile, provider: Provider, reading: Reading)] = [:]
+
+        fileprivate mutating func read(_ file: ActivityFile, provider: Provider) -> Reading {
+            if let saved = readings[file.url], saved.file == file, saved.provider == provider {
+                return saved.reading
+            }
+            let isZcode = provider == .zai || provider == .glmCoding
+            let lines = tail(of: file.url, limit: isZcode ? 2 * 1024 * 1024 : 128 * 1024)
+            let reading = isZcode
+                ? zcodeReading(in: lines, modified: file.modified)
+                : Reading(lastWrite: file.modified, verdict: verdict(in: lines, provider: provider))
+            // Empty/unreadable tails and cancelled reads must be retried.
+            if !lines.isEmpty, !Task.isCancelled {
+                readings[file.url] = (file, provider, reading)
+            } else {
+                readings[file.url] = nil
+            }
+            return reading
+        }
+    }
+
+    actor Reader {
+        private var cache = Cache()
+
+        func states(for providers: Set<Provider>) -> [Provider: State] {
+            AgentActivity.states(for: providers, now: Date(),
+                                 home: URL(fileURLWithPath: NSHomeDirectory()), cache: &cache)
+        }
+    }
+
+    static func states(
+        for providers: Set<Provider>, now: Date, home: URL, cache: inout Cache
+    ) -> [Provider: State] {
         var states: [Provider: State] = [:]
+        var retained: Set<URL> = []
 
         for provider in providers where provider.supportsLocalActivity {
             guard !Task.isCancelled else { break }
-            let files = transcripts(for: provider, home: home)
-            var state = State(lastWrite: lastActivity(in: files.first, provider: provider), isWorking: false)
+            let files = transcripts(for: provider, home: home, now: now)
+            var lastWrite = files.newest?.modified
+            if let newest = files.newest, provider == .zai || provider == .glmCoding {
+                retained.insert(newest.url)
+                lastWrite = cache.read(newest, provider: provider).lastWrite
+            }
+            var state = State(lastWrite: lastWrite, isWorking: false)
 
             // Any live session counts: two terminals can be running at once,
             // and the newest file is not necessarily the busy one. The filter
             // is the longest grace any verdict can claim, so nothing older is
             // worth opening.
-            for file in files where now.timeIntervalSince(file.modified) <= Wait.tool.grace {
+            // Kept whether or not this pass reaches them: the loop stops at
+            // the first busy session, and a file behind it is no less recent.
+            retained.formUnion(files.recent.map(\.url))
+            for file in files.recent {
                 guard !Task.isCancelled else { break }
-                switch verdict(for: file.url, provider: provider) {
+                switch cache.read(file, provider: provider).verdict {
                 case .working(let wait, let at):
                     // Timed from the record's *own* stamp, not the file's.
                     // Claude Code goes on writing bookkeeping into a transcript
@@ -108,6 +158,12 @@ enum AgentActivity {
             states[provider] = state
         }
 
+        // A cancelled pass only reached some providers; pruning by it would
+        // drop every tail it never got to — a 2 MB Z.ai one among them — and
+        // the next pass would read them all again.
+        if !Task.isCancelled {
+            cache.readings = cache.readings.filter { retained.contains($0.key) }
+        }
         return states
     }
 
@@ -116,7 +172,7 @@ enum AgentActivity {
     /// Internal rather than private so the rule can be driven directly against
     /// real and synthetic transcripts — it is the whole feature, and "the
     /// spinner looked right for a moment" is not a check.
-    enum Verdict: Equatable {
+    enum Verdict: Equatable, Sendable {
         /// A turn is in flight, waiting on `wait`, as of the moment the record
         /// that says so was written. That stamp is nil only for a record which
         /// carries none, which in practice means a format we half-recognise.
@@ -129,11 +185,16 @@ enum AgentActivity {
     /// settles the question, so a 20MB file costs a few kilobytes to consult.
     static func verdict(for url: URL, provider: Provider) -> Verdict {
         let lines = tail(of: url, limit: provider == .zai || provider == .glmCoding ? 2 * 1024 * 1024 : 128 * 1024)
+        return verdict(in: lines, provider: provider)
+    }
+
+    private static func verdict(in lines: [Data], provider: Provider) -> Verdict {
         if provider == .zai || provider == .glmCoding {
-            return zcodeVerdict(in: lines)
+            return zcodeReading(in: lines, modified: .distantPast).verdict
         }
 
         for line in lines.reversed() {
+            guard !Task.isCancelled else { return .unknown }
             guard let record = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { continue }
 
             // None of the profiled providers leaves transcripts Pulse reads,
@@ -237,15 +298,28 @@ enum AgentActivity {
     /// ZCode's native TUI and `zcode-acp` app-server both write this telemetry
     /// stream. Turns can overlap, so a completion only settles its own turn;
     /// the newest other turn may still be working.
-    private static func zcodeVerdict(in lines: [Data]) -> Verdict {
+    fileprivate struct Reading: Sendable {
+        let lastWrite: Date?
+        let verdict: Verdict
+    }
+
+    private static func zcodeReading(in lines: [Data], modified: Date) -> Reading {
         var completed: Set<String> = []
         var latest: [String: (wait: Wait, at: Date?)] = [:]
+        var lastWrite: Date?
 
         for line in lines.reversed() {
+            guard !Task.isCancelled else { return Reading(lastWrite: nil, verdict: .unknown) }
             guard let record = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
-                  let event = record["event"] as? String,
-                  let turn = record["turnId"] as? String
+                  let event = record["event"] as? String
             else { continue }
+            // The newest lifecycle event and the verdict come from one tail
+            // read/parse. Heartbeats alone are neither work nor recent activity.
+            if lastWrite == nil, record["turnId"] != nil,
+               event.hasPrefix("turn.") || event.hasPrefix("tool.") || event.hasPrefix("model.") {
+                lastWrite = stamp(of: record) ?? modified
+            }
+            guard let turn = record["turnId"] as? String else { continue }
 
             switch event {
             case "turn.completed", "turn.failed", "turn.cancelled":
@@ -260,7 +334,7 @@ enum AgentActivity {
             case "turn.started":
                 guard !completed.contains(turn) else { continue }
                 let state = latest[turn] ?? (.model, stamp(of: record))
-                return .working(state.wait, at: state.at)
+                return Reading(lastWrite: lastWrite, verdict: .working(state.wait, at: state.at))
             default:
                 continue
             }
@@ -275,11 +349,11 @@ enum AgentActivity {
             .map(\.value)
             .max(by: { ($0.at ?? .distantPast) < ($1.at ?? .distantPast) })
         {
-            return .working(state.wait, at: state.at)
+            return Reading(lastWrite: lastWrite, verdict: .working(state.wait, at: state.at))
         }
         // The same log also receives process heartbeat records while ZCode is
         // idle. Their fresh file timestamp is not evidence of a working turn.
-        return .finished
+        return Reading(lastWrite: lastWrite, verdict: .finished)
     }
 
     /// Claude Code records an interrupted turn as a user message saying so,
@@ -318,27 +392,6 @@ enum AgentActivity {
         return formatter.date(from: text)
     }
 
-    /// When the agent last did something, as far as its newest file says.
-    ///
-    /// The file's own date for everything but ZCode, which also writes process
-    /// heartbeats into the log while it sits idle. That date fed the adaptive
-    /// refresh's "an agent was active" signal and the marks' quiet state, so
-    /// ZCode merely being open held every provider at the fastest refresh and
-    /// kept every mark awake. Its newest turn, model or tool event is used
-    /// instead, and a log of heartbeats alone is no activity at all.
-    private static func lastActivity(in file: (url: URL, modified: Date)?, provider: Provider) -> Date? {
-        guard let file else { return nil }
-        guard provider == .zai || provider == .glmCoding else { return file.modified }
-        for line in tail(of: file.url, limit: 2 * 1024 * 1024).reversed() {
-            guard let record = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
-                  let event = record["event"] as? String, record["turnId"] != nil,
-                  event.hasPrefix("turn.") || event.hasPrefix("tool.") || event.hasPrefix("model.")
-            else { continue }
-            return stamp(of: record) ?? file.modified
-        }
-        return nil
-    }
-
     /// The last stretch of a file, split into whole lines.
     private static func tail(of url: URL, limit: Int = 128 * 1024) -> [Data] {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return [] }
@@ -349,9 +402,7 @@ enum AgentActivity {
         try? handle.seek(toOffset: start)
 
         guard let data = try? handle.readToEnd() else { return [] }
-        var lines: [Data] = data
-            .split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: true)
-            .map { Data($0) }
+        var lines = Array(LogLines(data: data))
 
         // The first line is only half a line unless we started at the top.
         if start > 0, !lines.isEmpty { lines.removeFirst() }
@@ -360,32 +411,42 @@ enum AgentActivity {
 
     // MARK: - Finding the files
 
-    /// Every transcript for a provider with its modification date, newest
-    /// first. Only file metadata is read here; measured at about 2ms across
-    /// both trees on a machine holding a few hundred megabytes of them.
-    private static func transcripts(for provider: Provider, home: URL) -> [(url: URL, modified: Date)] {
-        guard let root = root(for: provider, home: home) else { return [] }
+    fileprivate struct ActivityFile: Equatable, Sendable {
+        let url: URL
+        let modified: Date
+        let size: Int
+    }
+
+    /// Discover new/resumed sessions every sample, but retain and sort only the
+    /// recent files. Old history contributes only its newest modification date.
+    private static func transcripts(
+        for provider: Provider, home: URL, now: Date
+    ) -> (newest: ActivityFile?, recent: [ActivityFile]) {
+        guard let root = root(for: provider, home: home) else { return (nil, []) }
 
         guard let walker = FileManager.default.enumerator(
             at: root,
             includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey],
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else { return [] }
+        ) else { return (nil, []) }
 
-        var found: [(url: URL, modified: Date)] = []
+        var newest: ActivityFile?
+        var recent: [ActivityFile] = []
         for case let url as URL in walker {
             guard !Task.isCancelled else { break }
             guard
                 isActivityFile(url, provider: provider),
                 let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey]),
                 let modified = values.contentModificationDate,
-                (values.fileSize ?? 0) > 0
+                let size = values.fileSize, size > 0
             else { continue }
 
-            found.append((url, modified))
+            let file = ActivityFile(url: url, modified: modified, size: size)
+            if newest == nil || modified > newest!.modified { newest = file }
+            if now.timeIntervalSince(modified) <= Wait.tool.grace { recent.append(file) }
         }
 
-        return found.sorted { $0.modified > $1.modified }
+        return (newest, recent.sorted { $0.modified > $1.modified })
     }
 
     private static func isActivityFile(_ url: URL, provider: Provider) -> Bool {
@@ -483,11 +544,10 @@ final class AgentActivityMonitor {
     /// The reader is injectable so tests can hold an old scan across a change
     /// of providers without reading the user's transcripts.
     init(
-        readStates: @escaping @Sendable (Set<Provider>) async -> [Provider: AgentActivity.State] = {
-            AgentActivity.states(for: $0)
-        }
+        readStates: (@Sendable (Set<Provider>) async -> [Provider: AgentActivity.State])? = nil
     ) {
-        self.readStates = readStates
+        let reader = AgentActivity.Reader()
+        self.readStates = readStates ?? { await reader.states(for: $0) }
     }
 
     func start(providers: Set<Provider>) {

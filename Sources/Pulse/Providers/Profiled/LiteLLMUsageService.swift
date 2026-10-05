@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// LiteLLM, a self-hosted proxy: the budget on the user a virtual key belongs
@@ -217,16 +218,20 @@ enum LiteLLMUsageService {
         }
         let digits = text.prefix { $0.isNumber }
         guard let count = Int(digits), count > 0 else { return unstated }
-        let seconds: Int
+        let unit: Int
         switch text.dropFirst(digits.count) {
-        case "mo": return (count == 1 ? .monthly : .spend, count * 30 * 86_400, false)
-        case "s": seconds = count
-        case "m": seconds = count * 60
-        case "h": seconds = count * 3_600
-        case "d": seconds = count * 86_400
-        case "w": seconds = count * 7 * 86_400
+        case "mo":
+            guard let seconds = UsageWindow.length(count, unitSeconds: 30 * 86_400) else { return unstated }
+            return (count == 1 ? .monthly : .spend, seconds, false)
+        case "s": unit = 1
+        case "m": unit = 60
+        case "h": unit = 3_600
+        case "d": unit = 86_400
+        case "w": unit = 7 * 86_400
         default: return unstated
         }
+        // Past any real budget period, or past `Int`: not a length.
+        guard let seconds = UsageWindow.length(count, unitSeconds: unit) else { return unstated }
         let kind: UsageWindow.Kind = switch seconds {
         case 5 * 3_600: .fiveHour
         case 86_400: .daily

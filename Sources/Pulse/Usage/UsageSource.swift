@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 import SwiftUI
 
@@ -387,6 +388,8 @@ enum PanelMetrics {
     /// inside its item, and the hit testing has to agree with the drawing to
     /// within a point or a click lands beside the ring it appears to be on.
     nonisolated(unsafe) private static var storedLabelAboveRing = false
+    /// `AppSettings.freeAcrossFiguresBeside`, for `DockLayout.labelsBeside`.
+    nonisolated(unsafe) private static var storedFreeAcrossBeside = false
     nonisolated(unsafe) private static var storedForecast = false
 
     /// Whether the rail's ends are half circles rather than softened corners.
@@ -437,6 +440,22 @@ enum PanelMetrics {
     static func putLabelAboveRing(_ above: Bool) {
         lock.withLock { storedLabelAboveRing = above }
     }
+
+    /// `AppSettings.showsWindowClock`: the arc outside the ring pushes the
+    /// figures further off (`DockLayout.ringToTextSpacing`).
+    nonisolated(unsafe) private static var storedWindowClock = false
+
+    static func showWindowClock(_ shows: Bool) {
+        lock.withLock { storedWindowClock = shows }
+    }
+
+    static var showsWindowClock: Bool { lock.withLock { storedWindowClock } }
+
+    static func putFreeAcrossFiguresBeside(_ beside: Bool) {
+        lock.withLock { storedFreeAcrossBeside = beside }
+    }
+
+    static var freeAcrossFiguresBeside: Bool { lock.withLock { storedFreeAcrossBeside } }
 
     static func useRoundEnds(_ uses: Bool) {
         lock.withLock { storedRoundEnds = uses }

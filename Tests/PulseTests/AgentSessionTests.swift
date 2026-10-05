@@ -138,6 +138,33 @@ struct AgentSessionTests {
 
     // MARK: - Devin CLI
 
+    @Test("Devin's CLI keeps a message as two sibling nodes; it is counted once")
+    func devinSiblingNodesCountOnce() throws {
+        let directory = Self.temporary("devin-siblings")
+        let file = directory.appending(path: "sessions.db")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        var handle: OpaquePointer?
+        #expect(sqlite3_open(file.path, &handle) == SQLITE_OK)
+        defer { sqlite3_close(handle) }
+
+        let at = Int(Self.at(daysAgo: 0).timeIntervalSince1970)
+        let reply = #"{"role":"assistant","message_id":"m1","metadata":{"generation_model":"priced","metrics":{"input_tokens":100,"output_tokens":10}}}"#
+        let other = #"{"role":"assistant","message_id":"m2","metadata":{"generation_model":"priced","metrics":{"input_tokens":50,"output_tokens":5}}}"#
+        for sql in [
+            "CREATE TABLE sessions (id TEXT, working_directory TEXT, title TEXT)",
+            "CREATE TABLE message_nodes (session_id TEXT, chat_message TEXT, created_at INTEGER)",
+            "INSERT INTO sessions VALUES ('s1','/Users/me/Code/Pulse','Fix the ring')",
+            "INSERT INTO message_nodes VALUES ('s1','\(reply)',\(at))",
+            "INSERT INTO message_nodes VALUES ('s1','\(reply)',\(at))",
+            "INSERT INTO message_nodes VALUES ('s1','\(other)',\(at))",
+        ] {
+            #expect(sqlite3_exec(handle, sql, nil, nil, nil) == SQLITE_OK)
+        }
+        #expect(DevinCLIStore.ledger(at: file, prices: [:]).allTime.tokens == 110 + 55)
+    }
+
     @Test("Devin's reader fills a session's buckets and Today counts only today")
     func devinSessionSlotsReachToday() throws {
         let directory = Self.temporary("devin-session")

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import AppKit
 import SwiftUI
 
@@ -43,13 +44,17 @@ final class FloatingPanelController {
         static func size(
             for edge: PanelEdge,
             notchSize: CGSize? = nil,
-            capacity: Int = PanelMetrics.railCapacity
+            capacity: Int = PanelMetrics.railCapacity,
+            docked: Bool = true
         ) -> CGSize {
-            let size = unrounded(for: edge, notchSize: notchSize, capacity: capacity)
+            let size = unrounded(for: edge, notchSize: notchSize, capacity: capacity, docked: docked)
             return CGSize(width: size.width.rounded(.up), height: size.height.rounded(.up))
         }
 
-        private static func unrounded(for edge: PanelEdge, notchSize: CGSize?, capacity: Int) -> CGSize {
+        /// `docked` only moves the lying rail's thickness: free across with
+        /// its figures under the rings it is thicker than the top dock, and
+        /// the top dock keeps exactly its own budget.
+        private static func unrounded(for edge: PanelEdge, notchSize: CGSize?, capacity: Int, docked: Bool) -> CGSize {
             // Card + its pointer + the gap after it, which is the room the
             // card unfolds into whichever way it unfolds.
             let reach = DetailCardLayout.width
@@ -71,7 +76,7 @@ final class FloatingPanelController {
                 return CGSize(
                     // Wide enough for whichever is wider, for the same reason.
                     width: max(DockLayout.maximumLength(on: .horizontal, capacity: capacity), DetailCardLayout.width, notchSize?.width ?? 0),
-                    height: DockLayout.thickness(on: .horizontal)
+                    height: DockLayout.thickness(on: .horizontal, docked: docked)
                         + (notchSize?.height ?? 0)
                         + DetailCardLayout.horizontalGap
                         + DetailCardLayout.pointerWidth
@@ -118,7 +123,7 @@ final class FloatingPanelController {
             "the collapsed sliver escapes the rail's hit area — see PanelHitArea"
         )
 
-        let initialSize = Layout.size(for: placement.edge)
+        let initialSize = Layout.size(for: placement.edge, docked: placement.isDocked)
         panel = FloatingPanel(
             contentRect: NSRect(
                 x: 0,
@@ -205,8 +210,8 @@ final class FloatingPanelController {
         // rail's ends lose the flare's worth of padding the moment it comes off
         // an edge, and measuring the old state throws the placement off by that
         // much on the frame it changes.
-        panel.railSize = { [settings, store] edge, docked in
-            DockLayout.size(for: Self.shownSlotCount(settings, usage: { store.usage(for: $0) }), on: edge.axis, docked: docked)
+        panel.railSize = { [settings, store] axis, docked in
+            DockLayout.size(for: Self.shownSlotCount(settings, usage: { store.usage(for: $0) }), on: axis, docked: docked)
         }
         panel.grabArea = { [settings, store, placement] in
             if placement.notch != nil && !placement.isRailExpanded { return .zero }
@@ -396,7 +401,9 @@ final class FloatingPanelController {
         else { return }
 
         let edge = placement.edge
-        placement.notch = edge == .top ? PanelScreen.notch(of: screen) : nil
+        // The dock, not the edge: a rail standing free in the top half of the
+        // screen opens its card downwards too, and has no notch to sit in.
+        placement.notch = placement.dock == .edge(.top) ? PanelScreen.notch(of: screen) : nil
         let railSize = DockLayout.size(
             for: Self.shownSlotCount(settings, usage: { store.usage(for: $0) }),
             on: edge.axis,
@@ -405,10 +412,14 @@ final class FloatingPanelController {
         let layout = placement.layout(
             in: screen.visibleFrame,
             topEdge: FloatingPanel.topEdge(of: screen),
-            panel: Layout.size(for: edge, notchSize: placement.notch?.size),
+            bottomEdge: screen.frame.minY,
+            panel: Layout.size(for: edge, notchSize: placement.notch?.size, docked: placement.isDocked),
             rail: railSize
         )
 
+        placement.cardRoom = PanelPlacement.cardRoom(
+            edge: edge, railOrigin: layout.railOrigin, rail: railSize, in: screen.visibleFrame
+        )
         panel.applyLevel(for: placement.dock)
         panel.setFrame(layout.frame, display: true)
         // **Measured against the frame the window actually got**, not the one
@@ -483,9 +494,9 @@ private final class FloatingPanel: NSPanel {
     /// the rail's, and handing the placement a 20pt sliver where it expects a
     /// 64pt rail would throw the panel across the screen on the first drag.
     var railFrame: (() -> CGRect)?
-    /// The rail's size on a given edge, which the drag needs for an edge the
-    /// panel has not reached yet.
-    var railSize: ((PanelEdge, Bool) -> CGSize)?
+    /// The rail's size on a given axis, docked or not, which the drag needs
+    /// for a dock the panel has not reached yet.
+    var railSize: ((PanelEdge.Axis, Bool) -> CGSize)?
 
     /// Where a top-docked rail's top edge belongs: the display's physical top,
     /// less whatever a notch takes out of it.
@@ -516,7 +527,9 @@ private final class FloatingPanel: NSPanel {
     /// alerts. Nothing else about the panel changes, and off the top edge it
     /// goes back to floating so it never sits over the menu bar for nothing.
     func applyLevel(for dock: PanelDock) {
-        level = dock.edge == .top ? .statusBar : .floating
+        // Docked to the bottom it sits level with the Dock, beside it, and
+        // must not slip under it where the two meet.
+        level = dock.edge == .top || dock.edge == .bottom ? .statusBar : .floating
     }
     /// A short press that ended without moving the panel. The controller maps
     /// it to a provider ring; empty rail space remains drag-only.
@@ -639,14 +652,39 @@ private final class FloatingPanel: NSPanel {
         // — testing that would flip it on its side the moment it was picked
         // up. Throwing the pointer at the top of the screen is the deliberate
         // gesture, and it is the same one that reaches the menu bar.
+        //
+        // Off every edge the rail stands free **the way it already runs**:
+        // lifted off the top it stays lying across, lifted off a side it stays
+        // upright. Turning it on the way out would undo the free placement
+        // somebody chose in settings the first time they moved the panel.
+        //
+        // The bottom is the top's mirror: the pointer thrown at the screen's
+        // **own** bottom — level with the Dock, beside it — docks the rail
+        // there. Just above the Dock, short of that, it lies across and
+        // stands free with its card opening up; with the Dock hidden the two
+        // lines meet and docking wins.
+        //
+        // **Staying docked there is the rail's, not the pointer's.** A ring is
+        // held 32pt or more above the screen's bottom — more with figures — so
+        // the pointer rule would lift a bottom rail off on the first sideways
+        // frame. The top has the menu bar's height in hand for the same slack;
+        // the bottom has nothing, so a docked rail stays while its own bottom
+        // is within reach of the edge.
+        let railBottom = pointer.y - grab.height
+        let staysOnBottom = placement.dock == .edge(.bottom)
+            && railBottom - screen.frame.minY <= PanelPlacement.dockDistance
         let dock: PanelDock = if visible.maxY - pointer.y <= PanelPlacement.dockDistance {
             .edge(.top)
+        } else if staysOnBottom || pointer.y - screen.frame.minY <= PanelPlacement.dockDistance {
+            .edge(.bottom)
+        } else if pointer.y - visible.minY <= PanelPlacement.dockDistance {
+            .floating(.horizontal)
         } else if wanted.x - visible.minX <= PanelPlacement.dockDistance {
             .edge(.left)
         } else if visible.maxX - (wanted.x + rail.width) <= PanelPlacement.dockDistance {
             .edge(.right)
         } else {
-            .floating
+            .floating(placement.edge.axis)
         }
 
         // The rail turns as it crosses onto the other axis, so everything from
@@ -654,22 +692,19 @@ private final class FloatingPanel: NSPanel {
         // one it is leaving. Measuring in the old one throws the panel across
         // the screen on the frame the axis changes.
         //
-        // Coming off the top, `placement.edge` is a frame behind — it still
-        // says `.top` until `record` below, which would size the window for
-        // the horizontal axis while the content has already redrawn as a
-        // vertical rail: 52pt of it sliced off, and the hit rect a hundred
-        // points from where the rail is. So a floating landing picks its side
-        // the same way the placement picks it, from the half it stands in.
-        let landing: PanelEdge = if let docked = dock.edge {
-            docked
-        } else if placement.edge.axis == .horizontal {
-            pointer.x < visible.midX ? .left : .right
-        } else {
-            placement.edge
+        // `placement.edge` is a frame behind until `record` below, so it is
+        // not asked which way the rail runs: sizing the window for the axis
+        // being left while the content has already redrawn on the new one
+        // slices 52pt off the rail and puts the hit rect a hundred points from
+        // where the rail is. The axis comes from the dock being landed on, and
+        // the edge — which only decides where the card opens — from the
+        // placement once it has been recorded.
+        let landingAxis: PanelEdge.Axis = switch dock {
+        case .edge(let edge): edge.axis
+        case .floating(let axis): axis
         }
-        let landingRail = railSize?(landing, dock.isDocked) ?? rail
-        let landingNotch = dock.edge == .top ? PanelScreen.notch(of: screen) : nil
-        let landingPanel = FloatingPanelController.Layout.size(for: landing, notchSize: landingNotch?.size)
+        let landingRail = railSize?(landingAxis, dock.isDocked) ?? rail
+        let landingNotch = dock == .edge(.top) ? PanelScreen.notch(of: screen) : nil
 
         // Under the pointer, in the new orientation. Carrying the old grab
         // offset across a quarter turn would put the rail somewhere the hand
@@ -681,7 +716,7 @@ private final class FloatingPanel: NSPanel {
         // dock↔float transition re-centre itself under the pointer for one
         // frame and snap back on the next. The grab is re-measured whenever
         // that does happen, or the frame after a turn would undo it.
-        let turned = landing.axis != placement.edge.axis
+        let turned = landingAxis != placement.edge.axis
 
         let origin: CGPoint
         if turned {
@@ -717,14 +752,21 @@ private final class FloatingPanel: NSPanel {
         )
 
         placement.notch = landingNotch
+        let landingPanel = FloatingPanelController.Layout.size(
+            for: placement.edge, notchSize: landingNotch?.size, docked: dock.isDocked
+        )
 
         // One source of truth for the geometry: ask the placement where that
         // puts things rather than working it out a second way here.
         let layout = placement.layout(
             in: visible,
             topEdge: Self.topEdge(of: screen),
+            bottomEdge: screen.frame.minY,
             panel: landingPanel,
             rail: landingRail
+        )
+        placement.cardRoom = PanelPlacement.cardRoom(
+            edge: placement.edge, railOrigin: layout.railOrigin, rail: landingRail, in: visible
         )
         applyLevel(for: dock)
         setFrame(layout.frame, display: true)

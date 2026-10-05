@@ -1,7 +1,10 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
+import Darwin
 import Foundation
 
 /// Replayable, synchronous line IO with a cancellation checkpoint per read and
-/// per line. Memory is one 64 KiB chunk plus the current line, never the file.
+/// per line. IO buffers hold a 64 KiB chunk plus any cross-chunk line, never
+/// the file. A line within a chunk shares its storage until the caller releases it.
 /// A fresh iterator owns its descriptor; breaking a loop closes it on release.
 struct LogLines: Sequence {
     private let file: URL?
@@ -46,10 +49,16 @@ struct LogLines: Sequence {
             var line = Data()
             while !Task.isCancelled {
                 if offset < chunk.endIndex {
-                    if let end = chunk[offset...].firstIndex(of: 0x0a) {
-                        line.append(contentsOf: chunk[offset..<end])
+                    if let end = newline() {
+                        let start = offset
                         offset = end + 1
-                        if line.isEmpty { continue }
+                        if line.isEmpty {
+                            if start == end { continue }
+                            // Data's slice owns the storage; no borrowed pointer
+                            // escapes and the next read cannot overwrite it.
+                            return chunk[start..<end]
+                        }
+                        line.append(contentsOf: chunk[start..<end])
                         return line
                     }
                     line.append(contentsOf: chunk[offset...])
@@ -66,6 +75,20 @@ struct LogLines: Sequence {
             }
             close()
             return nil
+        }
+
+        /// Search contiguous bytes with libc's vectorized scanner instead of
+        /// visiting every byte through Data's Collection conformance. Keep
+        /// pointer offsets separate from Data indices (a slice may start > 0).
+        private func newline() -> Int? {
+            let start = chunk.startIndex
+            let consumed = offset - start
+            return chunk.withUnsafeBytes { bytes -> Int? in
+                guard let base = bytes.baseAddress,
+                      let found = memchr(base.advanced(by: consumed), 0x0a, bytes.count - consumed)
+                else { return nil }
+                return start + base.distance(to: UnsafeRawPointer(found))
+            }
         }
 
         private func close() {

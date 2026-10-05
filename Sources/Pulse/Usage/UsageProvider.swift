@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
 /// The coding agents Pulse tracks.
@@ -389,7 +390,15 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// data (it covers every machine) and the poorer (one token total per
     /// model, so nothing can be priced), which is what `UsageLedger.Origin`
     /// exists to keep straight.
-    var providesHistory: Bool { keepsLocalTranscripts || self == .zai || self == .glmCoding }
+    /// OpenCode Go joins them once its console session is kept: the console's
+    /// request log is the account's own record, priced as charged. DeepSeek
+    /// likewise once its console's sign-in is kept: the console's day-by-day
+    /// usage, charged in the account's own currency.
+    var providesHistory: Bool {
+        keepsLocalTranscripts || self == .zai || self == .glmCoding
+            || (self == .openCodeGo && OpenCodeConsole.hasSession)
+            || (self == .deepSeek && DeepSeekConsole.hasSession)
+    }
 
     /// Whether the route to this provider's figures is a choice.
     ///

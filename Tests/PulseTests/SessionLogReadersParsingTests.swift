@@ -125,6 +125,33 @@ struct SessionLogReadersParsingTests {
         #expect(records.contains { $0.model == "gemini-2.5-pro" && $0.tally.input == 40 && $0.tally.output == 8 })
     }
 
+    @Test("Gemini's stream-json total keeps the thoughts and tool tokens it does not name; json nests counts under tokens")
+    func geminiHeadlessShapes() throws {
+        let home = try Self.temporary("gemini-headless-shapes")
+        defer { try? FileManager.default.removeItem(at: home) }
+        let roots = SessionLogReaders.inputs(client: "gemini", home: home)
+        let base = try #require(roots.first)
+
+        // stream-json: input_tokens is gross, input net, output the candidates
+        // alone; 25 of the total is thoughts and tool use together.
+        // json: the counts sit under `tokens`, with thoughts and tool named.
+        try Self.write(
+            """
+            {"type":"result","id":"r1","timestamp":"2026-01-02T03:05:05Z","stats":{"models":{"gemini-2.5-pro":{"total_tokens":145,"input_tokens":100,"output_tokens":20,"cached":30,"input":70}}}}
+            {"id":"r2","timestamp":"2026-01-02T03:06:05Z","stats":{"models":{"gemini-2.5-flash":{"api":{"totalRequests":1},"tokens":{"input":70,"prompt":100,"candidates":20,"total":145,"cached":30,"thoughts":15,"tool":10}}}}}
+            """,
+            to: base.appending(path: "runs.jsonl")
+        )
+
+        let records = SessionLogReaders.records(client: "gemini", roots: roots)
+        let stream = try #require(records.first { $0.model == "gemini-2.5-pro" })
+        #expect(stream.tally == TokenTally(input: 70, cacheRead: 30, output: 20))
+        #expect(stream.unclassifiedTokens == 25)
+        let json = try #require(records.first { $0.model == "gemini-2.5-flash" })
+        #expect(json.tally == TokenTally(input: 80, cacheRead: 30, output: 35))
+        #expect(json.unclassifiedTokens == 0)
+    }
+
     @Test("A Gemini prompt-style key is cache-inclusive even without a total; a net input is not")
     func geminiPromptStyleIsCacheInclusive() throws {
         let home = try Self.temporary("gemini-prompt")

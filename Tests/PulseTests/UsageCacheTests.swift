@@ -184,9 +184,11 @@ struct UsageCacheTests {
         _ = await cache.reconciled(Self.live([Self.window(used: 0.4, resetsAt: Self.soon)], at: Date()))
 
         for reason: ProviderUsage.Unavailability in [
-            .apiKeyMissing, .ollamaSessionMissing, .qoderSessionMissing, .signedOut,
+            .apiKeyMissing, .ollamaSessionMissing, .qoderSessionMissing, .stepFunSessionMissing,
+            .xiaomiSessionMissing, .signedOut,
             .claudeDesktopNotSignedIn, .claudeDesktopKeyRefused,
-            .kimiSignInRequired, .kimiLoginExpired
+            .kimiSignInRequired, .kimiLoginExpired,
+            .sessionMissing, .localLoginMissing, .localAppMissing
         ] {
             let out = await cache.reconciled(.unavailable(Self.account, reason: reason))
             #expect(out.state == .unavailable(reason), "\(reason) must not be hidden behind the cache")

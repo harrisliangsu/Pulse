@@ -1,3 +1,4 @@
+// Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 import Observation
 import Sparkle
@@ -78,6 +79,23 @@ final class AppUpdate {
         controller.updater.checkForUpdates()
     }
 
+    /// Asks quietly, for a screen that is about to state the result: no
+    /// Sparkle window, just `newer` / `didFail` brought up to date. Opening
+    /// About calls this, so "up to date" there is an answer, not a default.
+    /// Skipped while any check or update is already under way — that one will
+    /// report, and starting another would only abort it.
+    func probe() {
+        guard
+            let updater = controller?.updater,
+            !isChecking,
+            !updater.sessionInProgress,
+            updater.canCheckForUpdates
+        else { return }
+        isChecking = true
+        didFail = false
+        updater.checkForUpdateInformation()
+    }
+
     /// Nothing to do: Sparkle runs its own schedule from the moment it starts.
     /// Kept so the app's launch path doesn't have to know which updater is
     /// behind this.
@@ -92,6 +110,12 @@ final class AppUpdate {
     fileprivate func failCheck(_ failed: Bool) {
         isChecking = false
         if failed { didFail = true }
+    }
+
+    /// Every cycle ends here, whichever of the calls above it made first, so a
+    /// cycle that made none of them cannot leave the row saying "Checking…".
+    fileprivate func endCycle() {
+        isChecking = false
     }
 }
 
@@ -121,5 +145,13 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
         let failed = (error as NSError).domain == NSURLErrorDomain
             || (error as NSError).code == Int(SUError.appcastError.rawValue)
         MainActor.assumeIsolated { owner?.failCheck(failed) }
+    }
+
+    nonisolated func updater(
+        _ updater: SPUUpdater,
+        didFinishUpdateCycleFor updateCheck: SPUUpdateCheck,
+        error: (any Error)?
+    ) {
+        MainActor.assumeIsolated { owner?.endCycle() }
     }
 }
