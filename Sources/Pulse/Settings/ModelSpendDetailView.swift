@@ -131,6 +131,7 @@ struct ModelSpendDetailView: View {
                 if let tally = model.tally {
                     TokenKindBreakdown(
                         tally: tally,
+                        unclassifiedTokens: model.unclassifiedTokens,
                         cost: model.costBreakdown,
                         unpriced: model.unpricedTokens,
                         readsUnreported: readsUnreported
@@ -212,6 +213,7 @@ struct ModelSpendDetailView: View {
         let rows = ModelSpendSummary.sorted(
             model.days.filter { $0.tokens > 0 }, by: sort, ascending: ascending, cacheUnreported: readsUnreported
         )
+        let columns = ModelSpendSummary.DayColumn.allCases.filter { $0 != .unclassified || model.unclassifiedTokens > 0 || sort == .unclassified }
         let pages = max((rows.count + pageSize - 1) / pageSize, 1)
         let current = min(max(page, 0), pages - 1)
         let shown = Array(rows.dropFirst(current * pageSize).prefix(pageSize))
@@ -220,7 +222,7 @@ struct ModelSpendDetailView: View {
             VStack(spacing: 0) {
                 Grid(alignment: .trailing, horizontalSpacing: 10, verticalSpacing: 0) {
                     GridRow {
-                        ForEach(ModelSpendSummary.DayColumn.allCases) { column in
+                        ForEach(columns) { column in
                             header(column)
                         }
                     }
@@ -229,7 +231,7 @@ struct ModelSpendDetailView: View {
                     ForEach(shown) { day in
                         Divider().gridCellUnsizedAxes(.horizontal)
                         GridRow {
-                            ForEach(ModelSpendSummary.DayColumn.allCases) { column in
+                            ForEach(columns) { column in
                                 cell(day, column: column)
                             }
                         }
@@ -264,6 +266,8 @@ struct ModelSpendDetailView: View {
         } label: {
             HStack(spacing: 2) {
                 Text(column.title)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 if sort == column {
                     Image(systemName: ascending ? "chevron.up" : "chevron.down")
                         .font(.system(size: 7, weight: .bold))
@@ -292,12 +296,14 @@ struct ModelSpendDetailView: View {
             Text(Self.shortDate(day.date))
                 .frame(maxWidth: .infinity, alignment: .leading)
         case .fresh:
-            tokenCell(day.tally?.fresh)
+            tokenCell(day.classifiedTally?.fresh)
         case .cacheRead:
             // A store with no cache column has no hits to show, not zero.
-            tokenCell(readsUnreported && day.tally?.cacheRead == 0 ? nil : day.tally?.cacheRead)
+            tokenCell(readsUnreported && day.classifiedTally?.cacheRead == 0 ? nil : day.classifiedTally?.cacheRead)
         case .output:
-            tokenCell(day.tally?.output)
+            tokenCell(day.classifiedTally?.output)
+        case .unclassified:
+            tokenCell(day.tally == nil ? nil : day.unclassifiedTokens)
         case .total:
             tokenCell(day.tokens)
         case .cost:
@@ -366,9 +372,10 @@ extension ModelSpendSummary.DayColumn {
         case .date: .localized("Date")
         // Short, because columns of Chinese headings in a settings pane are a
         // table that wraps.
-        case .fresh: .localized("Fresh")
+        case .fresh: .localized("Input")
         case .cacheRead: .localized("Cached")
         case .output: .localized("Output")
+        case .unclassified: .localized("Unclassified")
         case .total: .localized("Total")
         case .cost: .localized("Cost")
         }

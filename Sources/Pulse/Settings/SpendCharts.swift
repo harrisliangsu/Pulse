@@ -188,21 +188,16 @@ struct HourProfile: View {
     }
 }
 
-/// New input, cache hits, output — what was sent fresh, what was read back
-/// from the cache, and what the model wrote, each with its share of the whole.
+/// Recorded input, cache hits, output and any explicitly unclassified tokens.
 ///
 /// **The split is the point, not the total.** A cache hit is priced at a
 /// fraction of new input on most price lists, so a bill that looks surprising
 /// next to a token count is usually explained here and nowhere else.
 ///
-/// **Three kinds, not Anthropic's four.** A cache write is not a different
-/// kind of input; it is new input that Anthropic (and a few others) bills a
-/// step higher for keeping. OpenAI-style services cache new input on their own
-/// and report no write at all. Four rows put Claude's new input under "cache
-/// write" and Codex's under "input" and set the two side by side, which read
-/// as Codex never caching and Claude never sending anything new. So new input
-/// is one row, and where part of it was written to the cache, its note says
-/// how much — the reason that part costs more.
+/// One vocabulary across agents. Input includes recorded cache writes;
+/// reported cache reads stand separately. A missing write amount makes no
+/// claim about automatic caching. An explicit unclassified remainder keeps
+/// its own row and denominator share, and is never priced or called input.
 ///
 /// The agent and combined panes have no per-model money and pass no `cost`, so
 /// they draw tokens alone; a model's drill-down passes its own `costBreakdown`
@@ -210,6 +205,7 @@ struct HourProfile: View {
 /// a day's or an agent's blended rate spread across it.
 struct TokenKindBreakdown: View {
     let tally: TokenTally
+    var unclassifiedTokens = 0
     /// The priced subset of these kinds, where there is one. Nil leaves the
     /// rows as tokens, which is what the agent and combined panes show.
     var cost: TokenCost? = nil
@@ -222,17 +218,19 @@ struct TokenKindBreakdown: View {
     var readsUnreported = false
 
     var body: some View {
-        let total = max(tally.total, 1)
-        let rows = Self.rows(tally, cost: cost, readsUnreported: readsUnreported)
+        let total = max(Double(tally.total) + Double(unclassifiedTokens), 1)
+        let rows = Self.rows(tally, unclassified: unclassifiedTokens, cost: cost, readsUnreported: readsUnreported)
 
         return VStack(spacing: 0) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                if index > 0 { SettingsRowDivider() }
-                SettingsRow(row.label, subtitle: row.note) {
-                    if row.unreported {
-                        unreported
-                    } else {
-                        figures(row, total: total)
+            ForEach(rows) { row in
+                VStack(spacing: 0) {
+                    if row.id != .input { SettingsRowDivider() }
+                    SettingsRow(row.label, subtitle: row.note) {
+                        if row.unreported {
+                            unreported
+                        } else {
+                            figures(row, total: total)
+                        }
                     }
                 }
             }
@@ -255,9 +253,9 @@ struct TokenKindBreakdown: View {
         }
     }
 
-    private func figures(_ row: Row, total: Int) -> some View {
+    private func figures(_ row: Row, total: Double) -> some View {
         HStack(spacing: 10) {
-            ShareBar(share: Double(row.tokens) / Double(total))
+            ShareBar(share: Double(row.tokens) / total)
                 .frame(width: 64, height: 6)
 
             Text(String.localized("\(TokenCount.short(row.tokens)) tokens"))
@@ -272,7 +270,7 @@ struct TokenKindBreakdown: View {
                 .fixedSize(horizontal: true, vertical: false)
                 .help(SpendFormat.tokens(row.tokens))
 
-            if row.cost != nil {
+            if cost != nil {
                 CostText(cost: row.cost, unpriced: unpriced)
                     .font(.system(size: 12))
                     .frame(width: 76, alignment: .trailing)
@@ -280,7 +278,9 @@ struct TokenKindBreakdown: View {
         }
     }
 
-    private struct Row {
+    private struct Row: Identifiable {
+        enum ID: Hashable { case input, cacheRead, output, unclassified }
+        let id: ID
         let label: String
         let note: String
         let tokens: Int
@@ -288,27 +288,33 @@ struct TokenKindBreakdown: View {
         var unreported = false
     }
 
-    private static func rows(_ tally: TokenTally, cost: TokenCost?, readsUnreported: Bool) -> [Row] {
+    private static func rows(_ tally: TokenTally, unclassified: Int, cost: TokenCost?, readsUnreported: Bool) -> [Row] {
         // The write is named only where there was one: a zero here is most
         // often a service with no such step, and saying "0 written" is the
         // misreading this layout exists to avoid.
         // One sentence pair per key, not two keys joined: a space between
         // them is English punctuation, not Chinese.
-        let fresh = tally.cacheWrite > 0
+        let input = tally.cacheWrite > 0
             ? String.localized(
-                "Sent this time and not read from the cache. Of it, \(TokenCount.short(tally.cacheWrite)) was written to the cache, which Claude and a few others bill higher."
+                "Recorded input, with reported cache hits counted separately. Includes \(TokenCount.short(tally.cacheWrite)) recorded cache writes."
             )
-            : String.localized("Sent this time and not read from the cache.")
-        let freshCost = cost.map { $0.input + $0.cacheWrite }
+            : String.localized("Recorded input, with reported cache hits counted separately.")
+        let unknownOnly = tally.total == 0 && unclassified > 0
+        let missingCategory = String.localized("These records do not report this token category separately.")
+        let inputCost = cost.map { $0.input + $0.cacheWrite }
         // A hit that did turn up is shown, whatever the agent is said to keep.
-        let hit = readsUnreported && tally.cacheRead == 0
-            ? Row(label: .localized("Cache hit"), note: .localized("These records carry no cache figures."), tokens: 0, cost: nil, unreported: true)
-            : Row(label: .localized("Cache hit"), note: .localized("Read back from the cache, usually at a lower price."), tokens: tally.cacheRead, cost: cost?.cacheRead)
-        return [
-            Row(label: .localized("Fresh input"), note: fresh, tokens: tally.fresh, cost: freshCost),
+        let hit = (readsUnreported || unknownOnly) && tally.cacheRead == 0
+            ? Row(id: .cacheRead, label: .localized("Cache hit"), note: .localized("These records carry no cache figures."), tokens: 0, cost: nil, unreported: true)
+            : Row(id: .cacheRead, label: .localized("Cache hit"), note: .localized("Recorded cache hits. Unreported cache use is not estimated."), tokens: tally.cacheRead, cost: cost?.cacheRead)
+        var rows = [
+            Row(id: .input, label: .localized("Input"), note: unknownOnly ? missingCategory : input, tokens: tally.fresh, cost: inputCost, unreported: unknownOnly),
             hit,
-            Row(label: .localized("Output"), note: .localized("Written back by the model."), tokens: tally.output, cost: cost?.output),
+            Row(id: .output, label: .localized("Output"), note: unknownOnly ? missingCategory : .localized("Model output as recorded by each agent."), tokens: tally.output, cost: cost?.output, unreported: unknownOnly),
         ]
+        if unclassified > 0 {
+            rows.append(Row(id: .unclassified, label: .localized("Unclassified"), note: .localized("Reported tokens without a usable category breakdown."), tokens: unclassified, cost: nil))
+        }
+        return rows
     }
 }
 
