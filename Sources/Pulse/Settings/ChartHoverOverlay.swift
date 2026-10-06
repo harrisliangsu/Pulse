@@ -37,23 +37,7 @@ struct ChartHoverOverlay: View {
                             .position(x: sample.x, y: max(proxy.size.height - 2, 2))
 
                         TooltipPlacement(anchorX: sample.x) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(sample.title)
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(.secondary)
-                                Text(String.localized("\(TokenCount.short(sample.tokens)) tokens"))
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .monospacedDigit()
-                            }
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .background(.regularMaterial, in: .rect(cornerRadius: 6))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 6)
-                                    .strokeBorder(.separator.opacity(0.6), lineWidth: 0.5)
-                            }
-                            .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
+                            ChartTooltipCard(title: sample.title, tokens: sample.tokens)
                         }
                     }
                     // A tooltip must not become a new hover target under the
@@ -114,5 +98,33 @@ struct ChartHoverOverlay: View {
                 proposal: ProposedViewSize(size)
             )
         }
+    }
+}
+
+/// The read-out card every Settings chart shows: a caption (the date, hour or
+/// week) over a token count. Shared so the activity grid, which positions its
+/// own card beside a cell, reads exactly like the bar charts' hover.
+struct ChartTooltipCard: View {
+    let title: String
+    let tokens: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+            Text(String.localized("\(TokenCount.short(tokens)) tokens"))
+                .font(.system(size: 12, weight: .semibold))
+                .monospacedDigit()
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(.regularMaterial, in: .rect(cornerRadius: 6))
+        .overlay {
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(.separator.opacity(0.6), lineWidth: 0.5)
+        }
+        .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
     }
 }

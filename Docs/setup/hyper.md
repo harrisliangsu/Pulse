@@ -9,7 +9,7 @@ A Charm Hyper account and an API key.
 ## Steps
 
 1. Sign in at [hyper.charm.land](https://hyper.charm.land) and create an API key.
-2. In Pulse: **Settings → Accounts → Hyper**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Hyper**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the balance appears on the account's pane, in HC (Hypercredits).
 
 ## If it doesn't work

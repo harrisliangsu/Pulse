@@ -19,7 +19,7 @@ The generator reads `original-data.js` **as text** and never imports it. That is
 The upstream README grants no open-source licence and says outright that the reference-derived assets are not licensed by it, asking anyone redistributing or using them commercially to settle the rights first. Pulse ships a DMG. So:
 
 - **This is an unsettled dependency, deliberately taken.** It was added on an explicit instruction after the position was put in writing, not because the licence was thought to be fine.
-- Pulse already ships x.ai's `xai.svg` and seventeen other brand marks, but that is a different thing and should not be read as cover for this one. A brand mark used as a row's identifier is nominative use of a logo; an animated character reproduced from a company's own frontend is the character itself.
+- Pulse already shipped x.ai's `xai.svg` and seventeen other brand marks, but that is a different thing and should not be read as cover for this one. A brand mark used as a row's identifier is nominative use of a logo; an animated character reproduced from a company's own frontend is the character itself.
 - If this has to come out, the seam is `bot-data.json` plus `BotMarkTint`. The runtime does not care what shape data it is given: 18 rings of 96 points and 25 eye pairs of 48, in the 0…228.54 box, is the entire contract. Original shapes drawn to that contract would drop in.
 
 Nothing above is legal advice and none of it has been checked with anyone; it is the record of what was known when the code was written.
@@ -34,4 +34,4 @@ What Pulse keeps on top of the original is only what a rail of several marks nee
 
 ## Why it is off by default
 
-`AppSettings.botMarks` ships empty, and it is a choice per account rather than one switch: a rail of provider logos is the app telling you which twenty-three products it is watching, and a rail of identical bots in different colours is not. Switched on where somebody wants to watch a ring work, off everywhere else. Current behaviour: [../ui/rings-and-surface.md](../ui/rings-and-surface.md).
+`AppSettings.botMarks` ships empty, and it is a choice per account rather than one switch: a rail of provider logos is the app telling you which of its many products it is watching, and a rail of identical bots in different colours is not. Switched on where somebody wants to watch a ring work, off everywhere else. Current behaviour: [../ui/rings-and-surface.md](../ui/rings-and-surface.md).

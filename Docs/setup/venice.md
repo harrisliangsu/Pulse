@@ -1,6 +1,6 @@
 # Set up Venice in Pulse
 
-Pulse shows the balance your Venice API key spends from — US dollars, or DIEM if your account spends DIEM. Venice reports a balance and no allowance, so there is no ring to fill — the balance is the reading.
+Pulse shows the balance your Venice API key spends from — US dollars, or DIEM if your account spends DIEM. Venice reports a balance and no allowance, so the balance is the reading. For a dollar balance, any ring is Pulse's own estimate, not a figure Venice reported: **Ring measures** on the account's pane picks what it measures — **Since top-up** (the default), **My budget**, or **Balance only** for no ring. A DIEM balance has no ring.
 
 ## What you need
 
@@ -9,7 +9,7 @@ A Venice API key, from the API section of your settings at [venice.ai](https://v
 ## Steps
 
 1. Sign in at venice.ai and create an API key.
-2. In Pulse: **Settings → Accounts → Venice**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Venice**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the account shows its balance.
 
 ## If it doesn't work

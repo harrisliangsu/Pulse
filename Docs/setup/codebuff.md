@@ -9,7 +9,7 @@ Either the `codebuff` command-line tool signed in on this Mac (`codebuff login`)
 ## Steps
 
 1. Either run `codebuff login` in a terminal, or create an API key on codebuff.com.
-2. In Pulse: **Settings → Accounts → Codebuff**. Turn on **Show in panel**. If you created a key, paste it into **API key** under **Connection** and click **Save**. A pasted key is used before the CLI's login.
+2. In Pulse: **Settings → Codebuff**. Turn on **Show in panel**. If you created a key, paste it into **API key** under **Connection** and click **Save**. A pasted key is used before the CLI's login.
 3. Within a few seconds the ring appears, and the account's pane lists the credits and, with the CLI's login, the weekly limit.
 
 An API key reads the credits only; the weekly limit and the plan come with the CLI's login.

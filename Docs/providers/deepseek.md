@@ -43,9 +43,9 @@ The chooser offers DeepSeek unchecked, without a detected hint.
 
 *Since generalized:* these three modes are now every API account's rule — see `BalanceRing` and [README.md](README.md#subscriptions-and-api-accounts). DeepSeek keeps its own settings (`deepSeekBasis`, `deepSeekBudget`) and its own mark file, and makes its window through the same `BalanceRing.window`.
 
-**This is the first provider Pulse carries that reports no percentage at all.** The reply says how much money is left and stops. There is no quota, no window, no reset, and no spend-history endpoint anywhere in the API (the history Pulse shows comes from the web console, with its own sign-in — [below](#the-console-usage-history-and-a-balance-without-a-key)). Every other provider reports at least one fraction.
+**This is the first provider Pulse carries that reports no percentage at all.** The reply says how much money is left and stops. There is no quota, no window, no reset, and no spend-history endpoint anywhere in the API (the history Pulse shows comes from the web console, with its own sign-in — [below](#the-console-usage-history-and-a-balance-without-a-key)). Every provider before it reported at least one fraction.
 
-A ring needs a denominator, and there are exactly three places one can come from — which is why `DeepSeekBasis` has exactly three cases and the user picks between them in DeepSeek's settings pane.
+A ring needs a denominator, and there are exactly three places one can come from — which is why `BalanceBasis` has exactly three cases and the user picks between them in DeepSeek's settings pane.
 
 | Mode | Denominator | Ring |
 |---|---|---|
@@ -59,7 +59,7 @@ Both fractions carry a `UsageWindow.Estimate` naming where the number came from 
 
 ### `sinceTopUp` is measured, not inferred
 
-This is the whole reason it is the default. Pulse reads the balance every refresh — 2 to 30 minutes — and remembers the highest it has seen. **A balance that goes up can only be a top-up**, so that resets the mark and the ring starts from full again. Nothing here is a guess about DeepSeek's pricing, a table of plans, or a number anyone typed. Contrast [command-code.md](command-code.md), where the plan grant genuinely is a table in a client.
+This is the whole reason it is the default. Pulse reads the balance every refresh — 2 to 5 minutes while the panel is shown, since DeepSeek's spending is not visible on this Mac (`AdaptiveRefresh.unwatchedCeiling`), up to 30 while it is hidden — and remembers the highest it has seen. **A balance that goes up can only be a top-up**, so that resets the mark and the ring starts from full again. Nothing here is a guess about DeepSeek's pricing, a table of plans, or a number anyone typed. Contrast [command-code.md](command-code.md), where the plan grant genuinely is a table in a client.
 
 What it costs is the first run: a Mac that has never watched this account has no mark, so the first reading becomes one and the ring reads 0% until money is actually spent. That is a true statement about what Pulse has seen. A peak of zero draws no window at all — an account that has never had credit is not one that has spent it.
 

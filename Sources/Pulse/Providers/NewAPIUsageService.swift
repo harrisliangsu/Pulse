@@ -53,9 +53,9 @@ import Foundation
 ///   $100 would be shown as 90% spent with a full wallet, and every top-up
 ///   would grow the denominator.
 ///
-/// One reply, two meanings, no way to tell them apart. So this draws the money
-/// and no fraction, exactly as a sub2api wallet and DeepSeek's `balanceOnly`
-/// do. [Docs/providers/newapi.md](../../../Docs/providers/newapi.md)
+/// One reply, two meanings, no way to tell them apart. So this reports the
+/// money and no fraction, exactly as a sub2api wallet does; any ring is
+/// `BalanceRing`'s, applied in `UsageStore`. [Docs/providers/newapi.md](../../../Docs/providers/newapi.md)
 ///
 /// ## The unit is not in the reply either
 ///

@@ -9,7 +9,7 @@ A Mistral account you can sign in to at [admin.mistral.ai](https://admin.mistral
 ## Steps
 
 1. In your browser, sign in at [admin.mistral.ai](https://admin.mistral.ai/organization/usage).
-2. In Pulse: **Settings → Accounts → Mistral**. Turn on **Show in panel**. Under **Connection**, pick the browser you signed in with and click **Read**. Your browser may ask for Keychain access.
+2. In Pulse: **Settings → Mistral**. Turn on **Show in panel**. Under **Connection**, pick the browser you signed in with and click **Read**. Your browser may ask for Keychain access.
 3. Within a few seconds the account appears, with a ring for each allowance and the available credit.
 
 If Read can't find the session, you can paste the **Cookie** header of any request to `admin.mistral.ai` (from the browser's developer tools, **Network** tab) into **Session cookie** and click **Save**.

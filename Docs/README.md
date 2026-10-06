@@ -14,6 +14,7 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 | [refresh-and-data.md](refresh-and-data.md) | Refresh loop, cache, activity, ledger, forecast, estimate, chart hover |
 | [token-spend.md](token-spend.md) | Token spend pane: agents read, model drill-down, pricing, what may be said about the figures |
 | [token-spend-sources.md](token-spend-sources.md) | The complete agent/source catalog: default macOS location, format, counters reported, evidence level |
+| [recap.md](recap.md) | The shareable month and year recap cards: which cards a recap gets, nil means left out, language rules, the review render |
 | [notifications.md](notifications.md) | When Pulse posts a notification, and what it refuses to say |
 | [development.md](development.md) | Localization, resources, layout budgets, how to add UI |
 | [testing.md](testing.md) | What `swift test` covers, fixtures, why the gaps are gaps |
@@ -23,6 +24,7 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 | [window-starter.md](window-starter.md) | Starting Claude Code's and Codex's usage windows after a reset: the risk confirmation, when, and what is sent |
 | [build-from-source.md](build-from-source.md) | Toolchain, `swift build`, `#Preview`, local run |
 | [releasing.md](releasing.md) | Tag, bundle, Sparkle, DMG, CI |
+| [update-mirror.md](update-mirror.md) | Upstream's update.qunqin.org mirror, which this fork does not read; this fork's feeds stay on harrisliangsu/Pulse |
 | [providers/README.md](providers/README.md) | Per-provider routes, auth, cookies, extra accounts |
 | [setup/](setup/) | Per-provider setup pages for users — what the in-app **Setup help** link opens |
 | [decisions/README.md](decisions/README.md) | Why / failure lessons (historical) |
@@ -31,17 +33,17 @@ Maintained map. Change the topic file that owns a behaviour in the same patch as
 
 Current routes and sign-in behaviour live in [providers/README.md](providers/README.md). Do not duplicate them in architecture or UI docs.
 
-Older investigation notes that are still useful as history (not the live contract):
+[ollama-cloud.md](ollama-cloud.md) is the current contract for Ollama Cloud — how usage is read from a signed-in page (no quota API); [providers/ollama-cloud.md](providers/ollama-cloud.md) only places it in the matrix.
 
-- [ollama-cloud.md](ollama-cloud.md) — how Ollama Cloud usage is read from a signed-in page (no quota API).
+An older investigation note that is still useful as history (not the live contract):
+
 - [grok-bot-usage.md](grok-bot-usage.md) — historical Grok Bot / Cursor “Sand” investigation.
 
-When those notes disagree with `providers/README.md` or the code, the code and the providers README win.
+When it disagrees with `providers/README.md` or the code, the code and the providers README win.
 
 ## Also in this folder
 
 - [entropy-audit.md](entropy-audit.md) — 2026-09-26 snapshot of structural debt. Historical, not a contract.
-- [plan.md](plan.md) — working notes, not a contract.
 - Screenshots, `demo.gif` and `bot-mark.gif` used by the READMEs and by [ui/rings-and-surface.md](ui/rings-and-surface.md).
 
 ## Release notes

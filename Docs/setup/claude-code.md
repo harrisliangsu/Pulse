@@ -9,9 +9,9 @@ A Claude Pro or Max subscription, signed in to the Claude Code CLI (`claude`). T
 ## Steps
 
 1. Install Claude Code and run `claude` once in Terminal. On first run it opens your browser to sign you in with your claude.ai account; approve there.
-2. In Pulse, go to Settings → Accounts → Claude Code and turn on "Show in panel". Nothing else is required — Pulse reads the login Claude Code already saved on this Mac. If you want to see or change which route Pulse uses, the Connection group's "Read usage from" picker offers Automatic, Usage endpoint, Provider tooling, and Desktop app; Automatic is the right choice for almost everyone.
+2. In Pulse, go to Settings → Claude Code and turn on "Show in panel". Nothing else is required — Pulse reads the login Claude Code already saved on this Mac. If you want to see or change which route Pulse uses, the Connection group's "Read usage from" picker offers Automatic, Usage endpoint, Provider tooling, and Desktop app; Automatic is the right choice for almost everyone.
 3. Optional backup: in the same Connection group, "Claude Code status line" → Connect lets Pulse also read the status line Claude Code prints after each response, so a reading is still available if your saved login expires. Your own status line keeps working alongside it.
-4. To add a second Claude Code account, go to Settings → Accounts → Claude Code, click "Add another account" in its Accounts group, and sign in on the page that opens. This is a separate sign-in from the CLI's own login, so both accounts keep reporting even if the CLI's token later expires.
+4. To add a second Claude Code account, go to Settings → Claude Code, click "Add another account" in its Accounts group, and sign in on the page that opens. This is a separate sign-in from the CLI's own login, so both accounts keep reporting even if the CLI's token later expires.
 5. Success looks like a ring for Claude Code on the Pulse panel, filled in with your 5-hour and weekly usage.
 
 ## If it doesn't work

@@ -9,7 +9,7 @@ An Amp account at [ampcode.com](https://ampcode.com). Amp Free, a paid tier, or 
 ## Steps
 
 1. Sign in at [ampcode.com/settings](https://ampcode.com/settings) and create an access token.
-2. In Pulse: **Settings → Accounts → Amp**. Turn on **Show in panel**. Under **Connection**, paste the token into **API key** and click **Save**.
+2. In Pulse: **Settings → Amp**. Turn on **Show in panel**. Under **Connection**, paste the token into **API key** and click **Save**.
 3. Within a few seconds the ring appears. The account's pane lists each allowance and, on a paid tier, when the billing period renews. Individual credits show as a balance.
 
 ## If it doesn't work

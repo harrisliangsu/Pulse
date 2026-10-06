@@ -9,7 +9,7 @@ An IBM Bob subscription, and an API key from the IBM Bob web portal.
 ## Steps
 
 1. Sign in at [bob.ibm.com](https://bob.ibm.com) and create an API key.
-2. In Pulse: **Settings → Accounts → IBM Bob**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → IBM Bob**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, with your plan's name on the card.
 
 ## If it doesn't work

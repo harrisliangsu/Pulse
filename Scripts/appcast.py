@@ -9,6 +9,20 @@ touches the repository: it lives in the SPARKLE_PRIVATE_KEY secret and reaches
 
 Usage:
     Scripts/appcast.py <version> <path-to-zip> <download-url>
+    Scripts/appcast.py --notes <version>     # rewrite one item's notes only
+
+**One language in the update window.** This fork writes the changelog in two
+files (Chinese in CHANGELOG.zh-CN.md, English in CHANGELOG.md). Each new item
+carries one `<description xml:lang="…">` per language and Sparkle shows the one
+the system's preferred languages pick. Chinese goes out as both `zh-Hans` and
+`zh-Hant`. Japanese and Korean readers get English. Pulse can also be set to a
+language other than the system's, which Sparkle cannot see, so the script
+writes one feed per language as well (`appcast-zh.xml`, `appcast-en.xml`) and
+the app reads the one for the language it is set to.
+
+Every feed URL is this repository's own file on GitHub
+(`raw.githubusercontent.com/<owner>/Pulse/main/`). This fork does not publish
+to, or fall back onto, update.qunqin.org.
 
 The feed is committed rather than generated from scratch each time. Older
 *other* versions are left as they were published: re-signing them would mean
@@ -39,6 +53,24 @@ import changelog  # noqa: E402  — a sibling script, not a package
 ROOT = Path(__file__).resolve().parent.parent
 FEED = ROOT / "appcast.xml"
 
+# Chinese notes are offered under both written Chinese languages. The English
+# notes are the feed Japanese and Korean readers get. `feed` is the one-language
+# copy written beside appcast.xml.
+NOTE_LANGUAGES: dict[str, dict[str, object]] = {
+    "中文": {
+        "langs": ["zh-Hans", "zh-Hant"],
+        "feed": "appcast-zh.xml",
+        "link": "在 GitHub 查看更新说明",
+        "path": changelog.CHANGELOG_ZH,
+    },
+    "English": {
+        "langs": ["en"],
+        "feed": "appcast-en.xml",
+        "link": "Release notes on GitHub",
+        "path": changelog.CHANGELOG,
+    },
+}
+
 
 def github_repo() -> str:
     """owner/name. CI sets GITHUB_REPOSITORY; a local run reads origin."""
@@ -52,13 +84,15 @@ def github_repo() -> str:
         cwd=ROOT,
     )
     url = result.stdout.strip()
+    if "@" in url and "github.com" in url:
+        url = "https://" + url.split("@", 1)[1]
     for prefix in ("git@github.com:", "https://github.com/", "ssh://git@github.com/"):
         if url.startswith(prefix):
             url = url[len(prefix) :]
             break
     if url.endswith(".git"):
         url = url[:-4]
-    if not url:
+    if not url or "/" not in url:
         sys.exit("Could not tell which GitHub repository this is.")
     return url
 
@@ -168,31 +202,123 @@ def changes(version: str, previous: str | None) -> list[str]:
     return [line for line in result.stdout.splitlines() if line and not BORING.match(line)]
 
 
-def description(version: str, previous: str | None) -> str:
-    """The release notes Sparkle shows, carried **in the feed**.
-
-    Not a `sparkle:releaseNotesLink`, which is what this used to be: that is
-    not a link the user clicks, it is a page Sparkle loads into the update
-    window — so the whole GitHub release page, navigation bars and all, was
-    rendered inside a small panel, and showed nothing at all without a network.
-
-    This fork prefers Chinese (`CHANGELOG.zh-CN.md`) so the update dialog
-    matches a Chinese Mac UI; English is the fallback if the ZH entry is missing.
-    """
-    written = changelog.entry(version, changelog.CHANGELOG_ZH) or changelog.entry(version)
-    if written:
-        listing = changelog.as_html(written)
-    else:
-        items = changes(version, previous)
-        body = "".join(f"<li>{html.escape(line)}</li>" for line in items)
-        listing = f"<ul>{body}</ul>" if body else ""
-
-    link = f'<p><a href="{REPO}/releases/tag/v{version}">在 GitHub 查看更新说明</a></p>'
+def notes_html(version: str, listing: str, link_text: str) -> str:
+    """One language's notes as the update window shows them."""
+    link = f'<p><a href="{REPO}/releases/tag/v{version}">{html.escape(link_text)}</a></p>'
     inner = f"{STYLE}<h2>Pulse {html.escape(version)}</h2>{listing}{link}"
-
     # A CDATA section cannot contain its own terminator; nothing here should
     # produce one, but a commit subject is user-written text.
     return inner.replace("]]>", "]]&gt;")
+
+
+def descriptions(version: str, previous: str | None) -> str:
+    """The `<description>` elements of one item, one per language we have.
+
+    Chinese from CHANGELOG.zh-CN.md is offered as `zh-Hans` and `zh-Hant`.
+    English from CHANGELOG.md is offered as `en`. A version with only one of
+    the two files still gets that language. With neither, the commit subjects
+    are a single description with no `xml:lang`.
+    """
+    elements: list[str] = []
+    for spec in NOTE_LANGUAGES.values():
+        path = spec["path"]
+        written = changelog.entry(version, path) if isinstance(path, Path) else None
+        if not written:
+            continue
+        notes = notes_html(version, changelog.as_html(written), str(spec["link"]))
+        langs = spec["langs"]
+        assert isinstance(langs, list)
+        for lang in langs:
+            elements.append(f'<description xml:lang="{lang}"><![CDATA[{notes}]]></description>')
+    if elements:
+        return "\n            ".join(elements)
+
+    items = changes(version, previous)
+    body = "".join(f"<li>{html.escape(line)}</li>" for line in items)
+    listing = f"<ul>{body}</ul>" if body else ""
+    return (
+        "<description><![CDATA["
+        f"{notes_html(version, listing, 'Release notes on GitHub')}"
+        "]]></description>"
+    )
+
+
+ITEM = re.compile(r"        <item>\n.*?        </item>\n", re.S)
+DESCRIPTION = re.compile(
+    r'[ \t]*<description(?: xml:lang="([^"]+)")?><!\[CDATA\[.*?\]\]></description>\n',
+    re.S,
+)
+
+
+def single_language(feed: str, langs: list[str]) -> str:
+    """The feed with each item's notes cut to one language.
+
+    An item with notes in several languages keeps only the first of `langs`
+    it has, under no `xml:lang` (one node needs none); an older item with one
+    bilingual description is left as it is.
+    """
+
+    def cut(match: re.Match[str]) -> str:
+        item = match.group(0)
+        found = DESCRIPTION.findall(item)
+        if len([lang for lang in found if lang]) < 2:
+            return item
+        keep = next((lang for lang in langs if lang in found), None)
+        if keep is None:
+            return item
+
+        def one(description: re.Match[str]) -> str:
+            if description.group(1) != keep:
+                return ""
+            return description.group(0).replace(f' xml:lang="{keep}"', "", 1)
+
+        return DESCRIPTION.sub(one, item)
+
+    return ITEM.sub(cut, feed)
+
+
+def feed_file_url(name: str) -> str:
+    return f"https://raw.githubusercontent.com/{REPO_SLUG}/main/{name}"
+
+
+def write_feeds(feed: str) -> None:
+    """appcast.xml and its one-language copies, all on this repository."""
+    feed = re.sub(
+        r"<link>https://raw\.githubusercontent\.com/[^<]+/appcast(?:-[a-z]+)?\.xml</link>",
+        f"<link>{FEED_URL}</link>",
+        feed,
+        count=1,
+    )
+    FEED.write_text(feed)
+    for spec in NOTE_LANGUAGES.values():
+        langs = [str(lang) for lang in spec["langs"]]  # type: ignore[union-attr]
+        name = str(spec["feed"])
+        copy = single_language(feed, langs).replace(FEED_URL, feed_file_url(name), 1)
+        (ROOT / name).write_text(copy)
+
+
+def rewrite_notes(version: str) -> None:
+    """Replaces the notes of an item already in the feed, nothing else: the
+    enclosure, its signature and the dates stay as they were served."""
+    feed = FEED.read_text()
+    for match in ITEM.finditer(feed):
+        item = match.group(0)
+        if f"<sparkle:version>{version}</sparkle:version>" not in item:
+            continue
+        previous = None
+        older = feed[match.end() :]
+        found = re.search(r"<sparkle:shortVersionString>([^<]+)</sparkle:shortVersionString>", older)
+        if found:
+            previous = found.group(1)
+        stripped = DESCRIPTION.sub("", item)
+        anchor = "            <enclosure "
+        if anchor not in stripped:
+            sys.exit(f"The {version} item is not in the shape this expects — check it by hand.")
+        rewritten = stripped.replace(anchor, f"            {descriptions(version, previous)}\n{anchor}", 1)
+        write_feeds(feed[: match.start()] + rewritten + feed[match.end() :])
+        print(f"Rewrote the notes for {version}.")
+        return
+    sys.exit(f"appcast.xml has no item for {version}.")
 
 
 def enclosure(url: str, length: str, signature: str) -> str:
@@ -211,7 +337,7 @@ def enclosure(url: str, length: str, signature: str) -> str:
 
 
 def render_item(version: str, url: str, signature: str, length: str, notes: str) -> str:
-    """A new item. `enclosure()` is spliced in whole so its indent is not doubled."""
+    """A new item whose notes are one CDATA body. `enclosure()` is spliced in whole."""
     published = email.utils.formatdate(localtime=False, usegmt=False)
     return (
         "        <item>\n"
@@ -222,6 +348,23 @@ def render_item(version: str, url: str, signature: str, length: str, notes: str)
         "            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>\n"
         f"            <link>{REPO}/releases/tag/v{version}</link>\n"
         f"            <description><![CDATA[{notes}]]></description>\n"
+        f"{enclosure(url, length, signature)}\n"
+        "        </item>\n"
+    )
+
+
+def render_described_item(version: str, url: str, signature: str, length: str, notes: str) -> str:
+    """A new item whose `notes` are already `<description>` elements."""
+    published = email.utils.formatdate(localtime=False, usegmt=False)
+    return (
+        "        <item>\n"
+        f"            <title>{version}</title>\n"
+        f"            <pubDate>{published}</pubDate>\n"
+        f"            <sparkle:version>{version}</sparkle:version>\n"
+        f"            <sparkle:shortVersionString>{version}</sparkle:shortVersionString>\n"
+        "            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>\n"
+        f"            <link>{REPO}/releases/tag/v{version}</link>\n"
+        f"            {notes}\n"
         f"{enclosure(url, length, signature)}\n"
         "        </item>\n"
     )
@@ -286,11 +429,17 @@ def offer(feed: str, version: str, url: str, signature: str, length: str, notes:
     that item's enclosure changes — `notes` is ignored, so a second offer
     cannot wipe release notes that were already served. No other version is
     re-signed.
+
+    `notes` here is the inside of one description, which is what the tests
+    and a feed that predates per-language descriptions pass. `main` inserts a
+    new release through `render_described_item` so each language is its own
+    element.
     """
     if version_marker(version) in feed:
         return replace_enclosure(feed, version, url, signature, length)
 
     # Newest first, which is the order Sparkle and every feed reader expect.
+    # This fork's committed feed says zh-CN, not en.
     anchor = "        <language>zh-CN</language>\n"
     if anchor not in feed:
         sys.exit("appcast.xml is not in the shape this expects — check it by hand.")
@@ -298,7 +447,19 @@ def offer(feed: str, version: str, url: str, signature: str, length: str, notes:
     return feed.replace(anchor, anchor + item, 1)
 
 
+def insert_described(feed: str, version: str, url: str, signature: str, length: str, notes: str) -> str:
+    """Insert a new item whose notes are already description elements."""
+    anchor = "        <language>zh-CN</language>\n"
+    if anchor not in feed:
+        sys.exit("appcast.xml is not in the shape this expects — check it by hand.")
+    item = render_described_item(version, url, signature, length, notes)
+    return feed.replace(anchor, anchor + item, 1)
+
+
 def main() -> None:
+    if len(sys.argv) == 3 and sys.argv[1] == "--notes":
+        rewrite_notes(sys.argv[2])
+        return
     if len(sys.argv) != 4:
         sys.exit(__doc__)
 
@@ -307,23 +468,24 @@ def main() -> None:
 
     feed = FEED.read_text() if FEED.exists() else SKELETON
     feed = re.sub(
-        r"<link>https://raw\.githubusercontent\.com/[^/]+/Pulse/main/appcast\.xml</link>",
+        r"<link>https://raw\.githubusercontent\.com/[^<]+/appcast(?:-[a-z]+)?\.xml</link>",
         f"<link>{FEED_URL}</link>",
         feed,
         count=1,
     )
 
     # Notes are computed only for a version the feed does not yet carry.
-    # Re-offering the same version keeps the notes already there.
+    # Re-offering the same version keeps the notes already there and rewrites
+    # the enclosure, which is the zip this run just published.
     if version_marker(version) in feed:
         feed = offer(feed, version, url, signature, length, "")
         print(f"appcast.xml replaces the {version} enclosure ({length} bytes)")
     else:
-        notes = description(version, previous_version(feed))
-        feed = offer(feed, version, url, signature, length, notes)
+        notes = descriptions(version, previous_version(feed))
+        feed = insert_described(feed, version, url, signature, length, notes)
         print(f"appcast.xml now offers {version} ({length} bytes)")
 
-    FEED.write_text(feed)
+    write_feeds(feed)
 
 
 if __name__ == "__main__":

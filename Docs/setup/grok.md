@@ -10,12 +10,12 @@ A SuperGrok, SuperGrok Plus, SuperGrok Heavy, or X Premium+ subscription, and th
 
 1. Install Grok Build if you haven't already: `curl -fsSL https://x.ai/cli/install.sh | bash` (or `npm install -g @xai-official/grok`).
 2. Run `grok login` in Terminal. It opens your browser to sign in with your xAI/X account, then stores the login at `~/.grok/auth.json`.
-3. In Pulse, go to Settings → Accounts → Grok and turn on "Show in panel". There is nothing to paste: Pulse reads the login the CLI just saved. The "Read usage from" row will say "Grok's own login".
+3. In Pulse, go to Settings → Grok and turn on "Show in panel". There is nothing to paste: Pulse reads the login the CLI just saved. The "Read usage from" row will say "Grok's own login".
 4. Refresh Pulse (or wait for its next automatic check). A ring for Grok fills in on the Pulse panel with your weekly usage.
 
 ### Adding another Grok account
 
-If you use more than one Grok account, go to Settings → Accounts → Grok, and click "Add another account" in its Accounts group, then "Sign in…". Pulse shows a code and opens xAI's sign-in page — sign in there and approve the code. This is a separate login Pulse keeps for itself; it doesn't touch `~/.grok/auth.json` or your CLI session.
+If you use more than one Grok account, go to Settings → Grok, and click "Add another account" in its Accounts group, then "Sign in…". Pulse shows a code and opens xAI's sign-in page — sign in there and approve the code. This is a separate login Pulse keeps for itself; it doesn't touch `~/.grok/auth.json` or your CLI session.
 
 ## If it doesn't work
 

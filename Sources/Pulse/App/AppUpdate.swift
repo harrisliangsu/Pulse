@@ -71,6 +71,46 @@ final class AppUpdate {
         )
     }
 
+    /// This fork's update files on GitHub. Upstream's `update.qunqin.org`
+    /// mirror and the qunqin24 raw feed are not hosts here: every check reads
+    /// harrisliangsu/Pulse, and a failed check is not retried against anything else.
+    static let githubBase = "https://raw.githubusercontent.com/harrisliangsu/Pulse/main/"
+
+    /// The feed for the language Pulse is set to, on this fork's GitHub files.
+    ///
+    /// The notes in the update window come in one language: each item in
+    /// `appcast.xml` carries one `<description xml:lang>` per language and
+    /// Sparkle shows the one the **system's** languages pick, which Pulse's own
+    /// language setting cannot reach. So a Pulse set to a language reads that
+    /// language's copy of the feed (`appcast-zh.xml`, `appcast-en.xml`, written
+    /// by `Scripts/appcast.py` beside the main one). The changelog is written in
+    /// Chinese and English; Japanese and Korean read the English.
+    ///
+    /// `base` defaults to this fork. A bundle's `SUFeedURL` is used only when
+    /// it already names harrisliangsu/Pulse on `raw.githubusercontent.com`, so
+    /// a plist cannot point the app at upstream or at the mirror.
+    nonisolated static func feedURL(for language: AppLanguage, base: String = githubBase) -> String {
+        let file = switch language {
+        case .system: "appcast.xml"
+        case .chineseSimplified, .chineseTraditional: "appcast-zh.xml"
+        case .english, .japanese, .korean: "appcast-en.xml"
+        }
+        let root = base.hasSuffix("/") ? base : base + "/"
+        return root + file
+    }
+
+    /// The directory of `SUFeedURL` when that URL is this fork's GitHub feed.
+    nonisolated static func feedBase(from infoURL: String?) -> String {
+        guard
+            let infoURL,
+            let url = URL(string: infoURL),
+            url.host == "raw.githubusercontent.com",
+            url.path.hasPrefix("/harrisliangsu/Pulse/")
+        else { return githubBase }
+        let directory = url.deletingLastPathComponent().absoluteString
+        return directory.hasSuffix("/") ? directory : directory + "/"
+    }
+
     /// Asks now, and shows Sparkle's own window with whatever it finds.
     func check() {
         guard let controller else { return }
@@ -112,6 +152,13 @@ final class AppUpdate {
         if failed { didFail = true }
     }
 
+    /// The feed Sparkle asks for at the start of each check: this fork's
+    /// GitHub file for the language Pulse is set to.
+    fileprivate var feedURLForNextCheck: String {
+        let info = Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String
+        return Self.feedURL(for: LocalizationSource.language, base: Self.feedBase(from: info))
+    }
+
     /// Every cycle ends here, whichever of the calls above it made first, so a
     /// cycle that made none of them cannot leave the row saying "Checking…".
     fileprivate func endCycle() {
@@ -129,6 +176,12 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
     /// Weak: the app owns the updater, not the other way round.
     weak var owner: AppUpdate?
 
+    /// Read at every check, so a language changed in Settings applies to the
+    /// next one. The URL is always this fork's GitHub feed.
+    nonisolated func feedURLString(for updater: SPUUpdater) -> String? {
+        MainActor.assumeIsolated { owner?.feedURLForNextCheck }
+    }
+
     nonisolated func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
         MainActor.assumeIsolated { owner?.finishCheck(found: item) }
     }
@@ -141,7 +194,8 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
         // Sparkle aborts for benign reasons too — the user closing its window
         // is one — and reporting those as "couldn't reach the feed" would be a
         // lie on the one row that exists to tell the truth about that. Only a
-        // failure to *reach or read* the feed counts.
+        // failure to *reach or read* the feed counts. This fork does not retry
+        // the check on another host.
         let failed = (error as NSError).domain == NSURLErrorDomain
             || (error as NSError).code == Int(SUError.appcastError.rawValue)
         MainActor.assumeIsolated { owner?.failCheck(failed) }

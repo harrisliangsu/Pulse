@@ -16,6 +16,8 @@ struct SettingsView: View {
     let shortcuts: GlobalShortcutMonitor
 
     @Bindable var navigation: SettingsNavigation
+    /// Opens the recap window on a period — the one the Token spend pane's button names.
+    var openRecap: @MainActor (Recap.Period) -> Void = { _ in }
     private var pane: SettingsPane {
         get { navigation.pane }
         nonmutating set { navigation.pane = newValue }
@@ -119,6 +121,8 @@ struct SettingsView: View {
     /// disagree about what a month is.
     @State private var spendFocus: SpendAgent?
     @State private var focusedSpend = SpendSummary()
+    /// The year-long activity chart's series, for the agent on screen or all.
+    @State private var spendActivity = TokenActivity()
     private var spendLedgers: [SpendAgent: UsageLedger] { spendRead.snapshot?.ledgers ?? [:] }
     /// Present sources — installed, or captured/exported somewhere Pulse reads
     /// — that produced no records at all. Named together at the foot of the
@@ -236,7 +240,7 @@ struct SettingsView: View {
             // A `minWidth` on the content is a layout constraint, so it is
             // re-applied on every rebuild, which is the property this needs.
             //
-            // 200 is measured, not guessed. Scanning the committed English
+            // 200 was measured, not guessed. Scanning the committed English
             // screenshot for the rightmost ink in the list puts the longest
             // label — `GitHub Copilot` — at **150.5pt**, so this leaves about
             // 50pt of trailing air. 240 was tried first and read as baggy:
@@ -312,6 +316,22 @@ struct SettingsView: View {
                                             .monospacedDigit()
                                     }
                                 }
+                                if settings.readsTokenSpend {
+                                    SettingsRowDivider()
+                                    SettingsRow(
+                                        String.localized("Monthly and Yearly Recap"),
+                                        subtitle: String.localized("Shareable cards for a month or a year, from this Mac's records.")
+                                    ) {
+                                        // Both are visible here, so the yearly recap is
+                                        // not something found only inside the window.
+                                        HStack(spacing: 8) {
+                                            Button(recapButtonTitle) { openRecap(recapPeriod) }
+                                            Button(recapYearButtonTitle) { openRecap(recapYearPeriod) }
+                                        }
+                                        .lineLimit(1)
+                                        .fixedSize()
+                                    }
+                                }
                             }
                             if settings.readsTokenSpend {
                                 TokenSpendView(
@@ -325,6 +345,11 @@ struct SettingsView: View {
                                     span: Binding(
                                         get: { settings.spendSpan },
                                         set: { settings.spendSpan = $0 }
+                                    ),
+                                    activity: spendActivity,
+                                    activityView: Binding(
+                                        get: { settings.spendActivityView },
+                                        set: { settings.spendActivityView = $0 }
                                     ),
                                     isLoading: isScanningSpend,
                                     isSummarizing: spendSummaryIsPending,
@@ -884,9 +909,9 @@ struct SettingsView: View {
                 // the reasoning that four rows is not enough to make a drag
                 // worth learning and that an arrow which misses does nothing
                 // while a drag which misses does something. The first half of
-                // that stopped being true: there are seventeen providers now,
-                // plus every added account, and moving the bottom one to the
-                // top is sixteen clicks.
+                // that stopped being true at seventeen providers, plus every
+                // added account, when moving the bottom one to the top was
+                // already sixteen clicks.
                 //
                 // The arrows stay rather than being replaced. They are the
                 // precise way to move one place, they are the only way that
@@ -1003,8 +1028,8 @@ struct SettingsView: View {
                 SettingsRowDivider()
 
                 SettingsRow(
-                    String.localized("Show Dock icon while Settings is open"),
-                    subtitle: String.localized("So the window can be found again with the Dock or ⌘-Tab; it goes when the window closes.")
+                    String.localized("Show Dock icon while Settings or a recap is open"),
+                    subtitle: String.localized("So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { settings.showsDockIconInSettings },
@@ -1174,6 +1199,31 @@ struct SettingsView: View {
         }
     }
 
+    /// The month the recap button opens, which is the one the window would
+    /// open on by itself (`RecapPeriods.defaultMonth`).
+    private var recapPeriod: Recap.Period {
+        RecapPeriods.defaultMonth(earliest: RecapPeriods.earliest(in: spendLedgers))
+    }
+
+    /// The year the second button opens, by the same rule: January 1–7 opens
+    /// on the year that just ended, any other day on this one, in progress
+    /// (`RecapPeriods.defaultYear`).
+    private var recapYearPeriod: Recap.Period {
+        RecapPeriods.defaultYear(earliest: RecapPeriods.earliest(in: spendLedgers))
+    }
+
+    /// "View September recap".
+    private var recapButtonTitle: String {
+        guard case .month(_, let number) = recapPeriod else { return String.localized("Monthly Recap") }
+        return String.localized("View \(RecapFormat.monthName(number)) recap")
+    }
+
+    /// "View 2026 recap": the year as a plain string, never grouped ("2,026").
+    private var recapYearButtonTitle: String {
+        guard case .year(let year) = recapYearPeriod else { return String.localized("Yearly Recap") }
+        return String.localized("View \("\(year)") yearly recap")
+    }
+
     private var notificationsPane: some View {
         VStack(alignment: .leading, spacing: 22) {
             SettingsGroup {
@@ -1270,6 +1320,26 @@ struct SettingsView: View {
                     .labelsHidden()
                     .toggleStyle(.switch)
                     .disabled(!UsageAlerts.isSupported)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("When a recap is ready"),
+                    subtitle: String.localized("Last month's recap, at the start of the month. Needs Token spend reading.")
+                ) {
+                    // The request and the first check follow from the setting
+                    // itself (`AppSettings.onRecapAlertChange`).
+                    Toggle("", isOn: Binding(
+                        get: { settings.alertsOnRecap },
+                        set: { settings.alertsOnRecap = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    // The month is only known from records Pulse has read — but
+                    // a switch that is on can always be turned off, whatever
+                    // Token spend reading says.
+                    .disabled(!UsageAlerts.isSupported || (!settings.readsTokenSpend && !settings.alertsOnRecap))
                 }
             }
 
@@ -2377,6 +2447,7 @@ struct SettingsView: View {
         spend = SpendSummary()
         focusedSpend = SpendSummary()
         modelSpend = ModelSpendSummary()
+        spendActivity = TokenActivity()
     }
 
     /// The same function over the same ledgers, twice: once for everything and
@@ -2403,6 +2474,7 @@ struct SettingsView: View {
         spend = result.overview
         focusedSpend = result.agent
         modelSpend = result.model
+        spendActivity = result.activity
         displayedSpendRequest = request
     }
 
@@ -4025,7 +4097,7 @@ enum SettingsPane: Hashable {
              .localized("Interface language")]
         case .notifications:
             [.localized("Warn at"), .localized("When a limit comes back"), .localized("When a reading stops arriving"),
-             .localized("When a service is down"),
+             .localized("When a service is down"), .localized("When a recap is ready"),
              .localized("Reset reminders"), .localized("Predicted reset"), .localized("Regular resets"),
              .localized("Celebrate a reset"), .localized("Also celebrate hourly quota resets")]
         case .network:

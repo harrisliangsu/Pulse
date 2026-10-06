@@ -10,8 +10,8 @@ A team on [console.x.ai](https://console.x.ai) with prepaid credit, and permissi
 
 1. In the xAI Console, open **Settings → Management Keys** and create a key. An ordinary API key (the kind used to call models) won't work.
 2. Find your **team ID**: it's in the console's address bar and in the team settings.
-3. In Pulse: **Settings → Accounts → xAI API**. Turn on **Show in panel**. Under **Connection**, enter the team ID, a colon, then the key — `TeamID:ManagementKey` — into **API key**, and click **Save**.
-4. Within a few seconds the balance appears on the account's card. There is no ring: prepaid credit isn't a limit.
+3. In Pulse: **Settings → xAI API**. Turn on **Show in panel**. Under **Connection**, enter the team ID, a colon, then the key — `TeamID:ManagementKey` — into **API key**, and click **Save**.
+4. Within a few seconds the balance appears on the account's card. Prepaid credit isn't a limit, so any ring is Pulse's own estimate: **Ring measures** on the account's pane picks what it measures — **Since top-up** (the default), **My budget**, or **Balance only** for no ring.
 
 The balance is xAI's **posted** figure, which xAI updates when a billing cycle closes. Partway through a cycle it can read higher than the console's live remainder.
 

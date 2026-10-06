@@ -8,16 +8,16 @@ A Command Code account (free to create) at [commandcode.ai](https://commandcode.
 
 ## Steps
 
-Turn on the provider first: go to Settings → Accounts → Command Code and turn on "Show in panel". Then connect it one of two ways — a key you paste wins if both are present, since a key you typed on purpose shouldn't be overridden by a stale CLI login.
+Turn on the provider first: go to Settings → Command Code and turn on "Show in panel". Then connect it one of two ways — a key you paste wins if both are present, since a key you typed on purpose shouldn't be overridden by a stale CLI login.
 
 **Option A — the CLI's own login (no pasting required)**
 1. Install the CLI: `npm install -g command-code@latest`. Check it with `cmd --version` (on native Windows it's `cmdc` instead of `cmd`).
 2. Run `cmd login`. It opens your browser — sign in and click "Authorize". Your terminal confirms "API key stored in ~/.commandcode/auth.json".
-3. Back in Settings → Accounts → Command Code, there's nothing to enter — Pulse reads that saved login automatically. Refresh Pulse and a ring for Command Code fills in.
+3. Back in Settings → Command Code, there's nothing to enter — Pulse reads that saved login automatically. Refresh Pulse and a ring for Command Code fills in.
 
 **Option B — a pasted API key**
 1. Sign in to Command Code at [commandcode.ai](https://commandcode.ai), then go to your [API keys page](https://commandcode.ai/studio/) and click "Generate API key".
-2. In Settings → Accounts → Command Code, in the "API key" field, paste the key, then click "Save".
+2. In Settings → Command Code, in the "API key" field, paste the key, then click "Save".
 
 ## If it doesn't work
 

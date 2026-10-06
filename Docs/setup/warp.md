@@ -9,7 +9,7 @@ A Warp account with AI credits, and a Warp API key.
 ## Steps
 
 1. In Warp, open **Settings → Platform → API Keys** and create a key (it starts with `wk-`). Warp's guide: [API keys](https://docs.warp.dev/reference/cli/api-keys).
-2. In Pulse: **Settings → Accounts → Warp**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Warp**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears. The card shows "Credit allowance" for the plan and "Top-up pack" for add-on credits, if you have any.
 
 ## If it doesn't work

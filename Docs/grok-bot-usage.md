@@ -58,7 +58,7 @@ xAI docs (weekly included usage; Cursor vs SuperGrok eligibility uses the larger
 - https://docs.x.ai/grok-bot/faq
 - https://docs.x.ai/grok-bot/settings-and-notifications
 
-Claude fallback notes that used to live beside this investigation now point at [plan.md](plan.md) / [providers/claude-code.md](providers/claude-code.md).
+Claude fallback notes that used to live beside this investigation are in [providers/claude-code.md](providers/claude-code.md).
 
 ## Work state (investigation, frozen)
 

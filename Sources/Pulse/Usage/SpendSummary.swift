@@ -253,25 +253,30 @@ struct SpendSummary: Equatable, Sendable {
     /// which is the old rule and never a silent zero.
     private static func window(
         _ session: UsageLedger.Session,
-        cutoff: Date?
+        from lower: Date?,
+        until upper: Date?
     ) -> (tokens: Int, cost: Double, unpriced: Int, last: Date)? {
-        guard let cutoff else { return (session.tokens, session.cost, session.unpricedTokens, session.end) }
+        guard lower != nil || upper != nil else { return (session.tokens, session.cost, session.unpricedTokens, session.end) }
+
+        func inside(_ date: Date) -> Bool {
+            (lower.map { date >= $0 } ?? true) && (upper.map { date < $0 } ?? true)
+        }
 
         guard !session.slots.isEmpty else {
             if !session.days.isEmpty {
-                let days = session.days.filter { $0.date >= cutoff }
+                let days = session.days.filter { inside($0.date) }
                 guard let last = days.map(\.date).max() else { return nil }
                 return (days.reduce(0) { $0 + $1.tokens }, days.reduce(0.0) { $0 + $1.cost }, days.reduce(0) { $0 + $1.unpricedTokens }, last)
             }
-            return session.end >= cutoff ? (session.tokens, session.cost, session.unpricedTokens, session.end) : nil
+            return inside(session.end) ? (session.tokens, session.cost, session.unpricedTokens, session.end) : nil
         }
 
         var tokens = 0
         var cost = 0.0
         var unpriced = 0
-        var last = cutoff
+        var last = lower ?? .distantPast
         var found = false
-        for slot in session.slots where slot.start >= cutoff {
+        for slot in session.slots where inside(slot.start) {
             found = true
             tokens += slot.tokens
             cost += slot.cost
@@ -300,10 +305,43 @@ struct SpendSummary: Equatable, Sendable {
         now: Date = Date(),
         calendar: Calendar = .current
     ) -> SpendSummary {
-        var summary = SpendSummary()
-
         let today = calendar.startOfDay(for: now)
         let cutoff = span.flatMap { calendar.date(byAdding: .day, value: -($0 - 1), to: today) }
+        return summarize(ledgers, from: cutoff, until: nil, today: today, calendar: calendar)
+    }
+
+    /// Adds the ledgers up over the calendar days from `start` up to, **not
+    /// including**, `end` — both local midnights — instead of "the last N days
+    /// ending today". A month's or a year's recap is such a span.
+    ///
+    /// Everything `of(_:overLast:)` says holds, with the far edge added: days,
+    /// quarter-hours and a session's own buckets outside `[start, end)` are not
+    /// in it, and the padded series runs from `start` to the day before `end`
+    /// (so an `end` that is not after `start` is an empty series). **Streaks are
+    /// still the whole history, as of `now`'s day**: a span decides what is added
+    /// up, not what a habit is.
+    static func of(
+        _ ledgers: [SpendAgent: UsageLedger],
+        from start: Date,
+        until end: Date,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> SpendSummary {
+        summarize(ledgers, from: start, until: end, today: calendar.startOfDay(for: now), calendar: calendar)
+    }
+
+    private static func summarize(
+        _ ledgers: [SpendAgent: UsageLedger],
+        from cutoff: Date?,
+        until upper: Date?,
+        today: Date,
+        calendar: Calendar
+    ) -> SpendSummary {
+        var summary = SpendSummary()
+
+        func inside(_ date: Date) -> Bool {
+            (cutoff.map { date >= $0 } ?? true) && (upper.map { date < $0 } ?? true)
+        }
 
         var dayTokens: [Date: Int] = [:]
         var dayCost: [Date: Double] = [:]
@@ -333,7 +371,7 @@ struct SpendSummary: Equatable, Sendable {
 
             for day in ledger.days where day.tokens > 0 { worked.insert(calendar.startOfDay(for: day.date)) }
 
-            let window = cutoff.map { start in ledger.days.filter { $0.date >= start } } ?? ledger.days
+            let window = cutoff == nil && upper == nil ? ledger.days : ledger.days.filter { inside($0.date) }
             guard !window.isEmpty else { continue }
 
             var agentTokens = 0
@@ -362,7 +400,7 @@ struct SpendSummary: Equatable, Sendable {
             // The time of day, which only the quarter-hour buckets carry.
             // Bucketed by the hour their start falls in: a bucket never
             // straddles one.
-            for slot in ledger.slots where cutoff.map({ slot.start >= $0 }) ?? true {
+            for slot in ledger.slots where inside(slot.start) {
                 guard !Task.isCancelled else { return SpendSummary() }
                 guard slot.tokens > 0 else { continue }
                 hourTokens[calendar.component(.hour, from: slot.start), default: 0] += slot.tokens
@@ -377,7 +415,7 @@ struct SpendSummary: Equatable, Sendable {
             // money is a sum rather than a proportion guessed from the total.
             for session in ledger.sessions {
                 guard !Task.isCancelled else { return SpendSummary() }
-                guard let windowed = Self.window(session, cutoff: cutoff) else { continue }
+                guard let windowed = Self.window(session, from: cutoff, until: upper) else { continue }
 
                 // The row carries the span's portion, so the list and the
                 // totals above it are the same arithmetic. Its `start` and
@@ -386,7 +424,7 @@ struct SpendSummary: Equatable, Sendable {
                     Session(
                         agent: agent,
                         session: UsageLedger.Session(
-                            id: session.id, name: session.name, title: session.title,
+                            id: session.id, name: session.name, title: session.title, isReview: session.isReview,
                             project: session.project, start: session.start, end: session.end,
                             tokens: windowed.tokens, cost: windowed.cost, unpricedTokens: windowed.unpriced, slots: session.slots, days: session.days
                         )
@@ -443,8 +481,11 @@ struct SpendSummary: Equatable, Sendable {
         // bars are only the days with work on them compresses a quiet
         // fortnight into nothing and reads as a busy one.
         let first = cutoff ?? dayTokens.keys.min() ?? today
-        let last = max(today, dayTokens.keys.max() ?? today)
-        var cursor = min(first, last)
+        let last = upper.flatMap { calendar.date(byAdding: .day, value: -1, to: $0) }
+            ?? max(today, dayTokens.keys.max() ?? today)
+        // A bounded span starts where it was asked to; an `end` not after
+        // `start` leaves no days rather than one before it.
+        var cursor = upper == nil ? min(first, last) : first
         while cursor <= last {
             summary.days.append(
                 Day(
@@ -455,8 +496,11 @@ struct SpendSummary: Equatable, Sendable {
                     unpricedTokens: dayUnpriced[cursor] ?? 0
                 )
             )
+            // `startOfDay` again: where DST begins at midnight (Santiago,
+            // Asunción) adding a day lands on 01:00 and every later day would
+            // miss its key.
             guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
-            cursor = next
+            cursor = calendar.startOfDay(for: next)
         }
 
         // Months are rolled up from the padded day series, so a month with no

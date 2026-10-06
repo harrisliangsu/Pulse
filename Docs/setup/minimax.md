@@ -11,7 +11,7 @@ A MiniMax account with a Coding Plan subscription, at [platform.minimax.io](http
 
 ### Steps
 1. Sign in at [platform.minimax.io](https://platform.minimax.io), add a payment method if asked, then go to **API Keys** and create a new key. Copy it immediately — it's only shown once.
-2. In Pulse: **Settings → Accounts → MiniMax**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → MiniMax**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the MiniMax ring appears with your plan's windows.
 
 ## MiniMax CN
@@ -21,7 +21,7 @@ A MiniMax account with a Coding Plan subscription, at [platform.minimaxi.com](ht
 
 ### Steps
 1. Sign in at [platform.minimaxi.com](https://platform.minimaxi.com), open **接口密钥** (API Key) in the left sidebar, then **创建新的 API Key** (Create New API Key). Copy it immediately — it's only shown once. <!-- unverified: exact menu labels, taken from a third-party walkthrough rather than a directly fetched rendered page (the console is a JS app) -->
-2. In Pulse: **Settings → Accounts → MiniMax CN**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → MiniMax CN**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the MiniMax CN ring appears with your plan's windows.
 
 ## If it doesn't work

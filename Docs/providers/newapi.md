@@ -36,7 +36,7 @@ GET {root}/api/status                           (no credential)
 
 The first two are OpenAI's own billing paths, which is the whole reason this is readable: New API implements them for compatibility, and `middleware.TokenAuth` accepts the relay key. `401` on a bad key, so status handling is ordinary. The third is the site's public configuration — nothing in it is account-scoped, so it is **not** given the key.
 
-Three concurrent requests every 2–30 minutes. The status route is asked every pass rather than cached, so an operator changing the display setting is picked up rather than remembered wrongly.
+Three concurrent requests every 2–5 minutes (New API is unwatched, so `AdaptiveRefresh.unwatchedCeiling` caps the interval). The status route is asked every pass rather than cached, so an operator changing the display setting is picked up rather than remembered wrongly.
 
 ## Neither figure means what its name says
 
@@ -61,9 +61,7 @@ Both sides are New API's own numbers, so the subtraction is arithmetic on report
 - **on** — the figures are the key's own. A key sold with a quota really does have that allowance, and the fraction would be exactly right.
 - **off** — the figures are the *account's*, and `used` is lifetime. Somebody who has spent $900 over a year and just topped up $100 would be drawn at 90% spent with a full wallet, and every top-up would grow the denominator.
 
-One reply, two meanings, no way to tell them apart. So this draws the money and no fraction — the rail shows the balance, the same as a [sub2api](sub2api.md) wallet and DeepSeek's `balanceOnly` ([deepseek.md](deepseek.md)). See [`README.md`](README.md#pulse-does-not-invent-a-percentage).
-
-If anyone does want a ring here, the answer is to generalise DeepSeek's three-way `DeepSeekBasis` picker rather than to start dividing. That has deliberately not been done yet.
+One reply, two meanings, no way to tell them apart. So the service itself draws the money and no fraction (`windows: []`). Any ring on the rail is `BalanceRing`'s, from a denominator Pulse watched or the reader typed, never from this reply — the same as a [sub2api](sub2api.md) wallet; with **Balance only** the rail shows just the balance ([deepseek.md](deepseek.md), [README.md](README.md#subscriptions-and-api-accounts)). See also [`README.md`](README.md#pulse-does-not-invent-a-percentage).
 
 ## The unit is not in the reply either
 

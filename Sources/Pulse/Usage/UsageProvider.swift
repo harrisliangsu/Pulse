@@ -504,7 +504,7 @@ enum Provider: String, CaseIterable, Identifiable, Codable, Sendable {
     /// Whether this provider reports a prepaid balance that can be compared
     /// against a figure — so a "warn me below" line is worth offering.
     ///
-    /// **Not "reports a `creditBalance`".** Six providers set that, but it is
+    /// **Not "reports a `creditBalance`".** More providers set that, but it is
     /// a display string and Codex's is sometimes the word "Unlimited". This is
     /// the shorter list that also hands over `creditRemaining`, which is a
     /// number and a currency.

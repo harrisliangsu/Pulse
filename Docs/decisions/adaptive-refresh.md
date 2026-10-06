@@ -4,7 +4,7 @@
 
 A fixed minute spends the same requests at 3am as mid-session. Default wait is 2–30 minutes from signals that only ever lengthen the wait (activity metadata, movement of `windows`, hover, panel visibility, power/thermal/sleep).
 
-The timer is one-shot because the wait changes each pass. An older `UsageStore` comment still said “owns the 60s refresh loop (the interval the Codex CLI itself uses)” — that is **not** what the code does.
+The timer is one-shot because the wait changes each pass. An older `UsageStore` comment said “owns the 60s refresh loop (the interval the Codex CLI itself uses)” — that is **not** what the code does.
 
 ## Stalls
 

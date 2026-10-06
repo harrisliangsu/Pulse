@@ -1,6 +1,6 @@
 # Set up Replicate in Pulse
 
-Pulse shows the prepaid credit left on your Replicate account. Replicate reports no allowance or percentage, so there is no ring to fill — the balance is the reading.
+Pulse shows the prepaid credit left on your Replicate account. Replicate reports no allowance or percentage, so the balance is the reading. Any ring is Pulse's own estimate, not a figure Replicate reported: **Ring measures** on the account's pane picks what it measures — **Since top-up** (the default), **My budget**, or **Balance only** for no ring.
 
 ## What you need
 
@@ -9,7 +9,7 @@ A Replicate account, signed in at [replicate.com](https://replicate.com) in a br
 ## Steps
 
 1. Sign in at [replicate.com](https://replicate.com) in Safari, Chrome, Firefox or another browser on this Mac.
-2. In Pulse: **Settings → Accounts → Replicate**. Turn on **Show in panel**.
+2. In Pulse: **Settings → Replicate**. Turn on **Show in panel**.
 3. Under **Connection**, next to **Read from browser**, pick the browser (or leave it on **Automatic**) and click **Read**. Chrome-family browsers may ask for Keychain access to their cookie store.
 4. Within a few seconds the account shows its credit balance.
 

@@ -27,9 +27,9 @@ Five languages: English, Simplified Chinese, Traditional Chinese, Japanese and K
 - A `%` next to a placeholder is a malformed printf conversion. Bake the sign into the value (`"\(count)%"`).
 - **No conditional inside `Text(localized:)`.** The key scanner reads the bare tail after `localized:` and can match an unrelated key. Build the string in a property first.
 - Dates, times, and money use `LocalizationSource.locale`, not `Locale.autoupdatingCurrent`.
-- Large numbers: `TokenCount.short` uses 万 / 亿 when `groupsByTenThousands`. Those unit characters live in code, not the strings file.
+- Large numbers: `TokenCount.short` uses 万 / 亿 where `LocalizationSource.myriadUnits` returns units. Those unit characters live in code, not the strings file.
 - Chinese full stop `。` is full-width and already has trailing space; do not add another (`glassSubtitle`).
-- SwiftPM lowercases `zh-Hans.lproj` to `zh-hans.lproj` in the built bundle. `Bundle.preferredLocalizations` is case-insensitive; `path(forResource: "zh-Hans", ofType: "lproj")` returns nil.
+- SwiftPM has lowercased `zh-Hans.lproj` to `zh-hans.lproj` in the built bundle (the current toolchain does not, and CI accepts either). Where it does, `Bundle.preferredLocalizations` is case-insensitive but `path(forResource: "zh-Hans", ofType: "lproj")` returns nil, so `LocalizationSource` matches the folder name case-insensitively.
 
 ### A translation is written, not converted
 

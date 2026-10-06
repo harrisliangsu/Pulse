@@ -6,7 +6,7 @@ Source: [`Sources/Pulse/Usage/UsageAlerts.swift`](../Sources/Pulse/Usage/UsageAl
 
 ## What can be said
 
-Six things, and nothing else in that list. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card. Advance reminders are a separate list, below: they are scheduled before a time, not spoken after a reading.
+Seven things, and nothing else in that list. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card. Advance reminders are a separate list, below: they are scheduled before a time, not spoken after a reading.
 
 | Alert | Fires when | Gated by |
 |---|---|---|
@@ -16,6 +16,7 @@ Six things, and nothing else in that list. Each is something you would want to k
 | `unreadable(_:)` | Three eligible failures; cached figures remain protected for their first 30 minutes, while a failure with no usable figures counts immediately | `alertsOnFailure` |
 | `lowBalance(remaining:)` | A prepaid balance falls under the figure set for that account | `lowBalanceAlerts[account]` |
 | Service outage (`OutageMemory`) | Codex's, Claude Code's or DeepSeek's own status page reports one of its components down, worse, or back | `alertsOnOutage`, and the provider switched on |
+| Recap ready (`RecapNoticeRule`) | In the first three days of a month, last month had records in the scan Pulse already holds, and that month has not been announced | `alertsOnRecap`, and Token spend reading on |
 
 All off by default. All ask for the **default sound**; the mute switch is macOS's own per-app "Play sound for notifications".
 
@@ -34,7 +35,7 @@ Deduped per announcement id plus `scheduled_for`, and per account plus window pl
 
 This was silent first, with a changelog note saying to add a sound in System Settings if you wanted one. **That note was wrong.** A notification with no `sound` is delivered silently, and the system switch cannot put one back — it only takes away one the app asked for. The choice was never quiet versus loud, it was a working off switch in the place people look for it versus no switch at all. `requestAuthorization` therefore asks for `[.alert, .sound]`: without `.sound` in the grant, `soundSetting` is disabled outright and every `content.sound` is dropped whatever the user does with the switch.
 
-One rule for all of them rather than sound only for the consequential ones. macOS offers one switch per app, so a distinction drawn here would be one nobody could turn off and nobody could discover. And a silent banner on a second display, or behind a full-screen window, is a message that was never delivered — which is the opposite of the test these four had to pass to be here.
+One rule for all of them rather than sound only for the consequential ones. macOS offers one switch per app, so a distinction drawn here would be one nobody could turn off and nobody could discover. And a silent banner on a second display, or behind a full-screen window, is a message that was never delivered — which is the opposite of the test these had to pass to be here.
 
 ### A `balance` window is not a limit, and neither is a `topUp` one
 
@@ -52,7 +53,7 @@ One rule for all of them rather than sound only for the consequential ones. macO
 `lowBalance` is the odd one, and it exists because DeepSeek does. Providers that sell prepaid credit report **no allowance**, so there is no percentage to put a threshold on — `alertThreshold` has nothing to act on and would stay silent while the account emptied. What there is to warn about is the money.
 
 - **It asks for permission like its siblings.** Entering a figure calls `requestAuthorizationIfNeeded` and then reconsiders the readings in hand, so a balance already under the line is announced once rather than waiting for a pass. It was the only alert control in the app that did not ask, which on a fresh install meant `observe` bailed on `.notDetermined` for ever and nothing was ever said.
-- **Per account, not one figure.** The providers that report a spendable balance do not price in the same currency; ¥20 and $20 are not the same line. `Provider.reportsSpendableBalance` is the short list that hands over `ProviderUsage.creditRemaining` — a number *and* a currency — as opposed to the six that set the display string `creditBalance`, one of which is sometimes the word "Unlimited".
+- **Per account, not one figure.** The providers that report a spendable balance do not price in the same currency; ¥20 and $20 are not the same line. `Provider.reportsSpendableBalance` is the short list that hands over `ProviderUsage.creditRemaining` — a number *and* a currency — as opposed to the providers that only set the display string `creditBalance`, one of which (Codex) is sometimes the word "Unlimited".
 - **Live readings only**, the same rule the limits follow: a stale reading carries whatever the cache last banked, and the account may have been topped up since.
 - **Once.** The memory records the figure warned about, not a flag, so **moving the line warns again** — somebody who raises it from ¥5 to ¥50 is asking a new question. A balance climbing back over re-arms it, which for bought credit only ever means a top-up.
 - **Nothing is said about when it comes back**, unlike every other alert here. It does not come back on its own: the only thing that refills this is the reader.
@@ -72,6 +73,20 @@ Requested 2026-10-04, after the status rows on the Codex, Claude Code and DeepSe
 - **Its own file**, `status-alerts.json`. Not a field on `AlertMemory`: that type decodes as a whole, and a key old files lack would have thrown away every limit already warned about. `UsageAlerts.observe` works on `wantsUsageAlerts`, so this switch alone writes no `alerts.json`.
 
 Rules pinned by `OutageMemoryTests`.
+
+### The monthly recap
+
+"Your September recap is ready", about the month that just ended. Off by default, in the Notifications pane as **When a recap is ready** (greyed out in an unbundled build, and while Token spend reading is off — but a switch already on stays operable so it can be turned off). The month's token count is worked out off the main actor. The window it opens is [recap.md](recap.md#the-window); the rules are `RecapNoticeRule` (pure, in `Usage/RecapPeriods.swift`) and the clock is `RecapNotice` (`Usage/RecapNotice.swift`).
+
+- **Only what Pulse witnessed.** It reads **only the scan `SpendWarmer` already keeps** (`AgentLedgers.keptSnapshot`) — it never starts a read of its own, and it works only while Token spend reading is on, which is the reader's own decision. Last month's tokens are counted from that scan (`SpendSummary.of`). No kept scan yet is "not known", not "no records": nothing is said, nothing is remembered, and the next check (every 30 minutes, the first 90 seconds after launch) asks again.
+- **Only when the month had records.** A month with zero tokens is never announced; there is no "you used nothing" notification.
+- **At most once per month.** The month announced is remembered (`AppSettings.recapAnnouncedMonth`, "2026-09"), **before** the notification is handed to the system and whether or not the system will show it — so a relaunch, a second check, or switching the setting off and on says nothing more, and a refused grant does not queue a month's worth of "ready" for later. A month already announced is silent; the next month is news again.
+- **The first three days.** The 1st is the moment; the 2nd and 3rd are for a Mac that was shut or asleep on the 1st. From the 4th the moment has passed and a notification would be news from the past. Switching the setting on inside those days announces at once (the same "past the line when it goes on is said once" rule as the limits); outside them it waits for the next month.
+- **Default sound, like every other notification here.** There is no separate rule for it ([the sound note above](#what-can-be-said)).
+- **Clicking opens the recap window on that month**, not Settings: the identifier is `recap-ready-<yyyy>-<mm>`, and `NotificationTapHandler` reads the month out of it. Every other notification still opens Settings.
+- It is **not** a usage alert: `wantsUsageAlerts` is unchanged (no `alerts.json` entry is written for it); only `wantsAlerts` — whether permission is worth asking for — includes it. Permission is asked when the switch goes on, through `AppSettings.onRecapAlertChange`, not by the view.
+
+Rules pinned by `RecapWindowTests` (the window's, the price's and this one's).
 
 ## Rules that are not obvious
 

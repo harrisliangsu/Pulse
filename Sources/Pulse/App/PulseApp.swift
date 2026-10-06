@@ -36,6 +36,12 @@ enum PulseMain {
             exit(UsageReport.run())
         }
 
+        // The recap probe: read-only like `--json`, so it is settled before
+        // the migration for the same reason.
+        if CommandLine.arguments.contains(RecapReport.modeArgument) {
+            RecapReport.run(arguments: CommandLine.arguments)
+        }
+
         // Before anything reads a setting: running from a bundle changes
         // which `UserDefaults` domain that means.
         LegacyDefaults.migrateIfNeeded()

@@ -79,7 +79,7 @@ struct PromptCacheSessionsGroup: View {
             ForEach(Array(live.enumerated()), id: \.element.id) { index, session in
                 if index > 0 { SettingsRowDivider() }
                 SettingsRow(
-                    session.title ?? session.project ?? String.localized("Untitled conversation"),
+                    session.displayName,
                     subtitle: subtitle(session)
                 ) {
                     Text(verbatim: isFloor
@@ -99,7 +99,9 @@ struct PromptCacheSessionsGroup: View {
     /// title is something else.
     private func subtitle(_ session: PromptCacheSession) -> String {
         var parts: [String] = []
-        if session.title != nil, let project = session.project { parts.append(project) }
+        if SessionLabel.namesItself(title: session.title, isReview: session.isReview), let project = session.project {
+            parts.append(project)
+        }
         parts.append(isFloor
             ? String.localized("Kept at least \(PromptCacheLapse.duration(session.lapse.lifetime))")
             : String.localized("\(PromptCacheLapse.duration(session.lapse.lifetime)) cache"))
