@@ -228,13 +228,17 @@ struct RecapWindowView: View {
                 HStack(spacing: 6) {
                     Text(verbatim: "$")
                         .foregroundStyle(.secondary)
+                    // As wide as the largest price it takes ("10,000.00"),
+                    // not the column: a full-width field put "200" a column
+                    // away from its "$".
                     TextField("", text: $priceText)
                         .textFieldStyle(.roundedBorder)
-                        .multilineTextAlignment(.trailing)
                         .focused($priceFocused)
                         .onSubmit { commitPrice() }
                         .onChange(of: priceFocused) { if !priceFocused { commitPrice() } }
                         .accessibilityLabel(String.localized("Monthly price"))
+                        .frame(width: 96)
+                    Spacer(minLength: 0)
                 }
                 Text(localized: "Only used for the payback card. Leave it empty to leave that card out.")
                     .font(.system(size: 11))
