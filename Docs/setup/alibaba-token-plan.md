@@ -10,7 +10,7 @@ Pulse shows your Alibaba Cloud Token Plan's rolling allowances: the 5-hour windo
 ## Steps
 
 1. Install the Bailian CLI and sign in with it, following Alibaba's instructions. Check that `bl usage token-plan --output json` works in Terminal.
-2. In Pulse: **Settings → Accounts → Alibaba Token Plan**. Turn on **Show in panel**. There is nothing to paste.
+2. In Pulse: **Settings → Alibaba Token Plan**. Turn on **Show in panel**. There is nothing to paste.
 3. Within a few seconds the ring appears, and the account's pane lists the windows and when each resets.
 
 There is no site to choose. Pulse asks for the international site first and the China mainland site second, and reads whichever one your login belongs to.

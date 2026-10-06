@@ -9,7 +9,7 @@ A JetBrains IDE (IntelliJ IDEA, PyCharm, WebStorm, GoLand, Rider, Android Studio
 ## Steps
 
 1. Open your IDE and use AI Assistant once — ask it anything — so it checks your quota.
-2. In Pulse: **Settings → Accounts → JetBrains AI**. Turn on **Show in panel**.
+2. In Pulse: **Settings → JetBrains AI**. Turn on **Show in panel**.
 3. Within a few seconds the ring appears. If you have several IDEs, Pulse reads the one that saved its quota most recently.
 
 The figure is as current as the IDE last left it: the IDE updates it while it runs, so with every IDE closed Pulse shows the last quota any of them saw.

@@ -428,6 +428,10 @@ struct UsageLedger: Sendable, Equatable {
         /// What the conversation was called: the title the user set, else the
         /// words it opened with. Nil for a transcript that carries neither.
         let title: String?
+        /// A session Codex ran itself to review another's planned action: no
+        /// words of the user's, and no project. Shown as "Codex review"
+        /// (`SessionLabel`) rather than as an unnamed file.
+        var isReview = false
         /// The stated directory or source-scoped project, with identity kept
         /// separately from the short name shown in the pane.
         let project: UsageProject?
@@ -538,12 +542,14 @@ struct UsageLedger: Sendable, Equatable {
         guard count > 0, let first = days.first,
               let start = calendar.date(byAdding: .day, value: -(count - 1), to: today) else { return [] }
         let byDate = Dictionary(days.map { (calendar.startOfDay(for: $0.date), $0) }) { kept, _ in kept }
-        var cursor = max(start, calendar.startOfDay(for: first.date))
+        var cursor = max(calendar.startOfDay(for: start), calendar.startOfDay(for: first.date))
         var span: [LedgerDay] = []
         while cursor <= today {
             span.append(byDate[cursor] ?? LedgerDay(date: cursor, tokens: 0, cost: 0, unpricedTokens: 0, models: [:]))
+            // `startOfDay` again: a midnight DST start would otherwise leave
+            // every later day at 01:00, off its key.
             guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
-            cursor = next
+            cursor = calendar.startOfDay(for: next)
         }
         return span
     }
@@ -558,11 +564,35 @@ struct UsageLedger: Sendable, Equatable {
     /// the whole; so would a store that cannot prove its counts are complete.
     /// Nil then, and nil with no input at all.
     func cacheHitRate(overLast count: Int) -> Double? {
-        guard !hasPartialCounts, reportsCacheReads else { return nil }
-        let span = recent(count)
+        guard case .measured(let tally) = cacheReading(in: recent(count)) else { return nil }
+        let input = tally.input + tally.cacheWrite + tally.cacheRead
+        guard input > 0 else { return nil }
+        return Double(tally.cacheRead) / Double(input)
+    }
+
+    /// What a span's records say about the prompt cache — the rule
+    /// `cacheHitRate` applies, kept apart so a rate over several ledgers (the
+    /// recap's) adds up the same measured tallies instead of working the rule
+    /// out a second way.
+    enum CacheReading: Equatable, Sendable {
+        /// The input kinds the rate is measured over: cache reads, and every
+        /// input token beside them, from the models that said anything about
+        /// the cache.
+        case measured(TokenTally)
+        /// The store (or every model in it) records no cache. Its zero hits
+        /// are not a cache that missed, so it has no part in a rate.
+        case unrecorded
+        /// Counts that may be missing or cannot be sorted into their kinds:
+        /// a rate over them would state part of the work as the whole.
+        case unvouched
+    }
+
+    func cacheReading(in span: [LedgerDay]) -> CacheReading {
+        guard reportsCacheReads else { return .unrecorded }
+        guard !hasPartialCounts else { return .unvouched }
         let tally = span.reduce(TokenTally()) { $0 + $1.tally }
         let tokens = span.reduce(0) { $0 + $1.tokens }
-        guard tally.total == tokens else { return nil }
+        guard tally.total == tokens else { return .unvouched }
 
         // **A model that said nothing about the cache is left out of the
         // rate**, not counted as all misses: its input would sit in the
@@ -576,10 +606,8 @@ struct UsageLedger: Sendable, Equatable {
             for (raw, model) in day.modelTallies { byModel[raw] = (byModel[raw] ?? TokenTally()) + model }
         }
         let measured = split ? byModel.values.filter { !$0.reportsNoCache }.reduce(TokenTally(), +) : tally
-        guard !measured.reportsNoCache else { return nil }
-        let input = measured.input + measured.cacheWrite + measured.cacheRead
-        guard input > 0 else { return nil }
-        return Double(measured.cacheRead) / Double(input)
+        guard !measured.reportsNoCache else { return .unrecorded }
+        return .measured(measured)
     }
 
     /// One model's cache hit rate over a span, and how much input it is
@@ -716,6 +744,9 @@ struct UsageLedger: Sendable, Equatable {
 /// a few hundred megabytes to pick it up.
 actor UsageLedgerReader {
     static let shared = UsageLedgerReader()
+
+    /// The number in `ledger-<n>-<provider>.json`; see `FileCache.file`.
+    nonisolated static let cacheVersion = 9
 
     /// Tokens by quarter-hour (`yyyy-MM-dd HH:mm`, local) and then by model.
     private typealias Buckets = [String: [String: TokenTally]]
@@ -888,8 +919,10 @@ actor UsageLedgerReader {
                 byDate[cursor]
                     ?? LedgerDay(date: cursor, tokens: 0, cost: 0, unpricedTokens: 0, models: [:])
             )
+            // `startOfDay` again: a midnight DST start would otherwise leave
+            // every later day at 01:00, off its key.
             guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
-            cursor = next
+            cursor = calendar.startOfDay(for: next)
         }
 
         return UsageLedger(
@@ -927,6 +960,7 @@ actor UsageLedgerReader {
                 guard !Task.isCancelled else { return ([:], [:], [:]) }
                 fresh[key] = FileCache.Entry(
                     stamp: stamp, days: scanned.days, title: scanned.title, cwd: scanned.cwd,
+                    isReview: scanned.isReview ? true : nil,
                     timings: scanned.timings, replies: scanned.replies,
                     runningTotals: scanned.runningTotals.isEmpty ? nil : scanned.runningTotals
                 )
@@ -973,7 +1007,8 @@ actor UsageLedgerReader {
                 }
             }
             counted[key] = FileCache.Entry(
-                stamp: entry.stamp, days: days, title: entry.title, cwd: entry.cwd, timings: fileTimings
+                stamp: entry.stamp, days: days, title: entry.title, cwd: entry.cwd,
+                isReview: entry.isReview, timings: fileTimings
             )
             for (day, models) in days {
                 for (model, tally) in models {
@@ -998,72 +1033,121 @@ actor UsageLedgerReader {
         return (buckets, timings, counted)
     }
 
-    /// One row per transcript, priced the same way the days are.
+    /// One row per conversation, priced the same way the days are.
     ///
     /// The cache is keyed by path and holds each file's own buckets, so this
     /// is a second rollup of numbers already in hand rather than another pass
     /// over the transcripts.
+    ///
+    /// **A conversation can be several files.** Claude Code writes each
+    /// subagent's transcript beside its parent's (`sessionFile(of:)`); those
+    /// files' tokens are real and are in the days, models and projects like
+    /// any other, but as rows they were a "Pulse" session apiece. They are
+    /// folded into the parent's row here — summed, the span widened — after
+    /// `scan` has counted every reply once, so nothing is counted twice.
     private func sessions(
         _ files: [String: FileCache.Entry],
         provider: Provider,
         prices: [String: ModelPrice]
     ) -> [UsageLedger.Session] {
-        var sessions: [UsageLedger.Session] = []
-        var lookup = ModelPriceLookup(prices)
-
-        for (path, entry) in files {
-            guard !Task.isCancelled else { return [] }
+        /// One conversation's files, added up.
+        struct Rollup {
             var tokens = 0
             var cost = 0.0
-            var unpricedTokens = 0
+            var unpriced = 0
             var start: Date?
             var end: Date?
-            var slots: [UsageLedger.Slot] = []
+            /// By quarter-hour key (`slotKey(for:)`).
+            var slots: [String: (tokens: Int, cost: Double, unpriced: Int)] = [:]
+            /// Where the conversation ran and what it was called — the
+            /// parent's own when it has them, else the first subagent's (by
+            /// path, so the choice is stable).
+            var title: String?
+            var cwd: String?
+            var isReview = false
+            var parentSeen = false
+        }
+
+        var rollups: [String: Rollup] = [:]
+        var lookup = ModelPriceLookup(prices)
+
+        for (path, entry) in files.sorted(by: { $0.key < $1.key }) {
+            guard !Task.isCancelled else { return [] }
+            let group = provider == .claudeCode ? Self.sessionFile(of: path) : path
+            var rollup = rollups[group] ?? Rollup()
 
             for (key, models) in entry.days {
                 guard let at = slotFormatter.date(from: key) else { continue }
-                start = min(start ?? at, at)
-                end = max(end ?? at, at)
 
-                var slotTokens = 0
-                var slotCost = 0.0
-                var slotUnpriced = 0
+                var slot = rollup.slots[key] ?? (0, 0, 0)
+                let before = slot.tokens
                 for (model, tally) in models {
-                    tokens += tally.total
-                    slotTokens += tally.total
+                    rollup.tokens += tally.total
+                    slot.tokens += tally.total
                     if let price = lookup.price(for: model) {
                         let money = tally.cost(at: price)
-                        cost += money
-                        slotCost += money
+                        rollup.cost += money
+                        slot.cost += money
                     } else {
-                        unpricedTokens += tally.total
-                        slotUnpriced += tally.total
+                        rollup.unpriced += tally.total
+                        slot.unpriced += tally.total
                     }
                 }
-                slots.append(.init(start: at, tokens: slotTokens, cost: slotCost, unpricedTokens: slotUnpriced))
+                rollup.slots[key] = slot
+                // A quarter-hour with no tokens in it is not when the
+                // conversation ran.
+                guard slot.tokens > before else { continue }
+                rollup.start = min(rollup.start ?? at, at)
+                rollup.end = max(rollup.end ?? at, at)
             }
+            // A parent whose every reply was counted in another file still
+            // names the conversation, so this is not skipped for having no
+            // work of its own left.
+            if group == path {
+                rollup.parentSeen = true
+                rollup.title = entry.title ?? rollup.title
+                rollup.cwd = entry.cwd ?? rollup.cwd
+                rollup.isReview = entry.isReview == true
+            } else if !rollup.parentSeen {
+                rollup.title = rollup.title ?? entry.title
+                rollup.cwd = rollup.cwd ?? entry.cwd
+            }
+            rollups[group] = rollup
+        }
 
-            guard tokens > 0, let start, let end else { continue }
-
+        var sessions: [UsageLedger.Session] = []
+        for (path, rollup) in rollups {
+            guard rollup.tokens > 0, let start = rollup.start, let end = rollup.end else { continue }
             let url = URL(fileURLWithPath: path)
             sessions.append(
                 UsageLedger.Session(
                     id: path,
                     name: url.deletingPathExtension().lastPathComponent,
-                    title: entry.title,
-                    project: UsageProject(entry.cwd)
+                    title: rollup.title,
+                    isReview: rollup.isReview,
+                    project: UsageProject(rollup.cwd)
                         ?? Self.project(of: url, provider: provider),
                     start: start,
                     end: end,
-                    tokens: tokens,
-                    cost: cost,
-                    unpricedTokens: unpricedTokens,
-                    slots: slots.sorted { $0.start < $1.start }
+                    tokens: rollup.tokens,
+                    cost: rollup.cost,
+                    unpricedTokens: rollup.unpriced,
+                    slots: Self.sessionSlots(rollup.slots)
                 )
             )
         }
 
         return sessions.sorted { $0.end > $1.end }
+    }
+
+    /// The transcript a Claude Code file belongs to: its own path, or for a
+    /// subagent's — `<project>/<session>/subagents/agent-<id>.jsonl` — the
+    /// parent's, `<project>/<session>.jsonl`, whether or not that file is
+    /// still there. A string rule, like the rest of the grouping.
+    static func sessionFile(of path: String) -> String {
+        guard let range = path.range(of: "/subagents/"), range.lowerBound > path.startIndex, path.hasSuffix(".jsonl")
+        else { return path }
+        return String(path[..<range.lowerBound]) + ".jsonl"
     }
 
     /// The fallback for a transcript that states no `cwd`.
@@ -1133,6 +1217,9 @@ actor UsageLedgerReader {
         /// reversed — a folder whose own name contains a dash is
         /// indistinguishable from a separator, and this Mac has several.
         var cwd: String?
+        /// A Codex session that opens with a review request instead of the
+        /// user's words (`codexReviewOpening`).
+        var isReview = false
         /// Timed replies by quarter-hour and then model (`ReplyTiming`).
         var timings: [String: [String: ReplyTiming]] = [:]
         /// Claude Code's replies by message id, and a Codex fork's readings by
@@ -1207,14 +1294,109 @@ actor UsageLedgerReader {
     /// **Not the whole message.** These are the user's own words and a row is
     /// one line; the point is to tell one conversation from another, which the
     /// first few words do.
+    ///
+    /// **Links are unwrapped, not shown as markup.** `[text](url)` reads as
+    /// its text and `[url]` or `<url>` as the url. A message that opens with a
+    /// line that is only a link and carries words below it is named for the
+    /// first of those lines — the link is what was pasted, the words are the
+    /// request. A message that is only a link reads as `host/first-segment/…`
+    /// (`compactLink(_:)`), never as a scheme and a long path.
     static func title(from text: String) -> String? {
-        let cleaned = text
-            .replacingOccurrences(of: "\n", with: " ")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        // A pasted file or a command envelope is not a title. A `<url>` is
+        // markdown's way to write a link, not an envelope.
+        guard !trimmed.hasPrefix("<") || trimmed.hasPrefix("<http"), !trimmed.hasPrefix("Caveat:") else { return nil }
+
+        let lines = trimmed.split(whereSeparator: \.isNewline)
+            .map { collapsingWhitespace(unwrappingLinks(String($0))) }
+            .filter { !$0.isEmpty }
+        guard let first = lines.first else { return nil }
+
+        let cleaned: String
+        if isLinkOnly(first) {
+            // The first line of words below the link, else the link itself.
+            cleaned = lines.first { !isLinkOnly($0) } ?? compactLink(first)
+        } else {
+            cleaned = lines.joined(separator: " ")
+        }
         guard !cleaned.isEmpty else { return nil }
-        // A pasted file or a command envelope is not a title.
-        guard !cleaned.hasPrefix("<"), !cleaned.hasPrefix("Caveat:") else { return nil }
         return cleaned.count <= 70 ? cleaned : String(cleaned.prefix(69)) + "…"
+    }
+
+    /// `[text](url)` as `text`, `[](url)` as `url`, `[url]` and `<url>` as the
+    /// url.
+    private static func unwrappingLinks(_ line: String) -> String {
+        var result = line
+        for (pattern, template) in [
+            (#"!?\[([^\]]+)\]\([^)]*\)"#, "$1"),
+            (#"!?\[\]\(([^)\s]+)[^)]*\)"#, "$1"),
+            (#"\[(https?://[^\]\s]+)\]"#, "$1"),
+            (#"<(https?://[^>\s]+)>"#, "$1"),
+        ] {
+            result = result.replacingOccurrences(of: pattern, with: template, options: .regularExpression)
+        }
+        return result
+    }
+
+    private static func collapsingWhitespace(_ text: String) -> String {
+        text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    private static func isLinkOnly(_ line: String) -> Bool {
+        line.range(of: #"^https?://\S+$"#, options: .regularExpression) != nil
+    }
+
+    /// `host/first-path-segment/…` for a link: no scheme, no brackets, no
+    /// query. The ellipsis marks that there is more path after the segment.
+    /// A link that cannot be read is shown without its scheme.
+    static func compactLink(_ link: String) -> String {
+        guard let components = URLComponents(string: link), let host = components.host, !host.isEmpty else {
+            return link.replacingOccurrences(of: #"^https?://"#, with: "", options: .regularExpression)
+        }
+        let segments = components.path.split(separator: "/", omittingEmptySubsequences: true)
+        guard let first = segments.first else { return host }
+        return "\(host)/\(first)" + (segments.count > 1 ? "/…" : "")
+    }
+
+    /// The opening of the message Codex puts first in a session it runs to
+    /// review another's planned action.
+    static let codexReviewOpening = "The following is the Codex agent history"
+
+    /// Whether a Codex user-role message is a review request rather than the
+    /// user's words (`codexTitle(in:)` gives such a message no title).
+    static func isCodexReview(in content: Any?) -> Bool {
+        text(in: content)?.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(codexReviewOpening) == true
+    }
+
+    /// What a Codex user-role message says **in the user's own words**, as a
+    /// title, or nil when the message is context Codex put there itself.
+    ///
+    /// **Codex writes more user-role messages than the user does.** A rollout
+    /// opens with `# AGENTS.md instructions for …` and an
+    /// `<environment_context>` (or `<recommended_plugins>`), and the app adds
+    /// `<turn_aborted>`, `<subagent_notification>` and `<image>` envelopes
+    /// later; the IDE extension puts `# Context from my IDE setup:` before the
+    /// request, which follows `## My request for Codex:`. The first of these
+    /// used to be the title, so sessions were named for their instructions. A
+    /// session Codex runs to review another's planned action opens with a
+    /// message that says so, and that is not the user's either. Envelopes
+    /// start with `<`, which `title(from:)` already refuses.
+    ///
+    /// Only the message's first part is read, as for Claude Code: the rest of
+    /// an injected message can be a transcript.
+    static func codexTitle(in content: Any?) -> String? {
+        guard let text = text(in: content) else { return nil }
+        var opening = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if opening.hasPrefix("# AGENTS.md instructions")
+            || opening.hasPrefix(codexReviewOpening) {
+            return nil
+        }
+        if opening.hasPrefix("# Context from my IDE setup") || opening.hasPrefix("# Files mentioned by the user") {
+            guard let marker = opening.range(of: "## My request for Codex:") else { return nil }
+            opening = String(opening[marker.upperBound...])
+        }
+        return title(from: opening)
     }
 
     /// The first run of text in a message body, which is a string in the
@@ -1447,7 +1629,7 @@ actor UsageLedgerReader {
                 }
             }
 
-            if scanned.title == nil || scanned.cwd == nil {
+            if (scanned.title == nil && !scanned.isReview) || scanned.cwd == nil {
                 // The directory is stated once in the session header; the
                 // opening prompt is a `response_item` whose payload is a
                 // message with the user's role on it — **not** an `event_msg`,
@@ -1459,12 +1641,16 @@ actor UsageLedgerReader {
                         if scanned.cwd == nil, let cwd = payload["cwd"] as? String, !cwd.isEmpty {
                             scanned.cwd = cwd
                         }
-                        if scanned.title == nil,
+                        if scanned.title == nil, !scanned.isReview,
                            payload["type"] as? String == "message",
-                           payload["role"] as? String == "user",
-                           let text = Self.text(in: payload["content"]),
-                           let title = Self.title(from: text) {
-                            scanned.title = title
+                           payload["role"] as? String == "user" {
+                            // A review session's first words are the review
+                            // request: it is marked, and has no title.
+                            if Self.isCodexReview(in: payload["content"]) {
+                                scanned.isReview = true
+                            } else if let title = Self.codexTitle(in: payload["content"]) {
+                                scanned.title = title
+                            }
                         }
                     }
                 }
@@ -1695,6 +1881,8 @@ private struct FileCache: Codable {
         /// predates them.
         var title: String?
         var cwd: String?
+        /// Set for a Codex review session; `ledger-9` is what makes it present.
+        var isReview: Bool?
         /// Optional for the same reason; `ledger-5` is what makes it present.
         var timings: [String: [String: ReplyTiming]]?
         /// Claude Code's replies and Codex's readings by id (`ScannedReply`),
@@ -1767,6 +1955,20 @@ private struct FileCache: Codable {
         // readings are dropped (`parseCodex`); Claude Code's cache writes now
         // keep their one-hour share (`TokenTally.cacheWrite1h`). Both need
         // every file read once more.
-        (directory ?? PulseStorage.directory).appending(path: "ledger-7-\(provider.rawValue).json")
+        //
+        // **`ledger-8`: Codex titles were its injected context.** An entry's
+        // title was the first user-role message, which for Codex is the
+        // AGENTS.md instructions or the environment (`codexTitle(in:)`), and
+        // a rollout that has not changed is never read again.
+        //
+        // **`ledger-9`: Codex review sessions are marked.** Entries gained
+        // `isReview` (a session Codex ran to review another's action, which
+        // has no words of the user's), and titles now unwrap links; a rollout
+        // that has not changed is never read again.
+        //
+        // **The number lives in `UsageLedgerReader.cacheVersion`**, where
+        // `PulseStorage.isSuperseded` reads it: every `ledger-<n>-*` below it
+        // is cleaned away without a name being added to a list.
+        (directory ?? PulseStorage.directory).appending(path: "ledger-\(UsageLedgerReader.cacheVersion)-\(provider.rawValue).json")
     }
 }

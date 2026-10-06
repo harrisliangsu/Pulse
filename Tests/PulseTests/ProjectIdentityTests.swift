@@ -50,7 +50,7 @@ struct ProjectIdentityTests {
             saved["version"] = 6
             try JSONSerialization.data(withJSONObject: saved).write(to: file)
             #expect(AgentCache.load(agent, at: file) == nil)
-            #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-7-\(provider.rawValue).json").path))
+            #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-9-\(provider.rawValue).json").path))
             if pass == 0 {
                 // Same size and mtime: only the per-file cache still knows the
                 // original directory. This makes its reuse observable.
@@ -114,5 +114,19 @@ struct ProjectIdentityTests {
         #expect(one?.name == "proj")
         #expect(one?.identity == .label("vscode-remote://ssh-remote%2Bhost-a/home/me/proj"))
         #expect(one != two)
+    }
+
+    @Test("An agent worktree is its repository's project, read fresh or from an old cache")
+    func agentWorktreeFoldsIntoRepository() throws {
+        let worktree = UsageProject("/Users/me/Pulse/.claude/worktrees/agent-a4734cf379be4c74a/Sources")
+        #expect(worktree == UsageProject("/Users/me/Pulse"))
+        #expect(worktree?.name == "Pulse")
+        // Not a worktree: a folder that only looks like one is left alone.
+        #expect(UsageProject("/.claude/worktrees/x")?.name == "x")
+        #expect(UsageProject("/Users/me/claude/worktrees/x")?.name == "x")
+
+        let cached = #"{"identity":{"directory":{"_0":"/Users/me/Pulse/.claude/worktrees/agent-x"}},"name":"agent-x"}"#
+        let decoded = try JSONDecoder().decode(UsageProject.self, from: Data(cached.utf8))
+        #expect(decoded == UsageProject("/Users/me/Pulse"))
     }
 }

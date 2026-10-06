@@ -9,7 +9,7 @@ A ClawRouter key on the hosted service whose policy has a monthly budget. An unm
 ## Steps
 
 1. Create or copy your ClawRouter key at [clawrouter.openclaw.ai](https://clawrouter.openclaw.ai).
-2. In Pulse: **Settings → Accounts → ClawRouter**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → ClawRouter**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the pane lists the monthly limit.
 
 ## If it doesn't work

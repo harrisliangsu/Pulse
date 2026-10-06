@@ -9,7 +9,7 @@ An LLM Gateway account and a regular API key. Publishable keys can't read plan s
 ## Steps
 
 1. Sign in at [llmgateway.io](https://llmgateway.io) and create or copy an API key.
-2. In Pulse: **Settings → Accounts → DevPass**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → DevPass**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the pane lists the weekly limit, the credit allowance and any spend limit.
 
 ## If it doesn't work

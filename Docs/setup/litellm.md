@@ -9,7 +9,7 @@ The proxy's address and a virtual key on it. The key has to belong to a user or 
 ## Steps
 
 1. Get the address and key your AI client already uses for this proxy. If you run it yourself, create a virtual key for a user or team in the LiteLLM admin UI.
-2. In Pulse: **Settings → Accounts → LiteLLM**. Turn on **Show in panel**. Fill in **Server address** (for example `https://litellm.example.com` — a trailing `/v1` is fine) and click **Save**. Then paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → LiteLLM**. Turn on **Show in panel**. Fill in **Server address** (for example `https://litellm.example.com` — a trailing `/v1` is fine) and click **Save**. Then paste the key into **API key** and click **Save**.
 3. Within a few seconds a ring appears. The card lists "Team credits" for the team's budget and the user budget as "Spend limit", or as a daily or weekly limit when the budget has that duration.
 
 ## If it doesn't work

@@ -31,8 +31,8 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     }
 
     /// Name of the `.lproj` folder to read strings from, or `nil` to let the
-    /// system choose. Lowercased because SwiftPM lowercases these folder
-    /// names when it builds the resource bundle.
+    /// system choose. Lowercased because SwiftPM has lowercased these folder
+    /// names when building the resource bundle; `loadTable` matches either.
     var bundleName: String? {
         switch self {
         case .system: nil
@@ -75,6 +75,11 @@ enum LocalizationSource {
         lock.withLock { override } ?? .module
     }
 
+    /// The language Pulse is set to, `.system` when it follows macOS.
+    static var language: AppLanguage {
+        lock.withLock { chosen }
+    }
+
     /// The locale that goes with the language the strings are coming from.
     static var locale: Locale {
         lock.withLock { chosen }.locale
@@ -90,7 +95,7 @@ enum LocalizationSource {
     /// Finds a language's `.lproj` bundle.
     ///
     /// Resolved against the names the bundle itself reports rather than a
-    /// hardcoded folder name: SwiftPM lowercases `zh-Hans.lproj` on the way
+    /// hardcoded folder name: SwiftPM has lowercased `zh-Hans.lproj` on the way
     /// into the built bundle, and there is no guarantee about the casing it
     /// will use, so anything that assumes one spelling can come up empty —
     /// silently, leaving the app in the system language with no clue why.

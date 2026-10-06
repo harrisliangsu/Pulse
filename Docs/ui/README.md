@@ -12,4 +12,4 @@ The panel is SwiftUI inside a transparent, non-activating AppKit `NSPanel`. AppK
 - **Token spend in Settings**: agents, model details, daily/hourly history and chart hover live in [../token-spend.md](../token-spend.md); source formats and evidence live in [../token-spend-sources.md](../token-spend-sources.md). Per-account history is owned by [../refresh-and-data.md](../refresh-and-data.md).
 - **Settings access without the menu bar**: rail right-click and global shortcut mechanics are in [input.md](input.md); their settings controls and copy are in [settings.md](settings.md).
 
-Why the frame never grows with a card, why `.onHover` is banned, and why glass drag is not “verified”: [../decisions/README.md](../decisions/README.md).
+Why the frame never grows with a card, why `.onHover` is banned, and why glass needs a pixel of its own to be dragged: [../decisions/README.md](../decisions/README.md).

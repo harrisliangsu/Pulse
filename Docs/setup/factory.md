@@ -12,7 +12,7 @@ A Factory account and an API key for it.
 ## Steps
 
 1. Sign in at [app.factory.ai](https://app.factory.ai), open **Settings → API keys**, and create a key. It starts with `fk-`.
-2. In Pulse: **Settings → Accounts → Factory**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Factory**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists each limit and when it resets.
 
 ## If it doesn't work

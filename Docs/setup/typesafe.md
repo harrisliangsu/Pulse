@@ -1,6 +1,6 @@
 # Set up TypeSafe in Pulse
 
-Pulse shows the credit balance on your TypeSafe console's billing page. TypeSafe reports no allowance or percentage, so there is no ring to fill — the balance is the reading.
+Pulse shows the credit balance on your TypeSafe console's billing page. TypeSafe reports no allowance or percentage, so the balance is the reading. Any ring is Pulse's own estimate, not a figure TypeSafe reported: **Ring measures** on the account's pane picks what it measures — **Since top-up** (the default), **My budget**, or **Balance only** for no ring.
 
 ## What you need
 
@@ -13,7 +13,7 @@ A TypeSafe account, signed in at [console.typesafe.ai](https://console.typesafe.
 1. In your browser, open [console.typesafe.ai/settings/billing](https://console.typesafe.ai/settings/billing) while signed in.
 2. Open the browser's developer tools (Safari: **Develop → Show Web Inspector**; Chrome: **View → Developer → Developer Tools**), go to **Network**, and reload the page.
 3. Click the first request, `billing`. Under its request headers, copy the value of **Cookie** — the long line of `name=value; name=value`.
-4. In Pulse: **Settings → Accounts → TypeSafe**. Turn on **Show in panel**. Under **Connection**, paste it into **Session cookie** and click **Save**.
+4. In Pulse: **Settings → TypeSafe**. Turn on **Show in panel**. Under **Connection**, paste it into **Session cookie** and click **Save**.
 5. Within a few seconds the account shows its balance.
 
 When the console signs you out, the copied header stops working; repeat steps 1–4.

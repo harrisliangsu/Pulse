@@ -9,7 +9,7 @@ A Poe account and an API key.
 ## Steps
 
 1. Open [poe.com/api/keys](https://poe.com/api/keys) and copy your API key.
-2. In Pulse: **Settings → Accounts → Poe**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Poe**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the point balance appears on the account's pane.
 
 ## If it doesn't work

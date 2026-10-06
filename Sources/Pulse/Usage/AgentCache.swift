@@ -18,7 +18,7 @@ enum AgentCache {
     /// OpenCode's older rows their reasoning twice, Codebuff and Copilot
     /// Desktop their cached prefix twice, VS Code Copilot's cache-holding
     /// prompt was fresh input, and Gemini's headless thoughts were dropped.
-    private static let version = 10
+    static let version = 10
 
     /// Whether the stores' real inputs, and the money behind their cost, are
     /// the same as when the ledger was kept.
@@ -333,7 +333,9 @@ enum AgentCache {
         )
         ledger.sessions = saved.ledger.sessions.map {
             .init(
-                id: $0.id, name: $0.name, title: $0.title, project: $0.project,
+                // A scratch folder kept as a project by an older build is
+                // dropped here (`UsageProject.unlessScratch`).
+                id: $0.id, name: $0.name, title: $0.title, project: $0.project?.unlessScratch,
                 start: $0.start, end: $0.end, tokens: $0.tokens, cost: $0.cost, unpricedTokens: $0.unpricedTokens,
                 slots: $0.slots.map {
                     .init(start: $0.start, tokens: $0.tokens, cost: $0.cost, unpricedTokens: $0.unpricedTokens, models: $0.models)

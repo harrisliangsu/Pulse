@@ -9,7 +9,7 @@ A Zed account, signed in at [zed.dev](https://zed.dev) in a browser on this Mac.
 ## Steps
 
 1. Sign in at [zed.dev](https://zed.dev) in Safari, Chrome, Firefox or another browser on this Mac.
-2. In Pulse: **Settings → Accounts → Zed**. Turn on **Show in panel**.
+2. In Pulse: **Settings → Zed**. Turn on **Show in panel**.
 3. Under **Connection**, next to **Read from browser**, pick the browser (or leave it on **Automatic**) and click **Read**. Chrome-family browsers may ask for Keychain access to their cookie store.
 4. Within a few seconds the ring appears, and the account's pane lists what Zed reports.
 

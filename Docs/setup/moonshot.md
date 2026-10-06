@@ -1,6 +1,6 @@
 # Set up Moonshot in Pulse
 
-Pulse shows the money left on your Moonshot (Kimi Open Platform) API account: in US dollars on the international platform, in yuan on the China platform. The platform reports a balance and no allowance, so there is no ring to fill — the balance is the reading.
+Pulse shows the money left on your Moonshot (Kimi Open Platform) API account: in US dollars on the international platform, in yuan on the China platform. The platform reports a balance and no allowance, so the balance is the reading. Any ring is Pulse's own estimate, not a figure Moonshot reported: **Ring measures** on the account's pane picks what it measures — **Since top-up** (the default), **My budget**, or **Balance only** for no ring.
 
 This is the pay-as-you-go API. The Kimi Code subscription is a separate provider in Pulse.
 
@@ -11,7 +11,7 @@ An API key from the Kimi Open Platform — the international console ([platform.
 ## Steps
 
 1. Sign in to the platform's console and create an API key.
-2. In Pulse: **Settings → Accounts → Moonshot**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Moonshot**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the account shows its balance.
 
 Pulse asks the international platform first. If it refuses the key, Pulse asks the China platform, and remembers which one accepted it until Pulse quits.

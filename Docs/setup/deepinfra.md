@@ -9,8 +9,8 @@ A DeepInfra account and an API key.
 ## Steps
 
 1. Open the [DeepInfra dashboard](https://deepinfra.com/dash) and create an API key.
-2. In Pulse: **Settings → Accounts → DeepInfra**. Turn on **Show in panel**. Under **Connection**, paste the key (without a `Bearer ` prefix) into **API key** and click **Save**.
-3. Within a few seconds the balance appears — and the ring, if you have a spending limit.
+2. In Pulse: **Settings → DeepInfra**. Turn on **Show in panel**. Under **Connection**, paste the key (without a `Bearer ` prefix) into **API key** and click **Save**.
+3. Within a few seconds the balance appears — and the ring, if you have a spending limit. Without a limit, any ring is Pulse's own estimate of the balance: **Ring measures** on the account's pane picks what it measures — **Since top-up** (the default), **My budget**, or **Balance only** for no ring.
 
 ## If it doesn't work
 

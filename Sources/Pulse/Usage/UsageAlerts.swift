@@ -570,7 +570,7 @@ struct AlertMemory: Codable, Sendable, Equatable {
 /// the card — and a silent banner on a second display, or behind a full-screen
 /// window, is a message that was never delivered.
 ///
-/// One rule for all four rather than sound for the consequential two: macOS
+/// One rule for all of them rather than sound for the consequential ones: macOS
 /// offers one switch per app, so a distinction Pulse drew here would be one
 /// nobody could turn off, and one nobody could discover either.
 @MainActor
@@ -635,10 +635,13 @@ final class UsageAlerts {
     /// Called once at launch — asking for permission is not done here, because
     /// a permission dialog at launch for a feature nobody has switched on is
     /// how an app gets denied for good.
-    func start(openSettings: @escaping @MainActor () -> Void) {
+    func start(
+        openSettings: @escaping @MainActor () -> Void,
+        openRecap: @escaping @MainActor (Recap.Period) -> Void = { _ in }
+    ) {
         guard Self.isSupported else { return }
 
-        let handler = NotificationTapHandler(open: openSettings)
+        let handler = NotificationTapHandler(open: openSettings, openRecap: openRecap)
         tapHandler = handler
         UNUserNotificationCenter.current().delegate = handler
 
@@ -1072,19 +1075,28 @@ final class UsageAlerts {
     }
 }
 
-/// Opens Settings when a notification is clicked.
+/// Opens Settings when a notification is clicked — and the recap window when
+/// it is the recap's.
 ///
-/// Every one of these is about an account, and everything you can do about any
-/// of them — change a route, sign in again, paste a key, switch the provider
+/// Every one of the others is about an account, and everything you can do about
+/// any of them — change a route, sign in again, paste a key, switch the provider
 /// off — is in that window. It opens on whichever pane was last shown rather
 /// than the account's own: the pane is the view's own state, and reaching into
 /// it from here would mean threading a selection through the window controller
 /// for a feature that is one click away as it is.
+///
+/// The recap's identifier carries its month (`RecapNoticeRule`), so a click
+/// opens the recap on that month.
 final class NotificationTapHandler: NSObject, UNUserNotificationCenterDelegate, @unchecked Sendable {
     private let open: @MainActor () -> Void
+    private let openRecap: @MainActor (Recap.Period) -> Void
 
-    init(open: @escaping @MainActor () -> Void) {
+    init(
+        open: @escaping @MainActor () -> Void,
+        openRecap: @escaping @MainActor (Recap.Period) -> Void = { _ in }
+    ) {
         self.open = open
+        self.openRecap = openRecap
     }
 
     func userNotificationCenter(
@@ -1106,9 +1118,11 @@ final class NotificationTapHandler: NSObject, UNUserNotificationCenterDelegate, 
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let open = open
+        let openRecap = openRecap
+        let recap = RecapNoticeRule.period(fromIdentifier: response.notification.request.identifier)
         let finish = UncheckedBox(completionHandler)
         Task { @MainActor in
-            open()
+            if let recap { openRecap(recap) } else { open() }
             finish.value()
         }
     }

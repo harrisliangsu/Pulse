@@ -8,7 +8,7 @@ Any GitHub Copilot plan — Free, Pro, Pro+, Business, or Enterprise — and a G
 
 ## Steps
 
-1. In Pulse, go to Settings → Accounts → GitHub Copilot and turn on "Show in panel".
+1. In Pulse, go to Settings → GitHub Copilot and turn on "Show in panel".
 2. In the same pane, under "GitHub account", click "Sign in…".
 3. Pulse copies a short code to your clipboard and opens GitHub's device sign-in page in your browser. If you're not already signed in to GitHub, sign in first. Paste the code when the page asks for it (GitHub never pre-fills this for you — that's deliberate on their side), then click "Authorize".
 4. Back in Pulse, the "GitHub account" row updates to "Signed in. Pulse holds a read-only token for this Mac." and a ring for GitHub Copilot fills in on the Pulse panel.

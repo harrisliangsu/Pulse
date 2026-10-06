@@ -25,7 +25,7 @@ Focused contributions are welcome. Discussion in an issue is optional; you can d
 - **Aim for at most two open PRs per person.** If you have more, consider waiting for existing reviews before opening another. This is review guidance, not an automatic closure rule.
 - **Show the problem and the evidence for a bug fix.** Describe what happened and what should happen. A small fix found while reading code is welcome with a reproducible example or a regression test that fails before the fix and passes after it. State whether the evidence comes from real use or a synthetic test; UI and input claims still need the appropriate evidence described below.
 - **One PR does one thing.** Do not carry another PR's commits, and do not bundle a refactor with a fix.
-- **Screenshots for the review go in the PR description**, not in the repository (`Docs/images/` is for pictures the docs use).
+- **Screenshots for the review go in the PR description**, not in the repository (the pictures the docs use sit directly in `Docs/`).
 
 `.github/workflows/pr-gate.yml` posts a reminder only when an outside contributor has more than two open PRs. It leaves the PR open and does not require an issue link or prior approval. Maintainers and bots are exempt. All PRs still receive human review.
 

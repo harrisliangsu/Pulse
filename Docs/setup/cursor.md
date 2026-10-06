@@ -9,7 +9,7 @@ A Cursor account, signed in to the Cursor editor on this Mac. There is nothing t
 ## Steps
 
 1. Open Cursor and sign in with your Cursor account, if you have not already.
-2. In Pulse, go to Settings → Accounts → Cursor and turn on "Show in panel". There is nothing to paste — Pulse builds its request from the sign-in Cursor's editor already stored locally.
+2. In Pulse, go to Settings → Cursor and turn on "Show in panel". There is nothing to paste — Pulse builds its request from the sign-in Cursor's editor already stored locally.
 3. Success looks like a ring for Cursor on the Pulse panel, filled in with the "Cursor Models" and "Other Models" pools.
 
 Cursor does not support adding a second account in Pulse: usage always comes from whichever account this Mac's Cursor editor is signed in to. Note that Grok Bot is a separate Pulse provider — it is billed to the same Cursor account but has its own ring and its own sign-in.

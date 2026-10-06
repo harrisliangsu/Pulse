@@ -9,7 +9,7 @@ An Aixy project API key, on the hosted gateway at aixy-gateway.com, with at leas
 ## Steps
 
 1. Sign in to Aixy and create or copy the project API key your workload uses.
-2. In Pulse: **Settings → Accounts → Aixy**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Aixy**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists a daily, weekly or monthly limit — or a spend limit for a lifetime budget — with the reset Aixy reports.
 
 ## If it doesn't work

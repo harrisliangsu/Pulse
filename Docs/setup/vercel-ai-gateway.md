@@ -1,6 +1,6 @@
 # Set up Vercel AI Gateway in Pulse
 
-Pulse shows your Vercel team's remaining AI Gateway credit, in US dollars. The gateway has no allowance or period, so there is no ring — only the balance.
+Pulse shows your Vercel team's remaining AI Gateway credit, in US dollars. The gateway has no allowance or period, so the balance is the reading. Any ring is Pulse's own estimate, not a figure Vercel reported: **Ring measures** on the account's pane picks what it measures — **Since top-up** (the default), **My budget**, or **Balance only** for no ring.
 
 ## What you need
 
@@ -9,7 +9,7 @@ A Vercel team with AI Gateway, and an AI Gateway API key for that team.
 ## Steps
 
 1. In the Vercel dashboard, create an AI Gateway API key for the team you want to watch.
-2. In Pulse: **Settings → Accounts → Vercel AI Gateway**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Vercel AI Gateway**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the balance appears on the account's card.
 
 ## If it doesn't work

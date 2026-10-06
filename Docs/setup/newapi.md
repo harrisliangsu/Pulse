@@ -1,6 +1,6 @@
 # Set up New API in Pulse
 
-[New API](https://github.com/QuantumNous/new-api) is the gateway most self-run AI relays are built on. Pulse shows your remaining balance on the deployment as money — the same key you already use for that relay in your coding tool is all it needs. New API doesn't reliably say what a percentage there would mean, so Pulse never draws one for it — only the balance.
+[New API](https://github.com/QuantumNous/new-api) is the gateway most self-run AI relays are built on. Pulse shows your remaining balance on the deployment as money — the same key you already use for that relay in your coding tool is all it needs. New API doesn't reliably say what a percentage there would mean, so the balance is the reading. Any ring is Pulse's own estimate, not a figure New API reported: **Ring measures** on the account's pane picks what it measures — **Since top-up** (the default), **My budget**, or **Balance only** for no ring.
 
 ## What you need
 
@@ -10,7 +10,7 @@ Access to a running New API deployment (its web address) and an `sk-` API key is
 
 1. Get your key: if you already use this relay in a coding tool, its `sk-` key works here too — copy it from that tool's config. Otherwise, sign in to the deployment's web console (the address your operator gave you), open the **Tokens** page, and create a new one (usually a "Generate" or "Add Token" button).
    <!-- unverified: exact wording confirmed from New API's own English UI strings (web/src/i18n/locales/en.json: "Tokens", "Create API token", "Click \"Generate\" to create a token"), but not checked against a live running console, and operators can customize branding. -->
-2. In Pulse, go to Settings → Accounts → New API and turn on "Show in panel". Fill in "Server address" with your deployment's address — the same base URL your client uses, such as `https://gateway.example.com` — and click Save; Pulse assumes `https://` if you don't type a scheme, and only accepts plain `http://` for an address on your own network, such as `localhost`. Then paste your `sk-` key into "API key" and click Save.
+2. In Pulse, go to Settings → New API and turn on "Show in panel". Fill in "Server address" with your deployment's address — the same base URL your client uses, such as `https://gateway.example.com` — and click Save; Pulse assumes `https://` if you don't type a scheme, and only accepts plain `http://` for an address on your own network, such as `localhost`. Then paste your `sk-` key into "API key" and click Save.
 3. Success looks like a balance shown for New API on the Pulse panel. If your deployment reports its currency as a token count or a custom unit rather than a real currency, Pulse shows nothing rather than guessing — this is expected, not a failure.
 
 ## If it doesn't work

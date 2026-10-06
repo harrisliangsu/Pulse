@@ -408,23 +408,46 @@ enum PulseStorage {
     /// changed — the alternative, reusing the name, leaves old entries parsing
     /// as nothing at all, silently. But it does mean the superseded file sits
     /// in the user's Application Support forever unless something takes it
-    /// away, so this does. Add a name here whenever a cache is versioned up.
+    /// away, so this does.
+    ///
+    /// **The numbered caches go by a rule, not a list.** `agent-<n>-<store>`
+    /// and `ledger-<n>-<provider>` are superseded whenever `n` is below the
+    /// version that is current (`AgentCache.version`,
+    /// `UsageLedgerReader.cacheVersion`), so versioning one up needs no name
+    /// added here — the list that used to hold them missed every `agent-`
+    /// file, and tens of stale ones piled up. Add a name to this list only
+    /// for a file that is not numbered that way.
     private static let superseded = [
         "ledger-claudeCode.json",   // day buckets, before quarter-hours
         "ledger-codex.json",
         "model-prices.json",        // before model display names were kept
-        "ledger-4-claudeCode.json", // first-line output counts, no reply timings
-        "ledger-4-codex.json",
-        "ledger-5-claudeCode.json", // a resumed session's copied history counted again
-        "ledger-5-codex.json",
-        "ledger-6-claudeCode.json", // Codex forks counted their parents' history; no one-hour writes
-        "ledger-6-codex.json",
         "model-prices-2.json",      // before plan vendors were namespaced
         "model-prices-3.json"
     ]
 
+    /// Whether a file in this folder is from a cache format no longer read.
+    static func isSuperseded(
+        _ name: String,
+        agentVersion: Int = AgentCache.version,
+        ledgerVersion: Int = UsageLedgerReader.cacheVersion
+    ) -> Bool {
+        superseded.contains(name)
+            || isOlder(name, prefix: "agent-", than: agentVersion)
+            || isOlder(name, prefix: "ledger-", than: ledgerVersion)
+    }
+
+    /// `<prefix><n>-<name>.json` with `n` below `current`. A name without the
+    /// number — `ledger-codex.json` — is not this rule's to judge.
+    private static func isOlder(_ name: String, prefix: String, than current: Int) -> Bool {
+        guard name.hasPrefix(prefix), name.hasSuffix(".json") else { return false }
+        let rest = name.dropFirst(prefix.count)
+        guard let dash = rest.firstIndex(of: "-"), let number = Int(rest[..<dash]) else { return false }
+        return number < current
+    }
+
     static func removeSupersededFiles() {
-        for name in superseded {
+        let present = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        for name in Set(superseded).union(present.filter { isSuperseded($0) }) {
             try? FileManager.default.removeItem(at: directory.appending(path: name))
         }
     }

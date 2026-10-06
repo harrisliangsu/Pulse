@@ -49,6 +49,10 @@ struct TokenSpendView: View {
     /// diagnostics never reach the view.
     let hasReadLimitations: Bool
     @Binding var span: SpendSpan
+    /// The last twelve months to today, over the agent on screen where there is
+    /// one. Independent of `span`: the "Token activity" chart is the long view.
+    var activity = TokenActivity()
+    @Binding var activityView: ActivityView
     let isLoading: Bool
     var isSummarizing = false
     let refresh: () -> Void
@@ -136,6 +140,7 @@ struct TokenSpendView: View {
                     nothingForAgent(focus)
                 } else {
                     total(focused)
+                    activitySection
                     kinds(focused)
                     streaks(focused)
                     if span != .today { hourly(focused) }
@@ -150,6 +155,7 @@ struct TokenSpendView: View {
                 empty
             } else {
                 total(summary)
+                activitySection
                 kinds(summary)
                 streaks(summary)
                 if span != .today { hourly(summary) }
@@ -392,6 +398,18 @@ struct TokenSpendView: View {
         }
     }
 
+    // MARK: - The year
+
+    /// Not drawn for a Mac with no record at all: an empty grid would say
+    /// "quiet" about days nothing was read for. A history that ends more than
+    /// twelve months ago is drawn as a quiet year, because those days were
+    /// read and nothing was in them.
+    @ViewBuilder private var activitySection: some View {
+        if !activity.isEmpty {
+            TokenActivitySection(activity: activity, view: $activityView)
+        }
+    }
+
     // MARK: - What kind of token
 
     /// Fresh input, cache written, cache read, output.
@@ -432,9 +450,12 @@ struct TokenSpendView: View {
     /// chart above is the one that has to keep its gaps to stay a calendar,
     /// and a table of empty rows is a table you have to read past.
     private func daily(_ summary: SpendSummary) -> some View {
+        // No cache column in any store behind it: a zero hit is unrecorded,
+        // blank in the cell as in the sort.
+        let cacheUnreported = !summary.agents.isEmpty && summary.agents.allSatisfy { !$0.agent.reportsCacheReads }
         let rows = SpendSummary.sorted(
             summary.days.filter { $0.tokens > 0 }, by: sort, ascending: ascending,
-            cacheUnreported: !summary.agents.isEmpty && summary.agents.allSatisfy { !$0.agent.reportsCacheReads }
+            cacheUnreported: cacheUnreported
         )
         let pages = max((rows.count + pageSize - 1) / pageSize, 1)
         // Clamped rather than trusted: the span and the sort can both shorten
@@ -465,7 +486,7 @@ struct TokenSpendView: View {
                             // own figure and always stands.
                             let complete = day.tally.total == day.tokens
                             cell(complete ? day.tally.fresh : nil)
-                            cell(complete ? day.tally.cacheRead : nil)
+                            cell(complete && !(cacheUnreported && day.tally.cacheRead == 0) ? day.tally.cacheRead : nil)
                             cell(complete ? day.tally.output : nil)
                             cell(day.tokens)
                             // **An all-unpriced day is not a free day.** The
@@ -819,11 +840,10 @@ struct TokenSpendView: View {
                     if index > 0 { SettingsRowDivider() }
 
                     SettingsRow(
-                        // What the conversation was called. The directory is
-                        // the fallback and the file's own name the last
-                        // resort — a uuid tells the reader nothing, but it is
-                        // at least what the session is called.
-                        row.session.title ?? summary.projectName(for: row) ?? row.session.name,
+                        // What the conversation was called (`SessionLabel`):
+                        // the directory is the fallback, then "Untitled
+                        // conversation" — never the transcript's file name.
+                        row.session.label(projectName: summary.projectName(for: row)),
                         subtitle: Self.sessionSubtitle(row, project: summary.projectName(for: row)),
                         icon: row.agent.iconResource
                     ) {
@@ -861,7 +881,7 @@ struct TokenSpendView: View {
         // The directory belongs here once the title has taken the row's own
         // line — it is what tells two conversations about the same thing
         // apart.
-        guard let project, row.session.title != nil else { return when }
+        guard let project, row.session.namesItself() else { return when }
         return "\(when) · \(project)"
     }
 

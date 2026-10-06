@@ -3,8 +3,7 @@ import Foundation
 
 /// The OpenCode Go plan's limits.
 ///
-/// The only provider here that Pulse needs a key for. Two places it can come
-/// from, in this order:
+/// Needs a key. Two places it can come from, in this order:
 ///
 /// 1. **A key pasted into Settings**, kept encrypted on this Mac. It wins, because
 ///    someone who typed a key meant that one to be used — otherwise a stale

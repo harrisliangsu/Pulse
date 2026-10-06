@@ -1066,6 +1066,30 @@ final class AppSettings {
         }
     }
 
+    /// Which view of the Token spend pane's year-long "Token activity" chart is
+    /// open: the daily grid until the reader picks another, and their pick is
+    /// kept like the span's. No `onChange?()` for the same reason.
+    var spendActivityView: ActivityView {
+        didSet {
+            guard spendActivityView != oldValue else { return }
+            Self.storeSpendActivityView(spendActivityView, in: .standard)
+        }
+    }
+
+    /// The chart view last chosen, or the daily grid when nothing is stored or
+    /// what is stored is no longer offered. Takes the store as an argument so
+    /// the round trip can be pinned against an isolated suite.
+    static func storedSpendActivityView(in defaults: UserDefaults) -> ActivityView {
+        defaults.string(forKey: Key.spendActivityView)
+            .flatMap(ActivityView.init(rawValue:)) ?? .default
+    }
+
+    static func storeSpendActivityView(_ view: ActivityView, in defaults: UserDefaults) {
+        defaults.set(view.rawValue, forKey: Key.spendActivityView)
+    }
+
+    static var spendActivityViewDefaultsKey: String { Key.spendActivityView }
+
     /// Local records are read only after this pane is explicitly enabled.
     /// No onChange: that hook refreshes the quota providers.
     var readsTokenSpend: Bool {
@@ -1323,6 +1347,55 @@ final class AppSettings {
         }
     }
 
+    /// Say, in the first days of a month, that last month's recap is ready —
+    /// only when that month had records Pulse has read (`RecapNoticeRule`).
+    /// Off by default. Goes through its own callback, which checks at once:
+    /// switching it on in the first days of a month announces then.
+    var alertsOnRecap = false {
+        didSet {
+            guard alertsOnRecap != oldValue else { return }
+            UserDefaults.standard.set(alertsOnRecap, forKey: Key.alertsOnRecap)
+            onRecapAlertChange?()
+        }
+    }
+
+    /// The month whose recap was last announced, as `Recap.Period.key`
+    /// ("2026-09"), so each month is announced once however often Pulse
+    /// restarts or the switch is flipped.
+    var recapAnnouncedMonth: String? {
+        didSet {
+            guard recapAnnouncedMonth != oldValue else { return }
+            UserDefaults.standard.set(recapAnnouncedMonth, forKey: Key.recapAnnouncedMonth)
+        }
+    }
+
+    /// What the reader pays a month, in US dollars — typed into the recap
+    /// window, used only for its payback card. **Nil is nothing typed**, never a
+    /// guess and never zero: no payback card is drawn for it. Only a positive
+    /// amount within `RecapPrice.maximum` is kept.
+    var recapMonthlyPrice: Double? {
+        didSet {
+            // Assigning inside `didSet` does not run it again.
+            let kept = RecapPrice.normalized(recapMonthlyPrice)
+            if kept != recapMonthlyPrice { recapMonthlyPrice = kept }
+            guard kept != oldValue else { return }
+            if let kept {
+                UserDefaults.standard.set(kept, forKey: Key.recapMonthlyPrice)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Key.recapMonthlyPrice)
+            }
+        }
+    }
+
+    /// Whether the recap cards say "Project 1", "Project 2" instead of the
+    /// directories' names. Off: names are shown.
+    var recapHidesProjects = false {
+        didSet {
+            guard recapHidesProjects != oldValue else { return }
+            UserDefaults.standard.set(recapHidesProjects, forKey: Key.recapHidesProjects)
+        }
+    }
+
     /// Whether any rule about readings is on. What `UsageAlerts.observe`
     /// works for; the outage check reads status pages, not readings.
     /// Ribbons are not in here, and neither are the advance reminders —
@@ -1334,7 +1407,7 @@ final class AppSettings {
     /// Whether anything at all would be posted. What decides if permission is
     /// worth asking for.
     var wantsAlerts: Bool {
-        wantsUsageAlerts || alertsOnOutage
+        wantsUsageAlerts || alertsOnOutage || alertsOnRecap
     }
 
     /// Advance reminders, which ask for notification permission on their own.
@@ -1454,6 +1527,9 @@ final class AppSettings {
     var onMenuBarIconChange: (() -> Void)?
     /// Called when the Dock icon the settings window brings should appear or go.
     var onDockIconChange: (() -> Void)?
+    /// Called when the recap notification is switched, so a month already
+    /// announceable is announced now.
+    var onRecapAlertChange: (() -> Void)?
 
     init(
         isPanelVisible: Bool = true,
@@ -1506,6 +1582,7 @@ final class AppSettings {
         animatesRingActivity: Bool = true,
         splitAccounts: Set<String> = [],
         spendSpan: SpendSpan = .default,
+        spendActivityView: ActivityView = .default,
         readsTokenSpend: Bool = false,
         alertThreshold: AlertThreshold = .default,
         alertsOnReset: Bool = false,
@@ -1566,6 +1643,7 @@ final class AppSettings {
         self.animatesRingActivity = animatesRingActivity
         self.splitAccounts = splitAccounts
         self.spendSpan = spendSpan
+        self.spendActivityView = spendActivityView
         self.readsTokenSpend = readsTokenSpend
         self.alertThreshold = alertThreshold
         self.alertsOnReset = alertsOnReset
@@ -1878,6 +1956,7 @@ final class AppSettings {
             animatesRingActivity: defaults.object(forKey: Key.animatesRingActivity) as? Bool ?? true,
             splitAccounts: Set(defaults.stringArray(forKey: Key.splitAccounts) ?? []),
             spendSpan: Self.storedSpendSpan(in: defaults),
+            spendActivityView: Self.storedSpendActivityView(in: defaults),
             readsTokenSpend: Self.storedReadsTokenSpend(in: defaults),
             alertThreshold: (defaults.object(forKey: Key.alertThreshold) as? Int)
                 .flatMap(AlertThreshold.init(rawValue:)) ?? .default,
@@ -1894,6 +1973,10 @@ final class AppSettings {
         )
         settings.showsCodexResetCredits = defaults.bool(forKey: Key.showsCodexResetCredits)
         settings.alertsOnOutage = defaults.bool(forKey: Key.alertsOnOutage)
+        settings.alertsOnRecap = defaults.bool(forKey: Key.alertsOnRecap)
+        settings.recapAnnouncedMonth = defaults.string(forKey: Key.recapAnnouncedMonth)
+        settings.recapMonthlyPrice = RecapPrice.normalized(defaults.object(forKey: Key.recapMonthlyPrice) as? Double)
+        settings.recapHidesProjects = defaults.bool(forKey: Key.recapHidesProjects)
         settings.showsUsageInMenuBar = defaults.bool(forKey: Key.showsUsageInMenuBar)
         settings.showsMenuDashboard = defaults.bool(forKey: Key.showsMenuDashboard)
         settings.primedProviders = Set(defaults.stringArray(forKey: Key.primedProviders) ?? [])
@@ -2079,6 +2162,7 @@ final class AppSettings {
         static let animatesRingActivity = "settings.animatesRingActivity"
         static let splitAccounts = "settings.splitAccounts"
         static let spendSpan = "settings.spendSpan"
+        static let spendActivityView = "settings.spendActivityView"
         static let readsTokenSpend = "settings.readsTokenSpend"
         static let alertThreshold = "settings.alertThreshold"
         static let alertsOnReset = "settings.alertsOnReset"
@@ -2091,6 +2175,10 @@ final class AppSettings {
         static let regularResetLead = "settings.regularResetLead"
         static let offeredProviders = "settings.offeredProviders"
         static let alertsOnOutage = "settings.alertsOnOutage"
+        static let alertsOnRecap = "settings.alertsOnRecap"
+        static let recapAnnouncedMonth = "settings.recapAnnouncedMonth"
+        static let recapMonthlyPrice = "settings.recapMonthlyPrice"
+        static let recapHidesProjects = "settings.recapHidesProjects"
         static let providerOrder = "settings.providerOrder"
     }
 }

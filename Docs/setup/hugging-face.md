@@ -9,7 +9,7 @@ A Hugging Face access token. Either paste one, or sign in with the Hugging Face 
 ## Steps
 
 1. Either run `hf auth login` in a terminal, or create a token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
-2. In Pulse: **Settings → Accounts → Hugging Face**. Turn on **Show in panel**. If you created a token, paste it into **API key** under **Connection** and click **Save**. A pasted token is used before the saved one.
+2. In Pulse: **Settings → Hugging Face**. Turn on **Show in panel**. If you created a token, paste it into **API key** under **Connection** and click **Save**. A pasted token is used before the saved one.
 3. Within a few seconds the ring appears, and the account's pane shows the quota and when it resets.
 
 ## If it doesn't work

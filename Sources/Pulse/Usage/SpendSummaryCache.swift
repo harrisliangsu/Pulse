@@ -33,16 +33,29 @@ actor SpendSummaryCache {
         }
     }
 
+    /// What the year-long activity chart depends on. No span and no model: the
+    /// chart always covers the last twelve months, so changing the picker
+    /// leaves it alone.
+    private struct ActivityKey: Hashable {
+        let snapshot: UUID
+        let today: Date
+        let calendar: Calendar
+        let agent: SpendAgent?
+    }
+
     struct Result: Sendable {
         let overview: SpendSummary
         let agent: SpendSummary
         let model: ModelSpendSummary
+        /// The twelve months to today, over everything and over `request.agent`.
+        let activity: TokenActivity
     }
 
     private var window: Window?
     private var overview = SpendSummary()
     private var agent: (key: SpendAgent, summary: SpendSummary)?
     private var model: (agent: SpendAgent?, name: String, summary: ModelSpendSummary)?
+    private var activity: (key: ActivityKey, value: TokenActivity)?
 
     func summaries(for request: Request, ledgers: [SpendAgent: UsageLedger]) throws -> Result {
         try Task.checkCancellation()
@@ -66,10 +79,17 @@ actor SpendSummaryCache {
             try Task.checkCancellation()
             model = (request.agent, name, summary)
         }
+        let activityKey = ActivityKey(snapshot: next.snapshot, today: next.today, calendar: next.calendar, agent: request.agent)
+        if activity?.key != activityKey {
+            let series = TokenActivity.of(scoped, now: next.today, calendar: next.calendar)
+            try Task.checkCancellation()
+            activity = (activityKey, series)
+        }
         return Result(
             overview: overview,
             agent: request.agent == nil ? SpendSummary() : agent?.summary ?? SpendSummary(),
-            model: request.model == nil ? ModelSpendSummary() : model?.summary ?? ModelSpendSummary()
+            model: request.model == nil ? ModelSpendSummary() : model?.summary ?? ModelSpendSummary(),
+            activity: activity?.value ?? TokenActivity()
         )
     }
 }

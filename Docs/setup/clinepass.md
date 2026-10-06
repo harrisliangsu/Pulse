@@ -9,7 +9,7 @@ A ClinePass subscription on your Cline account. Pay-as-you-go credit is a separa
 ## Steps
 
 1. Sign in at [app.cline.bot](https://app.cline.bot) and create an API key.
-2. In Pulse: **Settings → Accounts → ClinePass**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → ClinePass**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists the three limits and when each resets.
 
 ## If it doesn't work

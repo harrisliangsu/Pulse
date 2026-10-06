@@ -9,7 +9,7 @@ Kiro CLI, installed and signed in, on a plan that reports usage.
 ## Steps
 
 1. Install Kiro CLI (`curl -fsSL https://cli.kiro.dev/install | bash`, or Homebrew if you already use it for other tools), then run `kiro-cli login` and choose your sign-in method (AWS Builder ID, Google, GitHub, or your organization) in the browser that opens. On a machine with no browser, use `kiro-cli login --device` instead.
-2. In Pulse, go to Settings → Accounts → Kiro and turn on "Show in panel". There is nothing to paste: Pulse asks Kiro CLI itself for your usage over its own local protocol, the same way Kiro's own `/usage` panel does.
+2. In Pulse, go to Settings → Kiro and turn on "Show in panel". There is nothing to paste: Pulse asks Kiro CLI itself for your usage over its own local protocol, the same way Kiro's own `/usage` panel does.
 3. Success looks like a ring for Kiro on the Pulse panel, filled in with your credit pools.
 
 Kiro does not support adding a second account in Pulse.

@@ -10,7 +10,7 @@ An OpenCode Go subscription ($10/month). You don't need to install anything — 
 
 1. Open [opencode.ai/auth](https://opencode.ai/auth) and sign in (or create an account). Add a payment method if you haven't, then copy the API key shown there.
    - Already signed in through the `opencode` CLI (`opencode auth login`, or `/connect` inside it)? You can skip this — Pulse reads the key OpenCode already saved for itself.
-2. In Pulse: **Settings → Accounts → OpenCode Go**. Turn on **Show in panel** if it isn't already. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → OpenCode Go**. Turn on **Show in panel** if it isn't already. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the OpenCode Go ring appears on the panel, and the account's pane lists the 5-hour, weekly and monthly limits.
 
 ## If it doesn't work

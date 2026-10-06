@@ -9,9 +9,9 @@ An Abacus AI subscription, signed in to a browser at [apps.abacus.ai](https://ap
 ## Steps
 
 1. Sign in at [apps.abacus.ai](https://apps.abacus.ai) in your browser.
-2. In Pulse: **Settings → Accounts → Abacus AI**. Turn on **Show in panel**.
+2. In Pulse: **Settings → Abacus AI**. Turn on **Show in panel**.
 3. Under **Read from browser**, pick the browser you signed in with (or leave it on Automatic) and click **Read**.
-   - Chrome, Edge, Brave and Arc: macOS asks once for keychain permission.
+   - Chrome, Edge, Brave, Arc and Vivaldi: macOS asks once for keychain permission.
    - Safari: give Pulse Full Disk Access first, in System Settings → Privacy & Security.
    - Firefox: nothing extra.
 4. Within a few seconds the ring appears. Its card shows "Credit allowance" and, when Abacus reports it, your next billing date and plan.

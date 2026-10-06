@@ -10,7 +10,7 @@ A Kimi Code membership (Moonshot AI's coding plan).
 
 1. Open [www.kimi.com/code/console](https://www.kimi.com/code/console) — the **Kimi Code Console**, linked from Kimi Code's own docs — and sign in with your Kimi account. Create an API key there.
    - Use a key from this console, not from Moonshot's general API platform (`platform.kimi.ai`). That's a separate product billed per token; it's meant for building your own apps, not for reading your Kimi Code plan's windows. <!-- unverified: whether a platform.kimi.ai key is actively refused by Pulse's endpoint, or simply reads differently — not confirmed against a live account -->
-2. In Pulse: **Settings → Accounts → Kimi Code**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
+2. In Pulse: **Settings → Kimi Code**. Turn on **Show in panel**. Under **Connection**, paste the key into **API key** and click **Save**.
 3. Within a few seconds the ring appears, and the account's pane lists your plan's windows and your weekly allowance.
 
 Kimi Code has no local fallback the way OpenCode Go does — there's nothing Pulse can find on its own, so a key has to be pasted.
