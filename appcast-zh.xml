@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>en</language>
         <item>
+            <title>1.8.1</title>
+            <pubDate>Tue, 06 Oct 2026 06:14:31 -0000</pubDate>
+            <sparkle:version>1.8.1</sparkle:version>
+            <sparkle:shortVersionString>1.8.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/qunqin24/Pulse/releases/tag/v1.8.1</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.8.1</h2><p><strong>改进与修复</strong></p><ul><li><strong>连不上 GitHub 也能自动更新。</strong> 检查更新前先试一下 GitHub，连不上就改走 update.qunqin.org 中转；检查或下载失败时，马上换另一条线路再试一次。安装包都带签名，Pulse 只装签名对得上的，中转改不了它。</li><li><strong>更新说明只显示一种语言。</strong> 跟随 Pulse 的语言（跟随系统时按系统语言）：中文显示中文，其他语言显示英文。</li><li><strong>调整面板外观不再重新拉取用量。</strong> 改面板大小、间距、玻璃效果等外观设置时，只重新排版，不再向所有服务商重新请求一遍。</li><li><strong>保存的密钥不会再互相覆盖。</strong> 设置里保存密钥和后台续期 DeepSeek 控制台登录同时发生时，其中一个可能被冲掉；你刚删掉的 DeepSeek 登录也可能被续期写回来。都已修好。</li><li><strong>钥匙串授权弹窗不再拖住刷新。</strong> 读取 Claude Code 登录最多等 60 秒，没人点就改用其他方式，不再让所有服务商的刷新一直等着。</li><li><strong>月报的大数字不再被切掉一块。</strong> 9、5 这类数字的右边之前会被削平。</li><li><strong>设置页布局。</strong> 「位置」一行在窗口不够宽时，选项换到下一行，不再把说明挤成一个字一行；月报窗口的订阅价格输入框缩短到合适的宽度。</li></ul><p><a href="https://github.com/qunqin24/Pulse/releases/tag/v1.8.1">在 GitHub 上查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/qunqin24/Pulse/releases/download/v1.8.1/Pulse-1.8.1.zip"
+                       length="14974632"
+                       type="application/octet-stream"
+                       sparkle:edSignature="a1hGmDSvnmGYCfBoHLjgbWdqh7vCPh27yuqGEyG3SE8rIxz04arQpIHonNf/YmVvOTl3P+YBDDaNilFlQNCgBg==" />
+        </item>
+        <item>
             <title>1.8.0</title>
             <pubDate>Mon, 05 Oct 2026 11:15:48 -0000</pubDate>
             <sparkle:version>1.8.0</sparkle:version>

@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>en</language>
         <item>
+            <title>1.8.1</title>
+            <pubDate>Tue, 06 Oct 2026 06:14:31 -0000</pubDate>
+            <sparkle:version>1.8.1</sparkle:version>
+            <sparkle:shortVersionString>1.8.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/qunqin24/Pulse/releases/tag/v1.8.1</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.8.1</h2><p><strong>Changed and fixed</strong></p><ul><li><strong>Updates arrive even where GitHub is out of reach.</strong> Pulse tries GitHub before each check and goes through update.qunqin.org when it does not answer; a check or download that fails is tried again at once the other way. Every update is signed and Pulse installs only what carries its signature, so the relay cannot change it.</li><li><strong>Update notes in one language.</strong> They follow Pulse&#x27;s language (the system&#x27;s, when Pulse follows it): Chinese in Chinese, English for every other language.</li><li><strong>Changing how the panel looks no longer refetches usage.</strong> Size, spacing, glass and the other look settings now only lay the panel out again instead of asking every provider afresh.</li><li><strong>Saved keys no longer overwrite each other.</strong> Saving a key in Settings while DeepSeek&#x27;s console sign-in was being renewed in the background could lose one of them, and a renewal could bring back a DeepSeek sign-in you had just removed. Both fixed.</li><li><strong>A Keychain prompt no longer holds up refreshing.</strong> Reading Claude Code&#x27;s sign-in waits at most 60 seconds, then falls back to the other routes instead of keeping every provider waiting.</li><li><strong>The recap&#x27;s big numbers are no longer clipped.</strong> The right side of a 9 or a 5 was cut off flat.</li><li><strong>Settings layout.</strong> The Position row puts its choices under the label when the window is too narrow for both, instead of squeezing the description to a character a line; the recap window&#x27;s price field is now the width of a price.</li></ul><p><a href="https://github.com/qunqin24/Pulse/releases/tag/v1.8.1">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/qunqin24/Pulse/releases/download/v1.8.1/Pulse-1.8.1.zip"
+                       length="14974632"
+                       type="application/octet-stream"
+                       sparkle:edSignature="a1hGmDSvnmGYCfBoHLjgbWdqh7vCPh27yuqGEyG3SE8rIxz04arQpIHonNf/YmVvOTl3P+YBDDaNilFlQNCgBg==" />
+        </item>
+        <item>
             <title>1.8.0</title>
             <pubDate>Mon, 05 Oct 2026 11:15:48 -0000</pubDate>
             <sparkle:version>1.8.0</sparkle:version>
