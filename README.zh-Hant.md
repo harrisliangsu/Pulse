@@ -269,6 +269,12 @@ Pulse 的靈感來自 [**Vinz**（@hivinz_）](https://x.com/hivinz_/status/2092
 
 ---
 
+## 支持 Pulse
+
+Pulse 是免費開源的。如果它對你有幫助，歡迎到[愛發電](https://afdian.com/a/qunqin)請作者喝杯咖啡。
+
+---
+
 ## 授權
 
 本專案依 [Apache 2.0](LICENSE) 授權。內含的第三方資源保留其各自的授權條款；詳見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

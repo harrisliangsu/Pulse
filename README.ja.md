@@ -269,6 +269,12 @@ Pulse は 2026 年 8 月に [**Vinz**（@hivinz_）](https://x.com/hivinz_/statu
 
 ---
 
+## Pulse を応援する
+
+Pulse は無料のオープンソースです。役に立ったなら、[Afdian（愛発電）](https://afdian.com/a/qunqin)で作者にコーヒーを一杯ごちそうできます。
+
+---
+
 ## ライセンス
 
 [Apache 2.0](LICENSE) の下でライセンスされています。同梱のサードパーティ資産はそれぞれのライセンスを保持します。詳しくは [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。

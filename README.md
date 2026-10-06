@@ -269,6 +269,12 @@ Pulse was inspired by a UI concept shared by [**Vinz** (@hivinz_)](https://x.com
 
 ---
 
+## Support Pulse
+
+Pulse is free and open source. If it has been useful to you, you can buy the author a coffee on [Afdian (爱发电)](https://afdian.com/a/qunqin).
+
+---
+
 ## License
 
 Licensed under [Apache 2.0](LICENSE). Bundled third-party assets retain their respective licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
