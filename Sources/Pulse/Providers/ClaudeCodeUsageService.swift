@@ -227,6 +227,7 @@ struct ClaudeCodeUsageService: Sendable {
     /// prompt degrades to the credentials file and then the status line,
     /// rather than freezing every provider's refresh behind it.
     private func readKeychainCredentials() async -> [String: Any]? {
+        guard !Self.keychainPaused() else { return nil }
         let result = await BoundedProcess.run(
             URL(fileURLWithPath: "/usr/bin/security"),
             ["find-generic-password", "-s", keychainService, "-w"],
@@ -234,12 +235,27 @@ struct ClaudeCodeUsageService: Sendable {
             deadline: Self.keychainDeadline,
             outputCeiling: 1 << 20
         )
+        if case .failure(.timedOut) = result { Self.pauseKeychain() }
         guard case .success(let data) = result else { return nil }
         return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
     }
 
     /// How long a keychain read may wait, permission prompt included.
     static let keychainDeadline: TimeInterval = 60
+    /// How long the keychain is left alone after a read ran out of time: a
+    /// prompt nobody answered is not put up again at every pass.
+    static let keychainPause: TimeInterval = 30 * 60
+
+    private static let keychainLock = NSLock()
+    nonisolated(unsafe) private static var keychainPausedUntil: Date?
+
+    private static func keychainPaused(now: Date = Date()) -> Bool {
+        keychainLock.withLock { keychainPausedUntil.map { now < $0 } ?? false }
+    }
+
+    private static func pauseKeychain(now: Date = Date()) {
+        keychainLock.withLock { keychainPausedUntil = now.addingTimeInterval(keychainPause) }
+    }
 
     private func readCredentialsFile() -> [String: Any]? {
         guard let data = try? Data(contentsOf: credentialsFile) else { return nil }

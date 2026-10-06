@@ -223,7 +223,10 @@ final class AppUpdate {
     }
 
     fileprivate func failCheck(_ failed: Bool, unreachable: Bool) {
-        // Tried again on the other host before anything says it failed.
+        // Tried again on the other host before the row says it failed. (A
+        // check asked for with "Check now" has already shown Sparkle's own
+        // error alert by here; the retry is a background check, which puts up
+        // the update window if it finds one.)
         if unreachable, route.failed() {
             retryPending = true
             return
@@ -243,13 +246,24 @@ final class AppUpdate {
         if retryPending {
             retryPending = false
             let quiet = quietCheck
-            // On the next turn, once Sparkle has wound this cycle down.
+            // Once Sparkle has wound this cycle down. **Not on the next turn**:
+            // right after this callback it schedules the next check, which marks
+            // a session in progress until an installer-status probe answers a
+            // couple of main-queue hops later — a retry asked for in between is
+            // refused, and was. So wait for the session to clear, up to a few
+            // seconds; a session still going by then is a check Sparkle started
+            // itself, which reads the host just switched to anyway.
             Task { @MainActor [weak self] in
-                guard let self, let updater = self.controller?.updater, !updater.sessionInProgress else {
-                    self?.isChecking = false
-                    return
+                for _ in 0..<30 {
+                    guard let self, let updater = self.controller?.updater else { return }
+                    if !updater.sessionInProgress {
+                        if quiet { updater.checkForUpdateInformation() } else { updater.checkForUpdatesInBackground() }
+                        return
+                    }
+                    try? await Task.sleep(for: .milliseconds(100))
                 }
-                if quiet { updater.checkForUpdateInformation() } else { updater.checkForUpdatesInBackground() }
+                self?.route.answered()
+                self?.isChecking = false
             }
             return
         }
@@ -259,7 +273,10 @@ final class AppUpdate {
         // whenever it answers.
         Task { [weak self] in
             let reachable = await Self.githubReachable()
-            self?.route.probed(githubReachable: reachable)
+            // Not under a check that has started meanwhile: it is reading the
+            // host it was given, and a failure flips from that one.
+            guard let self, self.controller?.updater.sessionInProgress != true, !self.isChecking else { return }
+            self.route.probed(githubReachable: reachable)
         }
     }
 }
@@ -293,13 +310,21 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
         // is one — and reporting those as "couldn't reach the feed" would be a
         // lie on the one row that exists to tell the truth about that. Only a
         // failure to *reach or read* the feed counts.
-        let failed = (error as NSError).domain == NSURLErrorDomain
-            || (error as NSError).code == Int(SUError.appcastError.rawValue)
-        // A feed or an archive that could not be fetched: tried again on the
-        // other host (`FeedRoute`). The archive comes from the host the feed
-        // did — the mirror rewrites the feed's downloads to itself.
-        let unreachable = failed || (error as NSError).code == Int(SUError.downloadError.rawValue)
-        MainActor.assumeIsolated { owner?.failCheck(failed, unreachable: unreachable) }
+        //
+        // Sparkle reports a feed it could not fetch, and an archive it could
+        // not download, as `SUDownloadError` wrapping the URL error — never a
+        // bare `NSURLErrorDomain` and never `SUAppcastError`, which nothing in
+        // Sparkle raises. A feed that came back as something else (a captive
+        // portal's page) is `SUAppcastParseError`. All of them are "could not
+        // reach or read", and all are tried again on the other host
+        // (`FeedRoute`); the archive comes from the host the feed did — the
+        // mirror rewrites the feed's downloads to itself.
+        let nsError = error as NSError
+        let unreachable = nsError.domain == NSURLErrorDomain
+            || (nsError.domain == SUSparkleErrorDomain && [
+                SUError.downloadError.rawValue, SUError.appcastParseError.rawValue, SUError.appcastError.rawValue,
+            ].contains(Int32(nsError.code)))
+        MainActor.assumeIsolated { owner?.failCheck(unreachable, unreachable: unreachable) }
     }
 
     nonisolated func updater(

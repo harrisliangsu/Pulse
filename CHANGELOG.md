@@ -7,6 +7,32 @@ shows in the update window — see [Scripts/changelog.py](Scripts/changelog.py).
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.8.1
+
+**中文**
+
+**改进与修复**
+
+- **连不上 GitHub 也能自动更新。** 检查更新前先试一下 GitHub，连不上就改走 update.qunqin.org 中转；检查或下载失败时，马上换另一条线路再试一次。安装包都带签名，Pulse 只装签名对得上的，中转改不了它。
+- **更新说明只显示一种语言。** 跟随 Pulse 的语言（跟随系统时按系统语言）：中文显示中文，其他语言显示英文。
+- **调整面板外观不再重新拉取用量。** 改面板大小、间距、玻璃效果等外观设置时，只重新排版，不再向所有服务商重新请求一遍。
+- **保存的密钥不会再互相覆盖。** 设置里保存密钥和后台续期 DeepSeek 控制台登录同时发生时，其中一个可能被冲掉；你刚删掉的 DeepSeek 登录也可能被续期写回来。都已修好。
+- **钥匙串授权弹窗不再拖住刷新。** 读取 Claude Code 登录最多等 60 秒，没人点就改用其他方式，不再让所有服务商的刷新一直等着。
+- **月报的大数字不再被切掉一块。** 9、5 这类数字的右边之前会被削平。
+- **设置页布局。** 「位置」一行在窗口不够宽时，选项换到下一行，不再把说明挤成一个字一行；月报窗口的订阅价格输入框缩短到合适的宽度。
+
+**English**
+
+**Changed and fixed**
+
+- **Updates arrive even where GitHub is out of reach.** Pulse tries GitHub before each check and goes through update.qunqin.org when it does not answer; a check or download that fails is tried again at once the other way. Every update is signed and Pulse installs only what carries its signature, so the relay cannot change it.
+- **Update notes in one language.** They follow Pulse's language (the system's, when Pulse follows it): Chinese in Chinese, English for every other language.
+- **Changing how the panel looks no longer refetches usage.** Size, spacing, glass and the other look settings now only lay the panel out again instead of asking every provider afresh.
+- **Saved keys no longer overwrite each other.** Saving a key in Settings while DeepSeek's console sign-in was being renewed in the background could lose one of them, and a renewal could bring back a DeepSeek sign-in you had just removed. Both fixed.
+- **A Keychain prompt no longer holds up refreshing.** Reading Claude Code's sign-in waits at most 60 seconds, then falls back to the other routes instead of keeping every provider waiting.
+- **The recap's big numbers are no longer clipped.** The right side of a 9 or a 5 was cut off flat.
+- **Settings layout.** The Position row puts its choices under the label when the window is too narrow for both, instead of squeezing the description to a character a line; the recap window's price field is now the width of a price.
+
 ## 1.8.0
 
 **中文**
