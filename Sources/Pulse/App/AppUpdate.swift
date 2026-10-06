@@ -74,7 +74,10 @@ final class AppUpdate {
     /// This fork's update files on GitHub. Upstream's `update.qunqin.org`
     /// mirror and the qunqin24 raw feed are not hosts here: every check reads
     /// harrisliangsu/Pulse, and a failed check is not retried against anything else.
-    static let githubBase = "https://raw.githubusercontent.com/harrisliangsu/Pulse/main/"
+    /// A constant string, so it can be the default of the nonisolated feed helpers
+    /// below. On this `@MainActor` type an unmarked `static let` is isolated, and
+    /// a default argument is evaluated off the actor.
+    nonisolated static let githubBase = "https://raw.githubusercontent.com/harrisliangsu/Pulse/main/"
 
     /// The feed for the language Pulse is set to, on this fork's GitHub files.
     ///
