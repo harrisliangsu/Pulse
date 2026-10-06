@@ -271,7 +271,13 @@ Pulse는 2026년 8월 [**Vinz**(@hivinz_)](https://x.com/hivinz_/status/20929960
 
 ## Pulse 후원하기
 
-Pulse는 무료 오픈 소스입니다. 도움이 되었다면 [Afdian(爱发电)](https://afdian.com/a/qunqin)에서 작성자에게 커피 한 잔을 사주실 수 있습니다.
+<p align="center">
+  <sub>Pulse는 무료 오픈 소스로, 여가 시간에 만들고 업데이트합니다.<br>갑작스러운 레이트 리밋에서 구해줬다면, 작성자에게 커피 한 잔을 사주세요.</sub>
+</p>
+
+<p align="center">
+  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/Afdian-%EC%BB%A4%ED%94%BC_%ED%95%9C_%EC%9E%94-946CE6?style=for-the-badge" alt="Afdian에서 Pulse 후원하기"></a>
+</p>
 
 ---
 

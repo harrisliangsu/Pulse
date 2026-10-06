@@ -271,7 +271,13 @@ Pulse was inspired by a UI concept shared by [**Vinz** (@hivinz_)](https://x.com
 
 ## Support Pulse
 
-Pulse is free and open source. If it has been useful to you, you can buy the author a coffee on [Afdian (爱发电)](https://afdian.com/a/qunqin).
+<p align="center">
+  <sub>Pulse is free and open source, built in spare time.<br>If it saved you from a surprise rate limit, you can buy the author a coffee — every cup keeps the rings spinning.</sub>
+</p>
+
+<p align="center">
+  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/Afdian-Buy_me_a_coffee-946CE6?style=for-the-badge" alt="Support Pulse on Afdian"></a>
+</p>
 
 ---
 

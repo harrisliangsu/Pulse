@@ -271,7 +271,13 @@ Pulse 的灵感来自 [**Vinz**(@hivinz_)](https://x.com/hivinz_/status/20929960
 
 ## 支持 Pulse
 
-Pulse 是免费开源的。如果它对你有帮助，欢迎到[爱发电](https://afdian.com/a/qunqin)请作者喝杯咖啡。
+<p align="center">
+  <sub>Pulse 是免费开源的，用爱发电、抽空更新。<br>如果它帮你躲过了一次突如其来的限流，欢迎请作者喝杯咖啡。</sub>
+</p>
+
+<p align="center">
+  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/%E7%88%B1%E5%8F%91%E7%94%B5-%E8%AF%B7%E4%BD%9C%E8%80%85%E5%96%9D%E6%9D%AF%E5%92%96%E5%95%A1-946CE6?style=for-the-badge" alt="在爱发电支持 Pulse"></a>
+</p>
 
 ---
 
