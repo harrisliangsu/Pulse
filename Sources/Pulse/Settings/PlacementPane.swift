@@ -10,6 +10,31 @@ struct PlacementPane: View {
     /// The row a reorder drag is currently over, so it can say so.
     @State private var dropTarget: AccountKey?
 
+    private func positionRow(controlBelow: Bool, fitsLabels: Bool = true) -> some View {
+        SettingsRow(
+            String.localized("Position"),
+            subtitle: String.localized("Drag it anywhere; near an edge it snaps on."),
+            controlBelow: controlBelow
+        ) {
+            Picker("", selection: Binding(
+                get: { placement.dock },
+                set: { placement.update(dock: $0) }
+            )) {
+                Text(localized: "Left").tag(PanelDock.edge(.left))
+                Text(localized: "Top").tag(PanelDock.edge(.top))
+                Text(localized: "Bottom").tag(PanelDock.edge(.bottom))
+                Text(localized: "Free across").tag(PanelDock.floating(.horizontal))
+                Text(localized: "Free upright").tag(PanelDock.floating(.vertical))
+                Text(localized: "Right").tag(PanelDock.edge(.right))
+            }
+            .labelsHidden()
+            .pickerStyle(.segmented)
+            // Six segments do not fit the usual ceiling without truncating
+            // both free ones, so this one is as wide as its labels.
+            .fixedSize(horizontal: fitsLabels, vertical: true)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             SettingsGroup {
@@ -57,27 +82,16 @@ struct PlacementPane: View {
 
                 SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("Position"),
-                    subtitle: String.localized("Drag it anywhere; near an edge it snaps on.")
-                ) {
-                    Picker("", selection: Binding(
-                        get: { placement.dock },
-                        set: { placement.update(dock: $0) }
-                    )) {
-                        Text(localized: "Left").tag(PanelDock.edge(.left))
-                        Text(localized: "Top").tag(PanelDock.edge(.top))
-                        Text(localized: "Bottom").tag(PanelDock.edge(.bottom))
-                        Text(localized: "Free across").tag(PanelDock.floating(.horizontal))
-                        Text(localized: "Free upright").tag(PanelDock.floating(.vertical))
-                        Text(localized: "Right").tag(PanelDock.edge(.right))
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.segmented)
-                    // Six segments do not fit the usual ceiling without
-                    // truncating both free ones, so this one is as wide as
-                    // its labels.
-                    .fixedSize()
+                // Six segments as wide as their labels leave the label a
+                // sliver beside them in the usual window ("位置" wrapped a
+                // character a line): side by side only when both fit, else
+                // the picker goes under the label, and only in the narrowest
+                // window, where even that overflows the card, do its segments
+                // give up width and truncate.
+                ViewThatFits(in: .horizontal) {
+                    positionRow(controlBelow: false)
+                    positionRow(controlBelow: true)
+                    positionRow(controlBelow: true, fitsLabels: false)
                 }
 
                 SettingsRowDivider()

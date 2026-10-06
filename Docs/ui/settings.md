@@ -2,7 +2,7 @@
 
 Chrome and why it is AppKit-owned: [../architecture.md](../architecture.md). Localization rules: [../development.md](../development.md).
 
-`SettingsView` / `SettingsRow`: `NavigationSplitView` source list, panes from `SettingsGroup` + `SettingsRow` (title + optional subtitle left, control right). `SettingsPane` includes `.account(AccountKey)`, so every account — each provider’s first, plus any added login — has a sidebar row.
+`SettingsView` / `SettingsRow`: `NavigationSplitView` source list, panes from `SettingsGroup` + `SettingsRow` (title + optional subtitle left, control right; `controlBelow: true` puts the control under the label). A control too wide to leave its label room is laid out with `ViewThatFits`: Placement's six-segment **Position** picker sits beside the label only when both fit, else under it, and in the narrowest window its segments shrink rather than overflow the card — beside it at the usual width, the label had wrapped a character a line. `SettingsPane` includes `.account(AccountKey)`, so every account — each provider’s first, plus any added login — has a sidebar row.
 
 ## Where the code lives
 
