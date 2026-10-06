@@ -67,7 +67,7 @@ The opener, calendar, timetable and payback follow the approved mockups (a lineu
 
 Flat colour and type only — paper `#F5F5F1`, white cards with a hairline, ink `#1B1B1E`, lime `#C8F03C` (the icon's accent). **Lime is a fill, never text on paper.** No gradient, blur, shadow, material or emoji, and nothing `ImageRenderer` cannot draw. Type is the system face and its CJK fallback; labels and digits use the monospaced design. The Pulse mark is drawn from `AppIcon/pulse-mark.svg`'s path.
 
-Hero numbers are set tight and trimmed to their digits (`RecapFigureText.trimmed`; the ascender and descender fractions are measured against the system font). `minimumScaleFactor` on a `Text` inside an `HStack` with a `Spacer` can be shrunk to its floor for no visible reason; give such a row a fixed frame or leave the factor off.
+Hero numbers are set tight and trimmed to their digits (`RecapFigureText.trimmed`; the ascender and descender fractions are measured against the system font). **Tight numbers go through `Text(tight:tracking:)`, never `.tracking` with a negative value**: SwiftUI takes tracking after the last glyph too, which pulls the frame in past the last digit's ink, and the text is drawn inside its frame — the right of a 9 or a 5 came out cut off flat. `Text(tight:)` tracks every character but the last. `minimumScaleFactor` on a `Text` inside an `HStack` with a `Spacer` can be shrunk to its floor for no visible reason; give such a row a fixed frame or leave the factor off.
 
 `RecapRenderer.png(of:in:)` renders a card at scale 1.
 
