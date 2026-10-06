@@ -36,6 +36,11 @@ struct RecapOpenerView: View {
                     .fixedSize()
                     .padding(.top, -340 * RecapFigureText.ascenderRoom)
                     .padding(.bottom, -340 * RecapFigureText.descenderRoom)
+                    // Tracking is taken after every glyph, the last too, so a
+                    // tight number's last digit inks past its own frame by the
+                    // tracking: given back here, or the mark beside it sits on
+                    // the 9.
+                    .padding(.trailing, 340 * 0.07)
                 VStack(alignment: .leading, spacing: 10) {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .fill(RecapColor.lime)
@@ -56,6 +61,11 @@ struct RecapOpenerView: View {
                     .fixedSize()
                     .padding(.top, -300 * RecapFigureText.ascenderRoom)
                     .padding(.bottom, -300 * RecapFigureText.descenderRoom)
+                    // Tracking is taken after every glyph, the last too, so a
+                    // tight number's last digit inks past its own frame by the
+                    // tracking: given back here, or the mark beside it sits on
+                    // the 9.
+                    .padding(.trailing, 300 * 0.07)
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(RecapColor.lime)
                     .frame(width: 60, height: 60)
