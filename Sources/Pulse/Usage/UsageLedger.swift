@@ -57,6 +57,19 @@ struct TokenTally: Codable, Sendable, Equatable {
     /// rates by the services that have a write step and at one by the rest.
     var fresh: Int { input + cacheWrite }
 
+    /// Whether the recorded kinds plus an explicit unclassified count account
+    /// for the reported total. Missing detail is never inferred by subtraction.
+    func accountsFor(tokens: Int, unclassified: Int = 0) -> Bool {
+        var total = 0
+        for value in [input, cacheWrite, cacheRead, output, unclassified] {
+            guard value >= 0 else { return false }
+            let (sum, overflow) = total.addingReportingOverflow(value)
+            guard !overflow else { return false }
+            total = sum
+        }
+        return total == tokens
+    }
+
     static func + (lhs: TokenTally, rhs: TokenTally) -> TokenTally {
         TokenTally(
             input: lhs.input + rhs.input,

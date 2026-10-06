@@ -747,8 +747,11 @@ struct CopilotLogReaderTests {
             [.openCode: ledger], named: "GPT-4o", overLast: nil, now: now, calendar: Self.calendar
         )
         #expect(model.tokens == 735)
-        // Part of the model's work has no kind, so it has no split to show.
-        #expect(model.tally == nil)
+        // VS Code's unknown input remains separate from the known categories.
+        #expect(model.tally == TokenTally(input: 265, cacheWrite: 20, cacheRead: 120, output: 130))
+        #expect(model.unclassifiedTokens == 200)
+        #expect(summary.unclassifiedTokens == 200)
+        #expect(summary.hasTokenBreakdown)
         #expect(abs((model.cost ?? -1) - 1.597) < 1e-9)
     }
 }
