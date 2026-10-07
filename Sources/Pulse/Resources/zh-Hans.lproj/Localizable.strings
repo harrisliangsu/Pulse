@@ -30,7 +30,7 @@
 "Checked at" = "检查时间";
 "Last successful reading" = "最近一次成功读取";
 "Displayed figures" = "当前数字来源";
-"Showing a saved reading; its original source is retained." = "正在显示缓存的数据，来源仍是它当初读取的途径。";
+"Showing a saved reading; its original source is retained." = "显示的是已保存的读数，并保留了它最初的读取来源。";
 "Source not recorded" = "未记录来源";
 "Route checks" = "读取途径检查";
 "Next step" = "下一步";
@@ -46,7 +46,7 @@
 "Raycast extension, tmux and shell status, and a sketchybar plugin." = "包含 Raycast 扩展、tmux 和终端里的状态显示，以及 sketchybar 插件。";
 "Export integration files…" = "导出集成文件…";
 "Installation guide" = "安装指南";
-"Open an account" = "直达账号设置";
+"Open an account" = "打开账号设置";
 "Account link" = "账号链接";
 "Opens this account's settings in the installed Pulse app." = "在已安装的 Pulse 中直接打开这个账号的设置。";
 "Copy link" = "复制链接";
@@ -70,7 +70,7 @@
 "Codex app server" = "Codex 应用服务器";
 "Local language server" = "本地语言服务器";
 "Signed-in web page" = "已登录的网页";
-"The app's saved plan" = "应用存下的套餐信息";
+"The app's saved plan" = "应用保存的套餐信息";
 
 "Floating panel" = "悬浮面板";
 "Show floating panel" = "显示悬浮面板";
@@ -135,7 +135,7 @@
 "Figure above the ring" = "数字显示在圆环上方";
 "Show what's left" = "显示剩余额度";
 "Forecast" = "用尽预测";
-"Whether each limit lasts its window, on the card." = "在卡片上预估每条限额能否撑到下次重置。";
+"Whether each limit lasts its window, on the card." = "在卡片上预估每条限额能否用到最后一次重置。";
 "Counts down instead of up, figure and ring together." = "百分比与圆环改为显示剩余量，而非已用量。";
 "Swaps the two, wherever the panel is." = "把百分比移到圆环上方，面板停靠在哪里都适用。";
 "When the panel lies across: docked to the top or bottom, or free." = "面板横着放时显示百分比：吸附在顶部、底部，或横向自由摆放。";
@@ -282,7 +282,7 @@
 "Size" = "整体大小";
 "Spacing" = "间距";
 "Round ends" = "正圆两端";
-"The rail's ends and the card's tail follow the ring's own curve." = "胶囊两端和卡片的小尾巴，与圆环的弧度保持一致。";
+"The rail's ends and the card's tail follow the ring's own curve." = "胶囊两端与卡片尾部，跟随圆环自身的弧度。";
 "How much air there is between the rings." = "调整圆环之间的间距。";
 "Tight" = "紧凑";
 "Loose" = "宽松";
@@ -296,7 +296,7 @@
 "Start Pulse automatically when you log in." = "登录 macOS 后自动启动 Pulse。";
 "Waiting for approval in System Settings › General › Login Items." = "等待在「系统设置 › 通用 › 登录项」中允许。";
 
-"Show Dock icon while Settings or a recap is open" = "打开设置或月报时显示 Dock 图标";
+"Show Dock icon while Settings or a recap is open" = "打开设置或月报、年报时显示 Dock 图标";
 "So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close." = "窗口被盖住时，可从 Dock 或 ⌘-Tab 找回；窗口都关闭后图标随之消失。";
 
 /* 菜单栏图标 */
@@ -315,18 +315,18 @@
 
 /* Cursor */
 "Sign in to Cursor to see usage." = "在 Cursor 中登录后才能读到用量。";
-"Cursor's saved login was refused. Open Cursor to renew it." = "Cursor 保存的登录被拒绝了。打开 Cursor 让它重新登录。";
+"Cursor's saved login was refused. Open Cursor to renew it." = "Cursor 保存的登录被拒绝。请打开 Cursor 重新登录。";
 "Sign in to Grok to see usage." = "登录 Grok 后才能读到用量。";
-"Grok's saved login expired. Use Grok to renew it." = "Grok 保存的登录过期了。用一次 Grok 让它重新登录。";
+"Grok's saved login expired. Use Grok to renew it." = "Grok 保存的登录已过期。请使用一次 Grok 让它重新登录。";
 "This Cursor plan doesn't include Grok Bot." = "当前 Cursor 套餐不含 Grok Bot。";
 "Reads your account's limits with the login Cursor saved." = "用 Cursor 已保存的登录读取账号额度。";
 "Cursor's own login" = "Cursor 自己的登录";
 "Grok's own login" = "Grok 自己的登录";
 "Uses the login Grok's CLI already saved." = "用 Grok CLI 已保存的登录信息读取。";
 "Devin's own app" = "Devin 自己的应用";
-"Reads what Devin saved the last time it started." = "读取 Devin 上次启动时存下的套餐信息。";
+"Reads what Devin saved the last time it started." = "读取 Devin 上次启动时保存的套餐信息。";
 "Asks Devin for your quota, with the token you entered." = "用你填入的 token 向 Devin 查询额度。";
-"A Bearer token from app.devin.ai, then a space, then your organization. Optional — Pulse can read what Devin's app saved. Stored encrypted on this Mac." = "在 app.devin.ai 获取 Bearer token，后面空一格再填组织。可以不填，不填时 Pulse 会读取 Devin 应用自己存下的套餐信息。加密保存在本机。";
+"A Bearer token from app.devin.ai, then a space, then your organization. Optional — Pulse can read what Devin's app saved. Stored encrypted on this Mac." = "在 app.devin.ai 获取 Bearer token，后面加一个空格再填组织。可不填，此时 Pulse 会读取 Devin 应用保存的套餐信息。加密保存在本机。";
 "Grok Bot is billed to your Cursor account." = "Grok Bot 的额度算在你的 Cursor 账号上。";
 "Uses the login Cursor already saved." = "用 Cursor 已保存的登录读取。";
 "Refresh" = "刷新";
@@ -339,7 +339,7 @@
 "Update to %@" = "更新到 %@";
 "Check automatically" = "自动检查";
 "Every two hours. Updates are offered, never installed on their own." = "每两小时检查一次。只会提示，不会自动安装。";
-"Couldn't reach the update feed." = "连不上更新源。";
+"Couldn't reach the update feed." = "无法连接更新源。";
 "Uses the key you entered." = "使用你填入的 key。";
 "API key" = "API key";
 "Session cookie" = "登录 Cookie";
@@ -352,14 +352,14 @@
 "Read" = "读取";
 "No browser cookie store was found." = "没有找到任何浏览器的 Cookie 存储。";
 "No Chromium browser was found." = "没有找到基于 Chromium 的浏览器。";
-"No Devin session found. Sign in at app.devin.ai first." = "没找到 Devin 的登录信息。请先在 app.devin.ai 登录。";
+"No Devin session found. Sign in at app.devin.ai first." = "未找到 Devin 的登录信息。请先在 app.devin.ai 登录。";
 "Token and organization" = "Token 与组织";
 "Read from %@." = "已从 %@ 读取。";
-"No Ollama session found. Sign in at ollama.com first." = "没找到 Ollama 的登录信息，请先在 ollama.com 登录。";
+"No Ollama session found. Sign in at ollama.com first." = "未找到 Ollama 的登录信息，请先在 ollama.com 登录。";
 "Copied from your browser. Stored encrypted on this Mac." = "从浏览器复制。加密保存在本机。";
 "Add an Ollama session in Settings." = "请在设置中添加 Ollama 的登录信息。";
 "The Ollama session expired. Sign in again and add it." = "Ollama 的登录已过期，请重新登录后再添加。";
-"Ollama's page has changed and can no longer be read." = "Ollama 的页面变了，已经读不出来了。";
+"Ollama's page has changed and can no longer be read." = "Ollama 的页面结构已变化，无法再读取。";
 "Reads your quota from Ollama's own settings page." = "从 Ollama 自己的设置页面读取额度。";
 "Show" = "显示";
 "Hide" = "隐藏";
@@ -370,23 +370,23 @@
 "estimated" = "推算";
 "Last read" = "上次读取";
 "Not yet" = "尚未读取";
-"That key was refused. Check it in Settings." = "这个 key 被拒绝了，去设置里检查一下。";
-"Claude Code's saved login expired. Use Claude Code, or connect the status line." = "Claude Code 存的登录已过期。用一下 Claude Code，或在设置里连接状态栏。";
-"Keep reading Claude Code's usage after its login expires?" = "让 Pulse 一直读得到 Claude Code 的用量？";
-"Claude Code saves a login that lasts a few hours, and only Claude Code can renew it. It also reports your limits to whatever status line command is registered — Pulse can be that command, and then it keeps working whether the login is fresh or not.\n\nThis edits ~/.claude/settings.json and changes the status line at the bottom of your Claude Code sessions. Any status line you already have keeps working, and you can disconnect it in Settings." = "Claude Code 的登录几小时就会过期，而且只有 Claude Code 自己能续上。过期之后，Pulse 就读不到它的用量了。\n\n连接后，你每次用 Claude Code，它都会顺手把最新额度交给 Pulse，不再受登录过期影响。\n\n这需要修改 ~/.claude/settings.json，借用 Claude Code 窗口底部的状态栏来传额度。你原来的状态栏照常显示，随时可以在设置里断开。";
+"That key was refused. Check it in Settings." = "这个 key 被拒绝，请在设置中检查。";
+"Claude Code's saved login expired. Use Claude Code, or connect the status line." = "Claude Code 保存的登录已过期。请使用一次 Claude Code，或在设置中连接状态栏。";
+"Keep reading Claude Code's usage after its login expires?" = "登录过期后仍继续读取 Claude Code 的用量？";
+"Claude Code saves a login that lasts a few hours, and only Claude Code can renew it. It also reports your limits to whatever status line command is registered — Pulse can be that command, and then it keeps working whether the login is fresh or not.\n\nThis edits ~/.claude/settings.json and changes the status line at the bottom of your Claude Code sessions. Any status line you already have keeps working, and you can disconnect it in Settings." = "Claude Code 保存的登录只有几小时有效期，且只能由 Claude Code 续期。它还会把限额上报给注册的状态栏命令——Pulse 可以担任这个命令，此后无论登录是否有效，用量都能持续更新。\n\n此操作会修改 ~/.claude/settings.json，并改变 Claude Code 会话底部的状态栏。你已有的状态栏不受影响，随时可以在设置中断开。";
 "Not now" = "以后再说";
 "Order" = "顺序";
 "Add an API key in Settings." = "在设置里填入 API key。";
 "Devin isn't installed." = "没有安装 Devin。";
 "Open Devin and sign in, so it can record your plan." = "打开 Devin 并登录，它才会记下你的套餐。";
-"Add your Devin organization after the token, separated by a space." = "在 token 后面空一格，再填上你的 Devin 组织。";
+"Add your Devin organization after the token, separated by a space." = "在 token 后加一个空格，再填写你的 Devin 组织。";
 "Stored encrypted on this Mac." = "加密保存在本机。";
 "From z.ai. Stored encrypted on this Mac." = "在 z.ai 获取。加密保存在本机。";
 "%@ points" = "%@ 点";
 "From bigmodel.cn. Stored encrypted on this Mac." = "在 bigmodel.cn 获取。加密保存在本机。";
 "From platform.minimax.io. Stored encrypted on this Mac." = "在 platform.minimax.io 获取。加密保存在本机。";
 "From platform.minimaxi.com. Stored encrypted on this Mac." = "在 platform.minimaxi.com 获取。加密保存在本机。";
-"From commandcode.ai. Optional — Pulse can use the login Command Code saved. Stored encrypted on this Mac." = "在 commandcode.ai 获取。可不填——Pulse 能用 Command Code 已保存的登录。加密保存在本机。";
+"From commandcode.ai. Optional — Pulse can use the login Command Code saved. Stored encrypted on this Mac." = "在 commandcode.ai 获取。可不填——Pulse 也可以使用 Command Code 保存的登录。加密保存在本机。";
 "Couldn't connect the status line" = "没能连接状态栏";
 "~/.claude/settings.json couldn't be read, and Pulse won't overwrite a file it doesn't understand. Check it, then connect from Settings." = "无法读取 ~/.claude/settings.json，而 Pulse 不会覆盖它看不懂的文件。请检查后，再到设置里连接。";
 "Move %@ up" = "把 %@ 上移";
@@ -407,7 +407,7 @@
 "Code" = "验证码";
 "Copied — paste it on the page that opened." = "已复制，在打开的页面里粘贴即可。";
 "Copied. Sign in there first if asked, then paste it." = "已复制。页面若要求登录，先登录再粘贴。";
-"Already on the page. Sign in there first if asked, then approve it." = "已经填在页面上了。如果要求登录，请先登录，再确认授权。";
+"Already on the page. Sign in there first if asked, then approve it." = "已自动填入页面。若要求登录，请先登录，再确认授权。";
 "Copy" = "复制";
 "Open page" = "打开页面";
 "Sign-in" = "登录";
@@ -426,15 +426,15 @@
 "Sign-in failed. You can close this page." = "登录失败，可以关闭这个页面。";
 "Signed in. You can close this page and go back to Pulse." = "已登录，可以关闭页面回到 Pulse 了。";
 "Read from each provider's own account. Pulse shows the figures they report; where it has to infer one, the figure itself says so." = "数据直接取自各服务商自己的账号。Pulse 只显示它们提供的数字；个别需要推算的，会在数字旁标明。";
-"Pulse is built from a design he posted on X." = "Pulse 是照着他在 X 上发的设计做的。";
+"Pulse is built from a design he posted on X." = "Pulse 基于他在 X 上发布的设计构建。";
 "Open" = "打开";
 "under 15 minutes" = "不到 15 分钟";
 "about an hour" = "约 1 小时";
 "about %@ minutes" = "约 %@ 分钟";
 "about %@ hours" = "约 %@ 小时";
-"Runs out in %@" = "%@后耗尽";
-"Expected to last the window" = "预计能撑到本轮重置";
-"Won't last the window" = "预计撑不到本轮重置";
+"Runs out in %@" = "%@ 后耗尽";
+"Expected to last the window" = "预计可维持到本轮重置";
+"Won't last the window" = "预计无法维持到本轮重置";
 
 /* The Claude desktop app as a usage route */
 "Desktop app" = "桌面端";
@@ -449,13 +449,13 @@
 "Warn at" = "提醒阈值";
 "Notify when a limit passes this, and again when it is spent." = "限额超过所选比例时提醒一次，用尽时再提醒一次。";
 "Turned off for Pulse in System Settings › Notifications." = "已在「系统设置 › 通知」里关闭了 Pulse 的通知。";
-"Notifications need the bundled app." = "通知需要打包后的 App 才能发出。";
+"Notifications need the bundled app." = "通知仅在打包后的应用中可用。";
 "When a limit comes back" = "限额恢复时";
 "Only for one you were warned about." = "仅提醒此前已预警过的限额。";
-"When a reading stops arriving" = "读不到用量时";
+"When a reading stops arriving" = "用量读取中断时";
 "After several failed checks in a row, once per outage." = "连续多次读取失败后提醒，同一次故障只提醒一次。";
-"Can't be read" = "读不到";
-"The last few checks didn't get through, so the panel is showing older figures." = "最近几次都没读到，面板上是旧数字。";
+"Can't be read" = "无法读取";
+"The last few checks didn't get through, so the panel is showing older figures." = "最近几次检查均未成功，面板显示的是此前保存的数据。";
 "%@ used." = "已用 %@。";
 "%@ left." = "剩余 %@。";
 "This limit is spent." = "这条限额已经用尽。";
@@ -537,7 +537,7 @@
 "%@ tokens unpriced" = "%@ token 未计价";
 "Excludes unpriced tokens." = "不含未计价 token。";
 "< %@" = "< %@";
-"Last %@ days" = "近 %@ 天";
+"Last %@ days" = "最近 %@ 天";
 "All agents" = "全部 Agent";
 "Nothing in this span" = "这个区间里没有记录";
 "Try a longer span, or rescan." = "换一个更长的区间，或者重新扫描。";
@@ -587,10 +587,10 @@
 "Rows per page" = "每页条数";
 "Shortcuts" = "快捷键";
 "Open settings" = "打开设置";
-"Reaches this window with the menu bar icon out of sight." = "菜单栏图标被挤掉时，也能打开这个窗口。";
+"Reaches this window with the menu bar icon out of sight." = "隐藏菜单栏图标后，仍可打开这个窗口。";
 "Show or hide the panel" = "显示或隐藏面板";
 "Draws the usage rail, or takes it away." = "显示用量胶囊，或把它收起来。";
-"Another app is already using this combination." = "这个组合键已被其他 App 占用。";
+"Another app is already using this combination." = "这个组合键已被其他应用占用。";
 "Record a shortcut" = "录制快捷键";
 "Clear this shortcut" = "清除这个快捷键";
 "Not set" = "未设定";
@@ -598,7 +598,7 @@
 "Add ⌘, ⌥ or ⌃" = "需要 ⌘、⌥ 或 ⌃";
 
 /* Xiaomi Coding Plan */
-"No Xiaomi session found. Sign in at platform.xiaomimimo.com first." = "没找到小米的登录信息。请先在 platform.xiaomimimo.com 登录。";
+"No Xiaomi session found. Sign in at platform.xiaomimimo.com first." = "未找到小米的登录信息。请先在 platform.xiaomimimo.com 登录。";
 "Sign in to Xiaomi's platform in a browser to see usage." = "在浏览器里登录小米开放平台后才能看到用量。";
 "Xiaomi's saved session expired. Sign in again in your browser." = "小米的登录信息已过期，请在浏览器里重新登录。";
 "No Coding Plan on this Xiaomi account." = "这个小米账号上没有 Coding Plan。";
@@ -625,20 +625,20 @@
 "Choose services to start monitoring…" = "选择服务，开始监控…";
 "New services detected" = "发现新支持的服务";
 "Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "请至少勾选一个服务。点「完成」后，Pulse 才会读取所选服务的登录信息并查询用量。之后可以在设置里更改。";
-"This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "这个版本新支持了以下服务，本机检测到了它们。勾选想添加的即可，原有选择会保留。";
+"This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "此版本新增支持了本机检测到的更多服务。勾选想添加的即可，已有选择保持不变。";
 "Detected on this Mac" = "本机已检测到";
-"Select detected services" = "勾选已检测到的";
+"Select detected services" = "选择已检测到的服务";
 "Done" = "完成";
-"Enable a service in its settings to start monitoring." = "在左侧选择服务，开启「在面板中显示」即可开始监控。";
+"Enable a service in its settings to start monitoring." = "在服务的设置页中开启，即可开始监控。";
 "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "读取 Claude Code 保存在钥匙串或凭据文件里的登录信息。可能弹出钥匙串授权，其中包括 Claude 桌面版的 cookie 存储。";
 "Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "读取 ~/.codex/auth.json，也可能启动 codex app-server 使用它保存的登录。Pulse 不请求钥匙串授权。";
-"Reads the running editor's local language server and connection token. No Keychain prompt." = "连接运行中的编辑器，读取本机语言服务器的用量及连接令牌。不弹钥匙串。";
-"Reads the login saved in Cursor's local database. No Keychain prompt." = "读取 Cursor 本地数据库里保存的登录信息。不弹钥匙串。";
-"Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "读取 ~/.grok/auth.json 里保存的登录信息。不弹钥匙串。";
-"Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "使用在设置里填入的 key，或读取 OpenCode 的 auth.json。不弹钥匙串。";
-"Uses a key entered in Settings, or reads the saved GLM key files. No Keychain prompt." = "使用在设置里填入的 key，或读取本机保存的 GLM key 文件。不弹钥匙串。";
-"Uses a key entered in Settings, or reads ~/.commandcode/auth.json. No Keychain prompt." = "使用在设置里填入的 key，或读取 ~/.commandcode/auth.json。不弹钥匙串。";
-"Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan." = "读取本机 Chromium 浏览器里 Devin 网页版的登录信息，不弹授权窗口；也可能读取桌面版保存的套餐。";
+"Reads the running editor's local language server and connection token. No Keychain prompt." = "连接运行中的编辑器，读取本机语言服务器的用量及连接令牌。无需钥匙串授权。";
+"Reads the login saved in Cursor's local database. No Keychain prompt." = "读取 Cursor 本地数据库里保存的登录信息。无需钥匙串授权。";
+"Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "读取 ~/.grok/auth.json 里保存的登录信息。无需钥匙串授权。";
+"Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "使用在设置里填入的 key，或读取 OpenCode 的 auth.json。无需钥匙串授权。";
+"Uses a key entered in Settings, or reads the saved GLM key files. No Keychain prompt." = "使用在设置里填入的 key，或读取本机保存的 GLM key 文件。无需钥匙串授权。";
+"Uses a key entered in Settings, or reads ~/.commandcode/auth.json. No Keychain prompt." = "使用在设置里填入的 key，或读取 ~/.commandcode/auth.json。无需钥匙串授权。";
+"Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan." = "读取本机 Chromium 浏览器里 Devin 网页版的登录信息，无需额外授权；也可能读取桌面版保存的套餐。";
 "Runs arkcli with its saved login, or uses access keys entered in Settings. Pulse does not request Keychain access." = "启动 arkcli 使用它保存的登录，或使用在设置里填入的访问密钥。Pulse 不请求钥匙串授权。";
 "Kiro CLI ACP" = "Kiro CLI ACP";
 "Uses Kiro CLI's signed-in session without reading its credentials." = "沿用 Kiro CLI 已登录的状态，不读取它的凭据。";
@@ -648,18 +648,18 @@
 "Runs Kiro CLI's native ACP usage method with its saved login. Pulse does not read or store Kiro credentials." = "调用 Kiro CLI 自带的 ACP 用量接口，沿用它已保存的登录。Pulse 不读取也不保存 Kiro 凭据。";
 "Asks Kiro CLI over ACP, using the login it already saved." = "通过 ACP 向 Kiro CLI 查询，沿用它已保存的登录。";
 "Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "使用你在设置里导入的浏览器登录信息。导入时可能请求浏览器的钥匙串授权。";
-"Uses the GitHub login you connect in Settings. No Keychain prompt." = "使用你在设置里连接的 GitHub 登录。不弹钥匙串。";
-"Uses only the API key you enter in Settings. No Keychain prompt." = "只使用你在设置里填入的 API key。不弹钥匙串。";
+"Uses the GitHub login you connect in Settings. No Keychain prompt." = "使用你在设置里连接的 GitHub 登录。无需钥匙串授权。";
+"Uses only the API key you enter in Settings. No Keychain prompt." = "只使用你在设置里填入的 API key。无需钥匙串授权。";
 "Top-up pack" = "加油包";
 "Server address" = "服务器地址";
 "Edit address" = "编辑地址";
 "Add the server address in Settings." = "在设置里填入服务器地址。";
-"That address can't be used. It needs https://, unless the server is on your own network." = "这个地址不能用。除非服务器在你自己的网络里，否则要用 https://。";
-"Sends the key you enter only to the server address you enter. No Keychain prompt." = "只把你填的 key 发到你填的那个服务器地址。不弹钥匙串。";
-"A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac." = "你那台 sub2api 上的分组 API key。只发到上面那个地址。加密保存在本机。";
+"That address can't be used. It needs https://, unless the server is on your own network." = "该地址无法使用。除自建网络中的服务器外，地址需以 https:// 开头。";
+"Sends the key you enter only to the server address you enter. No Keychain prompt." = "仅把你输入的 key 发送到你输入的服务器地址。无需钥匙串授权。";
+"A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac." = "来自你的 sub2api 部署的分组 API key。只发送到上方的地址。加密保存在本机。";
 "A Personal Access Token from v2ex.com. Stored encrypted on this Mac." = "在 v2ex.com 生成的个人访问令牌。加密保存在本机。";
-"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "你自己那台网关的地址，例如 https://gateway.example.com。Pulse 只向它查用量，别的什么都不发。";
-"The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "你的 AI 客户端连这台网关用的那个 key。只发到上面那个地址。加密保存在本机。";
+"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "自建网关的地址，例如 https://gateway.example.com。Pulse 只向它查询用量，不发送其他任何数据。";
+"The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "你的 AI 客户端连接此网关所用的 key。只发送到上方的地址。加密保存在本机。";
 "Credit allowance" = "积分额度";
 "Team credits" = "团队共享积分";
 "%@: %@ credits expire" = "%@ %@ 积分到期";
@@ -667,14 +667,14 @@
 "Qoder's saved session expired. Sign in again in your browser." = "Qoder 的登录信息已过期，请在浏览器里重新登录。";
 "This Qoder account has no credits." = "这个 Qoder 账号上没有积分。";
 "Reads your credits with your signed-in browser session." = "用你在浏览器里的登录状态读取积分。";
-"No Qoder session found. Sign in at %@ first." = "没找到 Qoder 的登录信息。请先在 %@ 登录。";
+"No Qoder session found. Sign in at %@ first." = "未找到 Qoder 的登录信息。请先在 %@ 登录。";
 "Site" = "站点";
-"Where you signed in. Changing it clears the saved session." = "你在哪个站登录的。切换后会清掉已保存的登录信息。";
+"Where you signed in. Changing it clears the saved session." = "即你登录时使用的站点。更改后会清除已保存的会话。";
 "Sign in to StepFun's platform in a browser to see usage." = "在浏览器里登录阶跃星辰开放平台后才能看到用量。";
 "StepFun's saved session expired. Sign in again in your browser." = "阶跃星辰的登录信息已过期，请在浏览器里重新登录。";
 "No Step Plan on this StepFun account." = "这个阶跃星辰账号没有订阅 Step Plan。";
 "Reads your Step Plan with your signed-in browser session." = "用你在浏览器里的登录状态读取 Step Plan。";
-"No StepFun session found. Sign in at %@ first." = "没找到阶跃星辰的登录信息。请先在 %@ 登录。";
+"No StepFun session found. Sign in at %@ first." = "未找到阶跃星辰的登录信息。请先在 %@ 登录。";
 
 /* Extensions */
 "An extension is a program you add yourself that reports one account's usage. Pulse draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials." = "扩展是你自己添加的程序，用来报告某一个账号的用量，Pulse 会把它输出的数据画成圆环。只有你开启后 Pulse 才会运行它，也不会交给它任何登录凭据。";
@@ -709,7 +709,7 @@
 "The extension stopped with an error." = "扩展运行出错，已退出。";
 "This extension's program can't be run. Check its folder." = "无法运行这个扩展的程序，请检查它的文件夹。";
 "Time limit" = "时间限制";
-"Written for extension schema %@, which this version of Pulse doesn't read." = "它按扩展格式第 %@ 版编写，这个版本的 Pulse 读不了。";
+"Written for extension schema %@, which this version of Pulse doesn't read." = "按扩展格式第 %@ 版编写，当前版本的 Pulse 无法读取。";
 "pulse-extension.json isn't valid JSON, or is missing a field." = "pulse-extension.json 不是有效的 JSON，或者缺少必填字段。";
 
 /* Profiled providers: shared wording */
@@ -727,13 +727,13 @@
 /* Amp */
 "From ampcode.com/settings. Stored encrypted on this Mac." = "在 ampcode.com/settings 获取。加密保存在本机。";
 /* Gemini */
-"Reads the login saved in ~/.gemini/oauth_creds.json. No Keychain prompt." = "读取 ~/.gemini/oauth_creds.json 里保存的登录信息。不弹钥匙串。";
+"Reads the login saved in ~/.gemini/oauth_creds.json. No Keychain prompt." = "读取 ~/.gemini/oauth_creds.json 里保存的登录信息。无需钥匙串授权。";
 "Gemini CLI's own login" = "Gemini CLI 自己的登录信息";
-"Uses the login Gemini CLI already saved. Using Gemini CLI renews it." = "用 Gemini CLI 已保存的登录信息读取。用一次 Gemini CLI 就会续期。";
+"Uses the login Gemini CLI already saved. Using Gemini CLI renews it." = "用 Gemini CLI 已保存的登录信息读取。使用一次 Gemini CLI 即会续期。";
 
 /* Kilo Code */
-"Uses a key entered in Settings, or reads ~/.local/share/kilo/auth.json. No Keychain prompt." = "使用在设置里填入的 key，或读取 ~/.local/share/kilo/auth.json。不弹钥匙串。";
-"From app.kilo.ai. Optional — Pulse can use the login the Kilo CLI saved. Stored encrypted on this Mac." = "在 app.kilo.ai 获取。选填——Pulse 也能用 Kilo CLI 已保存的登录。加密保存在本机。";
+"Uses a key entered in Settings, or reads ~/.local/share/kilo/auth.json. No Keychain prompt." = "使用在设置里填入的 key，或读取 ~/.local/share/kilo/auth.json。无需钥匙串授权。";
+"From app.kilo.ai. Optional — Pulse can use the login the Kilo CLI saved. Stored encrypted on this Mac." = "在 app.kilo.ai 获取。可不填——Pulse 也可以使用 Kilo CLI 保存的登录。加密保存在本机。";
 
 /* Mistral */
 /* Factory */
@@ -742,7 +742,7 @@
 /* Windsurf */
 
 /* Profiled providers: browser storage */
-"Reads windsurf.com's sign-in from a Chromium browser when you press Read. No Keychain prompt." = "点「读取」时，从 Chromium 内核浏览器读取 windsurf.com 的登录信息。不弹钥匙串。";
+"Reads windsurf.com's sign-in from a Chromium browser when you press Read. No Keychain prompt." = "点「读取」时，从 Chromium 内核浏览器读取 windsurf.com 的登录信息。无需钥匙串授权。";
 "Browser session" = "浏览器登录信息";
 /* OpenAI API */
 "From platform.openai.com. Stored encrypted on this Mac." = "在 platform.openai.com 获取。加密保存在本机。";
@@ -767,7 +767,7 @@
 "From chutes.ai. Stored encrypted on this Mac." = "在 chutes.ai 获取。加密保存在本机。";
 
 /* GitKraken AI */
-"Uses only the access token you enter in Settings. No Keychain prompt." = "只使用你在设置里填入的访问令牌。不弹钥匙串。";
+"Uses only the access token you enter in Settings. No Keychain prompt." = "只使用你在设置里填入的访问令牌。无需钥匙串授权。";
 "The Bearer token from gitkraken.dev's usage request, copied from the browser's developer tools. Stored encrypted on this Mac." = "在浏览器开发者工具里，从 gitkraken.dev 的用量请求中复制 Bearer token。加密保存在本机。";
 
 /* xKiro */
@@ -791,7 +791,7 @@
 "From clawrouter.openclaw.ai. Stored encrypted on this Mac." = "在 clawrouter.openclaw.ai 获取。加密保存在本机。";
 
 /* ZenMux */
-"A Management API key from zenmux.ai. An ordinary API key won't work. Stored encrypted on this Mac." = "在 zenmux.ai 生成的 Management API key，普通 API key 用不了。加密保存在本机。";
+"A Management API key from zenmux.ai. An ordinary API key won't work. Stored encrypted on this Mac." = "在 zenmux.ai 生成的 Management API key，普通 API key 不适用。加密保存在本机。";
 
 /* v0 */
 "From v0.app. Stored encrypted on this Mac." = "在 v0.app 获取。加密保存在本机。";
@@ -812,30 +812,30 @@
 "Runs the Bailian CLI (bl) with its saved login. Pulse does not read or store its credentials." = "运行百炼 CLI（bl），沿用它已保存的登录。Pulse 不会读取或保存其中的凭据。";
 "Uses the login the Bailian CLI already saved." = "使用百炼 CLI 已保存的登录。";
 /* Nous Portal */
-"Reads the Nous Portal login Hermes Agent saved in ~/.hermes. No Keychain prompt." = "读取 Hermes Agent 保存在 ~/.hermes 里的 Nous Portal 登录信息。不弹钥匙串。";
+"Reads the Nous Portal login Hermes Agent saved in ~/.hermes. No Keychain prompt." = "读取 Hermes Agent 保存在 ~/.hermes 里的 Nous Portal 登录信息。无需钥匙串授权。";
 "Hermes Agent's login" = "Hermes Agent 的登录信息";
 "Uses the login Hermes Agent already saved. Pulse never renews it." = "使用 Hermes Agent 已保存的登录信息。Pulse 从不替它续期。";
 
 /* Hugging Face */
-"Uses a token entered in Settings, or reads the one hf auth login saved in ~/.cache/huggingface. No Keychain prompt." = "使用在设置里填入的 token，或读取 hf auth login 保存在 ~/.cache/huggingface 里的 token。不弹钥匙串。";
+"Uses a token entered in Settings, or reads the one hf auth login saved in ~/.cache/huggingface. No Keychain prompt." = "使用在设置里填入的 token，或读取 hf auth login 保存在 ~/.cache/huggingface 里的 token。无需钥匙串授权。";
 "From huggingface.co/settings/tokens. Stored encrypted on this Mac." = "在 huggingface.co/settings/tokens 获取。加密保存在本机。";
 
 /* Moonshot */
 "From the Kimi Open Platform console, international or China. Stored encrypted on this Mac." = "在 Kimi 开放平台控制台（国际站或中国站）获取。加密保存在本机。";
 
 /* Codebuff */
-"Uses a key entered in Settings, or reads the login the codebuff CLI saved in ~/.config/manicode. No Keychain prompt." = "使用在设置里填入的 key，或读取 codebuff CLI 保存在 ~/.config/manicode 里的登录信息。不弹钥匙串。";
-"From codebuff.com. Optional — Pulse can use the login the codebuff CLI saved. Stored encrypted on this Mac." = "在 codebuff.com 获取。可不填——Pulse 能用 codebuff CLI 已保存的登录。加密保存在本机。";
+"Uses a key entered in Settings, or reads the login the codebuff CLI saved in ~/.config/manicode. No Keychain prompt." = "使用在设置里填入的 key，或读取 codebuff CLI 保存在 ~/.config/manicode 里的登录信息。无需钥匙串授权。";
+"From codebuff.com. Optional — Pulse can use the login the codebuff CLI saved. Stored encrypted on this Mac." = "在 codebuff.com 获取。可不填——Pulse 也可以使用 codebuff CLI 保存的登录。加密保存在本机。";
 
 /* Venice */
 "From venice.ai's API settings. Stored encrypted on this Mac." = "在 venice.ai 的 API 设置里获取。加密保存在本机。";
 
 /* TypeSafe */
-"Uses the Cookie header you paste in Settings. No Keychain prompt." = "使用你在设置里粘贴的 Cookie 请求头。不弹钥匙串。";
+"Uses the Cookie header you paste in Settings. No Keychain prompt." = "使用你在设置里粘贴的 Cookie 请求头。无需钥匙串授权。";
 "The Cookie header of a request to console.typesafe.ai/settings/billing. Stored encrypted on this Mac." = "打开 console.typesafe.ai/settings/billing 时请求里带的 Cookie 请求头。加密保存在本机。";
 
 /* xAI API */
-"TeamID:ManagementKey, from console.x.ai. An inference key won't work. Stored encrypted on this Mac." = "格式为 TeamID:ManagementKey，在 console.x.ai 获取。推理 key 不能用。加密保存在本机。";
+"TeamID:ManagementKey, from console.x.ai. An inference key won't work. Stored encrypted on this Mac." = "格式为 TeamID:ManagementKey，在 console.x.ai 获取。推理 key 不适用。加密保存在本机。";
 
 /* Billing groups */
 "Subscriptions" = "订阅";
@@ -860,7 +860,7 @@
 "Open %@ usage page" = "打开 %@ 用量页";
 "Overview" = "概览";
 "Updated just now" = "刚刚更新";
-"Updated %@" = "%@更新";
+"Updated %@" = "%@ 更新";
 "Estimated from token counts at API prices — not your subscription bill." = "按 API 价格和 Token 用量估算，不是订阅账单。";
 "Reading local records…" = "正在读取本机记录…";
 "Usage credits" = "额度";
@@ -871,18 +871,18 @@
 "Short: month" = "月";
 "Start windows automatically" = "自动开始新窗口";
 "Start a new window after each reset" = "额度重置后自动开始新窗口";
-"When the 5-hour limit resets, sends “hi” to Haiku through Claude Code, so the next window starts counting then rather than at your next message. Nothing is saved." = "5 小时额度重置后，通过 Claude Code 给 Haiku 发一句“hi”，让下一个窗口从这时开始计时，而不是等到你下一次发消息。不会保存任何对话。";
-"When the 5-hour or weekly limit resets, sends “hi” to the cheapest model through Codex, so the next window starts counting then rather than at your next message. Nothing is saved." = "5 小时或每周额度重置后，通过 Codex 给最便宜的模型发一句“hi”，让下一个窗口从这时开始计时，而不是等到你下一次发消息。不会保存任何对话。";
+"When the 5-hour limit resets, sends “hi” to Haiku through Claude Code, so the next window starts counting then rather than at your next message. Nothing is saved." = "5 小时额度重置后，通过 Claude Code 向 Haiku 发送一条「hi」，使下一个窗口从此时开始计时，而不是等到你下一次发消息。不会保存任何内容。";
+"When the 5-hour or weekly limit resets, sends “hi” to the cheapest model through Codex, so the next window starts counting then rather than at your next message. Nothing is saved." = "5 小时或每周额度重置后，通过 Codex 向最便宜的模型发送一条「hi」，使下一个窗口从此时开始计时，而不是等到你下一次发消息。不会保存任何内容。";
 "Only between" = "仅在此时段";
 "A reset outside these hours is started when they begin. Shared by Claude Code and Codex." = "如果在这个时段之外重置，会等时段开始时再自动开始。Claude Code 和 Codex 共用。";
 "Last started" = "上次自动开始";
 "Use at your own risk" = "请自行承担风险";
 "I understand the risk, turn it on" = "我了解风险，开启";
 "This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Pulse only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that." = "这不是 Anthropic 或 OpenAI 的功能。自动开始用量窗口可能被视为规避用量限制，你的账号可能因此被限制或封禁。Pulse 只会通过你已登录的命令行工具发一条简短消息，由此给你的账号带来的任何后果，Pulse 概不负责。请确认你能接受这一点，再开启。";
-"Not started yet" = "还没有自动开始过";
+"Not started yet" = "尚未自动开始";
 "%@ · the command-line tool was not found" = "%@ · 找不到命令行工具";
-"%@ · it did not go through; check the tool is signed in" = "%@ · 没有发送成功，请检查工具是否已登录";
-"%@ · it did not answer in time" = "%@ · 没有及时响应";
+"%@ · it did not go through; check the tool is signed in" = "%@ · 未能发送，请检查工具是否已登录";
+"%@ · it did not answer in time" = "%@ · 未及时响应";
 
 "Detailed card" = "详细卡片";
 "On this Mac" = "本机用量";
@@ -890,7 +890,7 @@
 "31 days" = "31 天";
 "Costs are estimates at API prices." = "金额按 API 价格估算。";
 "Whole account" = "整个账号";
-"Couldn't read the history." = "这次没能读到用量记录。";
+"Couldn't read the history." = "未能读取用量记录。";
 "From %@, for the whole account." = "来自 %@，覆盖整个账号。";
 "Adds the plan and when the figures were read." = "加上套餐名和数字的更新时间。";
 "Adds the plan, when the figures were read and the account's usage over the last month." = "加上套餐名、数字的更新时间，以及整个账号最近一个月的用量。";
@@ -912,12 +912,12 @@
 "%@ left" = "还剩 %@";
 "Expired" = "已过期";
 "Prompt cache · %@ chats" = "提示缓存 · %@ 个对话";
-"Soonest in %@" = "最早 %@后过期";
+"Soonest in %@" = "最早 %@ 后过期";
 "Prompt cache" = "提示缓存";
 "No conversation is holding a cache" = "当前没有对话还留着缓存";
 "Untitled conversation" = "未命名对话";
 "Codex review" = "Codex 自动审查";
-"%@ cache" = "%@缓存";
+"%@ cache" = "%@ 缓存";
 "Last used %@" = "最后使用 %@";
 "The latest one's cache lapsed at %@." = "最近一个对话的缓存已在 %@ 过期。";
 "Read from Claude Code's own records: each reply says whether it cached for an hour or five minutes, and a cache lasts that long from the last request that used it. That is the time if nothing before it has changed — switching model, changing tools or compacting starts a new cache. Subagents keep caches of their own and are not listed." = "数据来自 Claude Code 自己的记录。每次回复都会注明缓存保留 1 小时还是 5 分钟，从最后一次用到它的请求算起。这是上下文没变时的时长：换模型、改工具或压缩对话，都会重新开始一份缓存。子 Agent 有自己的缓存，这里不列出。";
@@ -967,12 +967,12 @@
 "%@ more" = "还有 %@ 条";
 "Checked %@ sessions." = "检查了 %@ 个会话。";
 "Read from this Mac's Codex records; nothing is sent." = "只读取这台 Mac 上的 Codex 记录，不会发送任何请求。";
-"Reasoning cut off: the model's reasoning stopped at exactly 516, 1,034, 1,552… tokens, as if cut off. Only about 0.2% of replies would stop there by chance." = "推理被打断：模型的推理恰好停在 516、1,034、1,552… 个 Token 处，像被硬生生截断。如果只是巧合，只有约 0.2% 的回复会停在这些位置。";
-"Settings quietly lowered: a turn ran on a worse model, lower reasoning or a smaller context than you chose, without you changing anything." = "设置被偷偷调低：某一轮实际用的模型比你选的差，或推理强度更低、上下文更小，而你并没有改过任何设置。";
+"Reasoning cut off: the model's reasoning stopped at exactly 516, 1,034, 1,552… tokens, as if cut off. Only about 0.2% of replies would stop there by chance." = "推理被打断：模型的推理恰好停在 516、1,034、1,552… 个 Token 处，如同被强制截断。如果只是巧合，只有约 0.2% 的回复会停在这些位置。";
+"Settings quietly lowered: a turn ran on a worse model, lower reasoning or a smaller context than you chose, without you changing anything." = "设置被静默调低：某一轮实际使用的模型比你选择的更弱，或推理强度更低、上下文更小，而你并未更改过任何设置。";
 "These are signs, not proof: Codex doesn't record which model the server actually used." = "以上只是迹象，不是定论：Codex 不会记录服务器实际用了哪个模型。";
 "Reasoning cut off" = "推理被打断";
 "%@ replies in all" = "共 %@ 条回复";
-"Settings quietly lowered" = "设置被偷偷调低";
+"Settings quietly lowered" = "设置被静默调低";
 "Model: %@ swapped for %@" = "模型：%@ 被换成 %@";
 "Reasoning: %@ lowered to %@" = "推理强度：%@ 被降到 %@";
 "Context: %@ cut to %@" = "上下文：%@ 被缩到 %@";
@@ -985,7 +985,7 @@
 "Full outage" = "完全中断";
 "Under maintenance" = "维护中";
 "Unrecognised status" = "无法识别的状态";
-"Couldn't read the status page." = "读不到状态页。";
+"Couldn't read the status page." = "无法读取状态页。";
 "Status page" = "状态页";
 "As %@ reports it on its status page, read when this page opens and every five minutes while it stays open." = "以 %@ 状态页公布的为准。打开此页时读取一次，页面保持打开期间每 5 分钟更新。";
 "90 days ago" = "90 天前";
@@ -1039,48 +1039,48 @@
 "Payback" = "回本";
 "You paid" = "你付的";
 "You used" = "你用的";
-"Where the money went" = "钱花在了哪";
+"Where the money went" = "钱花在了哪里";
 "The cache saved you" = "缓存命中帮你省下";
 "Estimated at each model's published API price. The plan price is the one you typed in Pulse." = "按各模型官方 API 价格估算；订阅价格由你在 Pulse 里填写。";
 "Figures are to date, and the plan price is prorated by the days so far." = "数字截至今天，订阅价格按已过去的天数折算。";
 "That was" = "这就是";
-"your %@." = "你的%@。";
+"your %@." = "你的 %@。";
 "Tokens" = "Token";
 "Sessions" = "会话";
 "Most used" = "用得最多";
 "Your type" = "你的类型";
-"See you in %@" = "%@见";
+"See you in %@" = "%@ 见";
 "Your busiest month" = "你用得最多的月份";
-"vs same period in %@" = "比%@同期";
-"Tokens · to %@" = "Token · 截至%@";
+"vs same period in %@" = "比 %@ 同期";
+"Tokens · to %@" = "Token · 截至 %@";
 "Estimated at API prices · daily" = "按 API 价格估算 · 每天";
 "Estimated at API prices · monthly" = "按 API 价格估算 · 每月";
-"%@ per active day" = "活跃日平均 %@ 个";
+"%@ per active day" = "活跃日平均 %@";
 "Tools" = "工具";
-"Every day of %@" = "%@每一天";
+"Every day of %@" = "%@ 的每一天";
 "Busiest %@ · %@" = "最多 %@ · %@";
 
 // Recap window, entry points and notification
 "Monthly Recap" = "月报";
 "Yearly Recap" = "年报";
 "Monthly and Yearly Recap" = "月报与年报";
-"View %@ recap" = "查看%@的月报";
+"View %@ recap" = "查看 %@ 的月报";
 "View %@ yearly recap" = "查看 %@ 年报";
 "Shareable cards for a month or a year, from this Mac's records." = "用这台 Mac 的本机记录，生成可以分享的月度和年度卡片。";
 "When a recap is ready" = "月报生成时";
-"Last month's recap, at the start of the month. Needs Token spend reading." = "每月月初告诉你上个月的月报好了。需要先开启“读取本机用量记录”。";
-"Your %@ recap is ready" = "%@的月报已经生成";
+"Last month's recap, at the start of the month. Needs Token spend reading." = "每月月初提醒上个月的月报已生成。需要先开启「读取本机用量记录」。";
+"Your %@ recap is ready" = "%@ 的月报已生成";
 "The recap needs Token spend" = "月报需要先读取本机用量记录";
-"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "月报根据这台 Mac 上的用量记录生成。只有开启“读取本机用量记录”后，Pulse 才会去读。";
+"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "月报根据这台 Mac 上的用量记录生成。只有开启「读取本机用量记录」后，Pulse 才会读取。";
 "Open Token spend" = "打开 Token 消耗";
 "The records could not be read." = "没能读取用量记录。";
-"No records for %@" = "%@没有用量记录";
+"No records for %@" = "%@ 没有用量记录";
 "Nothing in this Mac's usage records falls in this period." = "这台 Mac 的用量记录里，没有这段时间的内容。";
 "The first read of a long history can take a minute or two." = "记录很多时，第一次读取可能要一两分钟。";
 "Month" = "月度";
 "Year" = "年度";
 "Monthly price" = "每月订阅价格";
-"Only used for the payback card. Leave it empty to leave that card out." = "只用于“订阅回本”卡片。不填，就不生成这张卡片。";
+"Only used for the payback card. Leave it empty to leave that card out." = "仅用于「订阅回本」卡片。留空则不生成该卡片。";
 "Privacy" = "隐私";
 "Hide project names" = "隐藏项目名称";
 "Save image" = "保存图片";
@@ -1094,8 +1094,8 @@
 "Daily" = "每天";
 "Weekly" = "每周";
 "Cumulative" = "累计总量";
-"%@ tokens in the last 12 months" = "近 12 个月共 %@ tokens";
-"%@ over the last 12 months, %@ active days" = "近 12 个月：%@，%@ 天有记录";
+"%@ tokens in the last 12 months" = "最近 12 个月共 %@ tokens";
+"%@ over the last 12 months, %@ active days" = "最近 12 个月：%@，%@ 天有记录";
 "Less" = "少";
 "More" = "多";
 "Total through %@" = "截至 %@ 累计";
@@ -1111,12 +1111,12 @@
 "1 session" = "1 个会话";
 "1 agent" = "1 个工具";
 "Active %@ of 1 day" = "活跃 %@ / 1 天";
-"Used %@ · top tool" = "用了 %@ · 主力";
+"Used %@ · top tool" = "已用 %@ · 主力工具";
 "Which days · days used · token share" = "哪几天 · 用了几天 · token 占比";
 "Which months · days used · token share" = "哪几个月 · 用了几天 · token 占比";
 "Darker days used more · grey is the weekend" = "颜色越深用得越多 · 灰色是周末";
 "By week" = "按周";
-"Busiest week: %@" = "%@ 最忙";
+"Busiest week: %@" = "最忙的一周：%@";
 "Weekdays and weekends" = "工作日与周末";
 "Average per active day: %@" = "平均每个活跃日 %@";
 "Weekdays %@" = "工作日 %@";
@@ -1135,7 +1135,7 @@
 "Morning" = "上午";
 "Afternoon" = "下午";
 "Evening" = "晚上";
-"Busiest: %@" = "%@最忙";
+"Busiest: %@" = "%@ 最忙";
 "24 hours" = "24 小时";
 "Seven days of the week" = "一周七天";
 "For every %@ of subscription, you used %@ of API value" = "每 %@ 订阅费，用出 %@ 的 API 价值";
