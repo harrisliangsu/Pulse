@@ -7,6 +7,28 @@ shows in the update window — see [Scripts/changelog.py](Scripts/changelog.py).
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.8.2
+
+**中文**
+
+**改进与修复**
+
+- **保留不完整记录中的已知 Token 分类。** 部分来源只记录总用量，或仅记录部分分类。现在会保留已记录的输入、缓存命中和输出，并将来源明确记录的未分类用量单独列出；分类占比按包含未分类用量的总量计算。未分类部分不估算费用，分类与总量不一致时也不会自动补数。
+- **每日明细支持查看未分类用量。** Token 消耗与模型详情的每日明细新增「未分类」列，支持排序，无未分类用量时自动隐藏。只有未分类数据的记录，输入、缓存命中和输出不再显示为 0。
+- **统一 Token 分类展示。** 「新内容」改为「输入」，包含已记录的缓存写入；缓存命中单独统计，未记录的分类明确标注为「未记录」。
+- **修复明细表的排序与表头显示。** 超大 Token 数量排序时不再因精度损失将不同数值视为相同；表头保持单行显示。
+- **优化界面与更新说明文案。** 修订简体中文、繁体中文、日文和韩文的界面文案，统一术语并修正表达与排版问题；历史版本的中文更新说明同步更新至 GitHub 发布页和应用内更新窗口。
+
+**English**
+
+**Changed and fixed**
+
+- **Keep known token categories when records are incomplete.** Some sources report only a total or provide only partial category detail. Recorded input, cache hits and output now remain visible alongside any explicitly recorded unclassified usage. Category shares include unclassified tokens in the total. Unclassified tokens are not priced, and inconsistent totals are not filled in by inference.
+- **Show unclassified usage in daily tables.** Daily tables in Token spend and model details now include a sortable Unclassified column, hidden when there is no unclassified usage. Records containing only unclassified tokens no longer show zeroes for input, cache hits or output.
+- **Use consistent token categories.** Fresh input is now labelled Input and includes recorded cache writes. Cache hits remain separate, and missing category data is labelled Not reported.
+- **Fix table sorting and headers.** Sorting very large token counts no longer treats distinct values as equal due to precision loss. Column headers stay on one line.
+- **Improve interface copy and release notes.** Revised Simplified Chinese, Traditional Chinese, Japanese and Korean interface text for consistent terminology, clearer wording and corrected typography. Historical Chinese release notes are also updated on GitHub and in the in-app update window.
+
 ## 1.8.1
 
 **中文**
