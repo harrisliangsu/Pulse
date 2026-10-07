@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.15</title>
+            <pubDate>Wed, 07 Oct 2026 01:54:14 -0000</pubDate>
+            <sparkle:version>1.4.15</sparkle:version>
+            <sparkle:shortVersionString>1.4.15</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.15</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.15</h2><ul><li><strong>钥匙串授权弹窗不再拖住每一次刷新。</strong> 读取 Claude Code 的登录最多等 60 秒，到点就改走别的途径。设置里保存密钥和后台续期控制台登录同时发生时，不会再冲掉其中一个；刚删掉的登录也不会被续期写回来。</li><li><strong>改面板外观不再向每个服务商重新要一遍用量。</strong> 大小、间距、外观这些只影响怎么画的设置，现在只重新排版。</li><li><strong>「位置」一行会换行。</strong> 窗口不够宽、标签和选项并排放不下时，选项移到标签下面，不再把说明挤成一个字一行。</li><li><strong>月报里的大数字不再被切掉一块。</strong> 9、5 这类数字的右边不再被削平，月份和年份旁边的标记也不会压住最后一位。订阅价格的输入框缩到和价格差不多宽。</li><li><strong>Token 种类会写出没能归类的部分。</strong> 分类里多了一行「未分类」，原先的 Fresh 改称「输入」。只有未分类的用量显示为未记录，不再画成测出来的 0。</li><li><strong>同步上游 qunqin24/Pulse</strong>（17 个提交，直到其 1.8.1 之后的支持区，自 1.4.14 起）。本仓库版本为 <strong>1.4.15</strong>。没有抄入上游 1.8.1 的 Sparkle 推送；<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。README 收进了支持区和爱发电徽章；本仓库的徽章和链接仍指向 harrisliangsu/Pulse。</li><li><strong>这次同步里为本仓库补上的衔接：</strong> 更新检查仍只读本仓库在 GitHub 上的源，失败不会改去 update.qunqin.org 再试。环颜色方案、重置提醒（预测和普通，提前 12 / 24 / 48 小时）、限额恢复彩带（含小时额度）、外观选择、Kimi 的多账号、Qoder 和 Zen，都进了拆开后的设置文件。共用的用量读取仍会问 Qoder、Kimi 的额外账号，以及 Codex 的重置预测。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.15">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.15/Pulse-1.4.15.zip"
+                       length="15448219"
+                       type="application/octet-stream"
+                       sparkle:edSignature="twvNbiRZBEjP2l0symdn7NEw9n0w2zrAkndwgapN120TMbeuymyTq+sPEb8w83aaKqNraP81sdKKv/dYKZEWCQ==" />
+        </item>
+        <item>
             <title>1.4.14</title>
             <pubDate>Tue, 06 Oct 2026 01:49:27 -0000</pubDate>
             <sparkle:version>1.4.14</sparkle:version>

@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.15</title>
+            <pubDate>Wed, 07 Oct 2026 01:54:14 -0000</pubDate>
+            <sparkle:version>1.4.15</sparkle:version>
+            <sparkle:shortVersionString>1.4.15</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.15</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.15</h2><ul><li><strong>A Keychain prompt no longer holds up every refresh.</strong> Reading Claude Code&#x27;s sign-in waits at most 60 seconds, then uses the other routes. Saving a key while a console session is being renewed no longer drops one of them, and a renewal cannot write back a login you just removed.</li><li><strong>Changing how the panel looks no longer asks every provider again.</strong> Size, spacing, appearance and the other look settings only lay the panel out again.</li><li><strong>The Position row wraps.</strong> When the window is too narrow for the label and the choices side by side, the choices move under the label.</li><li><strong>The recap&#x27;s big numbers are no longer clipped.</strong> A 9 or a 5 keeps its right edge, and the month and year leave room for the mark beside them. The price field is the width of a price.</li><li><strong>Token kinds name what was not classified.</strong> The breakdown shows an Unclassified row, and Fresh is now Input. Work that is only unclassified reads as not reported.</li><li><strong>Synced from upstream qunqin24/Pulse</strong> (17 commits, through the Support section after their 1.8.1 line, since 1.4.14). This fork&#x27;s version is <strong>1.4.15</strong>. Their Sparkle offer for 1.8.1 was not copied; <code>appcast.xml</code> is unchanged until this version is tagged. The README&#x27;s Support section, with its Afdian badge, is included; this repository&#x27;s badges and links stay on harrisliangsu/Pulse.</li><li><strong>Fork fixes in this sync:</strong> update checks stay on this repository&#x27;s GitHub feeds and are not retried against update.qunqin.org. Ring colour schemes, reset reminders (predicted and regular, 12 / 24 / 48 hours), celebrations including the hourly one, the appearance picker, Kimi&#x27;s extra accounts, Qoder and Zen are carried into the split settings files. The shared usage fetch still asks Qoder, Kimi&#x27;s extra accounts, and the Codex reset forecast.</li><li><strong>Fork-only pieces kept:</strong> Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and <code>~/.qoder</code>); Zen&#x27;s cookie store; bilingual release notes; and this repo&#x27;s Sparkle feed and signing key.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.15">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.15/Pulse-1.4.15.zip"
+                       length="15448219"
+                       type="application/octet-stream"
+                       sparkle:edSignature="twvNbiRZBEjP2l0symdn7NEw9n0w2zrAkndwgapN120TMbeuymyTq+sPEb8w83aaKqNraP81sdKKv/dYKZEWCQ==" />
+        </item>
+        <item>
             <title>1.4.14</title>
             <pubDate>Tue, 06 Oct 2026 01:49:27 -0000</pubDate>
             <sparkle:version>1.4.14</sparkle:version>
