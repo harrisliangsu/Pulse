@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>en</language>
         <item>
+            <title>1.8.2</title>
+            <pubDate>Wed, 07 Oct 2026 06:35:02 -0000</pubDate>
+            <sparkle:version>1.8.2</sparkle:version>
+            <sparkle:shortVersionString>1.8.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/qunqin24/Pulse/releases/tag/v1.8.2</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.8.2</h2><p><strong>Changed and fixed</strong></p><ul><li><strong>Keep known token categories when records are incomplete.</strong> Some sources report only a total or provide only partial category detail. Recorded input, cache hits and output now remain visible alongside any explicitly recorded unclassified usage. Category shares include unclassified tokens in the total. Unclassified tokens are not priced, and inconsistent totals are not filled in by inference.</li><li><strong>Show unclassified usage in daily tables.</strong> Daily tables in Token spend and model details now include a sortable Unclassified column, hidden when there is no unclassified usage. Records containing only unclassified tokens no longer show zeroes for input, cache hits or output.</li><li><strong>Use consistent token categories.</strong> Fresh input is now labelled Input and includes recorded cache writes. Cache hits remain separate, and missing category data is labelled Not reported.</li><li><strong>Fix table sorting and headers.</strong> Sorting very large token counts no longer treats distinct values as equal due to precision loss. Column headers stay on one line.</li><li><strong>Improve interface copy and release notes.</strong> Revised Simplified Chinese, Traditional Chinese, Japanese and Korean interface text for consistent terminology, clearer wording and corrected typography. Historical Chinese release notes are also updated on GitHub and in the in-app update window.</li></ul><p><a href="https://github.com/qunqin24/Pulse/releases/tag/v1.8.2">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/qunqin24/Pulse/releases/download/v1.8.2/Pulse-1.8.2.zip"
+                       length="15008280"
+                       type="application/octet-stream"
+                       sparkle:edSignature="vc1VzANoWimnA5JjIORbLSFYnnM5dUt4sDq37Vf9kdgo6y5MjlKIg0+DAFw03W4tX6CI9pHOV8debWZ9InYkBA==" />
+        </item>
+        <item>
             <title>1.8.1</title>
             <pubDate>Tue, 06 Oct 2026 06:14:31 -0000</pubDate>
             <sparkle:version>1.8.1</sparkle:version>
