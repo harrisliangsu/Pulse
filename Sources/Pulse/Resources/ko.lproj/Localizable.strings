@@ -557,15 +557,14 @@
 "Most tokens" = "토큰이 가장 많은 모델";
 "By kind" = "종류별";
 "Output" = "출력";
-"Fresh input" = "새 입력";
-"Sent this time and not read from the cache." = "이번에 모델에 보냈고 캐시에서 읽지 않은 분량입니다.";
-"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "이번에 모델에 보냈고 캐시에서 읽지 않은 분량입니다. 그중 %@은 캐시에 기록되었고, Claude 등 일부 서비스는 이 부분을 더 비싸게 청구합니다.";
-"Read back from the cache, usually at a lower price." = "캐시에서 읽어 온 분량으로, 보통 더 싸게 청구됩니다.";
+"Input" = "입력";
+"Recorded input, with reported cache hits counted separately." = "기록된 입력 토큰입니다. 보고된 캐시 적중량은 별도로 집계합니다.";
+"Recorded input, with reported cache hits counted separately. Includes %@ recorded cache writes." = "기록된 입력 토큰입니다. 보고된 캐시 적중량은 별도로 집계합니다. 이 중 %@은 기록된 캐시 쓰기 토큰입니다.";
+"Recorded cache hits. Unreported cache use is not estimated." = "기록된 캐시 적중량을 집계합니다. 기록되지 않은 캐시 사용량은 추정하지 않습니다.";
 "These records carry no cache figures." = "이 기록에는 캐시 수치가 없습니다.";
 "Not reported" = "기록 없음";
-"Fresh" = "새 입력";
 "Cached" = "캐시 적중";
-"Written back by the model." = "모델이 되돌려 쓴 분량입니다.";
+"Model output as recorded by each agent." = "각 Agent에 기록된 모델 출력입니다.";
 "By hour" = "시간대별";
 "By month" = "월별";
 "Pattern" = "사용 패턴";
@@ -1222,3 +1221,6 @@
 "Actually spent" = "실제 지출";
 "Spent by day" = "일별 지출";
 "Spent by month" = "월별 지출";
+"Unclassified" = "미분류";
+"These records do not report this token category separately." = "이 유형의 토큰은 별도로 기록되지 않았습니다.";
+"Reported tokens without a usable category breakdown." = "토큰 수는 기록되었지만 사용할 수 있는 유형별 내역이 없습니다.";

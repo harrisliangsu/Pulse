@@ -584,15 +584,14 @@
 "Most tokens" = "Most tokens";
 "By kind" = "By kind";
 "Output" = "Output";
-"Fresh input" = "Fresh input";
-"Sent this time and not read from the cache." = "Sent this time and not read from the cache.";
-"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher.";
-"Read back from the cache, usually at a lower price." = "Read back from the cache, usually at a lower price.";
+"Input" = "Input";
+"Recorded input, with reported cache hits counted separately." = "Recorded input, with reported cache hits counted separately.";
+"Recorded input, with reported cache hits counted separately. Includes %@ recorded cache writes." = "Recorded input, with reported cache hits counted separately. Includes %@ recorded cache writes.";
+"Recorded cache hits. Unreported cache use is not estimated." = "Recorded cache hits. Unreported cache use is not estimated.";
 "These records carry no cache figures." = "These records carry no cache figures.";
 "Not reported" = "Not reported";
-"Fresh" = "Fresh";
 "Cached" = "Cached";
-"Written back by the model." = "Written back by the model.";
+"Model output as recorded by each agent." = "Model output as recorded by each agent.";
 "By hour" = "By hour";
 "By month" = "By month";
 "Pattern" = "Pattern";
@@ -1220,3 +1219,6 @@
 "Actually spent" = "Actually spent";
 "Spent by day" = "Spent by day";
 "Spent by month" = "Spent by month";
+"Unclassified" = "Unclassified";
+"These records do not report this token category separately." = "These records do not report this token category separately.";
+"Reported tokens without a usable category breakdown." = "Reported tokens without a usable category breakdown.";

@@ -29,9 +29,8 @@ struct RecapOpenerView: View {
         switch recap.period {
         case .month(let year, let month):
             HStack(alignment: .bottom, spacing: 24) {
-                Text(verbatim: String(format: "%02d", month))
+                Text(tight: String(format: "%02d", month), tracking: -340 * 0.07)
                     .font(.recap(340, .bold))
-                    .tracking(-340 * 0.07)
                     .lineLimit(1)
                     .fixedSize()
                     .padding(.top, -340 * RecapFigureText.ascenderRoom)
@@ -49,9 +48,8 @@ struct RecapOpenerView: View {
             }
         case .year(let year):
             HStack(alignment: .bottom, spacing: 24) {
-                Text(verbatim: "\(year)")
+                Text(tight: "\(year)", tracking: -300 * 0.07)
                     .font(.recap(300, .bold))
-                    .tracking(-300 * 0.07)
                     .lineLimit(1)
                     .fixedSize()
                     .padding(.top, -300 * RecapFigureText.ascenderRoom)
@@ -166,9 +164,8 @@ struct RecapOpenerView: View {
                         .font(.recap(19))
                         .foregroundStyle(RecapColor.secondary)
                         .recapFit(0.6)
-                    Text(verbatim: RecapFormat.percent(agent.share))
+                    Text(tight: RecapFormat.percent(agent.share), tracking: -44 * 0.03)
                         .font(.recap(44, .bold))
-                        .tracking(-44 * 0.03)
                         .lineLimit(1)
                 }
             }
@@ -211,9 +208,8 @@ struct RecapOpenerView: View {
                 HStack(spacing: 20) {
                     RecapMarkTile(resource: agent.agent.iconResource, name: agent.agent.displayName, side: 64, lead: first)
                     VStack(alignment: .leading, spacing: 10) {
-                        Text(verbatim: agent.agent.displayName)
+                        Text(tight: agent.agent.displayName, tracking: -0.6)
                             .font(.recap(first ? 34 : 30, first ? .bold : .medium))
-                            .tracking(-0.6)
                             .recapFit(0.5)
                         // A strip needs the dates; an agent without them has
                         // none to draw, and is left without one.

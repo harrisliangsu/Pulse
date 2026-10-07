@@ -273,6 +273,18 @@ Pulse 的靈感來自 [**Vinz**（@hivinz_）](https://x.com/hivinz_/status/2092
 
 ---
 
+## 支持 Pulse
+
+<p align="center">
+  <sub>Pulse 是免費開源的，用愛發電、抽空更新。<br>如果它幫你躲過了一次突如其來的限流，歡迎請作者喝杯咖啡。</sub>
+</p>
+
+<p align="center">
+  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/%E6%84%9B%E7%99%BC%E9%9B%BB-%E8%AB%8B%E4%BD%9C%E8%80%85%E5%96%9D%E6%9D%AF%E5%92%96%E5%95%A1-946CE6?style=for-the-badge" alt="在愛發電支持 Pulse"></a>
+</p>
+
+---
+
 ## 授權
 
 本專案依 [Apache 2.0](LICENSE) 授權。內含的第三方資源保留其各自的授權條款；詳見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

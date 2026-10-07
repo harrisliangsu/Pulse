@@ -131,7 +131,15 @@ class OfferTests(unittest.TestCase):
         self.assertIn('url="https://example.invalid/rebuilt.zip"', current)
         self.assertNotIn("do-not-write-this", updated)
         # Notes and the publication date are the part a reader already saw.
-        self.assertIn("<description>", current)
+        # This fork's newest item has one description per language
+        # (`<description xml:lang="…">`), not a single bare `<description>`.
+        notes = re.findall(
+            r'<description(?: xml:lang="[^"]+")?><!\[CDATA\[',
+            _item(original, newest),
+        )
+        self.assertGreaterEqual(len(notes), 1)
+        for note in notes:
+            self.assertIn(note, current)
         pub = re.search(r"<pubDate>([^<]+)</pubDate>", _item(original, newest))
         assert pub is not None
         self.assertIn(pub.group(1), current)

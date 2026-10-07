@@ -56,6 +56,16 @@ Disabled providers are not fetched by the loop, by opening their Settings pane, 
 
 `windowSeconds` is not evidence that a length was reported. `UsageWindow.reportsLength` distinguishes a real duration from a sort key. The window-clock arc and burn-rate divide only when the length was actually stated.
 
+### One path from an account to its fetch
+
+The full pass (`refresh(dueOnly:)`) and the per-account refresh (`refresh(_:)`) used to each build and switch over their own copy of every service. **They now both ask `UsageStore.fetch(for:liveKey:)`**, which resolves the credential and hands the account to the store's `UsageServiceFactory` (`UsageServices.swift`). The factory returns a `UsageFetch` — a `@Sendable () async -> ProviderUsage` closed over everything it needs, built on the main actor at the start of the pass so settings and keys are read then — and is the **only** place that decides which service answers which account: an extension answers by its program (or `.extensionMissing`), an added account by the login Pulse holds (`fetchAdded`), a primary account by its hand-written service or its `ProviderProfile`. `LiveUsageServices` is production; a test injects a fake.
+
+What each caller does with the answer is shared too: `settle` applies the balance ring, then `UsageCache.reconciled`, and returns both the raw and the reconciled reading, which `commit` writes. Credential: a full pass reads `apiKeys` (only enabled accounts, loaded at launch); a ring click (`liveKey: true`) falls back to the key store, because a provider's pane is reachable while switched off.
+
+What stays different, on purpose: the full pass asks primary accounts side by side in one task group, **then** added accounts one at a time, **then** extensions side by side, holds every write until the pass is still current, commits added accounts and extensions before the primaries, and skips an extension whose program is gone (its slot keeps its reading); a ring click commits one account, keeps its feedback up for 650 ms, and reports `.extensionMissing` for a vanished extension. A full pass commits in the order of `settings.shownAccounts`; it used to commit hand-written providers in a fixed list and profiled ones in completion order, which alert rules cannot tell apart.
+
+The store also takes a `UsageCache` (scratch file in tests) and a clock (`clock`, used by the watchdog, the pacing stamps and `noteLooked`). `UsageStore+Pacing.swift` holds the pure rules (`timerWait`, `providersToAsk`, `passCeiling`, `didAnythingMove`). `UsageStoreSchedulingTests` drives all of the above with fake services: [testing.md](testing.md).
+
 ## Cache
 
 `UsageCache` keeps the last good reading per account so a refusal can show numbers with a date instead of an empty error. They come back marked `.stale` (the card’s “as of” line).

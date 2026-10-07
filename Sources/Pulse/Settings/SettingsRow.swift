@@ -39,7 +39,9 @@ struct SettingsGroup<Content: View>: View {
 }
 
 /// One line inside a `SettingsGroup`: a label on the left, its control on the
-/// right, and an optional explanation underneath the label.
+/// right, and an optional explanation underneath the label — or, with
+/// `controlBelow`, the control under the label, for a control too wide to
+/// leave the label room beside it.
 struct SettingsRow<Control: View>: View {
     let title: String
     let subtitle: String?
@@ -51,21 +53,45 @@ struct SettingsRow<Control: View>: View {
     /// A resource name rather than a `Provider` because the spend pane draws
     /// clients that are not providers at all; see `SpendAgent.iconResource`.
     let icon: String?
+    let controlBelow: Bool
     @ViewBuilder let control: Control
 
     init(
         _ title: String,
         subtitle: String? = nil,
         icon: String? = nil,
+        controlBelow: Bool = false,
         @ViewBuilder control: () -> Control
     ) {
         self.title = title
         self.subtitle = subtitle
         self.icon = icon
+        self.controlBelow = controlBelow
         self.control = control()
     }
 
     var body: some View {
+        Group {
+            if controlBelow {
+                VStack(alignment: .leading, spacing: 9) {
+                    label
+                    control
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack(alignment: .center, spacing: 16) {
+                    label
+                    Spacer(minLength: 0)
+                    control
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .frame(minHeight: 44)
+    }
+
+    private var label: some View {
         HStack(alignment: .center, spacing: 16) {
             if let icon {
                 LobeIconView(resource: icon, size: 15)
@@ -82,14 +108,7 @@ struct SettingsRow<Control: View>: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-
-            Spacer(minLength: 0)
-
-            control
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
-        .frame(minHeight: 44)
     }
 }
 

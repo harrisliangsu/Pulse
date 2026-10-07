@@ -328,8 +328,8 @@ struct AgentUsageRecordTests {
         // An event record's unknown tokens still reach their hour bucket...
         #expect(ledger.slots.first?.tokens == 500)
 
-        // ...but the model's categories cannot, so the drill-down withholds
-        // the split and the money while keeping the count. The drill-down is
+        // ...and the drill-down preserves the explicit unclassified count,
+        // without displaying measured input/output zeroes or money. It is
         // reached by the published name, which the unknown-only id now takes
         // even though its tokens were never priced.
         #expect(ledger.modelNames["priced"] == "Priced")
@@ -338,7 +338,10 @@ struct AgentUsageRecordTests {
             now: Self.now, calendar: Self.calendar
         )
         #expect(model.tokens == 500)
-        #expect(model.tally == nil)
+        #expect(model.tally == TokenTally())
+        #expect(model.unclassifiedTokens == 500)
+        #expect(model.days.last?.unclassifiedTokens == 500)
+        #expect(model.days.last?.classifiedTally == nil)
         #expect(model.cost == nil)
         #expect(model.unpricedTokens == 500)
     }
@@ -370,8 +373,11 @@ struct AgentUsageRecordTests {
         #expect(model.tokens == 150)
         #expect(abs((model.cost ?? -1) - 0.1) < 1e-12)
         #expect(model.unpricedTokens == 50)
-        // The split cannot stand for the whole, so it is withheld.
-        #expect(model.tally == nil)
+        // The classified subset and the explicit remainder both survive.
+        #expect(model.tally == TokenTally(input: 100))
+        #expect(model.unclassifiedTokens == 50)
+        #expect(model.days.last?.classifiedTally == TokenTally(input: 100))
+        #expect(model.days.last?.unclassifiedTokens == 50)
     }
 
     @Test("A negative or overflowing record is skipped whole; the rest of the run is kept")
@@ -537,7 +543,10 @@ struct AgentUsageRecordTests {
         #expect(model.hours == nil)
         #expect(abs((model.cost ?? -1) - 0.1) < 1e-12)
         #expect(model.unpricedTokens == 400)
-        #expect(model.tally == nil)
+        #expect(model.tally == TokenTally(input: 100))
+        #expect(model.unclassifiedTokens == 400)
+        #expect(combined.unclassifiedTokens == 400)
+        #expect(combined.hasTokenBreakdown)
     }
 
     @Test("Aggregate and mixed-timing sessions window by their known days", arguments: [true, false])

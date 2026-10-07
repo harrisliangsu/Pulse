@@ -12,7 +12,7 @@ This is not a catalogue of secrets. Client ids below are public (they ship in ev
 |---|---|---|
 | Pasted API key, or Ollama / Qoder session cookie | `keys.dat` (`APIKeyStore`) | Nobody. User pastes or re-reads the browser. |
 | Copilot GitHub token | `keys.dat` as well (`keepsOwnCredential`) | Sign in again. Device tokens here are not the CLI refresh path. |
-| Extra-account logins (Claude Code, Codex, Grok, Grok Bot, Kimi Code) | `accounts.dat` (`AccountCredentialStore`) | `UsageStore.fetchAdded` via `OAuthLogin.refresh` for the OAuth providers. Grok Bot has **no** refresh endpoint in Cursor’s client. Kimi Code’s **primary** subscription login lives here too. |
+| Extra-account logins (Claude Code, Codex, Grok, Grok Bot, Kimi Code) | `accounts.dat` (`AccountCredentialStore`) | `LiveUsageServices.fetchAdded` (`UsageServices.swift`) via `OAuthLogin.refresh` for the OAuth providers. Grok Bot has **no** refresh endpoint in Cursor’s client. Kimi Code’s **primary** subscription login lives here too. |
 | Kimi Code subscription login (primary) | `accounts.dat` as well, keyed by the primary `kimiCode` account | `KimiCodeUsageService` via `OAuthLogin.refresh`. Access ~15 minutes; refresh ~30 days and **rotates**. A pasted console key still lives in `keys.dat` and wins when both exist. |
 
 Both files are AES-GCM boxes in Pulse’s Application Support folder, owner-only, key derived from this Mac rather than stored. `LocalSecrets` is shared so there is one copy of the crypto; a different derived key per purpose means a box from one store cannot be opened by the other.
@@ -33,7 +33,7 @@ Pulse’s extra-account login has its own refresh token and does not read or wri
 
 ## Extra accounts: who can have them
 
-[`Provider.supportsMultipleAccounts`](../../Sources/Pulse/Usage/MonitoredAccount.swift) is **`.claudeCode`, `.codex`, `.grok`, `.grokBot`**. Not two. Not Cursor.
+[`Provider.supportsMultipleAccounts`](../../Sources/Pulse/Usage/MonitoredAccount.swift) is **`.claudeCode`, `.codex`, `.grok`, `.grokBot`, `.kimiCode`**. Not Cursor.
 
 - Claude Code / Codex / Grok: `OAuthLogin` public CLI clients.
 - Grok Bot: **not OAuth** — [`CursorWebLogin`](../../Sources/Pulse/Auth/CursorWebLogin.swift) (Cursor’s login page + poll).
@@ -153,7 +153,7 @@ Pulse does **not** read `~/Library/Application Support/Grok Bot/sand-secrets.jso
 
 ## Browser cookies
 
-[`BrowserCookies.swift`](../../Sources/Pulse/Auth/BrowserCookies.swift) exists because Ollama publishes no quota API. It is no longer Ollama's alone: Xiaomi Coding Plan, Qoder and StepFun read the same way among the hand-written providers, and every profiled provider whose `ProviderProfile.Credential` is `.sessionCookie` reads through the same function (`SettingsView` calls `BrowserCookies.session(forHost:allowing:keep:)` for both). Which providers that is, and the one with `.browserStorage` (a `localStorage` value via `ChromiumLocalStorage` instead of a cookie), is a count worth checking in [`README.md`](README.md#profiled-providers) rather than copying here. Ollama's own setup, host filter, and parser rules: [`../ollama-cloud.md`](../ollama-cloud.md).
+[`BrowserCookies.swift`](../../Sources/Pulse/Auth/BrowserCookies.swift) exists because Ollama publishes no quota API. It is no longer Ollama's alone: Xiaomi Coding Plan, Qoder and StepFun read the same way among the hand-written providers, and every profiled provider whose `ProviderProfile.Credential` is `.sessionCookie` reads through the same function (`ProviderCredentialModel` calls `BrowserCookies.session(forHost:allowing:keep:)` for both). Which providers that is, and the one with `.browserStorage` (a `localStorage` value via `ChromiumLocalStorage` instead of a cookie), is a count worth checking in [`README.md`](README.md#profiled-providers) rather than copying here. Ollama's own setup, host filter, and parser rules: [`../ollama-cloud.md`](../ollama-cloud.md).
 
 **User-browser cookie reading is not how Claude, Cursor, or anyone else authenticates.** Claude Desktop borrows the *desktop app’s* Chromium cookie store (`sessionKey` / `sessionKeyV3` on `claude.ai`) via [`ClaudeDesktopSession`](../../Sources/Pulse/Providers/ClaudeDesktopSession.swift) — a different path, gated on a Keychain grant for `Claude Safe Storage`. Cursor **builds** a `WorkosCursorSessionToken` from the editor’s SQLite token; it does not open Safari or Chrome.
 

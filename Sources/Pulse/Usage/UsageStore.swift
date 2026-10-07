@@ -36,14 +36,17 @@ final class UsageStore {
     /// which have no bundle to post from and nothing to say anyway.
     private let alerts: UsageAlerts?
     private let appServer = CodexAppServer()
-    private let codex: CodexUsageService
-    private let kiro = KiroUsageService()
-    private let claudeCode = ClaudeCodeUsageService()
-    private let antigravity = AntigravityUsageService()
-    private let grok = GrokUsageService()
-    private let grokBot = GrokBotUsageService()
-    private let cursor = CursorUsageService()
-    private var timer: Timer?
+    /// The one way a provider is asked, for the full pass and the per-account
+    /// refresh alike. Production talks to the real providers; a test hands in
+    /// a fake and drives the scheduling without any network.
+    private let services: any UsageServiceFactory
+    /// Where fetched readings are reconciled and banked. Injectable so a test
+    /// writes a scratch file rather than the one the running app depends on.
+    private let cache: UsageCache
+    /// The store's clock, for the pass watchdog and the per-provider pacing.
+    private let clock: () -> Date
+    /// The loop's one timer. Readable so a test can see that it is a one-shot.
+    private(set) var timer: Timer?
     /// Kept with the centre each was registered on: workspace notifications
     /// don't come from the default centre, and removing them there does
     /// nothing at all.
@@ -99,14 +102,21 @@ final class UsageStore {
     /// pass none, so they neither read the real transcripts nor write the file.
     let elsewhere: ElsewhereWatch?
 
+    /// - Parameters:
+    ///   - services: how an account is asked. Nil is the real providers.
+    ///   - cache: where readings are reconciled and banked.
+    ///   - clock: the time the pass watchdog and the pacing are measured by.
     init(settings: AppSettings, alerts: UsageAlerts? = nil, activity: AgentActivityMonitor = AgentActivityMonitor(),
-         elsewhere: ElsewhereWatch? = nil) {
+         elsewhere: ElsewhereWatch? = nil, services: (any UsageServiceFactory)? = nil,
+         cache: UsageCache = .shared, clock: @escaping () -> Date = Date.init) {
         self.settings = settings
         self.activity = activity
         self.elsewhere = elsewhere
         networkProxy = settings.networkProxy
         self.alerts = alerts
-        codex = CodexUsageService(server: appServer)
+        self.services = services ?? LiveUsageServices(settings: settings, appServer: appServer)
+        self.cache = cache
+        self.clock = clock
 
         for account in settings.allAccounts {
             usage[account.id] = Self.initialState(for: account)
@@ -382,7 +392,7 @@ final class UsageStore {
         // running beside take a round trip.
         Task { [accounts = settings.shownAccounts] in
             for account in accounts {
-                guard let cached = await UsageCache.shared.lastReading(for: account) else { continue }
+                guard let cached = await self.cache.lastReading(for: account) else { continue }
                 // Nothing has been fetched yet, so anything but the seeded
                 // placeholder would be a reading — and there cannot be one.
                 guard case .unavailable = self.usage(for: account).state else { continue }
@@ -405,11 +415,11 @@ final class UsageStore {
     /// The user hovered the rail to read a card, which is the clearest sign
     /// they want these numbers to be current.
     func noteLooked() {
-        signals.lastLooked = Date()
+        signals.lastLooked = clock()
 
         // A rail is crossed ring by ring, so this is called several times a
         // second. Asking once is the point; asking once per ring is a storm.
-        let asked = lastLookRefresh.map { Date().timeIntervalSince($0) < Self.lookCooldown } ?? false
+        let asked = lastLookRefresh.map { clock().timeIntervalSince($0) < Self.lookCooldown } ?? false
 
         // Reading a stale card is the moment a slow cadence is most obviously
         // wrong, so this asks straight away rather than tightening the loop
@@ -422,7 +432,7 @@ final class UsageStore {
         // than the cadence that was chosen for it is the evidence, and the
         // pointer arriving is the cheapest place to act on it.
         if !asked, currentInterval > AdaptiveRefresh.floor || isOverdue {
-            lastLookRefresh = Date()
+            lastLookRefresh = clock()
             refresh()
         } else {
             scheduleNext()
@@ -440,56 +450,6 @@ final class UsageStore {
             ?? AdaptiveRefresh.interval(for: signals, isWatched: provider.spendingIsWatchedLocally)
     }
 
-    /// How long the loop's one timer waits: until the soonest primary account
-    /// is due, never under fifteen seconds.
-    ///
-    /// **No primary account is not no cadence.** Added accounts and extensions
-    /// are read on every tick, so a rail of only those still runs on the
-    /// interval the user chose — it fell to the adaptive one, and "every
-    /// minute" waited half an hour while Settings said a minute.
-    nonisolated static func timerWait(primaryWaits: [TimeInterval], fixed: TimeInterval?, adaptive: TimeInterval) -> TimeInterval {
-        max(primaryWaits.min() ?? fixed ?? adaptive, 15)
-    }
-
-    /// A second of slack, so a timer that fires a hair early does not skip the
-    /// very provider it woke up for and sleep another full interval.
-    nonisolated static let dueSlack: TimeInterval = 1
-
-    /// Which providers a pass should ask.
-    ///
-    /// **`dueOnly` is true for exactly one caller: the timer.** Everything else
-    /// that reaches `refresh()` is something happening — a setting changed, a
-    /// window reset, the display woke, the pointer arrived at a rail whose
-    /// figures are older than they should be — and each of those is a reason to
-    /// go and look *now*, whatever the cadence says.
-    ///
-    /// Getting that backwards is not a slow refresh, it is a control that does
-    /// nothing: switching DeepSeek between "since top-up" and "balance only"
-    /// changes what the reading means, and a pass that skipped it because it
-    /// had been asked a minute ago left the old ring on screen.
-    ///
-    /// `nonisolated static` and pure, so the rule is arguable: it reads none of
-    /// the store's state, the clock is passed in, and so is the cadence — which
-    /// is the store's own `interval(for:)` in production.
-    nonisolated static func providersToAsk(
-        from accounts: [AccountKey],
-        dueOnly: Bool,
-        askedAt: [String: Date],
-        interval: (Provider) -> TimeInterval,
-        now: Date
-    ) -> Set<Provider> {
-        Set(
-            accounts
-                .filter(\.isPrimary)
-                .map(\.provider)
-                .filter { provider in
-                    guard dueOnly else { return true }
-                    guard let asked = askedAt[AccountKey(provider).id] else { return true }
-                    return now.timeIntervalSince(asked) >= interval(provider) - dueSlack
-                }
-        )
-    }
-
     /// Whether the newest reading is older than the loop's own cadence allows.
     ///
     /// Twice the interval plus a minute: one missed tick is a slow network,
@@ -503,7 +463,7 @@ final class UsageStore {
         // per ring: measured, thirteen calls for twelve rings. Every signal in
         // this loop may only make it wait *longer*.
         guard let newest = usage.values.compactMap(\.observedAt).max() else { return false }
-        return Date().timeIntervalSince(newest) > currentInterval * 2 + 60
+        return clock().timeIntervalSince(newest) > currentInterval * 2 + 60
     }
 
     /// Re-reads settings that affect the loop itself, then refreshes.
@@ -548,19 +508,12 @@ final class UsageStore {
         Task { [appServer] in await appServer.shutDown() }
     }
 
-    /// Longer than any pass can honestly take: every request in one carries a
-    /// timeout of its own, and the whole set runs side by side. Past this the
-    /// pass is not slow, it is gone — and since `scheduleNext` only runs when a
-    /// pass *finishes*, a lost one takes the whole loop with it and nothing
-    /// ever asks again.
-    private static let passCeiling: TimeInterval = 180
-
     /// - Parameter dueOnly: leave every provider alone whose own cadence has
     ///   not come round yet. True only from the timer; see `providersToAsk`.
     func refresh(dueOnly: Bool = false) {
         guard !settings.needsProviderSelection else { return }
         if isRefreshing, let started = refreshStartedAt,
-           Date().timeIntervalSince(started) > Self.passCeiling {
+           clock().timeIntervalSince(started) > Self.passCeiling {
             // Whatever it was waiting for is not coming. Letting the next pass
             // through is the only thing that can restart the loop — and the
             // abandoned one is disowned here rather than merely unblocked, or
@@ -577,57 +530,14 @@ final class UsageStore {
             return
         }
         isRefreshing = true
-        refreshStartedAt = Date()
+        refreshStartedAt = clock()
         refreshingAccount = nil
         generation += 1
         currentPass = generation
         let pass = generation
 
-        let codexSource = settings.source(for: AccountKey(.codex))
-        let claudeSource = settings.source(for: AccountKey(.claudeCode))
         let previous = usage
 
-        // Read here rather than inside the services, which stay free of
-        // storage concerns.
-        let openCode = OpenCodeGoUsageService(
-            enteredKey: apiKeys[.openCodeGo],
-            consoleCookie: APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot)
-        )
-        let kimi = KimiCodeUsageService(enteredKey: apiKeys[.kimiCode])
-        let ollama = OllamaCloudUsageService(cookie: apiKeys[.ollamaCloud])
-        let xiaomi = XiaomiMiMoUsageService(cookie: apiKeys[.xiaomiMiMo])
-        let qoder = QoderUsageService(cookie: apiKeys[.qoder], site: settings.qoderSite)
-        let stepFun = StepFunUsageService(cookie: apiKeys[.stepFun], site: settings.stepFunSite)
-        let zai = ZaiUsageService(provider: .zai, enteredKey: apiKeys[.zai])
-        let glm = ZaiUsageService(provider: .glmCoding, enteredKey: apiKeys[.glmCoding])
-        let minimax = MiniMaxUsageService(provider: .minimax, enteredKey: apiKeys[.minimax])
-        let minimaxCN = MiniMaxUsageService(provider: .minimaxCN, enteredKey: apiKeys[.minimaxCN])
-        let copilot = CopilotUsageService(token: apiKeys[.copilot])
-        let volcengine = VolcengineUsageService(enteredKey: apiKeys[.volcengine])
-        let volcengineSource = settings.source(for: AccountKey(.volcengine))
-        let kimiSource = settings.source(for: AccountKey(.kimiCode))
-        let commandCode = CommandCodeUsageService(enteredKey: apiKeys[.commandCode])
-        let devin = DevinUsageService(
-            enteredKey: apiKeys[.devin],
-            browser: settings.sessionBrowser(for: AccountKey(.devin))
-        )
-        let devinSource = settings.source(for: AccountKey(.devin))
-        let deepSeek = DeepSeekUsageService(
-            enteredKey: apiKeys[.deepSeek],
-            basis: settings.deepSeekBasis,
-            budget: settings.deepSeekBudget,
-            currency: settings.deepSeekCurrency,
-            consoleToken: DeepSeekConsole.keptToken
-        )
-        let sub2api = Sub2APIUsageService(
-            enteredKey: apiKeys[.sub2api],
-            address: settings.serverAddress(for: AccountKey(.sub2api))
-        )
-        let newAPI = NewAPIUsageService(
-            enteredKey: apiKeys[.newAPI],
-            address: settings.serverAddress(for: AccountKey(.newAPI))
-        )
-        let v2ex = V2EXUsageService(enteredKey: apiKeys[.v2ex])
         // Nothing is fetched for a provider that isn't on the rail: it would
         // spend someone else's request, and read a credential, for a figure
         // nobody is going to see.
@@ -636,7 +546,7 @@ final class UsageStore {
         // woken for DeepSeek must not drag sixteen other services along with
         // it. Everything not asked keeps the reading it already has: the
         // commit loop below is gated on this same set.
-        let now = Date()
+        let now = clock()
         let wanted = Self.providersToAsk(
             from: settings.shownAccounts,
             dueOnly: dueOnly,
@@ -645,65 +555,27 @@ final class UsageStore {
             now: now
         )
         for provider in wanted { askedAt[AccountKey(provider).id] = now }
-        // Profiled providers are asked side by side in one group rather than
-        // each getting its own `async let` below: there are dozens of them,
-        // and nothing about one depends on another.
-        let profiled = wanted.compactMap { provider -> (ProviderProfile, ProfileContext)? in
-            guard let profile = provider.profile else { return nil }
-            return (profile, profileContext(for: provider))
-        }
+        // Primary accounts are asked side by side in one group rather than
+        // one after another: there are dozens of them, and nothing about one
+        // depends on another. Built here, on the main actor, so what each
+        // reads from settings and the key store is read at the start of the
+        // pass.
+        let asked = settings.shownAccounts.filter { $0.isPrimary && wanted.contains($0.provider) }
+        let primaries = asked.map { fetch(for: $0, liveKey: false) }
         // Added accounts stay on the loop's own cadence: every one of them is
         // an agent whose transcripts this Mac can see, so the signals are not
         // blind to any of them.
-        let extras = settings.shownAccounts.filter { !$0.isPrimary && $0.provider != .pulseExtension }
+        let extras = settings.shownAccounts
+            .filter { !$0.isPrimary && $0.provider != .pulseExtension }
+            .map { ($0, fetch(for: $0, liveKey: false)) }
         // Extensions are read side by side rather than in that queue: each is
         // a program with its own time limit, and one taking all of it must not
         // make every other extension wait behind it.
-        let extensionServices = settings.shownAccounts
-            .compactMap(settings.pulseExtension(for:))
-            .map(ExtensionUsageService.init(pulseExtension:))
+        let extensionAccounts = settings.shownAccounts.filter { settings.pulseExtension(for: $0) != nil }
+        let extensions = extensionAccounts.map { fetch(for: $0, liveKey: false) }
 
-        // The services above are copied into one value so the pass does not
-        // keep reaching back into this actor for them. Hand-written fetches
-        // live in `UsageBatch`: one `load` per provider. Profiled providers
-        // go in the same batch, side by side. An `async let` pasted back into
-        // this function is how the 1.4.3 merge shipped two Qoder bindings.
-        let batch = UsageBatch(
-            wanted: wanted,
-            codex: codex,
-            codexSource: codexSource,
-            kiro: kiro,
-            claudeCode: claudeCode,
-            claudeSource: claudeSource,
-            antigravity: antigravity,
-            cursor: cursor,
-            openCode: openCode,
-            kimi: kimi,
-            kimiSource: kimiSource,
-            ollama: ollama,
-            qoder: qoder,
-            xiaomi: xiaomi,
-            zai: zai,
-            glm: glm,
-            minimax: minimax,
-            minimaxCN: minimaxCN,
-            copilot: copilot,
-            grok: grok,
-            grokBot: grokBot,
-            volcengine: volcengine,
-            volcengineSource: volcengineSource,
-            commandCode: commandCode,
-            deepSeek: deepSeek,
-            devin: devin,
-            devinSource: devinSource,
-            sub2api: sub2api,
-            newAPI: newAPI,
-            v2ex: v2ex,
-            stepFun: stepFun,
-            profiles: Dictionary(uniqueKeysWithValues: profiled.map { ($0.1.provider, ($0.0, $0.1)) })
-        )
         Task {
-            let readings = await batch.collect()
+            let rawPrimaries = await Self.fetchTogether(primaries)
 
             // **The disowning is checked before anything is written, not just
             // before the readings are handed to the panel.** `reconciled`
@@ -724,13 +596,9 @@ final class UsageStore {
             // missing from the comparison — which is what left Devin's moves
             // unable to shorten the interval.
             var results: [BatchResult] = []
-            for (provider, rawReading) in readings {
-                let raw = self.ringed(rawReading)
-                results.append(BatchResult(
-                    provider: provider,
-                    raw: raw,
-                    fetched: await UsageCache.shared.reconciled(raw)
-                ))
+            for (account, raw) in zip(asked, rawPrimaries) {
+                let answer = await self.settle(raw)
+                results.append(BatchResult(provider: account.provider, raw: answer.raw, fetched: answer.fetched))
             }
             // Accounts Pulse signed in to itself, read one at a time: each
             // may have to renew its token first, and they are few.
@@ -741,25 +609,18 @@ final class UsageStore {
             // the one place that wrote straight into `usage` with no check at
             // all. Every one of these went over a newer reading.
             var fetchedExtras: [(String, ProviderUsage, ProviderUsage)] = []
-            for account in extras {
-                let raw = await Self.fetchAdded(account, claudeCode: claudeCode, codex: codex, grok: grok, grokBot: grokBot, kimi: kimi)
+            for (account, fetch) in extras {
+                let raw = await fetch()
                 guard pass == self.currentPass else { return }
-                fetchedExtras.append((account.id, await UsageCache.shared.reconciled(raw), raw))
+                let answer = await self.settle(raw)
+                fetchedExtras.append((account.id, answer.fetched, answer.raw))
             }
-            let extensionReadings = await withTaskGroup(of: ProviderUsage.self) { group in
-                for service in extensionServices {
-                    group.addTask { await service.fetch() }
-                }
-                var readings: [ProviderUsage] = []
-                for await reading in group { readings.append(reading) }
-                return readings
-            }
+            let extensionReadings = await Self.fetchTogether(extensions)
             guard pass == self.currentPass else { return }
-            for reading in extensionReadings {
-                let raw = self.ringed(reading)
-                fetchedExtras.append((raw.id, await UsageCache.shared.reconciled(raw), raw))
+            for (account, reading) in zip(extensionAccounts, extensionReadings) {
+                let answer = await self.settle(reading)
+                fetchedExtras.append((account.id, answer.fetched, answer.raw))
             }
-
 
             // **A disowned pass writes nothing.** It was given up on, another
             // has run since, and everything below would put its stale readings
@@ -788,7 +649,7 @@ final class UsageStore {
             // slot was never written — cannot compare as "moved" on every pass
             // and pin the adaptive interval at its floor.
             if Self.didAnythingMove(results, previous: previous) {
-                self.signals.lastChange = Date()
+                self.signals.lastChange = self.clock()
             }
 
             if wanted.contains(.codex) { self.refreshCodexResetCredits() }
@@ -810,7 +671,7 @@ final class UsageStore {
         // path sets the flag too, so a ring click that never came back would
         // block every refresh after it.
         if isRefreshing, let started = refreshStartedAt,
-           Date().timeIntervalSince(started) > Self.passCeiling {
+           clock().timeIntervalSince(started) > Self.passCeiling {
             isRefreshing = false
         }
 
@@ -819,129 +680,27 @@ final class UsageStore {
             return
         }
         isRefreshing = true
-        refreshStartedAt = Date()
+        refreshStartedAt = clock()
         refreshingAccount = account
         generation += 1
         currentPass = generation
         let pass = generation
 
-        let provider = account.provider
-        let source = settings.source(for: account)
         let previous = usage[account.id]
         let startedAt = ContinuousClock.now
-        // A provider's own pane in Settings is reachable while it is switched
-        // off, so its key will not be in the launch-time cache.
-        let key = provider.keepsOwnCredential ? (apiKeys[provider] ?? APIKeyStore.key(for: provider)) : nil
-        let openCode = OpenCodeGoUsageService(
-            enteredKey: key,
-            consoleCookie: provider == .openCodeGo ? APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot) : nil
-        )
-        let kimi = KimiCodeUsageService(enteredKey: key)
-        let ollama = OllamaCloudUsageService(cookie: key)
-        let xiaomi = XiaomiMiMoUsageService(cookie: key)
-        let qoder = QoderUsageService(cookie: key, site: settings.qoderSite)
-        let stepFun = StepFunUsageService(cookie: key, site: settings.stepFunSite)
-        let zai = ZaiUsageService(provider: provider, enteredKey: key)
-        let minimax = MiniMaxUsageService(provider: provider, enteredKey: key)
-        let volcengine = VolcengineUsageService(enteredKey: key)
-        let commandCode = CommandCodeUsageService(enteredKey: key)
-        let devinAccount = DevinUsageService(
-            enteredKey: key,
-            browser: settings.sessionBrowser(for: account)
-        )
-        let deepSeek = DeepSeekUsageService(
-            enteredKey: key,
-            basis: settings.deepSeekBasis,
-            budget: settings.deepSeekBudget,
-            currency: settings.deepSeekCurrency,
-            consoleToken: DeepSeekConsole.keptToken
-        )
-        let sub2api = Sub2APIUsageService(
-            enteredKey: key, address: settings.serverAddress(for: account)
-        )
-        let newAPI = NewAPIUsageService(
-            enteredKey: key, address: settings.serverAddress(for: account)
-        )
-        let v2ex = V2EXUsageService(enteredKey: key)
-        let extensionService = settings.pulseExtension(for: account).map(ExtensionUsageService.init(pulseExtension:))
-        let profiled = provider.profile.map { ($0, profileContext(for: provider, key: key)) }
+        let fetch = fetch(for: account, liveKey: true)
 
-        Task { [codex, claudeCode, antigravity, cursor, grok, grokBot, kimi] in
-            let raw: ProviderUsage
-            if account.provider == .pulseExtension {
-                raw = await extensionService?.fetch() ?? .unavailable(account, reason: .extensionMissing)
-            } else if !account.isPrimary {
-                raw = await Self.fetchAdded(account, claudeCode: claudeCode, codex: codex, grok: grok, grokBot: grokBot, kimi: kimi)
-            } else if let written = provider.handWritten {
-            switch written {
-            case .codex:
-                raw = await codex.fetch(source: source)
-            case .kiro:
-                raw = await kiro.fetch()
-            case .claudeCode:
-                raw = await claudeCode.fetch(source: source)
-            case .antigravity:
-                raw = await antigravity.fetch()
-            case .cursor:
-                raw = await cursor.fetch()
-            case .openCodeGo:
-                raw = await openCode.fetch()
-            case .kimiCode:
-                raw = await kimi.fetch(source: source)
-            case .ollamaCloud:
-                raw = await ollama.fetch()
-            case .zai, .glmCoding:
-                raw = await zai.fetch()
-            case .minimax, .minimaxCN:
-                raw = await minimax.fetch()
-            case .copilot:
-                raw = await CopilotUsageService(token: key).fetch()
-            case .grok:
-                raw = await grok.fetch()
-            case .grokBot:
-                raw = await grokBot.fetch()
-            case .volcengine:
-                raw = await volcengine.fetch(source: source)
-            case .commandCode:
-                raw = await commandCode.fetch()
-            case .deepSeek:
-                raw = await deepSeek.fetch()
-            case .devin:
-                raw = await devinAccount.fetch(source: source)
-            case .xiaomiMiMo:
-                raw = await xiaomi.fetch()
-            case .sub2api:
-                raw = await sub2api.fetch()
-            case .newAPI:
-                raw = await newAPI.fetch()
-            case .v2ex:
-                raw = await v2ex.fetch()
-            case .qoder:
-                raw = await qoder.fetch()
-            case .stepFun:
-                raw = await stepFun.fetch()
-            // Every extension is a slot of its own, answered above.
-            case .pulseExtension:
-                raw = .unavailable(account, reason: .extensionMissing)
-            }
-            } else {
-                // A profiled provider: the fetch its own file built.
-                raw = if let (profile, context) = profiled {
-                    await profile.fetch(context)
-                } else {
-                    .unavailable(account, reason: .loading)
-                }
-            }
+        Task {
+            let raw = await fetch()
 
             guard pass == self.currentPass else { return }
 
-            let answered = self.ringed(raw)
-            let fetched = await UsageCache.shared.reconciled(answered)
+            let answer = await self.settle(raw)
             guard pass == self.currentPass else { return }
-            self.commit(fetched, raw: answered, for: account.id)
+            self.commit(answer.fetched, raw: answer.raw, for: account.id)
 
-            if previous?.windows != fetched.windows {
-                self.signals.lastChange = Date()
+            if previous?.windows != answer.fetched.windows {
+                self.signals.lastChange = self.clock()
             }
 
             // A local/status-line read can finish within one frame. Keep the
@@ -963,6 +722,48 @@ final class UsageStore {
         }
     }
 
+    /// **The one path from an account to its request.** Both passes build
+    /// theirs here, so which service answers for which account, and with what
+    /// credential, is decided once — by `services`.
+    ///
+    /// - Parameter liveKey: read the credential from the key store when the
+    ///   launch-time cache has none. For a ring click: a provider's own pane
+    ///   in Settings is reachable while it is switched off, so its key will
+    ///   not be in the cache. A full pass only ever asks enabled accounts,
+    ///   whose keys are.
+    private func fetch(for account: AccountKey, liveKey: Bool) -> UsageFetch {
+        let provider = account.provider
+        let key: String?
+        if !account.isPrimary {
+            key = nil
+        } else if liveKey {
+            key = provider.keepsOwnCredential ? (apiKeys[provider] ?? services.storedKey(for: provider)) : nil
+        } else {
+            key = apiKeys[provider]
+        }
+        return services.fetch(for: account, key: key)
+    }
+
+    /// Asks every account at once and returns the answers in the order given.
+    private nonisolated static func fetchTogether(_ fetches: [UsageFetch]) async -> [ProviderUsage] {
+        await withTaskGroup(of: (Int, ProviderUsage).self) { group in
+            for (index, fetch) in fetches.enumerated() {
+                group.addTask { (index, await fetch()) }
+            }
+            var readings = [ProviderUsage?](repeating: nil, count: fetches.count)
+            for await (index, reading) in group { readings[index] = reading }
+            return readings.compactMap { $0 }
+        }
+    }
+
+    /// What an answer becomes before it is shown: its balance ring, then the
+    /// cache's say. Returns both, because the alert rules and the diagnostics
+    /// want the raw answer as well as the reconciled one.
+    private func settle(_ raw: ProviderUsage) async -> (raw: ProviderUsage, fetched: ProviderUsage) {
+        let answered = ringed(raw)
+        return (answered, await cache.reconciled(answered))
+    }
+
     /// An API account's balance with the ring its basis gives it. DeepSeek
     /// makes its own, from before the rule was everyone's; see `BalanceRing`.
     private func ringed(_ raw: ProviderUsage) -> ProviderUsage {
@@ -979,73 +780,6 @@ final class UsageStore {
         )
     }
 
-    /// What a profiled provider's fetch is handed: the credential Pulse holds
-    /// for it and the address it is to be sent to, read here on the main
-    /// actor so the fetch itself touches no settings.
-    ///
-    /// `key` is for the per-account refresh, which reads the store directly
-    /// because a pane reachable while switched off has nothing in `apiKeys`.
-    private func profileContext(for provider: Provider, key: String? = nil) -> ProfileContext {
-        ProfileContext(
-            provider: provider,
-            credential: key ?? apiKeys[provider],
-            serverAddress: provider.usesServerAddress ? settings.serverAddress(for: AccountKey(provider)) : nil
-        )
-    }
-
-    /// An account Pulse signed in to itself.
-    ///
-    /// Its token is renewed here when it is close to expiring, because nothing
-    /// else will: the CLI keeps its own login fresh, and this one is not that.
-    /// A renewal that fails leaves the account signed out rather than
-    /// reporting a network error — the remedy is the same either way, and it
-    /// is one the user can act on.
-    private static func fetchAdded(
-        _ account: AccountKey,
-        claudeCode: ClaudeCodeUsageService,
-        codex: CodexUsageService,
-        grok: GrokUsageService,
-        grokBot: GrokBotUsageService,
-        kimi: KimiCodeUsageService
-    ) async -> ProviderUsage {
-        guard var credentials = AccountCredentialStore.credentials(for: account) else {
-            return .unavailable(account, reason: .signedOut)
-        }
-
-        if !credentials.isFresh {
-            // Grok Bot lands in the `else` deliberately: `OAuthLogin` has no
-            // configuration for it, because its sign-in is not OAuth and no
-            // refresh endpoint was found in Cursor's own client. Its tokens
-            // run **sixty days** (measured), so signing in again twice a year
-            // is the honest answer rather than a renewal that cannot happen.
-            guard let renewed = try? await OAuthLogin.refresh(credentials, for: account.provider) else {
-                return .unavailable(account, reason: .signedOut)
-            }
-            credentials = renewed
-            // Compare-and-set: a pass that was given up on can still be in
-            // here, and its answer must not replace a newer login.
-            AccountCredentialStore.renewed(credentials, for: account)
-        }
-
-        // Nothing else can be signed in to, so nothing else gets here —
-        // including every profiled provider.
-        guard let written = account.provider.handWritten else {
-            return .unavailable(account, reason: .loading)
-        }
-        return switch written {
-        case .claudeCode: await claudeCode.fetch(account: account, token: credentials.accessToken)
-        case .codex: await codex.fetch(account: account, credentials: credentials)
-        case .grok: await grok.fetch(account: account, token: credentials.accessToken)
-        case .grokBot: await grokBot.fetch(account: account, token: credentials.accessToken)
-        case .kimiCode: await kimi.fetch(account: account, token: credentials.accessToken)
-        case .kiro, .antigravity, .cursor, .openCodeGo, .ollamaCloud,
-             .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine, .qoder,
-             .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api, .newAPI,
-             .v2ex, .stepFun, .pulseExtension:
-            .unavailable(account, reason: .loading)
-        }
-    }
-
     private func runQueued() {
         // A whole pass supersedes the individual ones it would have covered.
         if queuedFullPass {
@@ -1060,36 +794,6 @@ final class UsageStore {
         refresh(account)
     }
 
-    /// One provider's answer for a pass: what the service returned and what
-    /// the cache made of it.
-    ///
-    /// **One collection, not two.** The commit loop and the "did anything
-    /// move" question used to be asked of two hand-written lists of the same
-    /// providers, and adding Devin to one while forgetting the other left its
-    /// moves unable to shorten the interval. Asked of the same rows, they
-    /// cannot disagree.
-    struct BatchResult: Sendable {
-        let provider: Provider
-        let raw: ProviderUsage
-        let fetched: ProviderUsage
-    }
-
-    /// Whether any provider that was actually asked reported different windows
-    /// from the reading already on screen.
-    ///
-    /// Only providers represented in `results` are considered, and `results`
-    /// holds exactly the ones this pass asked. `observedAt` is deliberately
-    /// ignored: it moves on every successful fetch, so including it would
-    /// report a change every pass and the loop would never slow down.
-    nonisolated static func didAnythingMove(
-        _ results: [BatchResult],
-        previous: [String: ProviderUsage]
-    ) -> Bool {
-        results.contains { result in
-            previous[AccountKey(result.provider).id]?.windows != result.fetched.windows
-        }
-    }
-
     /// Writes a fetched reading into the table, and lets the alerts see it.
     ///
     /// **Every fetched reading goes through here, and only fetched ones.** The
@@ -1101,7 +805,7 @@ final class UsageStore {
         usage[id] = fetched
         diagnostics[id] = ConnectionDiagnostic(
             raw: raw.recordingSoleRoute(), displayed: fetched,
-            previous: diagnostics[id], now: Date()
+            previous: diagnostics[id], now: clock()
         )
         guard let account = AccountKey(id: id) else { return }
         // Before the alert rules, and regardless of whether they are on: the
@@ -1129,7 +833,7 @@ final class UsageStore {
     /// successful pass.
     func reconsiderAlerts() {
         guard let alerts else { return }
-        let now = Date()
+        let now = clock()
         var needsRefresh = false
         for account in settings.shownAccounts {
             let reading = usage(for: account)
@@ -1172,7 +876,7 @@ final class UsageStore {
 
         // The soonest anything is due, so the provider on the shortest cadence
         // sets the alarm and the rest are simply not asked when it goes off.
-        let now = Date()
+        let now = clock()
         let waits = settings.shownAccounts.filter(\.isPrimary).map { account -> TimeInterval in
             let due = interval(for: account.provider)
             guard let asked = askedAt[account.id] else { return 0 }

@@ -75,9 +75,13 @@ enum DeepSeekConsole {
     /// The kept token was turned away: the browser's current one, kept in its
     /// place, if the browser holds a different one. Nil when it does not —
     /// the console has signed this account out everywhere.
+    ///
+    /// **Only in place of the token that was refused** (`APIKeyStore.replaceKey`):
+    /// one removed in Settings while the browser was being read stays removed,
+    /// and one saved meanwhile is not written over.
     static func renewedFromBrowser(replacing refused: String) -> String? {
         guard let found = fromBrowser(), found.token != refused else { return nil }
-        guard APIKeyStore.setKey(found.token, for: .deepSeek, slot: slot) else { return nil }
+        guard APIKeyStore.replaceKey(refused, with: found.token, for: .deepSeek, slot: slot) else { return nil }
         return found.token
     }
 

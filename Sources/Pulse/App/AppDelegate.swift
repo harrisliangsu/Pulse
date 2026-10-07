@@ -78,6 +78,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settings.onChange = { [weak self] in
             self?.settingsChanged()
         }
+        // Size, spacing, glass and the rest of what only changes how the panel
+        // is drawn: re-place it and stop there. `onChange` also refreshes every
+        // provider, which a layout change must not cost.
+        settings.onLayoutChange = { [weak self] in
+            self?.layoutChanged()
+        }
 
         // Same issue, from the other side: a combination that works with no
         // pointer involved. Both unset until somebody sets one.
@@ -130,6 +136,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             store.settingsChanged()
             prepareClaudeIfSelected()
         }
+    }
+
+    /// The answer to `AppSettings.onLayoutChange`: the panel is brought in line
+    /// with the setting and nothing is fetched. Before monitoring starts there
+    /// is no panel to re-place, and starting it is `settingsChanged`'s job.
+    private func layoutChanged() {
+        panelController?.settingsChanged()
     }
 
     private func startMonitoring() {

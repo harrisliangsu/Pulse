@@ -412,7 +412,7 @@ struct TokenSpendView: View {
 
     // MARK: - What kind of token
 
-    /// Fresh input, cache written, cache read, output.
+    /// Recorded input, cache hits, output and an explicit unclassified remainder.
     ///
     /// **The split is the point, not the total.** These four are priced an
     /// order of magnitude apart — a cache read costs a tenth of fresh input on
@@ -421,14 +421,12 @@ struct TokenSpendView: View {
     /// are shared with the model detail, which is why they take a bare tally.
     private func kinds(_ summary: SpendSummary) -> some View {
         SettingsGroup(String.localized("By kind")) {
-            // **A partial split is not four zeroes.** Where some tokens belong
-            // to no kind — a bare or session total records the source never
-            // broke down — the four kinds do not add up to the total, and
-            // drawing the shortfall as a zero would read as a measurement of
-            // "none". The existing unavailable line says what is true instead.
-            if summary.tally.total == summary.tokens {
+            // Explicit unclassified tokens keep their own row. A broken split
+            // without a recorded remainder stays unavailable, never guessed.
+            if summary.hasTokenBreakdown {
                 TokenKindBreakdown(
                     tally: summary.tally,
+                    unclassifiedTokens: summary.unclassifiedTokens,
                     // No cache column in any store behind it, or replies
                     // that never named the cache (a compatible endpoint).
                     readsUnreported: summary.tally.reportsNoCache || !summary.agents.isEmpty
@@ -453,6 +451,7 @@ struct TokenSpendView: View {
         // No cache column in any store behind it: a zero hit is unrecorded,
         // blank in the cell as in the sort.
         let cacheUnreported = !summary.agents.isEmpty && summary.agents.allSatisfy { !$0.agent.reportsCacheReads }
+        let columns = DayColumn.allCases.filter { $0 != .unclassified || summary.unclassifiedTokens > 0 || sort == .unclassified }
         let rows = SpendSummary.sorted(
             summary.days.filter { $0.tokens > 0 }, by: sort, ascending: ascending,
             cacheUnreported: cacheUnreported
@@ -467,7 +466,7 @@ struct TokenSpendView: View {
             VStack(spacing: 0) {
                 Grid(alignment: .trailing, horizontalSpacing: 10, verticalSpacing: 0) {
                     GridRow {
-                        ForEach(DayColumn.allCases) { column in
+                        ForEach(columns) { column in
                             header(column)
                         }
                     }
@@ -478,16 +477,16 @@ struct TokenSpendView: View {
                         GridRow {
                             Text(Self.tableDate(day.date))
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            // **The kinds are shown only when they add up.** A
-                            // day whose categories do not equal its own total
-                            // has tokens outside the four kinds; the category
-                            // cells go blank rather than draw a zero that was
-                            // never measured. The total column is the day's
-                            // own figure and always stands.
-                            let complete = day.tally.total == day.tokens
-                            cell(complete ? day.tally.fresh : nil)
-                            cell(complete && !(cacheUnreported && day.tally.cacheRead == 0) ? day.tally.cacheRead : nil)
-                            cell(complete ? day.tally.output : nil)
+                            // Known kinds and the explicit remainder must
+                            // reconcile. Unknown-only work has no measured
+                            // input/output zeroes to show or sort by.
+                            let complete = day.hasTokenBreakdown
+                            cell(day.classifiedTally?.fresh)
+                            cell(cacheUnreported && day.classifiedTally?.cacheRead == 0 ? nil : day.classifiedTally?.cacheRead)
+                            cell(day.classifiedTally?.output)
+                            if columns.contains(.unclassified) {
+                                cell(complete ? day.unclassifiedTokens : nil)
+                            }
                             cell(day.tokens)
                             // **An all-unpriced day is not a free day.** The
                             // day's own money is a priced subset; when nothing
@@ -532,6 +531,8 @@ struct TokenSpendView: View {
         } label: {
             HStack(spacing: 2) {
                 Text(column.title)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 if sort == column {
                     Image(systemName: ascending ? "chevron.up" : "chevron.down")
                         .font(.system(size: 7, weight: .bold))
@@ -994,6 +995,7 @@ enum DayColumn: String, CaseIterable, Identifiable, Sendable {
     case fresh
     case cacheRead
     case output
+    case unclassified
     case total
     case cost
 
@@ -1004,9 +1006,10 @@ enum DayColumn: String, CaseIterable, Identifiable, Sendable {
         case .date: .localized("Date")
         // Short, because columns of Chinese headings in a settings pane are a
         // table that wraps.
-        case .fresh: .localized("Fresh")
+        case .fresh: .localized("Input")
         case .cacheRead: .localized("Cached")
         case .output: .localized("Output")
+        case .unclassified: .localized("Unclassified")
         case .total: .localized("Total")
         case .cost: .localized("Cost")
         }

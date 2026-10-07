@@ -26,14 +26,20 @@ enum CardHistorySource: Equatable, Sendable {
 
 extension Provider {
     var cardHistory: CardHistorySource? {
+        cardHistory(openCodeSession: OpenCodeConsole.hasSession, deepSeekSession: DeepSeekConsole.hasSession)
+    }
+
+    /// The rule, with whether each console's sign-in is kept passed in: those
+    /// are this Mac's state, which a test must not depend on.
+    func cardHistory(openCodeSession: Bool, deepSeekSession: Bool) -> CardHistorySource? {
         if keepsLocalTranscripts { return .transcripts }
         if self == .zai || self == .glmCoding { return .accountStatistics }
         // The console's log once its session is kept — every machine, and
         // what was charged — and this Mac's OpenCode records until then.
-        if self == .openCodeGo, OpenCodeConsole.hasSession { return .accountLogs }
+        if self == .openCodeGo, openCodeSession { return .accountLogs }
         // DeepSeek's console usage once its sign-in is kept. No local
         // records stand in before that: nothing on this Mac logs it.
-        if self == .deepSeek, DeepSeekConsole.hasSession { return .accountLogs }
+        if self == .deepSeek, deepSeekSession { return .accountLogs }
         let agents = SpendAgent.allCases.filter { $0.iconProvider == self && $0.provider == nil }
         return agents.isEmpty ? nil : .agents(agents)
     }
