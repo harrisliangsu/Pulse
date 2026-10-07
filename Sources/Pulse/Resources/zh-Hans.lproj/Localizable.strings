@@ -584,15 +584,14 @@
 "Most tokens" = "用量最多的模型";
 "By kind" = "按类型";
 "Output" = "输出";
-"Fresh input" = "新内容";
-"Sent this time and not read from the cache." = "这一轮发给模型、没从缓存读出的内容。";
-"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "这一轮发给模型、没从缓存读出的内容。其中 %@ 存进了缓存，Claude 等少数服务对这部分多收一档。";
-"Read back from the cache, usually at a lower price." = "从缓存读出的内容，通常按折扣价计费。";
+"Input" = "输入";
+"Recorded input, with reported cache hits counted separately." = "按各 Agent 记录的输入统计；已记录的缓存命中单独列出。";
+"Recorded input, with reported cache hits counted separately. Includes %@ recorded cache writes." = "按各 Agent 记录的输入统计；已记录的缓存命中单独列出。其中 %@ 为已记录的缓存写入。";
+"Recorded cache hits. Unreported cache use is not estimated." = "按各 Agent 记录的缓存命中统计，未记录的部分不作推算。";
 "These records carry no cache figures." = "这些记录里没有缓存数据。";
 "Not reported" = "未记录";
-"Fresh" = "新内容";
 "Cached" = "缓存命中";
-"Written back by the model." = "模型生成的回复。";
+"Model output as recorded by each agent." = "各 Agent 记录的模型输出。";
 "By hour" = "按小时";
 "By month" = "按月";
 "Pattern" = "使用节奏";
@@ -1220,3 +1219,6 @@
 "Actually spent" = "实际花了";
 "Spent by day" = "每天花了多少";
 "Spent by month" = "每月花了多少";
+"Unclassified" = "未分类";
+"These records do not report this token category separately." = "来源未单独记录这类 token。";
+"Reported tokens without a usable category breakdown." = "来源记录了这些 token，但没有可用的分类明细。";

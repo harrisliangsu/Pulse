@@ -208,11 +208,17 @@ struct SpendSummaryTests {
         )
 
         let summary = Self.summary([.codex: known, .claudeCode: unknown], overLast: 7)
+        #expect(summary.tokens == 1_500)
+        #expect(summary.tally == TokenTally(input: 1_000))
+        #expect(summary.unclassifiedTokens == 500)
+        #expect(summary.hasTokenBreakdown)
         #expect(summary.models.map(\.name) == ["GPT-5"])
         #expect(summary.models.first?.tokens == 1_500)
         #expect(summary.models.first?.agents == [.claudeCode, .codex])
         // The day carries the unknown-price tokens beside the priced ones.
         #expect(summary.days.last?.unpricedTokens == 500)
+        #expect(summary.days.last?.unclassifiedTokens == 500)
+        #expect(summary.days.last?.classifiedTally == TokenTally(input: 1_000))
 
         let model = ModelSpendSummary.of(
             [.codex: known, .claudeCode: unknown], named: "GPT-5",
@@ -222,7 +228,60 @@ struct SpendSummaryTests {
         // 1,000 input at $1,000/M for the classified copy.
         #expect(model.cost == 1)
         #expect(model.unpricedTokens == 500)
+        #expect(model.tally == TokenTally(input: 1_000))
+        #expect(model.unclassifiedTokens == 500)
         #expect(model.agents.count == 2)
+    }
+
+    @Test("Broken category details cannot cancel across two agents")
+    func invalidDetailsCannotCancelAcrossSources() {
+        let missing = LedgerDay(
+            date: Self.today, tokens: 500, cost: 0, unpricedTokens: 500,
+            models: ["m": 500], tally: TokenTally(input: 100)
+        )
+        let excess = LedgerDay(
+            date: Self.today, tokens: 500, cost: 0, unpricedTokens: 500,
+            models: ["m": 500], tally: TokenTally(input: 900)
+        )
+        let result = Self.summary([.codex: Self.ledger([missing]), .openCode: Self.ledger([excess])], overLast: 7)
+        #expect(result.tokens == 1_000)
+        #expect(result.tally.total == 1_000)
+        #expect(result.unclassifiedTokens == 0)
+        #expect(!result.hasTokenBreakdown)
+        #expect(result.days.last?.hasTokenBreakdown == false)
+        #expect(result.days.last?.classifiedTally == nil)
+    }
+
+    @Test("Unknown-only work sorts after measured input, while its unclassified count remains sortable")
+    func unknownOnlyIsNotAZeroInputDay() {
+        let unknown = SpendSummary.Day(
+            date: Self.today, tokens: 500, cost: 0, tally: TokenTally(), unclassifiedTokens: 500
+        )
+        let zero = SpendSummary.Day(
+            date: Self.calendar.date(byAdding: .day, value: -1, to: Self.today)!,
+            tokens: 10, cost: 0, tally: TokenTally(output: 10)
+        )
+        let mixed = SpendSummary.Day(
+            date: Self.calendar.date(byAdding: .day, value: -2, to: Self.today)!,
+            tokens: 150, cost: 0, tally: TokenTally(input: 100), unclassifiedTokens: 50
+        )
+        let days = [unknown, zero, mixed]
+        #expect(unknown.hasTokenBreakdown)
+        #expect(unknown.classifiedTally == nil)
+        #expect(SpendSummary.sorted(days, by: .fresh, ascending: true).map(\.date) == [zero.date, mixed.date, unknown.date])
+        #expect(SpendSummary.sorted(days, by: .fresh, ascending: false).map(\.date) == [mixed.date, zero.date, unknown.date])
+        #expect(SpendSummary.sorted(days, by: .unclassified, ascending: true).map(\.date) == [zero.date, mixed.date, unknown.date])
+    }
+
+    @Test("Adjacent large unclassified counts retain their exact order")
+    func largeUnclassifiedCountsSortExactly() {
+        let lower = 9_007_199_254_740_992
+        let newer = SpendSummary.Day(date: Self.today, tokens: lower, cost: 0, unclassifiedTokens: lower)
+        let older = SpendSummary.Day(
+            date: Self.calendar.date(byAdding: .day, value: -1, to: Self.today)!,
+            tokens: lower + 1, cost: 0, unclassifiedTokens: lower + 1
+        )
+        #expect(SpendSummary.sorted([older, newer], by: .unclassified, ascending: true).map(\.tokens) == [lower, lower + 1])
     }
 
     @Test("The busiest day is the busiest across agents, not any one of them")

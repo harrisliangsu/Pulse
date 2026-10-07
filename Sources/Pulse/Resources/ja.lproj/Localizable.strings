@@ -557,15 +557,14 @@
 "Most tokens" = "トークン最多のモデル";
 "By kind" = "種類別";
 "Output" = "出力";
-"Fresh input" = "新しい入力";
-"Sent this time and not read from the cache." = "今回モデルに送り、キャッシュから読まなかったぶんです。";
-"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "今回モデルに送り、キャッシュから読まなかったぶんです。うち %@ はキャッシュに書き込まれ、Claude など一部のサービスではここが割高になります。";
-"Read back from the cache, usually at a lower price." = "キャッシュから読み出したぶんで、ふつうは割安になります。";
+"Input" = "入力";
+"Recorded input, with reported cache hits counted separately." = "記録された入力です。報告されたキャッシュヒットは別に集計します。";
+"Recorded input, with reported cache hits counted separately. Includes %@ recorded cache writes." = "記録された入力です。報告されたキャッシュヒットは別に集計します。うち %@ は記録されたキャッシュ書き込みです。";
+"Recorded cache hits. Unreported cache use is not estimated." = "記録されたキャッシュヒットを集計します。未記録の利用量は推定しません。";
 "These records carry no cache figures." = "これらの記録にはキャッシュの数値がありません。";
 "Not reported" = "記録なし";
-"Fresh" = "新規";
 "Cached" = "キャッシュ";
-"Written back by the model." = "モデルが書き返したぶんです。";
+"Model output as recorded by each agent." = "各 Agent が記録したモデルの出力。";
 "By hour" = "時間帯別";
 "By month" = "月別";
 "Pattern" = "使い方の傾向";
@@ -1222,3 +1221,6 @@
 "Actually spent" = "実際の支出";
 "Spent by day" = "1 日ごとの支出";
 "Spent by month" = "月ごとの支出";
+"Unclassified" = "未分類";
+"These records do not report this token category separately." = "この種類のトークンは個別に記録されていません。";
+"Reported tokens without a usable category breakdown." = "トークン数は記録されていますが、利用できる分類の内訳がありません。";

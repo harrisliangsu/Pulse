@@ -123,9 +123,8 @@ struct RecapMonthsView: View {
                 .foregroundStyle(Color(recap: 0x55554F))
                 .padding(.top, 52)
             if let busiest {
-                Text(verbatim: RecapFormat.monthName(busiest.month))
+                Text(tight: RecapFormat.monthName(busiest.month), tracking: -230 * 0.05)
                     .font(.recap(230, .bold))
-                    .tracking(-230 * 0.05)
                     .lineLimit(1)
                     .minimumScaleFactor(0.35)
                     .frame(maxWidth: .infinity, alignment: .leading)

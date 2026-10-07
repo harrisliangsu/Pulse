@@ -4,7 +4,7 @@ Historical snapshot, not a contract. When this page and the code disagree, the c
 
 只读。源码 250 个 Swift 文件、64,485 行；测试 137 个文件、27,678 行；Docs 186 篇、7,756 行；提交 379。行号与计数对应当日工作树。
 
-高 4，中 7，低 4；另有 2 条原列为高、复核后撤回，见文末「复核更正」。2026-10-05 删去了已在代码中修复的条目：16 处 `case .clinePass, .alibabaCodingPlan`、`removeAccount` 漏清的键、七个 provider 缺用量解析套件、`PointerEntryReporter` / `UsageDockView` / `UsageStore` 文件头 / `Package.swift` 的过时注释，以及已改正的文档条目。`Sources` 与 `Tests` 内 `TODO` / `FIXME` / `HACK` 为 0。
+高 3，中 7，低 4；另有 2 条原列为高、复核后撤回，见文末「复核更正」。2026-10-05 删去了已在代码中修复的条目：16 处 `case .clinePass, .alibabaCodingPlan`、`removeAccount` 漏清的键、七个 provider 缺用量解析套件、`PointerEntryReporter` / `UsageDockView` / `UsageStore` 文件头 / `Package.swift` 的过时注释，`UsageStore` 两套服务构造与 `switch` 的重复（现为 `UsageServiceFactory` 一条路径，`UsageStoreSchedulingTests` 覆盖编排），以及已改正的文档条目。`Sources` 与 `Tests` 内 `TODO` / `FIXME` / `HACK` 为 0。
 
 本次未跑 `swift build` 与 `swift test`。Panel 的真实指针输入未在运行中的应用上复测。
 
@@ -27,7 +27,7 @@ Historical snapshot, not a contract. When this page and the code disagree, the c
 |---|---:|---|---|
 | `SettingsView.swift` | 3,423 | 约 102 | 无 |
 | `AppSettings.swift` | 1,693 | 约 53 | 旁路偏好有，类本身无 |
-| `UsageStore.swift` | 1,186 | 约 53 | 编排无集成测试 |
+| `UsageStore.swift` | 841（另 `UsageStore+Pacing.swift` 94、`UsageServices.swift` 225） | 约 53 | `UsageStoreSchedulingTests`（注入假服务驱动整轮刷新） |
 | `BotMarkEngine.swift` | 1,566 | 不在 churn 前 40 | `BotMark*` 行为测试 |
 | `UsageLedger.swift` | 1,001 | — | 部分经 spend 套件 |
 | `TokenSpendView.swift` | 973 | 不在 churn 前 40 | `SpendReadState` / `SpendSpan` |
@@ -41,10 +41,6 @@ Historical snapshot, not a contract. When this page and the code disagree, the c
 ### `AppSettings.swift`
 
 `Sources/Pulse/App/AppSettings.swift`。1,693 行，`@Observable final class`，无 `@MainActor`。`private enum Key` 有 53 个 `static let`。`init` 有 50 个参数。同一类型同时是偏好仓库、账户目录和副作用总线：`didSet` 写 `UserDefaults`，并调用 `PanelMetrics.use`、`NetworkSession.apply`、`LocalizationSource.use`。`showsCodexResetCredits`、`balanceBases`、`balanceBudgets` 不在 `init` 参数里，由 `restored()` 在 1555–1558 行事后赋值。合并历史约 53 次提交触及。
-
-### `UsageStore.swift`
-
-`Sources/Pulse/Usage/UsageStore.swift`。1,186 行，约 32 个存储属性。`refresh(dueOnly:)`（约 409–727）与 `refresh(_ account:)`（735–902）各写一套 20 余个服务构造和 `switch`；`fetchAdded`（941–989）第三次列出全部 profiled case。合并历史约 53 次提交触及。被测的是抽出去的纯函数（`AdaptiveRefresh`、`AlertMemory`、`UsageCache`）；队列、stall、one-shot timer 的编排没有集成测试。
 
 ### `Provider` switch 的 `default` 分支
 

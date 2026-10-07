@@ -8,7 +8,7 @@ Primary service: [`ClaudeCodeUsageService.swift`](../../Sources/Pulse/Providers/
 
 Default `.automatic`, in this order:
 
-1. **Usage endpoint** — `GET https://api.anthropic.com/api/oauth/usage` with the OAuth access token Claude Code already stored (Keychain service `Claude Code-credentials`, falling back to `~/.claude/.credentials.json`).
+1. **Usage endpoint** — `GET https://api.anthropic.com/api/oauth/usage` with the OAuth access token Claude Code already stored (Keychain service `Claude Code-credentials`, falling back to `~/.claude/.credentials.json`). The Keychain read is `security find-generic-password` through `BoundedProcess`, ended after 60 seconds (`keychainDeadline`): an access prompt nobody answers falls through to the file and the status line instead of holding every provider's pass behind it, and the Keychain is then left alone for 30 minutes (`keychainPause`) so the unanswered prompt is not put up again at every pass.
 2. **Desktop session** — only if the Keychain grant for `Claude Safe Storage` has already happened, the session returns a **live** reading, and account identity is compatible (or there is nothing to compare). See [authentication.md](authentication.md).
 3. **Status line capture** — Claude Code’s documented status-line hook. Pulse registers as `Pulse --statusline`, banks the blob, prints a status line back.
 4. **Cache**, then an actionable unavailable reason.

@@ -557,15 +557,14 @@
 "Most tokens" = "用量最多的模型";
 "By kind" = "依類型";
 "Output" = "輸出";
-"Fresh input" = "新內容";
-"Sent this time and not read from the cache." = "這一輪發給模型、沒從快取讀出的內容。";
-"Sent this time and not read from the cache. Of it, %@ was written to the cache, which Claude and a few others bill higher." = "這一輪發給模型、沒從快取讀出的內容。其中 %@ 存進了快取，Claude 等少數服務對這部分多收一檔。";
-"Read back from the cache, usually at a lower price." = "從快取讀出的內容，通常按折扣價計費。";
+"Input" = "輸入";
+"Recorded input, with reported cache hits counted separately." = "依各 Agent 記錄的輸入統計；已記錄的快取命中另外列出。";
+"Recorded input, with reported cache hits counted separately. Includes %@ recorded cache writes." = "依各 Agent 記錄的輸入統計；已記錄的快取命中另外列出。其中 %@ 為已記錄的快取寫入。";
+"Recorded cache hits. Unreported cache use is not estimated." = "依各 Agent 記錄的快取命中統計，沒有記錄的部分不予推估。";
 "These records carry no cache figures." = "這些記錄裡沒有快取資料。";
 "Not reported" = "未記錄";
-"Fresh" = "新內容";
 "Cached" = "快取命中";
-"Written back by the model." = "模型產生的回覆。";
+"Model output as recorded by each agent." = "各 Agent 記錄的模型輸出。";
 "By hour" = "依小時";
 "By month" = "依月份";
 "Pattern" = "使用節奏";
@@ -1222,3 +1221,6 @@
 "Actually spent" = "實際花了";
 "Spent by day" = "每天花了多少";
 "Spent by month" = "每月花了多少";
+"Unclassified" = "未分類";
+"These records do not report this token category separately." = "來源未單獨記錄這類 token。";
+"Reported tokens without a usable category breakdown." = "來源記錄了這些 token，但沒有可用的分類明細。";

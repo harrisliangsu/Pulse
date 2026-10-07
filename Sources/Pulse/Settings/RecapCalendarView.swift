@@ -229,9 +229,8 @@ struct RecapCalendarTiles: View {
                         .foregroundStyle(RecapTileTone.white.caption)
                         .recapFit(0.6)
                     HStack(alignment: .lastTextBaseline, spacing: 4) {
-                        Text(verbatim: "\(recap.activeDays)")
+                        Text(tight: "\(recap.activeDays)", tracking: -48 * 0.03)
                             .font(.recap(48, .bold))
-                            .tracking(-48 * 0.03)
                         Text(verbatim: "/ \(recap.elapsedDays)")
                             .font(.recap(22))
                             .foregroundStyle(RecapColor.tertiary)

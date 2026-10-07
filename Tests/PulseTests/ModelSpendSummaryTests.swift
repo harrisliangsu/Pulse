@@ -724,6 +724,20 @@ struct ModelSpendSummarySortingTests {
         #expect(descending.map(\.date) == [busyNewer.date, busyOlder.date, quiet.date])
     }
 
+    @Test("Unknown-only tokens sort as missing input and as a recorded unclassified count")
+    func unknownOnlySortsByItsRecordedCount() {
+        let unknown = ModelSpendSummary.Day(date: Self.today, tokens: 500, tally: TokenTally(), unclassifiedTokens: 500)
+        let zero = Self.day(-1, tokens: 10, tally: TokenTally(output: 10))
+        let mixed = ModelSpendSummary.Day(
+            date: Self.calendar.date(byAdding: .day, value: -2, to: Self.today)!,
+            tokens: 150, tally: TokenTally(input: 100), unclassifiedTokens: 50
+        )
+        let days = [unknown, zero, mixed]
+        #expect(ModelSpendSummary.sorted(days, by: .fresh, ascending: true).map(\.date) == [zero.date, mixed.date, unknown.date])
+        #expect(ModelSpendSummary.sorted(days, by: .fresh, ascending: false).map(\.date) == [mixed.date, zero.date, unknown.date])
+        #expect(ModelSpendSummary.sorted(days, by: .unclassified, ascending: true).map(\.date) == [zero.date, mixed.date, unknown.date])
+    }
+
     @Test("The date column has no missing values and follows the arrow")
     func dateColumnFollowsArrow() {
         let oldest = Self.day(0, tokens: 1, tally: TokenTally(input: 1))

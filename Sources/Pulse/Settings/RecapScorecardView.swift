@@ -343,9 +343,8 @@ struct RecapScorecardView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                         HStack(alignment: .firstTextBaseline, spacing: 12) {
-                            Text(verbatim: model.name)
+                            Text(tight: model.name, tracking: -0.8)
                                 .font(.recap(40, .bold))
-                                .tracking(-0.8)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.5)
                                 .layoutPriority(1)

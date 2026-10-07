@@ -67,7 +67,7 @@ The opener, calendar, timetable and payback follow the approved mockups (a lineu
 
 Flat colour and type only — paper `#F5F5F1`, white cards with a hairline, ink `#1B1B1E`, lime `#C8F03C` (the icon's accent). **Lime is a fill, never text on paper.** No gradient, blur, shadow, material or emoji, and nothing `ImageRenderer` cannot draw. Type is the system face and its CJK fallback; labels and digits use the monospaced design. The Pulse mark is drawn from `AppIcon/pulse-mark.svg`'s path.
 
-Hero numbers are set tight and trimmed to their digits (`RecapFigureText.trimmed`; the ascender and descender fractions are measured against the system font). `minimumScaleFactor` on a `Text` inside an `HStack` with a `Spacer` can be shrunk to its floor for no visible reason; give such a row a fixed frame or leave the factor off.
+Hero numbers are set tight and trimmed to their digits (`RecapFigureText.trimmed`; the ascender and descender fractions are measured against the system font). **Tight numbers go through `Text(tight:tracking:)`, never `.tracking` with a negative value**: SwiftUI takes tracking after the last glyph too, which pulls the frame in past the last digit's ink, and the text is drawn inside its frame — the right of a 9 or a 5 came out cut off flat. `Text(tight:)` tracks every character but the last. `minimumScaleFactor` on a `Text` inside an `HStack` with a `Spacer` can be shrunk to its floor for no visible reason; give such a row a fixed frame or leave the factor off.
 
 `RecapRenderer.png(of:in:)` renders a card at scale 1.
 
@@ -106,7 +106,7 @@ writes every card of the sample month and year in all five languages to `/tmp/re
 
 **Entry points** — both open the same window, and neither menu carries one (the rail's and the menu bar's menus stay to the panel, Settings and Quit):
 
-- the Token spend pane's **Monthly and Yearly Recap** row, with two buttons side by side so the yearly recap is not found only inside the window: **View September recap** opens on that month (`SettingsView.recapPeriod`, the window's own default rule) and **View 2026 recap** on the year by the same rule (`RecapPeriods.defaultYear`: January 1–7 opens the year that just ended, any other day this one, in progress; the year is a plain string, never "2,026");
+- the Token spend pane's **Monthly and Yearly Recap** row, with two buttons side by side so the yearly recap is not found only inside the window: **View September recap** opens on that month (`TokenSpendPane.recapPeriod`, the window's own default rule) and **View 2026 recap** on the year by the same rule (`RecapPeriods.defaultYear`: January 1–7 opens the year that just ended, any other day this one, in progress; the year is a plain string, never "2,026");
 - a clicked "recap is ready" notification, on the month it names ([notifications.md](notifications.md#the-monthly-recap)).
 
 **Layout.** The deck on the left, one card at a time, drawn live and scaled to fit (`RecapCardView` at 1080 × 1920, `scaleEffect`), with previous / next buttons beside it and dots with a "1 / 5" counter under it; **← and →** turn the page. On the right: the period, the price, the privacy switch and four buttons. The window follows the system's light or dark; only the cards are paper.

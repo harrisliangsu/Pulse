@@ -82,9 +82,8 @@ struct RecapTimetableView: View {
                 .font(.recap(18))
                 .foregroundStyle(RecapColor.secondary)
                 .recapFit(0.6)
-            Text(verbatim: value)
+            Text(tight: value, tracking: -52 * 0.03)
                 .font(.recap(52, .bold))
-                .tracking(-52 * 0.03)
                 .recapFit(0.5)
             if let note {
                 Text(verbatim: note)

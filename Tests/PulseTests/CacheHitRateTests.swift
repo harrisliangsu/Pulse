@@ -57,7 +57,7 @@ struct CacheHitRateTests {
         #expect(ledger([day(1, TokenTally(input: 1))]).recent(31).count == 1)
     }
 
-    @Test func aModelThatNeverNamedTheCacheIsLeftOut() {
+    @Test func aModelThatNeverNamedTheCacheIsLeftOut() throws {
         // One model through a compatible endpoint that writes no cache field,
         // one through Anthropic: the rate is the second's alone.
         let silent = TokenTally(input: 900, repliesWithoutCacheFields: 3)
@@ -66,8 +66,8 @@ struct CacheHitRateTests {
                               models: ["gateway": 900, "claude": 100])
         mixed.tally = silent + cached
         mixed.modelTallies = ["gateway": silent, "claude": cached]
-        let rate = try? #require(ledger([mixed]).cacheHitRate(overLast: 31))
-        #expect(rate.map { abs($0 - 0.9) < 0.0001 } == true)
+        let rate = try #require(ledger([mixed]).cacheHitRate(overLast: 31))
+        #expect(abs(rate - 0.9) < 0.0001)
         #expect(ledger([mixed]).cacheHitRatesByModel(overLast: 31).map(\.name) == ["claude"])
 
         var only = day(1, silent)

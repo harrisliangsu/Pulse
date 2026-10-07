@@ -10,6 +10,17 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.15
+
+- **A Keychain prompt no longer holds up every refresh.** Reading Claude Code's sign-in waits at most 60 seconds, then uses the other routes. Saving a key while a console session is being renewed no longer drops one of them, and a renewal cannot write back a login you just removed.
+- **Changing how the panel looks no longer asks every provider again.** Size, spacing, appearance and the other look settings only lay the panel out again.
+- **The Position row wraps.** When the window is too narrow for the label and the choices side by side, the choices move under the label.
+- **The recap's big numbers are no longer clipped.** A 9 or a 5 keeps its right edge, and the month and year leave room for the mark beside them. The price field is the width of a price.
+- **Token kinds name what was not classified.** The breakdown shows an Unclassified row, and Fresh is now Input. Work that is only unclassified reads as not reported.
+- **Synced from upstream qunqin24/Pulse** (17 commits, through the Support section after their 1.8.1 line, since 1.4.14). This fork's version is **1.4.15**. Their Sparkle offer for 1.8.1 was not copied; `appcast.xml` is unchanged until this version is tagged. The README's Support section, with its Afdian badge, is included; this repository's badges and links stay on harrisliangsu/Pulse.
+- **Fork fixes in this sync:** update checks stay on this repository's GitHub feeds and are not retried against update.qunqin.org. Ring colour schemes, reset reminders (predicted and regular, 12 / 24 / 48 hours), celebrations including the hourly one, the appearance picker, Kimi's extra accounts, Qoder and Zen are carried into the split settings files. The shared usage fetch still asks Qoder, Kimi's extra accounts, and the Codex reset forecast.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen's cookie store; bilingual release notes; and this repo's Sparkle feed and signing key.
+
 ## 1.4.14
 
 - **Monthly and yearly recaps.** A month or a year of AI coding becomes a set of cards to share: an overview poster, the tools that worked with you, the calendar, your hours, whether your plan paid for itself, and a closing scorecard. The yearly recap adds twelve small calendars and a month-by-month comparison. Open it from Settings › Token spend, then save, copy or share the images. Everything comes from this Mac's own records; what is missing is left out, never drawn as zero. Type a monthly plan price in the recap window to see how many times over you used it; leave it empty and that card is left out. Project names are shown and can be hidden in one click. The recap's Chinese persona names are written plainly.

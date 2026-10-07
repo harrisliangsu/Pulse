@@ -273,6 +273,18 @@ Pulse は 2026 年 8 月に [**Vinz**（@hivinz_）](https://x.com/hivinz_/statu
 
 ---
 
+## Pulse を応援する
+
+<p align="center">
+  <sub>Pulse は無料のオープンソースで、余暇の時間で開発・更新しています。<br>突然のレート制限から救われたら、作者にコーヒーを一杯どうぞ。</sub>
+</p>
+
+<p align="center">
+  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/Afdian-%E3%82%B3%E3%83%BC%E3%83%92%E3%83%BC%E3%82%92%E4%B8%80%E6%9D%AF-946CE6?style=for-the-badge" alt="Afdian で Pulse を応援"></a>
+</p>
+
+---
+
 ## ライセンス
 
 [Apache 2.0](LICENSE) の下でライセンスされています。同梱のサードパーティ資産はそれぞれのライセンスを保持します。詳しくは [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) を参照してください。

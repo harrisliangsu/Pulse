@@ -137,6 +137,22 @@ struct RecapRichText: View {
 
 /// A hero number with its unit set smaller beside it ("8.4" "亿"), both on one
 /// baseline.
+extension Text {
+    /// `string` set tight, every character but the last: **`.tracking` on a
+    /// `Text` is taken after the last glyph too**, so a negative value pulls
+    /// the frame in past the last digit's ink — and the text is drawn inside
+    /// its frame, so the right of a 9 or a 5 was cut off flat. Leaving the last
+    /// character untracked keeps its whole advance, and the frame holds it.
+    init(tight string: String, tracking: CGFloat) {
+        var text = AttributedString(string)
+        if !text.characters.isEmpty {
+            let last = text.characters.index(before: text.endIndex)
+            text[text.startIndex..<last].tracking = tracking
+        }
+        self.init(text)
+    }
+}
+
 struct RecapFigureText: View {
     let figure: RecapFormat.Figure
     let numberSize: CGFloat
@@ -154,9 +170,8 @@ struct RecapFigureText: View {
 
     var body: some View {
         HStack(alignment: .lastTextBaseline, spacing: figure.unit.isEmpty ? 0 : unitGap) {
-            Text(figure.number)
+            Text(tight: figure.number, tracking: numberSize * tracking)
                 .font(.recap(numberSize, numberWeight))
-                .tracking(numberSize * tracking)
                 .lineLimit(1)
             if !figure.unit.isEmpty {
                 Text(figure.unit)

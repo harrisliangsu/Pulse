@@ -21,7 +21,7 @@ enum DockLayout {
     /// further in than the centre of the end's circle, which is itself
     /// `flareHeight + cornerRadius` in. 54pt at standard size — the rail is
     /// 16pt longer that way, which is why this setting goes through
-    /// `onChange?()` like the other rail metrics.
+    /// `onLayoutChange?()` like the other rail metrics.
     static var verticalPadding: CGFloat {
         guard PanelMetrics.usesRoundEnds else { return 46 * PanelMetrics.scale }
         return flareHeight + cornerRadius - ringDiameter / 2 + endRingOffset

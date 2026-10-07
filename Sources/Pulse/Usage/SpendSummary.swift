@@ -64,6 +64,18 @@ struct SpendSummary: Equatable, Sendable {
         /// could not price, and so the figure is never silently priced at zero.
         var unpricedTokens: Int = 0
 
+        /// Reported tokens whose source supplied no usable category.
+        var unclassifiedTokens: Int = 0
+        var hasInvalidCategories = false
+
+        var hasTokenBreakdown: Bool {
+            !hasInvalidCategories && tally.accountsFor(tokens: tokens, unclassified: unclassifiedTokens)
+        }
+
+        var classifiedTally: TokenTally? {
+            hasTokenBreakdown && !(tokens > 0 && unclassifiedTokens == tokens) ? tally : nil
+        }
+
         var id: Date { date }
     }
 
@@ -111,6 +123,9 @@ struct SpendSummary: Equatable, Sendable {
     /// cache read and output are priced an order of magnitude apart, so "four
     /// billion tokens" says much less than this does.
     var tally = TokenTally()
+    var unclassifiedTokens = 0
+    /// Every contributing day's categories and explicit remainder reconcile.
+    var hasTokenBreakdown = false
     var unpricedTokens = 0
     var agents: [Agent] = []
     var models: [Model] = []
@@ -212,28 +227,31 @@ struct SpendSummary: Equatable, Sendable {
         // in which had a price shows no money; ranked by the numbers behind
         // the blanks, a "—" landed among real figures as if it were one.
         func kind(_ day: Day, _ value: (TokenTally) -> Int) -> Int? {
-            day.tally.total == day.tokens ? value(day.tally) : nil
+            day.classifiedTally.map(value)
         }
-        func value(_ day: Day) -> Double? {
-            switch column {
-            case .date: day.date.timeIntervalSince1970
-            case .fresh: kind(day, \.fresh).map(Double.init)
-            // A store with no cache column has hits that were never recorded.
-            case .cacheRead: kind(day, \.cacheRead).flatMap { cacheUnreported && $0 == 0 ? nil : Double($0) }
-            case .output: kind(day, \.output).map(Double.init)
-            case .total: Double(day.tokens)
-            case .cost: day.tokens > 0 && day.unpricedTokens == day.tokens ? nil : day.cost
+        // Counts remain Int: adjacent large totals must not compare equal
+        // after conversion to Double. Money keeps its fractional amount.
+        func ranked<T: Comparable>(_ value: (Day) -> T?) -> [Day] {
+            days.sorted { lhs, rhs in
+                switch (value(lhs), value(rhs)) {
+                case (nil, nil): return ascending ? lhs.date < rhs.date : lhs.date > rhs.date
+                case (nil, _): return false
+                case (_, nil): return true
+                case let (left?, right?):
+                    guard left == right else { return ascending ? left < right : left > right }
+                    return ascending ? lhs.date < rhs.date : lhs.date > rhs.date
+                }
             }
         }
-        return days.sorted { lhs, rhs in
-            switch (value(lhs), value(rhs)) {
-            case (nil, nil): return ascending ? lhs.date < rhs.date : lhs.date > rhs.date
-            case (nil, _): return false
-            case (_, nil): return true
-            case let (left?, right?):
-                guard left == right else { return ascending ? left < right : left > right }
-                return ascending ? lhs.date < rhs.date : lhs.date > rhs.date
-            }
+        switch column {
+        case .date: return ranked { $0.date }
+        case .fresh: return ranked { kind($0, \.fresh) }
+        case .cacheRead:
+            return ranked { kind($0, \.cacheRead).flatMap { cacheUnreported && $0 == 0 ? nil : $0 } }
+        case .output: return ranked { kind($0, \.output) }
+        case .unclassified: return ranked { $0.hasTokenBreakdown ? $0.unclassifiedTokens : nil }
+        case .total: return ranked { $0.tokens }
+        case .cost: return ranked { $0.tokens > 0 && $0.unpricedTokens == $0.tokens ? nil : $0.cost }
         }
     }
 
@@ -347,6 +365,9 @@ struct SpendSummary: Equatable, Sendable {
         var dayCost: [Date: Double] = [:]
         var dayTally: [Date: TokenTally] = [:]
         var dayUnpriced: [Date: Int] = [:]
+        var dayUnclassified: [Date: Int] = [:]
+        var invalidCategoryDays: Set<Date> = []
+        var categoriesComplete = true
         var hourTokens: [Int: Int] = [:]
         var tally = TokenTally()
         var modelTokens: [String: Int] = [:]
@@ -384,6 +405,25 @@ struct SpendSummary: Equatable, Sendable {
                 agentCost += day.cost
                 agentUnpriced += day.unpricedTokens
                 tally = tally + day.tally
+
+                // Only the source's explicit remainder, never total minus
+                // known kinds. Check each day before combining different agents.
+                let unknown = day.modelUnclassifiedTokens.values.reduce(Int?.some(0)) { total, value in
+                    guard let total, value >= 0 else { return nil }
+                    let (sum, overflow) = total.addingReportingOverflow(value)
+                    return overflow ? nil : sum
+                }
+                if let unknown {
+                    if !day.tally.accountsFor(tokens: day.tokens, unclassified: unknown) {
+                        categoriesComplete = false
+                        invalidCategoryDays.insert(day.date)
+                    }
+                    dayUnclassified[day.date, default: 0] += unknown
+                    summary.unclassifiedTokens += unknown
+                } else {
+                    categoriesComplete = false
+                    invalidCategoryDays.insert(day.date)
+                }
 
                 dayTokens[day.date, default: 0] += day.tokens
                 dayCost[day.date, default: 0] += day.cost
@@ -493,7 +533,9 @@ struct SpendSummary: Equatable, Sendable {
                     tokens: dayTokens[cursor] ?? 0,
                     cost: dayCost[cursor] ?? 0,
                     tally: dayTally[cursor] ?? TokenTally(),
-                    unpricedTokens: dayUnpriced[cursor] ?? 0
+                    unpricedTokens: dayUnpriced[cursor] ?? 0,
+                    unclassifiedTokens: dayUnclassified[cursor] ?? 0,
+                    hasInvalidCategories: invalidCategoryDays.contains(cursor)
                 )
             )
             // `startOfDay` again: where DST begins at midnight (Santiago,
@@ -547,6 +589,8 @@ struct SpendSummary: Equatable, Sendable {
             .sorted { $0.tokens > $1.tokens }
 
         summary.tally = tally
+        summary.hasTokenBreakdown = categoriesComplete
+            && tally.accountsFor(tokens: summary.tokens, unclassified: summary.unclassifiedTokens)
         summary.hours = hourTokens
         summary.unpricedModels = unpriced.sorted()
         summary.hasAggregateTiming = hasAggregate
