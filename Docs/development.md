@@ -57,6 +57,7 @@ The standard — no script checks any of this, it is a read-through job, done on
 - **Say the behaviour, then the reason.** A bullet leads with what the user gets or what stopped going wrong, in one bold clause that stands alone; the explanation follows in full sentences. A bullet that cannot be summarised from its own lead-in is rewritten, not annotated.
 - **One term per concept, everywhere.** The vocabulary of a release entry is the vocabulary of the interface it describes: zh-Hans says 服务商 and 账号, and a button labelled one thing on screen is called the same thing in the notes about it.
 - **Nothing invented, nothing vague.** No object the interface has not got, no「它」or「那个」without a referent, and no claim the change cannot support. 「合适的宽度」 says nothing; what changed about the width does.
+- **Credits describe the actual relationship.** The panel design takes inspiration from Vinz's work shared on X; it is not a reproduction. Say “inspired by” rather than “built from”, and keep that distinction in every language. Code or assets actually ported from another project must still be credited as ports.
 - **The changelog keeps its grammar.** Entries stay in the small language `Scripts/changelog.py` converts (bullets, `**bold**`, `` `code` ``, links), validated with `python3 Scripts/changelog.py x.y.z > /dev/null` before a tag, and never regain the pseudo-conversational style that had to be rewritten wholesale on 2026-10-07 — every release page from 1.0.0 to 1.8.1 carried it.
 
 ## Resources

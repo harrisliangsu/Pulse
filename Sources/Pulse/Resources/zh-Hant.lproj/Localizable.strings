@@ -426,7 +426,7 @@
 "Sign-in failed. You can close this page." = "登入失敗，可以關閉這個頁面。";
 "Signed in. You can close this page and go back to Pulse." = "已登入，可以關閉頁面回到 Pulse 了。";
 "Read from each provider's own account. Pulse shows the figures they report; where it has to infer one, the figure itself says so." = "數據直接取自各服務商自己的帳號。Pulse 只顯示它們提供的數字；少數需要推算的，會在數字旁註明。";
-"Pulse is built from a design he posted on X." = "Pulse 基於他在 X 上發表的設計製作。";
+"Panel design inspired by Vinz's work shared on X." = "面板設計靈感來自 Vinz 在 X 上分享的作品。";
 "Open" = "開啟";
 "under 15 minutes" = "不到 15 分鐘";
 "about an hour" = "約 1 小時";

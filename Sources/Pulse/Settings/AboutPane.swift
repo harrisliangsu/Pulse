@@ -70,7 +70,7 @@ struct AboutPane: View {
             SettingsGroup(String.localized("Credits")) {
                 SettingsRow(
                     "Vinz (@hivinz_)",
-                    subtitle: String.localized("Pulse is built from a design he posted on X.")
+                    subtitle: String.localized("Panel design inspired by Vinz's work shared on X.")
                 ) {
                     Button(String.localized("Open")) {
                         NSWorkspace.shared.open(

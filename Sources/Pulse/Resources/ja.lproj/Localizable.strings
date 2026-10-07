@@ -426,7 +426,7 @@
 "Sign-in failed. You can close this page." = "サインインに失敗しました。このページは閉じて構いません。";
 "Signed in. You can close this page and go back to Pulse." = "サインインしました。このページを閉じて Pulse に戻ってください。";
 "Read from each provider's own account. Pulse shows the figures they report; where it has to infer one, the figure itself says so." = "各プロバイダのアカウントから直接読み取ります。Pulse が表示するのは各社が報告する数値で、推定せざるを得ない場合はその数値自体にその旨が示されます。";
-"Pulse is built from a design he posted on X." = "Pulse は彼が X に投稿したデザインをもとに作られています。";
+"Panel design inspired by Vinz's work shared on X." = "パネルのデザインは、Vinz が X で公開した作品から着想を得ています。";
 "Open" = "開く";
 "under 15 minutes" = "15 分未満";
 "about an hour" = "約 1 時間";
