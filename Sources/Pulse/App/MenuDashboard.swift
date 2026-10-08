@@ -365,7 +365,7 @@ private struct MenuAccountDetail: View {
                     .frame(width: 120, alignment: .leading)
                 }
                 if ledger.days.count > 1 {
-                    DailyTokensChart(days: ledger.recent(span))
+                    DailyTokensChart(days: ledger.recent(span), slots: span)
                         .frame(height: 44)
                 }
                 Text(localized: "Estimated from token counts at API prices — not your subscription bill.")

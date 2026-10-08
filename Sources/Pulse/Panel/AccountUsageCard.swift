@@ -45,7 +45,7 @@ struct AccountUsageCard: View {
                     figures
 
                     if ledger.days.count > 1 {
-                        DailyTokensChart(days: ledger.recent(Self.span))
+                        DailyTokensChart(days: ledger.recent(Self.span), slots: Self.span)
                             .frame(height: 58)
                             .padding(.horizontal, 16)
                             .padding(.bottom, 10)
@@ -447,15 +447,22 @@ private extension View {
 }
 
 /// Daily totals as bars, oldest on the left.
+///
+/// **Sized for the whole span, not for the days on record** — the same rule
+/// as the panel card's chart. A history two days old, divided across the
+/// width, drew two blocks each half the card wide; it now draws two bars at
+/// the left that the following days join.
 struct DailyTokensChart: View {
     let days: [LedgerDay]
+    let slots: Int
 
     var body: some View {
         GeometryReader { proxy in
             let peak = max(days.map(\.tokens).max() ?? 1, 1)
-            let spacing = max(proxy.size.width / CGFloat(max(days.count, 1)) * 0.22, 2)
+            let count = max(days.count, slots, 1)
+            let spacing = max(proxy.size.width / CGFloat(count) * 0.22, 2)
             let width = max(
-                (proxy.size.width - spacing * CGFloat(max(days.count - 1, 0))) / CGFloat(max(days.count, 1)),
+                (proxy.size.width - spacing * CGFloat(count - 1)) / CGFloat(count),
                 1
             )
 
@@ -476,7 +483,7 @@ struct DailyTokensChart: View {
                         .accessibilityValue(SpendFormat.tokens(day.tokens))
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             .overlay {
                 ChartHoverOverlay(samples: days.enumerated().map { index, day in
                     .init(
