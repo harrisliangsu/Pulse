@@ -42,10 +42,23 @@ Five languages: English, Simplified Chinese, Traditional Chinese, Japanese and K
 - **Do not invent objects the interface has not got.** *不随它在轨道上的位置变化* gave the rail an 轨道 nobody had mentioned.
 - **zh-Hant is not zh-Hans run through a converter.** Vocabulary differs (*個性* / *性格*, *預設* / *默认*), and so does terminology: zh-Hant says *服務商* where zh-Hans says *供应商*.
 - **One term per concept per language.** zh-Hans currently breaks this: *供应商* in the navigation, *服务商* in two strings. Worth settling next time that pane is open.
-
 `./Scripts/check-localization.sh` compares **every** `.strings` file against English — it globs `*.lproj` rather than naming a pair, so a language added to the app but not to the script cannot go unchecked — **and** every key the source asks for (`Scripts/localization-keys.py` — a scanner, not a regex, because interpolations nest). Comparing only the two files missed a renamed string literal that fell back to English while both files still agreed.
 
 Why implicit `Text` fails, and the scanner’s blind spots: [decisions/localization.md](decisions/localization.md).
+
+## Writing users can read
+
+**Everything a user can see is held to one standard**, in every language, on every surface: interface copy in the five `.strings` files, notification text, the Sparkle update window, the CHANGELOG entry (which becomes both the GitHub release page and the update dialog), the READMEs, the `Docs/setup/` pages and every issue reply. If somebody decides whether to install, click or trust something based on the words, the words are user-visible.
+
+The standard — no script checks any of this, it is a read-through job, done on the rows a user actually sees:
+
+- **Written, not converted.** The rule for translations above applies to the source language and to every surface: no English syntax, no word-by-word rendering, no phrase a native reader would have to reread.
+- **Standard register.** Release notes and interface copy are formal, plain and complete — the way a Mac application writes, not the way somebody talks. Deliberate "plain talk" is as wrong as jargon: it reads as carelessness, and half the time it stops saying what happened at all. Concretely banned: sentences whose subject is a vague 「它」, idioms that describe damage instead of the fix (「削平」「冲掉」), chatty connectors (「马上」「没人点就」) in place of stating the behaviour.
+- **Say the behaviour, then the reason.** A bullet leads with what the user gets or what stopped going wrong, in one bold clause that stands alone; the explanation follows in full sentences. A bullet that cannot be summarised from its own lead-in is rewritten, not annotated.
+- **One term per concept, everywhere.** The vocabulary of a release entry is the vocabulary of the interface it describes: zh-Hans says 服务商 and 账号, and a button labelled one thing on screen is called the same thing in the notes about it.
+- **Nothing invented, nothing vague.** No object the interface has not got, no「它」or「那个」without a referent, and no claim the change cannot support. 「合适的宽度」 says nothing; what changed about the width does.
+- **Credits describe the actual relationship.** The panel design takes inspiration from Vinz's work shared on X; it is not a reproduction. Say “inspired by” rather than “built from”, and keep that distinction in every language. Code or assets actually ported from another project must still be credited as ports.
+- **The changelog keeps its grammar.** Entries stay in the small language `Scripts/changelog.py` converts (bullets, `**bold**`, `` `code` ``, links), validated with `python3 Scripts/changelog.py x.y.z > /dev/null` before a tag, and never regain the pseudo-conversational style that had to be rewritten wholesale on 2026-10-07 — every release page from 1.0.0 to 1.8.1 carried it.
 
 ## Resources
 

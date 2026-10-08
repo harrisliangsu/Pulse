@@ -10,6 +10,13 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.16
+
+- **About credits the panel design as inspiration.** The Credits row for Vinz says the panel design is inspired by work he shared on X. English, Simplified Chinese, Traditional Chinese, Japanese, and Korean all say that.
+- **Interface copy is revised in Simplified Chinese, Traditional Chinese, Japanese, and Korean.** Each concept keeps one term, and wording and line breaks are corrected. In Simplified Chinese, keychain lines now say that no Keychain prompt is needed, and notices such as an expired login or an unreachable update feed are full sentences.
+- **Synced from upstream qunqin24/Pulse** (6 commits, through their 1.8.2 line, since 1.4.15). This fork's version is **1.4.16**. Their Sparkle offer for 1.8.2 was not copied; `appcast.xml` is unchanged until this version is tagged. Upstream rewrote the Chinese notes for its own versions; this fork's existing entries are unchanged.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen's cookie store; bilingual release notes; and this repo's Sparkle feed and signing key.
+
 ## 1.4.15
 
 - **A Keychain prompt no longer holds up every refresh.** Reading Claude Code's sign-in waits at most 60 seconds, then uses the other routes. Saving a key while a console session is being renewed no longer drops one of them, and a renewal cannot write back a login you just removed.
