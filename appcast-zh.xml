@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>en</language>
         <item>
+            <title>1.8.3</title>
+            <pubDate>Thu, 08 Oct 2026 07:55:04 -0000</pubDate>
+            <sparkle:version>1.8.3</sparkle:version>
+            <sparkle:shortVersionString>1.8.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/qunqin24/Pulse/releases/tag/v1.8.3</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.8.3</h2><p><strong>改进与修复</strong></p><ul><li><strong>修复每日用量图表遮挡详情卡片的问题。</strong> 本机用量记录只有一天时，悬浮详情卡片中的每日图表会显示为一个覆盖卡片下方内容的大圆。现在图表的柱宽始终按 31 天计算，记录较少时从左侧开始显示；设置和菜单栏中的每日图表也按同样方式显示，不再显示为宽色块。</li><li><strong>Codex 额度余额按数字显示。</strong> 设置中的「额度余额」此前显示为「2500.0000000000」这类带十位小数的原始数值，现在按当前语言的数字格式显示，最多保留两位小数。</li></ul><p><a href="https://github.com/qunqin24/Pulse/releases/tag/v1.8.3">在 GitHub 上查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/qunqin24/Pulse/releases/download/v1.8.3/Pulse-1.8.3.zip"
+                       length="15012401"
+                       type="application/octet-stream"
+                       sparkle:edSignature="oPBGA+EwhhCGsT2GpXeWjR8VY1CXme31E597E6O2QOO3nMdrMR5lyiw+nUKu5m3kHRcKTMcWf4LQCQZ6zU14Dg==" />
+        </item>
+        <item>
             <title>1.8.2</title>
             <pubDate>Wed, 07 Oct 2026 06:35:02 -0000</pubDate>
             <sparkle:version>1.8.2</sparkle:version>
