@@ -7,6 +7,22 @@ shows in the update window — see [Scripts/changelog.py](Scripts/changelog.py).
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.8.3
+
+**中文**
+
+**改进与修复**
+
+- **修复每日用量图表遮挡详情卡片的问题。** 本机用量记录只有一天时，悬浮详情卡片中的每日图表会显示为一个覆盖卡片下方内容的大圆。现在图表的柱宽始终按 31 天计算，记录较少时从左侧开始显示；设置和菜单栏中的每日图表也按同样方式显示，不再显示为宽色块。
+- **Codex 额度余额按数字显示。** 设置中的「额度余额」此前显示为「2500.0000000000」这类带十位小数的原始数值，现在按当前语言的数字格式显示，最多保留两位小数。
+
+**English**
+
+**Changed and fixed**
+
+- **Fix the daily usage chart covering the detail card.** When local usage records covered only one day, the daily chart on the hover detail card was drawn as a large circle over the rows below it. Bars are now always sized for 31 days, and a short history starts at the left. The daily charts in Settings and the menu bar follow the same rule and no longer draw wide blocks.
+- **Show Codex's credit balance as a number.** The Credit balance row in Settings showed the raw value with ten decimal places, such as "2500.0000000000". It now uses the number format of the current language, with at most two decimal places.
+
 ## 1.8.2
 
 **中文**
