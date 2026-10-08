@@ -6,6 +6,36 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.16</title>
+            <pubDate>Thu, 08 Oct 2026 01:47:14 -0000</pubDate>
+            <sparkle:version>1.4.16</sparkle:version>
+            <sparkle:shortVersionString>1.4.16</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.16</link>
+            <description xml:lang="zh-Hans"><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.16</h2><ul><li><strong>关于页将面板设计记为灵感来源。</strong> 「致谢」中 Vinz 一行写明：面板设计灵感来自他在 X 上分享的作品。英文、简体中文、繁体中文、日文和韩文表达的是同一含义。</li><li><strong>修订简体中文、繁体中文、日文和韩文的界面文案。</strong> 同一概念使用同一术语，并校正措辞与换行。简体中文里，钥匙串相关说明改为「无需钥匙串授权」；登录已过期、无法连接更新源等提示改为完整的句子。</li><li><strong>同步上游 qunqin24/Pulse</strong>（6 个提交，直到其 1.8.2，自 1.4.15 起）。本仓库版本为 <strong>1.4.16</strong>。没有抄入上游 1.8.2 的 Sparkle 推送；<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。上游改写了其自身版本的中文更新说明；本仓库已有条目保持原样。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.16">在 GitHub 查看更新说明</a></p>]]></description>
+            <description xml:lang="zh-Hant"><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.16</h2><ul><li><strong>关于页将面板设计记为灵感来源。</strong> 「致谢」中 Vinz 一行写明：面板设计灵感来自他在 X 上分享的作品。英文、简体中文、繁体中文、日文和韩文表达的是同一含义。</li><li><strong>修订简体中文、繁体中文、日文和韩文的界面文案。</strong> 同一概念使用同一术语，并校正措辞与换行。简体中文里，钥匙串相关说明改为「无需钥匙串授权」；登录已过期、无法连接更新源等提示改为完整的句子。</li><li><strong>同步上游 qunqin24/Pulse</strong>（6 个提交，直到其 1.8.2，自 1.4.15 起）。本仓库版本为 <strong>1.4.16</strong>。没有抄入上游 1.8.2 的 Sparkle 推送；<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。上游改写了其自身版本的中文更新说明；本仓库已有条目保持原样。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.16">在 GitHub 查看更新说明</a></p>]]></description>
+            <description xml:lang="en"><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.16</h2><ul><li><strong>About credits the panel design as inspiration.</strong> The Credits row for Vinz says the panel design is inspired by work he shared on X. English, Simplified Chinese, Traditional Chinese, Japanese, and Korean all say that.</li><li><strong>Interface copy is revised in Simplified Chinese, Traditional Chinese, Japanese, and Korean.</strong> Each concept keeps one term, and wording and line breaks are corrected. In Simplified Chinese, keychain lines now say that no Keychain prompt is needed, and notices such as an expired login or an unreachable update feed are full sentences.</li><li><strong>Synced from upstream qunqin24/Pulse</strong> (6 commits, through their 1.8.2 line, since 1.4.15). This fork&#x27;s version is <strong>1.4.16</strong>. Their Sparkle offer for 1.8.2 was not copied; <code>appcast.xml</code> is unchanged until this version is tagged. Upstream rewrote the Chinese notes for its own versions; this fork&#x27;s existing entries are unchanged.</li><li><strong>Fork-only pieces kept:</strong> Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and <code>~/.qoder</code>); Zen&#x27;s cookie store; bilingual release notes; and this repo&#x27;s Sparkle feed and signing key.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.16">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.16/Pulse-1.4.16.zip"
+                       length="15447993"
+                       type="application/octet-stream"
+                       sparkle:edSignature="AfLohTDbeO5x+XFDmaaatnjGAMu4XU4AvykOWJR9ROUpNJ0l+JoXfKob6fk69p2skGh1MdjWvui6H/5WWITJBA==" />
+        </item>
+        <item>
             <title>1.4.15</title>
             <pubDate>Wed, 07 Oct 2026 01:54:14 -0000</pubDate>
             <sparkle:version>1.4.15</sparkle:version>
