@@ -29,13 +29,13 @@
 "No completed check since launch." = "起動後まだ確認が完了していません。";
 "Checked at" = "確認時刻";
 "Last successful reading" = "最後に成功した取得";
-"Displayed figures" = "表示中の数値の出どころ";
+"Displayed figures" = "表示中の数値";
 "Showing a saved reading; its original source is retained." = "保存済みの取得結果を表示しています。元の取得経路は保持されています。";
 "Source not recorded" = "取得元の記録なし";
 "Route checks" = "取得経路の確認";
 "Next step" = "次にすること";
 "Share diagnostics" = "診断情報を共有";
-"Only source, status and timestamps; no account details or secrets." = "取得元・状態・時刻のみで、アカウント情報や秘密鍵は含みません。";
+"Only source, status and timestamps; no account details or secrets." = "取得元・状態・時刻のみで、アカウント情報や機密情報は含みません。";
 "Copied" = "コピーしました";
 "Copy diagnostics" = "診断情報をコピー";
 "Not recorded" = "記録なし";
@@ -46,7 +46,7 @@
 "Raycast extension, tmux and shell status, and a sketchybar plugin." = "Raycast 拡張、tmux とシェルのステータス、sketchybar プラグインが含まれます。";
 "Export integration files…" = "連携ファイルを書き出す…";
 "Installation guide" = "インストールガイド";
-"Open an account" = "アカウント設定を直接開く";
+"Open an account" = "アカウントを開く";
 "Account link" = "アカウントリンク";
 "Opens this account's settings in the installed Pulse app." = "インストール済みの Pulse でこのアカウントの設定を直接開きます。";
 "Copy link" = "リンクをコピー";
@@ -68,7 +68,7 @@
 "Older reading received" = "受け取ったのは古い取得結果です";
 "Desktop app session" = "デスクトップ App のセッション";
 "Codex app server" = "Codex app server";
-"Local language server" = "ローカルの language server";
+"Local language server" = "ローカルの言語サーバ";
 "Signed-in web page" = "サインイン済みの Web ページ";
 "The app's saved plan" = "App が保存したプラン情報";
 
@@ -103,7 +103,7 @@
 "Choose whether the outer arc fills with elapsed time or empties with time remaining." = "外側のリングを経過時間で満たすか、残り時間で減らすかを選択します。";
 "Elapsed" = "経過";
 "Remaining" = "残り";
-"Animated mark" = "アニメーションマーク";
+"Animated mark" = "ボット";
 "Bot personality" = "ボットの性格";
 "Bot shape" = "ボットの形";
 "Bot colour" = "ボットの色";
@@ -267,7 +267,7 @@
 "Top model" = "最も使ったモデル";
 "Estimated value" = "使った分の推定額";
 "%@ used so far" = "今期はここまでで %@";
-"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. If both are in use at once, the figure reads low. Windows with too little use to extrapolate from are left out." = "報告された数値ではなく推定です。この Mac で期間の開始から使った金額を、提供元が示す使用率で割っています。使用率が上がっているのにこの Mac でほとんど使っていない場合は、別の場所（ほかのコンピュータやウェブサイト）でも使われているため、その期間はリセットまで推定しません。両方で同時に使っている場合、推定は低めになります。推定できるほど使っていない上限は表示しません。";
+"An estimate, not a reported figure: what this Mac spent since each window opened, divided by the percentage the provider says is used. When the percentage rises while this Mac spends nothing, the account is being used elsewhere — another computer, or the website — and that window isn't estimated until it resets. If both are in use at once, the figure reads low. Windows with too little use to extrapolate from are left out." = "報告された数値ではなく推定です。この Mac で期間の開始から使った金額を、プロバイダが示す使用率で割っています。使用率が上がっているのにこの Mac でほとんど使っていない場合は、別の場所（ほかのコンピュータやウェブサイト）でも使われているため、その期間はリセットまで推定しません。両方で同時に使っている場合、推定は低めになります。推定できるほど使っていない上限は表示しません。";
 "Also used somewhere this Mac's logs can't see" = "この Mac の記録にない場所でも使われています";
 "Not estimated" = "推定しません";
 
@@ -288,7 +288,7 @@
 /* Panel size */
 "Size" = "全体のサイズ";
 "Spacing" = "間隔";
-"Round ends" = "端を真円に";
+"Round ends" = "端を丸く";
 "The rail's ends and the card's tail follow the ring's own curve." = "レールの両端とカードの尾が、リングと同じ弧を描きます。";
 "How much air there is between the rings." = "リングどうしの間隔を調整します。";
 "Tight" = "狭い";
@@ -303,7 +303,7 @@
 "Start Pulse automatically when you log in." = "macOS にログインすると Pulse を自動的に起動します。";
 "Waiting for approval in System Settings › General › Login Items." = "「システム設定 › 一般 › ログイン項目」での許可を待っています。";
 
-"Show Dock icon while Settings or a recap is open" = "設定や月間まとめを開いている間 Dock にアイコンを表示";
+"Show Dock icon while Settings or a recap is open" = "設定やまとめを開いている間 Dock にアイコンを表示";
 "So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close." = "他のウインドウに隠れても Dock や ⌘-Tab から戻れます。どちらも閉じるとアイコンも消えます。";
 
 /* メニューバーのアイコン */
@@ -317,12 +317,12 @@
 "Transparency" = "透明度";
 "Clearer to the right. Darker reads better over bright pages." = "右ほど透明になります。暗めにすると、明るいページの上でも読みやすくなります。";
 "Open Antigravity to see its usage." = "使用量を読むには Antigravity を開いてください。";
-"Asks the language server Antigravity runs while it is open." = "Antigravity が起動中に走らせている language server に問い合わせます。";
+"Asks the language server Antigravity runs while it is open." = "Antigravity が起動中に走らせている言語サーバに問い合わせます。";
 "Only while Antigravity is open." = "Antigravity が開いているあいだだけ読めます。";
-"Antigravity's language server" = "Antigravity の language server";
+"Antigravity's language server" = "Antigravity の言語サーバ";
 
 /* Cursor */
-"Sign in to Cursor to see usage." = "使用量を読むには Cursor でサインインしてください。";
+"Sign in to Cursor to see usage." = "使用量を読むには Cursor にサインインしてください。";
 "Cursor's saved login was refused. Open Cursor to renew it." = "Cursor が保存したログインが拒否されました。Cursor を開いて入り直してください。";
 "Sign in to Grok to see usage." = "使用量を読むには Grok にサインインしてください。";
 "Grok's saved login expired. Use Grok to renew it." = "Grok が保存したログインの期限が切れました。Grok を一度使って更新してください。";
@@ -342,7 +342,7 @@
 "Check now" = "今すぐ確認";
 "Checking…" = "確認中…";
 "Built from source — no update check." = "ソースからビルドされているため、更新は確認しません。";
-"%@ installed · %@ available" = "%@ をインストール済み · %@ が利用可能";
+"%@ installed · %@ available" = "%@ インストール済み · %@ が利用可能";
 "%@ · up to date" = "%@ · 最新です";
 "Update to %@" = "%@ に更新";
 "Check automatically" = "自動で確認";
@@ -433,8 +433,8 @@
 "This page can be closed." = "このページは閉じて構いません。";
 "Sign-in failed. You can close this page." = "サインインに失敗しました。このページは閉じて構いません。";
 "Signed in. You can close this page and go back to Pulse." = "サインインしました。このページを閉じて Pulse に戻ってください。";
-"Read from each provider's own account. Pulse shows the figures they report; where it has to infer one, the figure itself says so." = "各プロバイダのアカウントから直接読み取ります。Pulse が表示するのは各社が報告する数字で、推定せざるを得ない箇所はその数字自身に明記します。";
-"Pulse is built from a design he posted on X." = "Pulse は彼が X に投稿したデザインをもとに作られています。";
+"Read from each provider's own account. Pulse shows the figures they report; where it has to infer one, the figure itself says so." = "各プロバイダのアカウントから直接読み取ります。Pulse が表示するのは各社が報告する数値で、推定せざるを得ない場合はその数値自体にその旨が示されます。";
+"Panel design inspired by Vinz's work shared on X." = "パネルのデザインは、Vinz が X で公開した作品から着想を得ています。";
 "Open" = "開く";
 "under 15 minutes" = "15 分未満";
 "about an hour" = "約 1 時間";
@@ -464,7 +464,7 @@
 "When a reading stops arriving" = "使用量が読めなくなったとき";
 "After several failed checks in a row, once per outage." = "連続して何度か失敗したときに、1 回の障害につき 1 度だけ通知します。";
 "Can't be read" = "読み取れません";
-"The last few checks didn't get through, so the panel is showing older figures." = "直近の数回が通らなかったため、パネルには古い数字が出ています。";
+"The last few checks didn't get through, so the panel is showing older figures." = "直近の数回が通らなかったため、パネルには古い数値が出ています。";
 "%@ used." = "%@ 使用。";
 "%@ left." = "残り %@。";
 "This limit is spent." = "この上限は使い切りました。";
@@ -494,7 +494,7 @@
 "That key works. The account has no Coding Plan running on it." = "キーは有効です。ただしこのアカウントには有効な Coding Plan がありません。";
 
 /* Usage history read from a provider's own statistics */
-"Reported by %@ for the whole account, so it covers every machine you use it on. It counts tokens only — the figures behind it cannot be turned into a cost." = "%@ がアカウント単位で報告するため、使用しているすべてのマシンが対象です。数えるのはトークンだけで、元になる数字を金額には換算できません。";
+"Reported by %@ for the whole account, so it covers every machine you use it on. It counts tokens only — the figures behind it cannot be turned into a cost." = "%@ がアカウント単位で報告するため、使用しているすべてのマシンが対象です。数えるのはトークンだけで、元になる数値を金額には換算できません。";
 "This account hasn't used anything yet, so there is nothing to chart." = "このアカウントにはまだ使用量がないため、グラフにできるデータがありません。";
 "Asking %@" = "%@ に問い合わせています";
 "Last 7 days" = "過去 7 日";
@@ -522,14 +522,14 @@
 // Token spend: every agent's history added up.
 "Token spend" = "トークン使用量";
 "Read local usage records" = "ローカルの使用量記録を読み取る";
-"When enabled, scans local records and exports." = "オンにすると、この Mac の記録とエクスポートファイルを読み取ります。";
+"When enabled, scans local records and exports." = "オンにすると、この Mac の記録と書き出しを読み取ります。";
 "Reading %@…" = "%@ を読み取り中…";
 "Span" = "集計期間";
 "Counting" = "集計方法";
 "Read from local records and exports, priced at models.dev's published rates." = "ローカルの記録と書き出しから読み取り、models.dev が公開する価格で換算します。";
 "Rescan" = "再スキャン";
 "Total" = "合計";
-"Reading…" = "読み込み中…";
+"Reading…" = "読み取り中…";
 "Nothing yet" = "まだ記録がありません";
 "Going through local records and exports." = "ローカルの記録と書き出しを順に読んでいます。";
 "No local records or exports have been found yet." = "ローカルの記録も書き出しも、まだ見つかっていません。";
@@ -564,7 +564,7 @@
 "These records carry no cache figures." = "これらの記録にはキャッシュの数値がありません。";
 "Not reported" = "記録なし";
 "Cached" = "キャッシュ";
-"Model output as recorded by each agent." = "各 Agent が記録したモデルの出力。";
+"Model output as recorded by each agent." = "各エージェントが記録したモデルの出力。";
 "By hour" = "時間帯別";
 "By month" = "月別";
 "Pattern" = "使い方の傾向";
@@ -652,7 +652,7 @@
 "HTTP" = "HTTP";
 "SOCKS5" = "SOCKS5";
 "Host" = "ホスト";
-"The proxy server's name or address." = "プロキシサーバのホスト名またはアドレス。";
+"The proxy server's name or address." = "プロキシサーバーのホスト名またはアドレス。";
 "Enter a host." = "ホストを入力してください。";
 "Port" = "ポート";
 "A number from 1 to 65535." = "1〜65535 の数字。";
@@ -662,12 +662,12 @@
 "Choose services to monitor" = "監視するサービスを選択";
 "Choose services to start monitoring…" = "サービスを選んで監視を開始…";
 "New services detected" = "新たに対応したサービス";
-"Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "サービスを1つ以上選んでください。「完了」を押すと、選んだサービスのログイン情報を読み取り、使用量の確認を始めます。後から設定で変更できます。";
+"Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "サービスを 1 つ以上選んでください。「完了」を押すと、選んだサービスのログイン情報を読み取り、使用量の確認を始めます。後から設定で変更できます。";
 "This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "このバージョンで新たに対応したサービスが Mac に見つかりました。追加するものを選んでください。これまでの選択はそのままです。";
 "Detected on this Mac" = "この Mac で検出";
 "Select detected services" = "検出したサービスを選択";
 "Done" = "完了";
-"Enable a service in its settings to start monitoring." = "左側でサービスを選び、「パネルに表示」をオンにすると監視を始めます。";
+"Enable a service in its settings to start monitoring." = "監視を始めるには、そのサービスの設定で有効にしてください。";
 "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "キーチェーンまたは認証情報ファイルから Claude Code のログインを読み取ります。Claude デスクトップの Cookie 保存領域を含め、キーチェーンへのアクセスを求めることがあります。";
 "Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "~/.codex/auth.json を読み取り、保存済みのログインで codex app-server を起動する場合があります。Pulse はキーチェーンへのアクセスを求めません。";
 "Reads the running editor's local language server and connection token. No Keychain prompt." = "起動中のエディタのローカル言語サーバから使用量と接続トークンを読み取ります。キーチェーンの確認はありません。";
@@ -676,7 +676,7 @@
 "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "設定で入力したキーを使うか、OpenCode の auth.json を読み取ります。キーチェーンの確認はありません。";
 "Uses a key entered in Settings, or reads the saved GLM key files. No Keychain prompt." = "設定で入力したキーを使うか、保存済みの GLM キーファイルを読み取ります。キーチェーンの確認はありません。";
 "Uses a key entered in Settings, or reads ~/.commandcode/auth.json. No Keychain prompt." = "設定で入力したキーを使うか、~/.commandcode/auth.json を読み取ります。キーチェーンの確認はありません。";
-"Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan." = "この Mac の Chromium 系ブラウザから Devin の Web ログインを読み取ります。確認ダイアログは出ません。デスクトップアプリの保存済みプランも読む場合があります。";
+"Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan." = "この Mac の Chromium 系ブラウザから Devin の Web ログインを読み取ります。確認ダイアログは出ません。デスクトップ App の保存済みプランも読む場合があります。";
 "Runs arkcli with its saved login, or uses access keys entered in Settings. Pulse does not request Keychain access." = "保存済みのログインで arkcli を起動するか、設定で入力したアクセスキーを使います。Pulse はキーチェーンへのアクセスを求めません。";
 "Kiro CLI ACP" = "Kiro CLI ACP";
 "Uses Kiro CLI's signed-in session without reading its credentials." = "Kiro CLI のサインイン済みセッションを使い、認証情報は読み取りません。";
@@ -730,7 +730,7 @@
 "Sends the key you enter only to the server address you enter. No Keychain prompt." = "入力したキーは、入力したサーバーのアドレスにだけ送られます。キーチェーンの確認はありません。";
 "A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac." = "あなたの sub2api のグループ API キーです。上のアドレスにだけ送られます。この Mac に暗号化して保存されます。";
 "A Personal Access Token from v2ex.com. Stored encrypted on this Mac." = "v2ex.com で発行した Personal Access Token です。この Mac に暗号化して保存されます。";
-"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "あなた自身のゲートウェイのアドレスです。例: https://gateway.example.com。Pulse は使用状況を尋ねるだけで、ほかには何も送りません。";
+"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "あなた自身のゲートウェイのアドレスです。例：https://gateway.example.com。Pulse は使用状況を尋ねるだけで、ほかには何も送りません。";
 "The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "この ゲートウェイ に AI クライアントが使っているのと同じキーです。上のアドレスにだけ送られます。この Mac に暗号化して保存されます。";
 "Credit allowance" = "クレジット枠";
 "Team credits" = "チーム共有クレジット";
@@ -786,11 +786,11 @@
 
 /* Profiled providers: shared wording */
 "No session found. Sign in at %@ first." = "セッションが見つかりません。先に %@ でサインインしてください。";
-"Nothing saved on this Mac yet. Open the service's app once, then retry." = "この Mac にはまだ何も保存されていません。そのサービスのアプリを一度開いてから、再試行してください。";
-"Read a browser session in Settings." = "設定でブラウザのセッションを読み込んでください。";
-"Sign in with this service's own app or command-line tool first." = "先にそのサービス自身のアプリかコマンドラインツールでサインインしてください。";
-"The browser session expired. Sign in on the website, then read it again in Settings." = "ブラウザのセッションの有効期限が切れました。Web サイトでサインインしてから、設定でもう一度読み込んでください。";
-"The saved login has expired. Sign in again with the service's own app or tool." = "保存されているログインの有効期限が切れました。そのサービス自身のアプリかツールでサインインし直してください。";
+"Nothing saved on this Mac yet. Open the service's app once, then retry." = "この Mac にはまだ何も保存されていません。そのサービスの App を一度開いてから、再試行してください。";
+"Read a browser session in Settings." = "設定でブラウザのセッションを読み取ってください。";
+"Sign in with this service's own app or command-line tool first." = "先にそのサービス自身の App かコマンドラインツールでサインインしてください。";
+"The browser session expired. Sign in on the website, then read it again in Settings." = "ブラウザのセッションの有効期限が切れました。Web サイトでサインインしてから、設定でもう一度読み取ってください。";
+"The saved login has expired. Sign in again with the service's own app or tool." = "保存されているログインの有効期限が切れました。そのサービス自身の App かツールでサインインし直してください。";
 "This account has no plan with usage limits." = "このアカウントには使用量の上限があるプランがありません。";
 
 /* ClinePass */
@@ -927,14 +927,14 @@
 "An account switched off falls back to the fullest ring." = "選んだアカウントをオフにすると、いちばん使っているリングに戻ります。";
 "Fullest ring" = "いちばん使っているリング";
 "Menu bar style" = "メニューバーのスタイル";
-"Figure" = "数字";
+"Figure" = "数値";
 "Ring" = "リング";
 "Open %@ usage page" = "%@ の使用量ページを開く";
 "Overview" = "概要";
 "Updated just now" = "たった今更新";
 "Updated %@" = "%@に更新";
 "Estimated from token counts at API prices — not your subscription bill." = "API 料金でトークン数から見積もった金額です。サブスクリプションの請求額ではありません。";
-"Reading local records…" = "ローカルの記録を読み込み中…";
+"Reading local records…" = "ローカルの記録を読み取り中…";
 "Usage credits" = "クレジット";
 "%@ remaining" = "残り %@";
 "Split" = "分割";
@@ -967,7 +967,7 @@
 "Adds the plan and when the figures were read." = "プラン名と数値の更新時刻を加えます。";
 "Adds the plan, when the figures were read and the account's usage over the last month." = "プラン名と数値の更新時刻に加えて、アカウント全体の直近 1 か月の利用量を表示します。";
 "Adds the plan, when the figures were read and, with Token spend on, this Mac's recent activity." = "プラン名と数値の更新時刻を加えます。「トークン使用量」がオンなら、この Mac での最近の利用も表示します。";
-"Estimated value %@ · %@ used" = "上限の推定価値 %@ · 今期 %@ 使用";
+"Estimated value %@ · %@ used" = "使った分の推定額 %@ · 今期 %@ 使用";
 "Cache hit rate" = "キャッシュヒット率";
 "Models" = "モデル";
 "Share" = "割合";
@@ -1007,13 +1007,13 @@
 "No OpenCode console session found. Sign in at opencode.ai first." = "OpenCode コンソールのセッションが見つかりません。先に opencode.ai でサインインしてください。";
 "Costs as %@ charged them, for the whole account." = "金額は %@ の実際の請求額で、アカウント全体のものです。";
 "The console session has expired. Read it again in Settings." = "コンソールのセッションが切れました。設定で読み取り直してください。";
-"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode のコンソールが 30 日間保持するリクエスト記録です。アカウントのすべてのデバイス・すべてのアプリからのリクエストと、それぞれの費用が含まれます。キーが未設定か拒否されたときは、プランの上限もこれで読み取ります。Pulse はコンソールのサインイン用 Cookie だけを、この Mac に暗号化して保存します。";
+"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode のコンソールが 30 日間保持するリクエスト記録です。アカウントのすべてのデバイス・すべての App からのリクエストと、それぞれの費用が含まれます。キーが未設定か拒否されたときは、プランの上限もこれで読み取ります。Pulse はコンソールのサインイン用 Cookie だけを、この Mac に暗号化して保存します。";
 "Turn on Detailed card above to see the request log on the card." = "上の「詳細カード」をオンにすると、カードにリクエスト記録が表示されます。";
 "Read from %@ · workspace %@." = "%@ から読み取りました · ワークスペース「%@」。";
 "The console turned this session away. Sign in again at opencode.ai, then read it again." = "コンソールがこのセッションを受け付けませんでした。opencode.ai でサインインし直してから、もう一度読み取ってください。";
 "Read from %@, but the console didn't answer. It will be tried again on the next refresh." = "%@ から読み取りましたが、コンソールが応答しませんでした。次の更新時にもう一度試します。";
 "Reading the account's records…" = "アカウントの記録を読み取り中…";
-"From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "%@ のアカウント全体のリクエスト記録で、すべてのデバイスとそれを使うすべてのアプリを含みます。金額は各リクエストの実際の請求額です。記録は 30 日間保持されます。";
+"From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "%@ のアカウント全体のリクエスト記録で、すべてのデバイスとそれを使うすべての App を含みます。金額は各リクエストの実際の請求額です。記録は 30 日間保持されます。";
 
 "From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days." = "%@ のコンソールが記録したアカウント全体の使用量で、すべてのキーとすべてのデバイスを含みます。金額は日ごとの実際の請求額です。Pulse は直近 30 日分を読み取ります。";
 "DeepSeek console" = "DeepSeek コンソール";
@@ -1079,7 +1079,7 @@
 "%@ sessions" = "%@ セッション";
 "Counted from this Mac's local records · money estimated at API prices" = "この Mac のローカル記録から集計 · 金額は API 料金で概算";
 "Counted from this Mac's local records" = "この Mac のローカル記録から集計";
-"Figures are to date." = "数字は本日までのものです。";
+"Figures are to date." = "数値は本日までのものです。";
 "Some work had no published price, so the money is a floor." = "一部の利用分には公開価格がないため、金額は実際より少なくなっています。";
 "Some tools' counts may be missing, so the total is a floor." = "一部のツールの記録が欠けている可能性があり、実際の量はこれ以上です。";
 "Project %@" = "プロジェクト %@";
@@ -1096,8 +1096,8 @@
 "Model ranking" = "モデルランキング";
 "By token share" = "トークンの割合順";
 "Other" = "その他";
-"%@ agents" = "%@ 個のツール";
-"Repeated context is read from the cache, saving about %@" = "くり返す文脈はキャッシュから読むので、約 %@ の節約";
+"%@ agents" = "%@ 個のエージェント";
+"Repeated context is read from the cache, saving about %@" = "繰り返しの文脈はキャッシュから読むので、約 %@ の節約";
 "days" = "日";
 "Still going · longest %@" = "継続中 · 最長 %@";
 "Top projects" = "よく使ったプロジェクト";
@@ -1114,7 +1114,7 @@
 "Where the money went" = "金額の内訳";
 "The cache saved you" = "キャッシュで節約できた額";
 "Estimated at each model's published API price. The plan price is the one you typed in Pulse." = "各モデルが公開している API 料金で概算しています。プランの料金は Pulse に入力された値です。";
-"Figures are to date, and the plan price is prorated by the days so far." = "数字は本日までのもので、プランの料金は経過日数で日割りにしています。";
+"Figures are to date, and the plan price is prorated by the days so far." = "数値は本日までのもので、プランの料金は経過日数で日割りにしています。";
 "That was" = "これが";
 "your %@." = "あなたの%@。";
 "Tokens" = "トークン";
@@ -1138,17 +1138,17 @@
 "Monthly and Yearly Recap" = "月間まとめ・年間まとめ";
 "View %@ recap" = "%@のまとめを見る";
 "View %@ yearly recap" = "%@年の年間まとめを見る";
-"Shareable cards for a month or a year, from this Mac's records." = "この Mac の記録から、1か月または1年分の共有用カードを作ります。";
+"Shareable cards for a month or a year, from this Mac's records." = "この Mac の記録から、1 か月または 1 年分の共有用カードを作ります。";
 "When a recap is ready" = "まとめができたとき";
 "Last month's recap, at the start of the month. Needs Token spend reading." = "月初に、先月のまとめができたことを知らせます。「ローカルの使用量記録を読み取る」がオンのときだけ使えます。";
 "Your %@ recap is ready" = "%@のまとめができました";
-"The recap needs Token spend" = "まとめには使用量記録の読み取りが必要です";
+"The recap needs Token spend" = "まとめには「トークン使用量」が必要です";
 "It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "この Mac の使用量記録から作ります。Pulse が記録を読むのは、「ローカルの使用量記録を読み取る」がオンのときだけです。";
 "Open Token spend" = "トークン使用量を開く";
 "The records could not be read." = "記録を読み取れませんでした。";
 "No records for %@" = "%@の記録はありません";
 "Nothing in this Mac's usage records falls in this period." = "この Mac の使用量記録に、この期間の分はありません。";
-"The first read of a long history can take a minute or two." = "履歴が長いと、最初の読み取りに1〜2分かかることがあります。";
+"The first read of a long history can take a minute or two." = "履歴が長いと、最初の読み取りに 1〜2 分かかることがあります。";
 "Month" = "月";
 "Year" = "年";
 "Monthly price" = "月額料金";
@@ -1181,14 +1181,14 @@
 "1 day" = "1 日";
 "day" = "日";
 "1 session" = "1 セッション";
-"1 agent" = "1 個のツール";
+"1 agent" = "1 個のエージェント";
 "Active %@ of 1 day" = "活動日 %@ / 1 日";
-"Used %@ · top tool" = "%@使用 · メイン";
+"Used %@ · top tool" = "%@使用 · メインのツール";
 "Which days · days used · token share" = "使った日 · 日数 · トークンの割合";
 "Which months · days used · token share" = "使った月 · 日数 · トークンの割合";
 "Darker days used more · grey is the weekend" = "濃い日ほどたくさん使った · グレーは週末";
 "By week" = "週ごと";
-"Busiest week: %@" = "最も多かった週: %@";
+"Busiest week: %@" = "最も多かった週：%@";
 "Weekdays and weekends" = "平日と週末";
 "Average per active day: %@" = "活動日あたり平均 %@";
 "Weekdays %@" = "平日 %@";
