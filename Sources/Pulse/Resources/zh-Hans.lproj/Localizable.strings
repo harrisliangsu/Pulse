@@ -305,7 +305,11 @@
 
 /* Liquid Glass */
 "Liquid Glass" = "液态玻璃";
-"Clear glass that shows what is behind the panel, instead of solid black." = "透出面板后面的内容，替代纯黑背景。";
+"Clear glass that shows what is behind the panel, instead of a solid surface." = "透出面板后面的内容，替代纯色背景。";
+"Panel colour" = "面板颜色";
+"Light suits a bright screen. At the camera notch the panel stays black." = "浅色适合明亮的屏幕。停靠在刘海处时，面板仍为黑色。";
+"Black" = "黑色";
+"Light" = "浅色";
 "Transparency" = "透明度";
 "Clearer to the right. Darker reads better over bright pages." = "越往右越透。偏暗一些，在浅色页面上更容易看清。";
 "Open Antigravity to see its usage." = "打开 Antigravity 才能读到它的用量。";

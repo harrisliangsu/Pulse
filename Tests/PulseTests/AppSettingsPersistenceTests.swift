@@ -45,6 +45,7 @@ struct AppSettingsPersistenceTests {
             ("settings.followsActiveDisplay", \.followsActiveDisplay, true),
             ("settings.showsCodexResetCredits", \.showsCodexResetCredits, true),
             ("settings.usesGlass", \.usesGlass, true),
+            ("settings.usesLightPanel", \.usesLightPanel, true),
             ("settings.autoCollapse", \.autoCollapse, false),
             ("settings.topRailShowsPercentages", \.topRailShowsPercentages, true),
             ("settings.sideRailShowsPercentages", \.sideRailShowsPercentages, false),
@@ -225,6 +226,7 @@ struct AppSettingsPersistenceTests {
         first.railSpacing = .roomy
         first.usesGlass = true
         first.glassTransparency = 0.25
+        first.usesLightPanel = true
         first.topRailShowsPercentages = true
         first.sideRailShowsPercentages = false
         first.labelAboveRing = true
@@ -296,6 +298,7 @@ struct AppSettingsPersistenceTests {
         #expect(back.railSpacing == .roomy)
         #expect(back.usesGlass)
         #expect(back.glassTransparency == 0.25)
+        #expect(back.usesLightPanel)
         #expect(back.topRailShowsPercentages)
         #expect(back.sideRailShowsPercentages == false)
         #expect(back.labelAboveRing)
@@ -352,6 +355,7 @@ struct AppSettingsPersistenceTests {
         #expect(back.autoCollapse)
         #expect(back.usesGlass == false)
         #expect(back.glassTransparency == fresh.glassTransparency)
+        #expect(back.usesLightPanel == false)
         #expect(back.topRailShowsPercentages == false)
         #expect(back.sideRailShowsPercentages)
         #expect(back.showsForecast == false)

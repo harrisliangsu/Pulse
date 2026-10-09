@@ -33,6 +33,7 @@ extension AppSettings.Key {
     static let detailedCards = "settings.detailedCards"
     static let usesGlass = "settings.usesGlass"
     static let glassTransparency = "settings.glassTransparency"
+    static let usesLightPanel = "settings.usesLightPanel"
     static let autoCollapse = "settings.autoCollapse"
     static let splitAccounts = "settings.splitAccounts"
 }
@@ -50,6 +51,7 @@ extension AppSettings.Default {
     static let showsForecast = false
     static let usesGlass = false
     static let glassTransparency = PanelGlass.defaultTransparency
+    static let usesLightPanel = false
     static let autoCollapse = true
 }
 
@@ -149,6 +151,12 @@ extension AppSettings {
     func usesGlassChanged(from old: Bool) {
         guard usesGlass != old else { return }
         defaults.set(usesGlass, forKey: Key.usesGlass)
+        onLayoutChange?()
+    }
+
+    func usesLightPanelChanged(from old: Bool) {
+        guard usesLightPanel != old else { return }
+        defaults.set(usesLightPanel, forKey: Key.usesLightPanel)
         onLayoutChange?()
     }
 

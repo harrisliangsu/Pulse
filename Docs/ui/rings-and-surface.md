@@ -2,6 +2,13 @@
 
 The rail keeps its latest `BotMarkTint` colour deal in a view-owned cache, keyed by ordered providers and chosen colours. Pointer, quota and activity updates reuse it; changing those colour inputs recomputes the deal. The selection still evaluates all 272 stride/rotation combinations over the 17-colour palette.
 
+## Light panel
+
+Optional, **off by default** (`AppSettings.usesLightPanel`, #74): the solid surface drawn light (`PanelLight.fill`, grey 0.97 with a 0.12 black hairline so it keeps an edge on a white page) with dark content. It is a colour scheme, not a second set of views: `FloatingUsagePanelContent.panelScheme` pins `.light` instead of `.dark`, `PanelSurface` picks its fill off `\.colorScheme`, and content already drawn in `.primary` follows.
+
+- **Solid surface only, and not at a notch.** Glass stays pinned dark for the reason below, and the notch berth grows out of the black camera housing; in both the setting is kept but ignored, which is why the row is hidden while glass is on.
+- **The usage colours have light twins.** `pulseGood` / `pulseCaution` are about 1.5:1 on a light surface — no reading. Each `Color.pulse*` is a dynamic `NSColor` that resolves a deeper twin under an aqua appearance, ≥ 3:1 on `PanelLight.fill` (`UsageTintTests` pins both the switch and the ratio). The same twins appear in the menu where macOS draws it light. A colour chosen per account (`RingTint`) is the reader's and is not adjusted.
+
 ## Liquid Glass
 
 Optional, **off by default** (`AppSettings.usesGlass`, `PanelSurface`). Black stays default because the panel sits over the user’s work all day.

@@ -305,7 +305,11 @@
 
 /* Liquid Glass */
 "Liquid Glass" = "Liquid Glass";
-"Clear glass that shows what is behind the panel, instead of solid black." = "Clear glass that shows what is behind the panel, instead of solid black.";
+"Clear glass that shows what is behind the panel, instead of a solid surface." = "Clear glass that shows what is behind the panel, instead of a solid surface.";
+"Panel colour" = "Panel colour";
+"Light suits a bright screen. At the camera notch the panel stays black." = "Light suits a bright screen. At the camera notch the panel stays black.";
+"Black" = "Black";
+"Light" = "Light";
 "Transparency" = "Transparency";
 "Clearer to the right. Darker reads better over bright pages." = "Clearer to the right. Darker reads better over bright pages.";
 "Open Antigravity to see its usage." = "Open Antigravity to see its usage.";

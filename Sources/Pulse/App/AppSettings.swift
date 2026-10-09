@@ -321,6 +321,18 @@ final class AppSettings {
         didSet { usesGlassChanged(from: oldValue) }
     }
 
+    /// A light solid surface with dark content, instead of black (#74).
+    ///
+    /// Only the solid surface: glass is pinned dark for the reason
+    /// `PanelGlass` gives, so this is ignored while `usesGlass` is on, and
+    /// kept rather than cleared so turning glass off again brings it back.
+    /// Ignored at a physical notch too — that berth grows out of the black
+    /// camera housing, and a light one would hang from it as a white tab.
+    /// `FloatingUsagePanelContent.panelScheme` is where all three meet.
+    var usesLightPanel: Bool {
+        didSet { usesLightPanelChanged(from: oldValue) }
+    }
+
     /// How clear the glass is, 0 to 1: how little of `PanelGlass`'s dimming
     /// sits under the panel's white content. The reader's to choose because
     /// the right amount depends on what is usually behind the panel — a
@@ -898,6 +910,7 @@ final class AppSettings {
         railSpacing: RailSpacing = .default,
         usesGlass: Bool = Default.usesGlass,
         glassTransparency: Double = Default.glassTransparency,
+        usesLightPanel: Bool = Default.usesLightPanel,
         topRailShowsPercentages: Bool = Default.topRailShowsPercentages,
         sideRailShowsPercentages: Bool = Default.sideRailShowsPercentages,
         labelAboveRing: Bool = Default.labelAboveRing,
@@ -954,6 +967,7 @@ final class AppSettings {
         self.railSpacing = railSpacing
         self.usesGlass = usesGlass
         self.glassTransparency = min(max(glassTransparency, 0), 1)
+        self.usesLightPanel = usesLightPanel
         self.topRailShowsPercentages = topRailShowsPercentages
         self.sideRailShowsPercentages = sideRailShowsPercentages
         self.labelAboveRing = labelAboveRing
@@ -1054,6 +1068,7 @@ final class AppSettings {
             railSpacing: defaults.settingsChoice(Key.railSpacing) ?? .default,
             usesGlass: defaults.settingsFlag(Key.usesGlass, default: Default.usesGlass),
             glassTransparency: defaults.object(forKey: Key.glassTransparency) as? Double ?? Default.glassTransparency,
+            usesLightPanel: defaults.settingsFlag(Key.usesLightPanel, default: Default.usesLightPanel),
             topRailShowsPercentages: defaults.settingsFlag(
                 Key.topRailShowsPercentages, default: Default.topRailShowsPercentages
             ),

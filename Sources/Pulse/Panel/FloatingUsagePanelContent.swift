@@ -217,7 +217,10 @@ struct FloatingUsagePanelContent: View {
             // over `PanelGlass.dim` does, which is Apple's own answer for the clear
             // variant. Following the system scheme instead left dark text
             // vanishing over dark windows.
-            .environment(\.colorScheme, .dark)
+            //
+            // The light panel (#74) is the one exception, and only on the
+            // solid surface: `panelScheme`.
+            .environment(\.colorScheme, panelScheme)
             .environment(\.glassTransparency, settings.glassTransparency)
             // Where red begins, for every ring, bar and figure below here at
             // once. Read off `settings` in one place so they cannot disagree.
@@ -231,6 +234,14 @@ struct FloatingUsagePanelContent: View {
             // *thickness*, so leaving it out draws the rings at one size in a
             // berth built for the other.
             .id("\(settings.language.rawValue)-\(settings.panelSize.rawValue)-\(settings.topRailShowsPercentages)-\(settings.sideRailShowsPercentages)-\(settings.railSpacing.rawValue)-\(settings.labelAboveRing)-\(settings.freeAcrossFiguresBeside)-\(settings.showsWindowClock)-\(settings.showsForecast)-\(settings.detailedCards.isEmpty)-\(settings.usesRoundEnds)")
+    }
+
+    /// Light only for the solid surface away from a notch; dark everywhere
+    /// else, for the reasons on `AppSettings.usesLightPanel`. `PanelSurface`
+    /// reads its fill off this, and the usage colours deepen with it, so the
+    /// surface and everything drawn on it change together.
+    private var panelScheme: ColorScheme {
+        settings.usesLightPanel && !settings.usesGlass && placement.notch == nil ? .light : .dark
     }
 
     /// Whether the rail is drawn out in full.

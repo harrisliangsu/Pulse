@@ -81,8 +81,31 @@ struct AppearancePane: View {
                     .disabled(!settings.isPanelVisible)
                 }
 
+                // Only while glass is off: glass is always drawn dark, so the
+                // choice would do nothing there (`AppSettings.usesLightPanel`).
+                if !settings.usesGlass {
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Panel colour"),
+                        subtitle: String.localized("Light suits a bright screen. At the camera notch the panel stays black.")
+                    ) {
+                        Picker("", selection: Binding(
+                            get: { settings.usesLightPanel },
+                            set: { settings.usesLightPanel = $0 }
+                        )) {
+                            Text(localized: "Black").tag(false)
+                            Text(localized: "Light").tag(true)
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                        .disabled(!settings.isPanelVisible)
+                    }
+                }
+
                 // Only while glass is on: it is how clear the glass is, and on
-                // the black panel there is no glass to be clear.
+                // a solid panel there is no glass to be clear.
                 if settings.usesGlass {
                     SettingsRowDivider()
 
@@ -122,6 +145,6 @@ struct AppearancePane: View {
     }
 
     private var glassSubtitle: String {
-        .localized("Clear glass that shows what is behind the panel, instead of solid black.")
+        .localized("Clear glass that shows what is behind the panel, instead of a solid surface.")
     }
 }

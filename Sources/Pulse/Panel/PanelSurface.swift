@@ -1,7 +1,8 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import SwiftUI
 
-/// What the panel's shapes are filled with: flat black, or Liquid Glass.
+/// What the panel's shapes are filled with: flat black, flat light, or Liquid
+/// Glass.
 ///
 /// Black is the default and stays it. The panel sits over whatever the user is
 /// working on all day, and a solid surface is the one that is legible over
@@ -25,6 +26,8 @@ struct PanelSurface<S: Shape>: View {
     var tint: Color?
     /// The reader's setting, handed down from the panel's root.
     @Environment(\.glassTransparency) private var transparency
+    /// Light only when the reader chose the light panel; the root pins it.
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         // Deliberately hit-testable, and the panel cannot be dragged without
@@ -49,6 +52,17 @@ struct PanelSurface<S: Shape>: View {
     private var surface: some View {
         if usesGlass {
             glass
+        } else if colorScheme == .light {
+            shape.fill(tint ?? PanelLight.fill)
+                // Black over a black window loses its edge too, but light over
+                // a white page is the usual case for this surface, and without
+                // the line the card's tail is all that says where it ends.
+                //
+                // Under the fill, not over it: the card's tail is its own
+                // subpath overlapping the body, and a stroke on top draws the
+                // body's edge straight through the join. Beneath, the fill
+                // covers every inner edge and only the outer half shows.
+                .background { shape.stroke(PanelLight.edge, lineWidth: 2) }
         } else {
             shape.fill(tint ?? .black)
         }
@@ -102,6 +116,13 @@ enum PanelGlass {
     static func dim(transparency: Double) -> Color {
         .black.opacity((1 - min(max(transparency, 0), 1)) * maximumDim)
     }
+}
+
+/// The light panel's surface (#74). Not pure white: on a white page that is
+/// a hole with a hairline round it, and the slight grey reads as a surface.
+enum PanelLight {
+    static let fill = Color(white: 0.97)
+    static let edge = Color.black.opacity(0.12)
 }
 
 private struct GlassTransparencyKey: EnvironmentKey {

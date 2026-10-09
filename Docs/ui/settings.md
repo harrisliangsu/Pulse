@@ -52,13 +52,13 @@ Settings stays reachable after dismissing the initial chooser. Appearance points
 
 A joined sentence needs no extra space after a Chinese full stop (`。`). `UsageAlerts.joined` only inserts a separator when the first half does not end in one.
 
-While Liquid Glass is on, a **Transparency** slider appears under it (`glassTransparency`, 0–1, default 0.5): right is clearer, left dims the glass. It sets no `onChange` — that refetches every provider, and a slider fires continuously. Named Liquid Glass in every language (zh-Hans 液态玻璃); it was briefly 毛玻璃 while the panel rendered glass inactive and it really was frosted ([../decisions/liquid-glass.md](../decisions/liquid-glass.md)).
+While Liquid Glass is off, a **Panel colour** picker (Black / Light, `usesLightPanel`, #74) appears under it; glass is always drawn dark, so there it would do nothing. While Liquid Glass is on, a **Transparency** slider appears under it (`glassTransparency`, 0–1, default 0.5): right is clearer, left dims the glass. It sets no `onChange` — that refetches every provider, and a slider fires continuously. Named Liquid Glass in every language (zh-Hans 液态玻璃); it was briefly 毛玻璃 while the panel rendered glass inactive and it really was frosted ([../decisions/liquid-glass.md](../decisions/liquid-glass.md)).
 
 **Panes.** What was one General pane of thirty-odd rows is split by subject (`SettingsPane`):
 
 | Sidebar section | Pane | Holds |
 |---|---|---|
-| Panel | **Appearance** | Size, Spacing, Round ends, Liquid Glass (+ Transparency), Ring activity animation |
+| Panel | **Appearance** | Size, Spacing, Round ends, Liquid Glass (+ Panel colour when off, Transparency when on), Ring activity animation |
 | Panel | **Rings and figures** | *Figures*: percentages at the side / across (*Percentages across*: any rail lying across — docked to the top or bottom, or free), figures beside the rings (free across only, off by default; needs percentages across), figure above the ring, show what's left, forecast. *Rings*: second limit, time until reset, time ring direction, turn red at, alert colour when docked |
 | Panel | **Position and behavior** | Show floating panel, hide in full screen, hide until pointed at, position (Left, Top, Bottom, Free across, Free upright, Right — a segmented control sized to its labels, since that many segments truncate under `controlWidth`), follow the active display; **Order** |
 | Panel | Token spend | unchanged |

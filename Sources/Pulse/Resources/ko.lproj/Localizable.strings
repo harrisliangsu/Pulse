@@ -305,7 +305,11 @@
 
 /* Liquid Glass */
 "Liquid Glass" = "리퀴드 글래스";
-"Clear glass that shows what is behind the panel, instead of solid black." = "완전한 검정 대신, 뒤에 있는 내용이 비쳐 보이는 유리를 씁니다.";
+"Clear glass that shows what is behind the panel, instead of a solid surface." = "불투명한 배경 대신, 뒤에 있는 내용이 비쳐 보이는 유리를 씁니다.";
+"Panel colour" = "패널 색상";
+"Light suits a bright screen. At the camera notch the panel stays black." = "밝은 색은 밝은 화면에 어울립니다. 노치 위치에서는 패널이 검은색으로 유지됩니다.";
+"Black" = "검은색";
+"Light" = "밝은 색";
 "Transparency" = "투명도";
 "Clearer to the right. Darker reads better over bright pages." = "오른쪽으로 갈수록 투명해집니다. 어둡게 하면 밝은 페이지 위에서도 잘 읽힙니다.";
 "Open Antigravity to see its usage." = "사용량을 보려면 Antigravity를 여십시오.";

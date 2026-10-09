@@ -151,12 +151,28 @@ extension Color {
 extension Color {
     /// Picked to sit on the panel's black: bright enough to read at ring size,
     /// without the neon cast that fully saturated values take on there.
-    static let pulseGood = Color(red: 0.00, green: 0.90, blue: 0.55)
-    static let pulseCaution = Color(red: 1.00, green: 0.76, blue: 0.15)
-    static let pulseWarning = Color(red: 1.00, green: 0.31, blue: 0.26)
+    ///
+    /// Each has a deeper twin for a light appearance — the light panel (#74),
+    /// and the menu where macOS draws it light. The dark green and yellow are
+    /// about 1.5:1 against a light surface, which is no reading at all; the
+    /// twins are 3:1 or better on `PanelLight.fill`. Resolved by the
+    /// appearance of wherever they are drawn, so no call site has to choose.
+    static let pulseGood = usage(dark: (0.00, 0.90, 0.55), light: (0.00, 0.58, 0.35))
+    static let pulseCaution = usage(dark: (1.00, 0.76, 0.15), light: (0.76, 0.49, 0.00))
+    static let pulseWarning = usage(dark: (1.00, 0.31, 0.26), light: (0.87, 0.22, 0.17))
     /// Deeper and flatter than the warning red, so a spent limit doesn't just
     /// look like a slightly redder nearly-spent one.
-    static let pulseExhausted = Color(red: 0.85, green: 0.09, blue: 0.13)
+    static let pulseExhausted = usage(dark: (0.85, 0.09, 0.13), light: (0.68, 0.06, 0.10))
+
+    private static func usage(
+        dark: (Double, Double, Double),
+        light: (Double, Double, Double)
+    ) -> Color {
+        Color(nsColor: NSColor(name: nil) { appearance in
+            let (red, green, blue) = appearance.bestMatch(from: [.aqua, .darkAqua]) == .aqua ? light : dark
+            return NSColor(srgbRed: red, green: green, blue: blue, alpha: 1)
+        })
+    }
 }
 
 /// How full a limit has to be before the panel draws it in the warning colour.
