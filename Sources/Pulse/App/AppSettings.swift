@@ -326,9 +326,9 @@ final class AppSettings {
     /// Only the solid surface: glass is pinned dark for the reason
     /// `PanelGlass` gives, so this is ignored while `usesGlass` is on, and
     /// kept rather than cleared so turning glass off again brings it back.
-    /// Ignored at a physical notch too — that berth grows out of the black
-    /// camera housing, and a light one would hang from it as a white tab.
-    /// `FloatingUsagePanelContent.panelScheme` is where all three meet.
+    /// At a physical notch too: the reader chose light, so the notch berth
+    /// is light like everywhere else, not a special case they have to learn.
+    /// `FloatingUsagePanelContent.panelScheme` is where the two settings meet.
     var usesLightPanel: Bool {
         didSet { usesLightPanelChanged(from: oldValue) }
     }

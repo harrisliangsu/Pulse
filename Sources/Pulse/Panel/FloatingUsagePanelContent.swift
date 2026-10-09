@@ -236,12 +236,12 @@ struct FloatingUsagePanelContent: View {
             .id("\(settings.language.rawValue)-\(settings.panelSize.rawValue)-\(settings.topRailShowsPercentages)-\(settings.sideRailShowsPercentages)-\(settings.railSpacing.rawValue)-\(settings.labelAboveRing)-\(settings.freeAcrossFiguresBeside)-\(settings.showsWindowClock)-\(settings.showsForecast)-\(settings.detailedCards.isEmpty)-\(settings.usesRoundEnds)")
     }
 
-    /// Light only for the solid surface away from a notch; dark everywhere
-    /// else, for the reasons on `AppSettings.usesLightPanel`. `PanelSurface`
+    /// Light only for the solid surface, notch included; dark under glass,
+    /// for the reasons on `AppSettings.usesLightPanel`. `PanelSurface`
     /// reads its fill off this, and the usage colours deepen with it, so the
     /// surface and everything drawn on it change together.
     private var panelScheme: ColorScheme {
-        settings.usesLightPanel && !settings.usesGlass && placement.notch == nil ? .light : .dark
+        settings.usesLightPanel && !settings.usesGlass ? .light : .dark
     }
 
     /// Whether the rail is drawn out in full.
@@ -548,8 +548,11 @@ struct FloatingUsagePanelContent: View {
             let surface = PanelHitArea.notchSurface(rail: rail, notchSize: notch.size)
             if NotchBerthShape(notchSize: notch.size)
                 .path(in: surface.insetBy(dx: -DockLayout.flareWidth, dy: 0)).contains(point) { return true }
+        } else if rail.contains(point) {
+            // Not at a notch: there the rail's ends reach past the drawn
+            // surface (`notchSurface`), and empty air must not hold it open.
+            return true
         }
-        if rail.contains(point) { return true }
 
         guard let index = selectedIndex else { return false }
 
@@ -608,8 +611,15 @@ enum PanelHitArea {
     /// The body alone — `NotchBerthShape` sweeps `DockLayout.flareWidth`
     /// further out at the screen edge, and the grab area deliberately does not
     /// follow it there.
+    ///
+    /// **As long as the free rail, not the docked one.** A docked rail's ends
+    /// carry the room its own flares sweep into (`DockLayout.endPadding`), and
+    /// the notch's fillets are drawn *outside* this body, so taking the
+    /// docked length as well spent that room twice: a notch rail visibly
+    /// wider than the same rings standing free.
     static func notchSurface(rail: CGRect, notchSize: CGSize) -> CGRect {
-        let width = max(rail.width, notchSize.width)
+        let flareRoom = DockLayout.endPadding(docked: true) - DockLayout.endPadding(docked: false)
+        let width = max(rail.width - flareRoom * 2, notchSize.width)
         return CGRect(x: rail.midX - width / 2, y: rail.minY - notchSize.height,
                       width: width, height: rail.height + notchSize.height)
     }

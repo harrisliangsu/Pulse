@@ -68,6 +68,28 @@ struct AppearancePane: View {
 
                 SettingsRowDivider()
 
+                // Always shown, and greyed out under glass rather than
+                // hidden: glass is always drawn dark (`AppSettings.usesLightPanel`),
+                // and a row that vanishes is one nobody finds again.
+                SettingsRow(
+                    String.localized("Panel colour"),
+                    subtitle: String.localized("Light suits a bright screen. Not available with Liquid Glass.")
+                ) {
+                    Picker("", selection: Binding(
+                        get: { settings.usesLightPanel },
+                        set: { settings.usesLightPanel = $0 }
+                    )) {
+                        Text(localized: "Black").tag(false)
+                        Text(localized: "Light").tag(true)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                    .disabled(!settings.isPanelVisible || settings.usesGlass)
+                }
+
+                SettingsRowDivider()
+
                 SettingsRow(
                     String.localized("Liquid Glass"),
                     subtitle: glassSubtitle
@@ -79,29 +101,6 @@ struct AppearancePane: View {
                     .labelsHidden()
                     .toggleStyle(.switch)
                     .disabled(!settings.isPanelVisible)
-                }
-
-                // Only while glass is off: glass is always drawn dark, so the
-                // choice would do nothing there (`AppSettings.usesLightPanel`).
-                if !settings.usesGlass {
-                    SettingsRowDivider()
-
-                    SettingsRow(
-                        String.localized("Panel colour"),
-                        subtitle: String.localized("Light suits a bright screen. At the camera notch the panel stays black.")
-                    ) {
-                        Picker("", selection: Binding(
-                            get: { settings.usesLightPanel },
-                            set: { settings.usesLightPanel = $0 }
-                        )) {
-                            Text(localized: "Black").tag(false)
-                            Text(localized: "Light").tag(true)
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.segmented)
-                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
-                        .disabled(!settings.isPanelVisible)
-                    }
                 }
 
                 // Only while glass is on: it is how clear the glass is, and on

@@ -307,7 +307,7 @@
 "Liquid Glass" = "Liquid Glass";
 "Clear glass that shows what is behind the panel, instead of a solid surface." = "Clear glass that shows what is behind the panel, instead of a solid surface.";
 "Panel colour" = "Panel colour";
-"Light suits a bright screen. At the camera notch the panel stays black." = "Light suits a bright screen. At the camera notch the panel stays black.";
+"Light suits a bright screen. Not available with Liquid Glass." = "Light suits a bright screen. Not available with Liquid Glass.";
 "Black" = "Black";
 "Light" = "Light";
 "Transparency" = "Transparency";

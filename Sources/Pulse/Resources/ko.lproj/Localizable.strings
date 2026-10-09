@@ -307,7 +307,7 @@
 "Liquid Glass" = "리퀴드 글래스";
 "Clear glass that shows what is behind the panel, instead of a solid surface." = "불투명한 배경 대신, 뒤에 있는 내용이 비쳐 보이는 유리를 씁니다.";
 "Panel colour" = "패널 색상";
-"Light suits a bright screen. At the camera notch the panel stays black." = "밝은 색은 밝은 화면에 어울립니다. 노치 위치에서는 패널이 검은색으로 유지됩니다.";
+"Light suits a bright screen. Not available with Liquid Glass." = "밝은 색은 밝은 화면에 어울립니다. 리퀴드 글래스를 켜면 사용할 수 없습니다.";
 "Black" = "검은색";
 "Light" = "밝은 색";
 "Transparency" = "투명도";

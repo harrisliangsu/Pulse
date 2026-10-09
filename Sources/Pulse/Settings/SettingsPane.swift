@@ -84,7 +84,7 @@ enum SettingsPane: Hashable {
         switch self {
         case .appearance:
             [.localized("Size"), .localized("Spacing"), .localized("Round ends"),
-             .localized("Liquid Glass"), .localized("Panel colour"), .localized("Transparency"), .localized("Ring activity animation")]
+             .localized("Panel colour"), .localized("Liquid Glass"), .localized("Transparency"), .localized("Ring activity animation")]
         case .rings:
             [.localized("Percentages at the side"), .localized("Percentages across"), .localized("Figures beside the rings"),
              .localized("Figure above the ring"), .localized("Show what's left"), .localized("Forecast"),

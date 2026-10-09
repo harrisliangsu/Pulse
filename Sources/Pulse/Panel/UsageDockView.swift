@@ -507,7 +507,8 @@ struct UsageDockView: View {
             let surface = PanelHitArea.notchSurface(rail: CGRect(origin: .zero, size: railSize), notchSize: notchSize)
             PanelSurface(
                 shape: NotchBerthShape(notchSize: notchSize, openness: isExpanded ? 1 : 0),
-                usesGlass: usesGlass
+                usesGlass: usesGlass,
+                screenEdge: .top
             )
             .overlay {
                 // The hardware housing replaces the ordinary collapsed
@@ -538,7 +539,8 @@ struct UsageDockView: View {
             usesGlass: usesGlass,
             // Only the sliver carries the alert colour: expanded, the rings
             // already say which limit is where.
-            tint: isExpanded ? nil : alert
+            tint: isExpanded ? nil : alert,
+            screenEdge: isDocked ? edge.screenSide : []
         )
             .frame(width: currentSize.width, height: currentSize.height)
             .overlay(alignment: edge.stackAlignment) {
@@ -1048,4 +1050,16 @@ struct DockBerthShape: Shape {
     .frame(height: DockLayout.maximumHeight + 80)
     .padding()
     .background(.gray)
+}
+
+private extension PanelEdge {
+    /// The side of a docked rail's own frame that lies on the screen's edge.
+    var screenSide: Edge.Set {
+        switch self {
+        case .left: .leading
+        case .right: .trailing
+        case .top: .top
+        case .bottom: .bottom
+        }
+    }
 }

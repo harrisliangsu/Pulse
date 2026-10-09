@@ -24,6 +24,10 @@ struct PanelSurface<S: Shape>: View {
     /// Tints the surface when a limit is close enough to matter. Nil leaves it
     /// neutral.
     var tint: Color?
+    /// The side lying against the screen's edge, if any: the light panel's
+    /// hairline is left off it, where it would be a grey line along the very
+    /// edge of the display.
+    var screenEdge: Edge.Set = []
     /// The reader's setting, handed down from the panel's root.
     @Environment(\.glassTransparency) private var transparency
     /// Light only when the reader chose the light panel; the root pins it.
@@ -58,11 +62,19 @@ struct PanelSurface<S: Shape>: View {
                 // a white page is the usual case for this surface, and without
                 // the line the card's tail is all that says where it ends.
                 //
-                // Under the fill, not over it: the card's tail is its own
-                // subpath overlapping the body, and a stroke on top draws the
-                // body's edge straight through the join. Beneath, the fill
-                // covers every inner edge and only the outer half shows.
-                .background { shape.stroke(PanelLight.edge, lineWidth: 2) }
+                // **Inside the outline, not outside.** The window is exactly
+                // card + rail wide, so the rail's far side and the card's far
+                // side lie on the window's edge, and the half of a line drawn
+                // outside them was cut off — that side looked sliced (#74).
+                // Outlined from the *normalized* path: the card's tail is its
+                // own subpath overlapping the body, and stroking that as it
+                // stands draws the body's edge straight through the join.
+                .overlay {
+                    PanelOutline(shape: shape)
+                        .stroke(PanelLight.edge, lineWidth: PanelLight.edgeWidth * 2)
+                        .clipShape(shape)
+                        .mask { Rectangle().padding(screenEdge, PanelLight.edgeWidth) }
+                }
         } else {
             shape.fill(tint ?? .black)
         }
@@ -123,6 +135,17 @@ enum PanelGlass {
 enum PanelLight {
     static let fill = Color(white: 0.97)
     static let edge = Color.black.opacity(0.12)
+    static let edgeWidth: CGFloat = 1
+}
+
+/// A shape's outline with its overlaps dissolved, so a stroke follows only
+/// the outside of the union.
+private struct PanelOutline<S: Shape>: Shape {
+    let shape: S
+
+    func path(in rect: CGRect) -> Path {
+        shape.path(in: rect).normalized(eoFill: false)
+    }
 }
 
 private struct GlassTransparencyKey: EnvironmentKey {

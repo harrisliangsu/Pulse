@@ -15,10 +15,19 @@ struct NotchBerthShape: Shape {
     var openness: CGFloat = 1
 
     /// Pulls each fillet's control points off its endpoints, the same 0.55
-    /// circular-arc approximation `DockBerthShape` uses. Keeping the two in
-    /// step matters more than the number: a notched Mac and a plain one show
-    /// the same rail.
+    /// circular-arc approximation `DockBerthShape` uses, so the two curves
+    /// differ in size only, not in kind.
     private static let fillet: CGFloat = 0.55
+
+    /// How far each fillet sweeps along and down from the screen's top edge:
+    /// the housing's own fillet, so the surface continues the notch rather
+    /// than meeting it with a bigger curve beside a smaller one. Apple
+    /// publishes no figure; 6pt is the one notch apps converge on for the
+    /// closed housing (boring.notch, after DynamicNotchKit). Fixed rather
+    /// than scaled with `PanelMetrics` — it matches hardware, which does not
+    /// change size with the panel. The rail elsewhere keeps
+    /// `DockLayout.flareWidth` / `flareHeight`.
+    static let filletRadius: CGFloat = 6
 
     var animatableData: CGFloat {
         get { openness }
@@ -33,8 +42,10 @@ struct NotchBerthShape: Shape {
         let progress = min(max(openness, 0), 1)
         guard progress > 0 else { return Path() }
 
-        let flareWidth = DockLayout.flareWidth * progress
-        let flareHeight = min(DockLayout.flareHeight * progress, rect.height)
+        let flareWidth = Self.filletRadius * progress
+        let flareHeight = min(Self.filletRadius * progress, rect.height)
+        // The frame still leaves `DockLayout.flareWidth` either side; the
+        // smaller fillet simply does not use all of it.
         let body = rect.insetBy(dx: DockLayout.flareWidth, dy: 0)
 
         let width = notchSize.width + (body.width - notchSize.width) * progress

@@ -307,7 +307,7 @@
 "Liquid Glass" = "Liquid Glass";
 "Clear glass that shows what is behind the panel, instead of a solid surface." = "不透明な背景ではなく、背後の内容が透けて見えるガラスにします。";
 "Panel colour" = "パネルの色";
-"Light suits a bright screen. At the camera notch the panel stays black." = "ライトは明るい画面に向いています。ノッチの位置では、パネルは黒のままです。";
+"Light suits a bright screen. Not available with Liquid Glass." = "ライトは明るい画面に向いています。Liquid Glass がオンのときは使えません。";
 "Black" = "黒";
 "Light" = "ライト";
 "Transparency" = "透明度";
