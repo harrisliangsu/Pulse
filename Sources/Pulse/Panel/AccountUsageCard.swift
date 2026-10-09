@@ -37,7 +37,7 @@ struct AccountUsageCard: View {
                 .padding(.leading, 4)
 
                 VStack(alignment: .leading, spacing: 0) {
-                    if let credits, credits.availableResetCredits > 0 || credits.nextExpiringCredit != nil {
+                    if let credits, credits.availableResetCredits > 0 {
                         resetCredits(credits)
                         Divider()
                     }

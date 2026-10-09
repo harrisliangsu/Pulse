@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.18</title>
+            <pubDate>Fri, 09 Oct 2026 10:13:00 -0000</pubDate>
+            <sparkle:version>1.4.18</sparkle:version>
+            <sparkle:shortVersionString>1.4.18</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.18</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.18</h2><ul><li><strong>Codex 卡片只显示仍可使用的重置卡。</strong> 张数只计仍可使用、且未过期的卡。明细里已经没有这样的卡时，这一行不显示，即使回复还带着以前的张数。打开 Codex 卡片会重新询问；只要卡片上还显示有卡，之后每次刷新也会再问，这一行会和每周剩余等数字一起更新。一次读取失败时保留上一次的数字；成功的回复里没有重置卡数据时，把这一行去掉。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.18">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.18/Pulse-1.4.18.zip"
+                       length="15455813"
+                       type="application/octet-stream"
+                       sparkle:edSignature="qLUJdQnrLr+vjzRNxTyf6ZW/uqr3T4Q1fnUgUEPLopGxCPp7F0oFAsrcJabrXkIBGEOOLMyOU9Zph1Thfa9KAw==" />
+        </item>
+        <item>
             <title>1.4.16</title>
             <pubDate>Thu, 08 Oct 2026 01:47:14 -0000</pubDate>
             <sparkle:version>1.4.16</sparkle:version>
