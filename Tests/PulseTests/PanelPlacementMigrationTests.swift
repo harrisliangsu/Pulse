@@ -9,41 +9,41 @@ import Testing
 /// and must get the upright rail they left, not one lying across.
 @Suite("Panel placement migration")
 struct PanelPlacementMigrationTests {
-    /// A throwaway domain, so nothing here reads or writes the real settings.
-    private func defaults(_ values: [String: Any]) -> UserDefaults {
-        let name = "PanelPlacementMigrationTests.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: name)!
-        defaults.removePersistentDomain(forName: name)
+    /// The placement restored from a throwaway domain holding `values`, so
+    /// nothing here reads or writes the real settings.
+    private func restored(_ values: [String: Any]) -> PanelPlacement {
+        let (defaults, cleanup) = TestDefaults.make("panelPlacement")
+        defer { cleanup() }
         for (key, value) in values { defaults.set(value, forKey: key) }
-        return defaults
+        return PanelPlacement.restored(from: defaults)
     }
 
     @Test("A free placement stored before the axis existed stays upright")
     func earlierFreePlacementStaysUpright() {
-        let placement = PanelPlacement.restored(from: defaults(["panel.floating": true]))
+        let placement = restored(["panel.floating": true])
         #expect(placement.dock == .floating(.vertical))
     }
 
     @Test("A stored axis is the one restored")
     func storedAxisIsRestored() {
-        let across = PanelPlacement.restored(from: defaults(["panel.floating": true, "panel.floatingAxis": "horizontal"]))
+        let across = restored(["panel.floating": true, "panel.floatingAxis": "horizontal"])
         #expect(across.dock == .floating(.horizontal))
-        let upright = PanelPlacement.restored(from: defaults(["panel.floating": true, "panel.floatingAxis": "vertical"]))
+        let upright = restored(["panel.floating": true, "panel.floatingAxis": "vertical"])
         #expect(upright.dock == .floating(.vertical))
     }
 
     @Test("An axis Pulse does not know is read as upright")
     func unknownAxisIsUpright() {
-        let placement = PanelPlacement.restored(from: defaults(["panel.floating": true, "panel.floatingAxis": "diagonal"]))
+        let placement = restored(["panel.floating": true, "panel.floatingAxis": "diagonal"])
         #expect(placement.dock == .floating(.vertical))
     }
 
     @Test("A docked placement ignores the axis")
     func dockedIgnoresTheAxis() {
-        let placement = PanelPlacement.restored(from: defaults([
+        let placement = restored([
             "panel.floating": false, "panel.edge": "top", "panel.floatingAxis": "horizontal",
-        ]))
+        ])
         #expect(placement.dock == .edge(.top))
-        #expect(PanelPlacement.restored(from: defaults([:])).dock == .edge(.right))
+        #expect(restored([:]).dock == .edge(.right))
     }
 }

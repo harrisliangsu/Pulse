@@ -13,9 +13,7 @@ import Testing
 struct AppSettingsPersistenceTests {
     /// A throwaway defaults domain, removed when the test ends.
     static func isolatedDefaults() -> (UserDefaults, cleanup: () -> Void) {
-        let name = "PulseTests.AppSettings.\(UUID().uuidString)"
-        let suite = UserDefaults(suiteName: name)!
-        return (suite, { suite.removePersistentDomain(forName: name) })
+        TestDefaults.make("AppSettings")
     }
 
     @Test("Building settings writes nothing")

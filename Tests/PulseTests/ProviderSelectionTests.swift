@@ -7,9 +7,8 @@ struct ProviderSelectionTests {
     private let primaryAccounts = Set(Provider.allCases.map(\.rawValue))
 
     private func withDefaults(_ body: (UserDefaults) -> Void) {
-        let name = "PulseTests.providerSelection.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: name)!
-        defer { defaults.removePersistentDomain(forName: name) }
+        let (defaults, cleanup) = TestDefaults.make("providerSelection")
+        defer { cleanup() }
         body(defaults)
     }
 
