@@ -749,14 +749,15 @@ struct CodexResetForecastTests {
           {"title":"Used","status":"consumed","expiresAt":1600000000}
         ]}}
         """.utf8)) as? [String: Any])
-        let summary = CodexAccountUsageService.credits(from: limits)
+        let now = Date(timeIntervalSince1970: 1_600_000_000)
+        let summary = CodexAccountUsageService.credits(from: limits, now: now)
         #expect(summary?.available == 2)
         #expect(summary?.nextExpiresAt == Date(timeIntervalSince1970: 1_700_000_000))
-        #expect(summary?.showsOnCard == true)
+        #expect(summary?.showsOnCard(at: now) == true)
         let empty: [String: Any] = ["rateLimitResetCredits": ["availableCount": 0, "credits": [Any]()] as [String: Any]]
         let none = CodexAccountUsageService.credits(from: empty)
         #expect(none?.available == 0)
-        #expect(none?.showsOnCard == false)
+        #expect(none?.showsOnCard() == false)
     }
 
     private func json(_ text: String) -> Data { Data(text.utf8) }

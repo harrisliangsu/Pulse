@@ -64,6 +64,7 @@ struct ShownOrderTests {
 struct CodexResetCreditsTests {
     @Test("The stated count is read, with the soonest expiry among the available ones")
     func count() {
+        let now = Date(timeIntervalSince1970: 1_600_000_000)
         let limits: [String: Any] = ["rateLimitResetCredits": [
             "availableCount": 2,
             "credits": [
@@ -72,8 +73,84 @@ struct CodexResetCreditsTests {
                 ["title": "c", "status": "used", "expiresAt": 1_700_000_000],
             ],
         ]]
-        #expect(CodexAccountUsageService.resetCredits(in: limits)
+        #expect(CodexAccountUsageService.resetCredits(in: limits, now: now)
                 == .available(count: 2, nextExpiry: Date(timeIntervalSince1970: 1_800_000_000)))
+    }
+
+    @Test("A null credit list is the stated count, and no expiry is invented")
+    func countOnly() {
+        let limits: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": NSNull(),
+        ]]
+        #expect(CodexAccountUsageService.resetCredits(in: limits)
+                == .available(count: 1, nextExpiry: nil))
+    }
+
+    @Test("A list with nothing still usable is zero, even when the stated count is not")
+    func spentListIsZero() {
+        let now = Date(timeIntervalSince1970: 1_750_000_000)
+        let empty: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": [[String: Any]](),
+        ]]
+        #expect(CodexAccountUsageService.resetCredits(in: empty, now: now) == .available(count: 0, nextExpiry: nil))
+
+        let redeemed: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": [["title": "Full reset", "status": "redeemed", "expiresAt": 1_900_000_000]],
+        ]]
+        #expect(CodexAccountUsageService.resetCredits(in: redeemed, now: now) == .available(count: 0, nextExpiry: nil))
+
+        let expired: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": [["title": "Full reset", "status": "available", "expiresAt": 1_700_000_000]],
+        ]]
+        #expect(CodexAccountUsageService.resetCredits(in: expired, now: now) == .available(count: 0, nextExpiry: nil))
+        #expect(CodexAccountUsageService.credits(from: expired, now: now)?.showsOnCard(at: now) == false)
+    }
+
+    @Test("A shorter list of only still-usable cards keeps the higher stated count")
+    func cappedListKeepsStatedCount() {
+        let now = Date(timeIntervalSince1970: 1_600_000_000)
+        let limits: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 3,
+            "credits": [
+                ["title": "Later", "status": "available", "expiresAt": 1_900_000_000],
+                ["title": "Soon", "status": "available", "expiresAt": 1_800_000_000],
+            ],
+        ]]
+        #expect(CodexAccountUsageService.resetCredits(in: limits, now: now)
+                == .available(count: 3, nextExpiry: Date(timeIntervalSince1970: 1_800_000_000)))
+    }
+
+    @Test("An ISO-8601 expiry is a date, and one already past is not a card")
+    func isoExpiry() {
+        let now = Date(timeIntervalSince1970: 1_750_000_000)
+        let limits: [String: Any] = ["rateLimitResetCredits": [
+            "credits": [
+                ["title": "Later", "status": "available", "expiresAt": "2027-01-15T08:00:00Z"],
+                ["title": "Gone", "status": "available", "expiresAt": "2023-11-14T22:13:20Z"],
+            ],
+        ]]
+        let credits = CodexAccountUsageService.resetCredits(in: limits, now: now)
+        #expect(credits == .available(count: 1, nextExpiry: Date(timeIntervalSince1970: 1_800_000_000)))
+    }
+
+    @Test("A failed read keeps the previous line; a reply with no block removes it; a zero replaces it")
+    func reconcile() {
+        let previous = CodexCreditSummary(
+            available: 1,
+            nextExpiresAt: Date(timeIntervalSince1970: 1_900_000_000),
+            next: nil
+        )
+        #expect(CodexCreditSummary.reconcile(previous: previous, read: .failed) == previous)
+        #expect(CodexCreditSummary.reconcile(previous: previous, read: .absent) == nil)
+        let zero = CodexCreditSummary(available: 0, nextExpiresAt: nil, next: nil)
+        #expect(CodexCreditSummary.reconcile(previous: previous, read: .summary(zero)) == zero)
+        #expect(zero.showsOnCard() == false)
+        #expect(previous.showsOnCard(at: Date(timeIntervalSince1970: 1_950_000_000)) == false)
+        #expect(previous.showsOnCard(at: Date(timeIntervalSince1970: 1_800_000_000)) == true)
     }
 
     @Test("Without a stated count, the available credits listed are the count")
