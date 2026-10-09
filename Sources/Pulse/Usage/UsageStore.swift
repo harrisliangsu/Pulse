@@ -206,8 +206,13 @@ final class UsageStore {
     private(set) var codexCredits: CodexCreditSummary?
     private var codexResets: CodexResetMonitor?
     private var codexCreditsFetchedAt: Date?
-    private var codexCreditsTask: Task<Void, Never>?
-    /// Opening the card more often than this must not start another app-server read.
+    /// Which inventory ask is the latest. Two can be in flight — the card
+    /// opening while a pass is already asking — and the one that answers last
+    /// is not always the one asked last.
+    private var codexCreditsAsk = 0
+    /// How long a known zero, or a line that has gone quiet, may stand before
+    /// the next pass asks again. A line that is still showing cards does not
+    /// wait this out: see `refreshCodexCreditsIfStale`.
     private static let creditRefreshInterval: TimeInterval = 300
 
     func refreshCodexResetForecast() {
@@ -215,32 +220,52 @@ final class UsageStore {
         codexResets?.poke()
     }
 
-    /// The primary Codex card was opened, or settings just read the account.
-    /// A failure leaves the previous summary in place.
+    /// The primary Codex card was opened, or a Codex usage refresh landed
+    /// after the card had already asked once.
+    ///
+    /// Opening the card (`force`) always asks. A later pass asks too while
+    /// the line is still showing cards, so a count read before they were
+    /// spent cannot sit there after the weekly bar has moved. Once the line
+    /// is quiet, the pass waits out `creditRefreshInterval` rather than
+    /// starting the app server on every tick. A pass that has never asked
+    /// does not start one either: somebody who never opens the Codex card
+    /// does not grow a `codex` process just for this row.
+    ///
+    /// A failed read leaves the previous summary. A document with no
+    /// reset-credit block removes it. A summary, including a known zero,
+    /// replaces it. An older ask that answers after a newer one does not write.
     func refreshCodexCreditsIfStale(force: Bool = false) {
         guard settings.isEnabled(AccountKey(.codex)) else { return }
-        if !force, let codexCreditsFetchedAt,
-           Date().timeIntervalSince(codexCreditsFetchedAt) < Self.creditRefreshInterval {
-            return
+        if !force {
+            guard codexCreditsFetchedAt != nil else { return }
+            let showing = codexCredits?.showsOnCard() == true
+            if !showing, let codexCreditsFetchedAt,
+               clock().timeIntervalSince(codexCreditsFetchedAt) < Self.creditRefreshInterval {
+                return
+            }
         }
-        guard codexCreditsTask == nil else { return }
-        codexCreditsTask = Task { [appServer] in
-            let summary = await CodexAccountUsageService(server: appServer).fetchCredits()
-            self.codexCreditsTask = nil
-            self.codexCreditsFetchedAt = Date()
-            if let summary { self.codexCredits = summary }
+        codexCreditsAsk += 1
+        let ask = codexCreditsAsk
+        Task { [weak self, appServer] in
+            let read = await CodexAccountUsageService(server: appServer).readCredits()
+            guard let self, ask == self.codexCreditsAsk else { return }
+            self.codexCreditsFetchedAt = self.clock()
+            self.codexCredits = CodexCreditSummary.reconcile(previous: self.codexCredits, read: read)
         }
     }
 
     /// Settings already parsed credits out of a full account read.
+    /// Bumps the ask so a card read still in flight cannot put its older
+    /// count back over this one.
     func noteCodexCredits(_ usage: CodexAccountUsage) {
         guard usage.creditsKnown else { return }
+        codexCreditsAsk += 1
         codexCredits = CodexCreditSummary(
             available: usage.availableResetCredits,
             nextExpiresAt: usage.nextExpiringCredit?.expiresAt,
             next: usage.nextExpiringCredit
         )
-        codexCreditsFetchedAt = Date()
+        codexCreditsFetchedAt = clock()
     }
 
     /// Schedules or withdraws advance reminders from the readings and the
@@ -652,7 +677,10 @@ final class UsageStore {
                 self.signals.lastChange = self.clock()
             }
 
-            if wanted.contains(.codex) { self.refreshCodexResetCredits() }
+            if wanted.contains(.codex) {
+                self.refreshCodexResetCredits()
+                self.refreshCodexCreditsIfStale()
+            }
             self.scheduleNext()
         }
     }
@@ -716,7 +744,10 @@ final class UsageStore {
             self.isRefreshing = false
             self.refreshStartedAt = nil
             self.refreshingAccount = nil
-            if account == AccountKey(.codex) { self.refreshCodexResetCredits() }
+            if account == AccountKey(.codex) {
+                self.refreshCodexResetCredits()
+                self.refreshCodexCreditsIfStale()
+            }
             self.scheduleNext()
             self.runQueued()
         }

@@ -605,7 +605,7 @@ struct UsageDetailCard: View {
                 latestAnnouncement(latest)
             }
 
-            if let codexCredits, codexCredits.showsOnCard, usage.account.isPrimary {
+            if let codexCredits, codexCredits.showsOnCard(), usage.account.isPrimary {
                 creditLine(codexCredits)
             }
         }

@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.18
+
+- **The Codex card drops reset cards that are already gone.** The line counts credits that are still available and have not expired. When the reply lists none left, the line is removed, even if an older count is still attached. Opening the Codex card asks again, and so does each later refresh while a card is showing, so the line moves with the rest of the card. A failed read keeps the previous figure; a successful read with no reset-card data removes the line.
+
 ## 1.4.16
 
 - **About credits the panel design as inspiration.** The Credits row for Vinz says the panel design is inspired by work he shared on X. English, Simplified Chinese, Traditional Chinese, Japanese, and Korean all say that.

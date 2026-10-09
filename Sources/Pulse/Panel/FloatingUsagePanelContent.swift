@@ -470,7 +470,7 @@ struct FloatingUsagePanelContent: View {
         // which is what the automatic refresh interval paces itself against.
         store.noteLooked()
         if entry.usage.provider == .codex, entry.usage.account.isPrimary {
-            store.refreshCodexCreditsIfStale()
+            store.refreshCodexCreditsIfStale(force: true)
         }
     }
 
