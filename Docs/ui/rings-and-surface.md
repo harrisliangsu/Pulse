@@ -2,6 +2,13 @@
 
 The rail keeps its latest `BotMarkTint` colour deal in a view-owned cache, keyed by ordered providers and chosen colours. Pointer, quota and activity updates reuse it; changing those colour inputs recomputes the deal. The selection still evaluates all 272 stride/rotation combinations over the 17-colour palette.
 
+## Light panel
+
+Light is a case of `AppSettings.panelAppearance` (and of Auto when the Mac is light), not a second switch (#74). The solid surface is drawn light (`PanelLight.fill`, grey 0.97 with a 0.12 black hairline so it keeps an edge on a white page) with dark content. The hairline is drawn **inside** the outline: the window is exactly card + rail wide, so the free rail's far side and the card's far side lie on the window's edge, and a line drawn outside was cut off there. It strokes the *normalized* path (the card's tail is a separate, overlapping subpath) and leaves out `PanelSurface.screenEdge` — the docked side, or the notch berth's top — where it would be a grey line along the display's own edge. It is a colour scheme, not a second set of views: `FloatingUsagePanelContent.pinnedScheme` pins `.light`, `PanelSurface` picks its fill off `\.colorScheme`, and content already drawn in `.primary` follows.
+
+- **Solid surface only, notch included.** Glass stays pinned dark for the reason below. At a notch the berth is light too — the reader chose light, and a surface that silently turns black when docked there read as a bug. The notch fillet is the housing's own radius, and the berth is the free rail's width, not a second size.
+- **The usage colours have light twins.** `pulseGood` / `pulseCaution` are about 1.5:1 on a light surface — no reading. Each `Color.pulse*` — including Gradient's peak and Quiet's greys — is a dynamic `NSColor` that resolves a deeper twin under an aqua appearance, ≥ 3:1 on `PanelLight.fill` (`UsageTintTests` pins both the switch and the ratio). The same twins appear in the menu where macOS draws it light. A colour chosen per account (`RingTint`) is the reader's and is not adjusted.
+
 ## Liquid Glass
 
 Optional, **off by default** (`AppSettings.panelAppearance == .glass`, `PanelSurface`). Dark (flat black) stays the default because a solid rail is legible over anything.

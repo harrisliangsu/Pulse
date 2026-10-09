@@ -52,7 +52,7 @@ Settings stays reachable after dismissing the initial chooser. Appearance points
 
 A joined sentence needs no extra space after a Chinese full stop (`。`). `appearanceSubtitle` and `UsageAlerts.joined` only insert a separator when the first half does not end in one.
 
-While the Appearance picker is on Glass, a **Transparency** slider appears under it (`glassTransparency`, 0–1, default 0.5): right is clearer, left dims the glass. It sets no `onChange` — that refetches every provider, and a slider fires continuously. The Glass segment is 液态玻璃 / 液態玻璃; it was 毛玻璃 while the panel rendered glass inactive and it really was frosted ([../decisions/liquid-glass.md](../decisions/liquid-glass.md)).
+While the Appearance picker is on Glass, a **Transparency** slider appears under it (`glassTransparency`, 0–1, default 0.5): right is clearer, left dims the glass. It sets no `onChange` — that refetches every provider, and a slider fires continuously. The Glass segment is 液态玻璃 / 液態玻璃; it was 毛玻璃 while the panel rendered glass inactive and it really was frosted ([../decisions/liquid-glass.md](../decisions/liquid-glass.md)). Light, and Auto when the Mac is light, draws the light panel (#74): grey 0.97, the hairline inside the outline, deeper usage colours, and the same light surface at the notch. Glass stays dark. Appearance stays one control — dark, light, auto, glass — rather than a colour switch beside a glass switch.
 
 **Panes.** What was one General pane of thirty-odd rows is split by subject (`SettingsPane`):
 

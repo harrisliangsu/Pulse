@@ -82,6 +82,9 @@ struct NotchGeometryTests {
                 #expect(surface.maxY == rail.maxY)
                 #expect(surface.minY == 0)
                 #expect(surface.midX == rail.midX)
+                // As long as the same rings standing free (#74 follow-up).
+                let free = DockLayout.size(for: 6, on: .horizontal, docked: false)
+                if !labels { #expect(abs(surface.width - max(free.width, notch.width)) < 0.01) }
                 let ordinary = FloatingPanelController.Layout.size(for: .top, capacity: 12)
                 let attached = FloatingPanelController.Layout.size(for: .top, notchSize: notch.size, capacity: 12)
                 // Budgets to the whole point the window is rounded up to
@@ -155,15 +158,16 @@ struct NotchGeometryTests {
             let top = rect.minY
             let body = rect.insetBy(dx: DockLayout.flareWidth, dy: 0)
 
-            // Wider at the screen edge than at the body, by the whole flare.
-            #expect(abs(path.boundingRect.width - body.width - DockLayout.flareWidth * 2) < 0.01)
+            // Wider at the screen edge than at the body, by the housing's own
+            // fillet — not the rail's larger flare.
+            #expect(abs(path.boundingRect.width - body.width - NotchBerthShape.filletRadius * 2) < 0.01)
 
             // Concave, not a chamfer: at the body's own edge the fillet has
             // already left the screen edge, so a point just outside the body
             // is filled at the very top and empty further down.
             let outside = body.minX - 1
             #expect(path.contains(CGPoint(x: outside, y: top + 0.5)))
-            #expect(!path.contains(CGPoint(x: outside, y: top + DockLayout.flareHeight + 1)))
+            #expect(!path.contains(CGPoint(x: outside, y: top + NotchBerthShape.filletRadius + 1)))
         }
     }
 

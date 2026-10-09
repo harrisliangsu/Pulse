@@ -13,9 +13,7 @@ import Testing
 struct AppSettingsPersistenceTests {
     /// A throwaway defaults domain, removed when the test ends.
     static func isolatedDefaults() -> (UserDefaults, cleanup: () -> Void) {
-        let name = "PulseTests.AppSettings.\(UUID().uuidString)"
-        let suite = UserDefaults(suiteName: name)!
-        return (suite, { suite.removePersistentDomain(forName: name) })
+        TestDefaults.make("AppSettings")
     }
 
     @Test("Building settings writes nothing")
@@ -236,8 +234,8 @@ struct AppSettingsPersistenceTests {
         first.autoCollapse = false
         first.panelSize = .large
         first.railSpacing = .roomy
-        first.usesGlass = true
         first.glassTransparency = 0.25
+        first.panelAppearance = .light
         first.topRailShowsPercentages = true
         first.sideRailShowsPercentages = false
         first.labelAboveRing = true
@@ -314,8 +312,8 @@ struct AppSettingsPersistenceTests {
         #expect(back.autoCollapse == false)
         #expect(back.panelSize == .large)
         #expect(back.railSpacing == .roomy)
-        #expect(back.usesGlass)
-        #expect(back.panelAppearance == .glass)
+        #expect(back.usesGlass == false)
+        #expect(back.panelAppearance == .light)
         #expect(back.ringColourScheme == .gradient)
         #expect(back.celebratesReset)
         #expect(back.celebratesHourlyReset)
@@ -379,6 +377,7 @@ struct AppSettingsPersistenceTests {
         #expect(back.stepFunSite == fresh.stepFunSite)
         #expect(back.autoCollapse)
         #expect(back.usesGlass == false)
+        #expect(back.panelAppearance == .dark)
         #expect(back.glassTransparency == fresh.glassTransparency)
         #expect(back.topRailShowsPercentages == false)
         #expect(back.sideRailShowsPercentages)

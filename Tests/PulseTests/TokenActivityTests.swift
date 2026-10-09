@@ -316,10 +316,8 @@ struct TokenActivityTests {
 @Suite("Token activity preference")
 struct TokenActivityPreferenceTests {
     private func withIsolatedDefaults(_ body: (UserDefaults) throws -> Void) rethrows {
-        let name = "PulseTests.activityView.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: name)!
-        defaults.removePersistentDomain(forName: name)
-        defer { defaults.removePersistentDomain(forName: name) }
+        let (defaults, cleanup) = TestDefaults.make("activityView")
+        defer { cleanup() }
         try body(defaults)
     }
 
