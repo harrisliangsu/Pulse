@@ -27,7 +27,7 @@ struct NotchBerthShape: Shape {
     /// than scaled with `PanelMetrics` — it matches hardware, which does not
     /// change size with the panel. The rail elsewhere keeps
     /// `DockLayout.flareWidth` / `flareHeight`.
-    static let filletRadius: CGFloat = 6
+    static var filletRadius: CGFloat { 6 }
 
     var animatableData: CGFloat {
         get { openness }

@@ -70,10 +70,16 @@ struct PanelSurface<S: Shape>: View {
                 // own subpath overlapping the body, and stroking that as it
                 // stands draws the body's edge straight through the join.
                 .overlay {
-                    PanelOutline(shape: shape)
+                    let outline = PanelOutline(shape: shape)
                         .stroke(PanelLight.edge, lineWidth: PanelLight.edgeWidth * 2)
                         .clipShape(shape)
-                        .mask { Rectangle().padding(screenEdge, PanelLight.edgeWidth) }
+                    // Masked only where a side lies on the screen; the card and
+                    // a free rail have none, and need no extra pass.
+                    if screenEdge.isEmpty {
+                        outline
+                    } else {
+                        outline.mask { Rectangle().padding(screenEdge, PanelLight.edgeWidth) }
+                    }
                 }
         } else {
             shape.fill(tint ?? .black)
@@ -135,7 +141,7 @@ enum PanelGlass {
 enum PanelLight {
     static let fill = Color(white: 0.97)
     static let edge = Color.black.opacity(0.12)
-    static let edgeWidth: CGFloat = 1
+    static var edgeWidth: CGFloat { 1 }
 }
 
 /// A shape's outline with its overlaps dissolved, so a stroke follows only
