@@ -194,11 +194,13 @@ struct CodexAccountUsageService: Sendable {
     }
 
     private static func inventory(in block: [String: Any], now: Date) -> CreditInventory? {
-        let stated = number(block["availableCount"]).flatMap { value -> Int? in
-            // `Int(_:)` traps past its range, and a number in somebody's JSON
-            // is not bounded by anything.
-            guard value.isFinite, value >= 0, value < 1_000_000 else { return nil }
-            return Int(value)
+        // `Int(_:)` traps past its range, and a number in somebody's JSON
+        // is not bounded by anything.
+        let stated: Int?
+        if let value = number(block["availableCount"]), value.isFinite, value >= 0, value < 1_000_000 {
+            stated = Int(value)
+        } else {
+            stated = nil
         }
         guard let rows = creditRows(block["credits"]) else {
             guard let stated else { return nil }
@@ -210,10 +212,11 @@ struct CodexAccountUsageService: Sendable {
         // A shorter list of only still-usable rows is capped, so the stated
         // count stands. A list that also holds spent or expired rows is the
         // inventory, and the usable rows are the count.
-        let count = if let stated, usable.count == rows.count, stated > usable.count {
-            stated
+        let count: Int
+        if let stated, usable.count == rows.count, stated > usable.count {
+            count = stated
         } else {
-            usable.count
+            count = usable.count
         }
         return CreditInventory(count: count, next: soonestCredit(in: usable))
     }
@@ -277,8 +280,13 @@ struct CodexAccountUsageService: Sendable {
             return CodexAccountUsage.Day(date: date, tokens: Int(tokens))
         }
 
-        let inventory = (limits["rateLimitResetCredits"] as? [String: Any])
-            .flatMap { inventory(in: $0, now: Date()) }
+        let creditBlock = limits["rateLimitResetCredits"] as? [String: Any]
+        let inventory: CreditInventory?
+        if let creditBlock {
+            inventory = Self.inventory(in: creditBlock, now: Date())
+        } else {
+            inventory = nil
+        }
 
         return CodexAccountUsage(
             days: days,
