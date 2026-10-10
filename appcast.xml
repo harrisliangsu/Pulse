@@ -6,6 +6,36 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.19</title>
+            <pubDate>Sat, 10 Oct 2026 01:21:54 -0000</pubDate>
+            <sparkle:version>1.4.19</sparkle:version>
+            <sparkle:shortVersionString>1.4.19</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.19</link>
+            <description xml:lang="zh-Hans"><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.19</h2><ul><li><strong>Codex 的额度余额按数字显示。</strong> 设置里的「额度余额」以前会显示成「2500.0000000000」这样带十位小数的原始数值。现在按当前语言的数字格式显示，最多保留两位小数。</li><li><strong>用量记录很短时，每日图表不再盖住卡片。</strong> 这台 Mac 上只有一天的记录时，详细卡片里的每日图表会画成一个盖住下面几行的大圆。柱宽现在始终按 31 天计算，记录较少时从左侧排起。设置和菜单栏里的每日图表同样如此，不再画成宽色块。</li><li><strong>浅色面板有清晰的边缘，颜色也看得清。</strong> 外观选「浅色」，或选「自动」且 Mac 为浅色时，面板画成浅色，刘海里也一样。描边画在轮廓内侧，贴着屏幕的那一边不画。绿色、琥珀色、红色，以及渐变和低调方案的颜色，在浅色表面上更深。面板接到刘海时，转角跟刘海外壳的弧度走，不再用轨道那条更大的弧。液态玻璃仍是深色。</li><li><strong>同步上游 qunqin24/Pulse</strong>（8 个提交，直到其 1.8.3 之后的浅色描边修订，自 1.4.16 起）。本仓库版本为 <strong>1.4.19</strong>。没有抄入上游 1.8.3 的 Sparkle 推送。<code>appcast.xml</code> 已包含 1.4.18 的推送，此外保持不动，等这个版本打 tag 后再由发布流程写入。</li><li><strong>这次同步里为本仓库补上的衔接：</strong> 浅色表面仍走原来的外观选择（深色、浅色、跟随 Mac、液态玻璃），没有另做一套「面板颜色」开关。环颜色方案、Codex 重置预测和限额恢复彩带，在这层表面上仍会画出来。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.19">在 GitHub 查看更新说明</a></p>]]></description>
+            <description xml:lang="zh-Hant"><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.19</h2><ul><li><strong>Codex 的额度余额按数字显示。</strong> 设置里的「额度余额」以前会显示成「2500.0000000000」这样带十位小数的原始数值。现在按当前语言的数字格式显示，最多保留两位小数。</li><li><strong>用量记录很短时，每日图表不再盖住卡片。</strong> 这台 Mac 上只有一天的记录时，详细卡片里的每日图表会画成一个盖住下面几行的大圆。柱宽现在始终按 31 天计算，记录较少时从左侧排起。设置和菜单栏里的每日图表同样如此，不再画成宽色块。</li><li><strong>浅色面板有清晰的边缘，颜色也看得清。</strong> 外观选「浅色」，或选「自动」且 Mac 为浅色时，面板画成浅色，刘海里也一样。描边画在轮廓内侧，贴着屏幕的那一边不画。绿色、琥珀色、红色，以及渐变和低调方案的颜色，在浅色表面上更深。面板接到刘海时，转角跟刘海外壳的弧度走，不再用轨道那条更大的弧。液态玻璃仍是深色。</li><li><strong>同步上游 qunqin24/Pulse</strong>（8 个提交，直到其 1.8.3 之后的浅色描边修订，自 1.4.16 起）。本仓库版本为 <strong>1.4.19</strong>。没有抄入上游 1.8.3 的 Sparkle 推送。<code>appcast.xml</code> 已包含 1.4.18 的推送，此外保持不动，等这个版本打 tag 后再由发布流程写入。</li><li><strong>这次同步里为本仓库补上的衔接：</strong> 浅色表面仍走原来的外观选择（深色、浅色、跟随 Mac、液态玻璃），没有另做一套「面板颜色」开关。环颜色方案、Codex 重置预测和限额恢复彩带，在这层表面上仍会画出来。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.19">在 GitHub 查看更新说明</a></p>]]></description>
+            <description xml:lang="en"><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.19</h2><ul><li><strong>Codex&#x27;s credit balance is a number.</strong> The Credit balance row in Settings showed the raw value with ten decimal places, such as &quot;2500.0000000000&quot;. It now uses the number format of the current language, with at most two decimal places.</li><li><strong>A short history no longer draws a disc over the card.</strong> When this Mac&#x27;s records covered only one day, the daily chart on the detail card was a circle over the rows below it. Bars are always sized for 31 days, and a short history starts at the left. The daily charts in Settings and the menu bar follow the same rule and no longer draw wide blocks.</li><li><strong>The light panel keeps its edge, and its colours stay readable.</strong> Light, and Auto when the Mac is light, draws a light surface, including in the notch. The hairline sits inside the outline, and is left off the side that lies on the screen. Green, amber, red, and the Gradient and Quiet colours are deeper on that surface. Where the panel meets the notch, the curve matches the housing instead of the rail&#x27;s larger flare. Glass stays dark.</li><li><strong>Synced from upstream qunqin24/Pulse</strong> (8 commits, through the light-panel edge follow-up after their 1.8.3 line, since 1.4.16). This fork&#x27;s version is <strong>1.4.19</strong>. Their Sparkle offer for 1.8.3 was not copied. <code>appcast.xml</code> already offers 1.4.18 and is otherwise unchanged until this version is tagged.</li><li><strong>Fork fixes in this sync:</strong> the light surface stays on the existing Appearance choice (dark, light, auto, or glass), rather than a second Panel colour switch. Ring colour schemes, the Codex reset forecast, and reset ribbons still draw on that surface.</li><li><strong>Fork-only pieces kept:</strong> Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and <code>~/.qoder</code>); Zen&#x27;s cookie store; bilingual release notes; and this repo&#x27;s Sparkle feed and signing key.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.19">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.19/Pulse-1.4.19.zip"
+                       length="15476599"
+                       type="application/octet-stream"
+                       sparkle:edSignature="/bBNKrVuvlu8q23WdW8zTjm7fGJ4pTiZPidNK/y9T36cwKU6RL5wwHCvdVrc1ahUl1Zv/XUOnp8WDk5Hitj9Bw==" />
+        </item>
+        <item>
             <title>1.4.18</title>
             <pubDate>Fri, 09 Oct 2026 10:13:00 -0000</pubDate>
             <sparkle:version>1.4.18</sparkle:version>

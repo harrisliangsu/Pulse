@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.19</title>
+            <pubDate>Sat, 10 Oct 2026 01:21:54 -0000</pubDate>
+            <sparkle:version>1.4.19</sparkle:version>
+            <sparkle:shortVersionString>1.4.19</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.19</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.19</h2><ul><li><strong>Codex 的额度余额按数字显示。</strong> 设置里的「额度余额」以前会显示成「2500.0000000000」这样带十位小数的原始数值。现在按当前语言的数字格式显示，最多保留两位小数。</li><li><strong>用量记录很短时，每日图表不再盖住卡片。</strong> 这台 Mac 上只有一天的记录时，详细卡片里的每日图表会画成一个盖住下面几行的大圆。柱宽现在始终按 31 天计算，记录较少时从左侧排起。设置和菜单栏里的每日图表同样如此，不再画成宽色块。</li><li><strong>浅色面板有清晰的边缘，颜色也看得清。</strong> 外观选「浅色」，或选「自动」且 Mac 为浅色时，面板画成浅色，刘海里也一样。描边画在轮廓内侧，贴着屏幕的那一边不画。绿色、琥珀色、红色，以及渐变和低调方案的颜色，在浅色表面上更深。面板接到刘海时，转角跟刘海外壳的弧度走，不再用轨道那条更大的弧。液态玻璃仍是深色。</li><li><strong>同步上游 qunqin24/Pulse</strong>（8 个提交，直到其 1.8.3 之后的浅色描边修订，自 1.4.16 起）。本仓库版本为 <strong>1.4.19</strong>。没有抄入上游 1.8.3 的 Sparkle 推送。<code>appcast.xml</code> 已包含 1.4.18 的推送，此外保持不动，等这个版本打 tag 后再由发布流程写入。</li><li><strong>这次同步里为本仓库补上的衔接：</strong> 浅色表面仍走原来的外观选择（深色、浅色、跟随 Mac、液态玻璃），没有另做一套「面板颜色」开关。环颜色方案、Codex 重置预测和限额恢复彩带，在这层表面上仍会画出来。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.19">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.19/Pulse-1.4.19.zip"
+                       length="15476599"
+                       type="application/octet-stream"
+                       sparkle:edSignature="/bBNKrVuvlu8q23WdW8zTjm7fGJ4pTiZPidNK/y9T36cwKU6RL5wwHCvdVrc1ahUl1Zv/XUOnp8WDk5Hitj9Bw==" />
+        </item>
+        <item>
             <title>1.4.18</title>
             <pubDate>Fri, 09 Oct 2026 10:13:00 -0000</pubDate>
             <sparkle:version>1.4.18</sparkle:version>
