@@ -11,7 +11,13 @@ import Testing
 /// the alarm / spent band — never a full-rail grey wash, and never red,
 /// which is the failure 1.2.2 Quiet had after 1.2.1 left 98% used on the
 /// old ladder.
+///
+/// On the main actor: resolving a colour backed by an `NSColor` provider makes
+/// SwiftUI sync onto the main thread, and two tests doing that at once from the
+/// cooperative pool deadlocked the whole run (sampled on 2026-10-09: both
+/// threads in `Update.syncMain`, the main thread idle in its run loop).
 @Suite("Usage tint")
+@MainActor
 struct UsageTintTests {
     private static func colour(
         _ used: Double,
