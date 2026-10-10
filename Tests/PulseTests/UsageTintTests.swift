@@ -11,7 +11,13 @@ import Testing
 /// the alarm / spent band — never a full-rail grey wash, and never red,
 /// which is the failure 1.2.2 Quiet had after 1.2.1 left 98% used on the
 /// old ladder.
+///
+/// On the main actor: resolving a colour backed by an `NSColor` provider makes
+/// SwiftUI sync onto the main thread, and two tests doing that at once from the
+/// cooperative pool deadlocked the whole run (sampled on 2026-10-09: both
+/// threads in `Update.syncMain`, the main thread idle in its run loop).
 @Suite("Usage tint")
+@MainActor
 struct UsageTintTests {
     private static func colour(
         _ used: Double,
@@ -258,5 +264,39 @@ struct UsageTintTests {
         defaults.removePersistentDomain(forName: name)
         defer { defaults.removePersistentDomain(forName: name) }
         try body(defaults)
+    }
+
+    // MARK: Light panel (#74)
+
+    private static func resolved(_ colour: Color, _ scheme: ColorScheme) -> Color.Resolved {
+        var environment = EnvironmentValues()
+        environment.colorScheme = scheme
+        return colour.resolve(in: environment)
+    }
+
+    private static func luminance(_ colour: Color.Resolved) -> Double {
+        func linear(_ value: Float) -> Double {
+            let value = Double(value)
+            return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * linear(colour.red) + 0.7152 * linear(colour.green) + 0.0722 * linear(colour.blue)
+    }
+
+    @Test("the panel's own scheme picks the twin, not the system's")
+    func usageColoursFollowTheScheme() {
+        for colour in [Color.pulseGood, .pulseCaution, .pulseWarning, .pulseExhausted, .pulseGradientPeak, .pulseQuiet, .pulseQuietDeep] {
+            #expect(Self.resolved(colour, .light) != Self.resolved(colour, .dark))
+        }
+        let good = Self.resolved(.pulseGood, .dark)
+        #expect(abs(good.red - 0) < 0.01 && abs(good.green - 0.90) < 0.01 && abs(good.blue - 0.55) < 0.01)
+    }
+
+    @Test("every usage colour reads on the light surface")
+    func lightTwinsHaveContrast() {
+        let surface = Self.luminance(Self.resolved(PanelLight.fill, .light))
+        for colour in [Color.pulseGood, .pulseCaution, .pulseWarning, .pulseExhausted, .pulseGradientPeak, .pulseQuiet, .pulseQuietDeep] {
+            let ratio = (surface + 0.05) / (Self.luminance(Self.resolved(colour, .light)) + 0.05)
+            #expect(ratio >= 3, "\(colour) is \(ratio):1 on the light panel")
+        }
     }
 }

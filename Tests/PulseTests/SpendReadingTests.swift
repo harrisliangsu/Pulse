@@ -23,9 +23,8 @@ struct SpendReadingTests {
 
     @Test("New installs and upgrades leave the pane off until its choice is saved")
     func preference() {
-        let name = "PulseTests.readsTokenSpend.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: name)!
-        defer { defaults.removePersistentDomain(forName: name) }
+        let (defaults, cleanup) = TestDefaults.make("readsTokenSpend")
+        defer { cleanup() }
         #expect(!AppSettings.storedReadsTokenSpend(in: defaults))
         #expect(!AppSettings().readsTokenSpend)
         defaults.set(true, forKey: ProviderSelection.hasRunKey)

@@ -10,6 +10,15 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.19
+
+- **Codex's credit balance is a number.** The Credit balance row in Settings showed the raw value with ten decimal places, such as "2500.0000000000". It now uses the number format of the current language, with at most two decimal places.
+- **A short history no longer draws a disc over the card.** When this Mac's records covered only one day, the daily chart on the detail card was a circle over the rows below it. Bars are always sized for 31 days, and a short history starts at the left. The daily charts in Settings and the menu bar follow the same rule and no longer draw wide blocks.
+- **The light panel keeps its edge, and its colours stay readable.** Light, and Auto when the Mac is light, draws a light surface, including in the notch. The hairline sits inside the outline, and is left off the side that lies on the screen. Green, amber, red, and the Gradient and Quiet colours are deeper on that surface. Where the panel meets the notch, the curve matches the housing instead of the rail's larger flare. Glass stays dark.
+- **Synced from upstream qunqin24/Pulse** (8 commits, through the light-panel edge follow-up after their 1.8.3 line, since 1.4.16). This fork's version is **1.4.19**. Their Sparkle offer for 1.8.3 was not copied. `appcast.xml` already offers 1.4.18 and is otherwise unchanged until this version is tagged.
+- **Fork fixes in this sync:** the light surface stays on the existing Appearance choice (dark, light, auto, or glass), rather than a second Panel colour switch. Ring colour schemes, the Codex reset forecast, and reset ribbons still draw on that surface.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen's cookie store; bilingual release notes; and this repo's Sparkle feed and signing key.
+
 ## 1.4.18
 
 - **The Codex card drops reset cards that are already gone.** The line counts credits that are still available and have not expired. When the reply lists none left, the line is removed, even if an older count is still attached. Opening the Codex card asks again, and so does each later refresh while a card is showing, so the line moves with the rest of the card. A failed read keeps the previous figure; a successful read with no reset-card data removes the line.

@@ -291,9 +291,6 @@ enum PanelAppearance: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Solid fill when glass is off. Not pure white: a white rail on a white
-    /// page disappears, and the panel has no window shadow to give it an edge.
-    static let lightFill = Color(red: 0.94, green: 0.94, blue: 0.95)
 }
 
 /// How much air there is between the rings.

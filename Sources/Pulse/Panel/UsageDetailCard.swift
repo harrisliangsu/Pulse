@@ -1076,7 +1076,7 @@ private struct ActivitySection: View {
                 message(String.localized("The console session has expired. Read it again in Settings."))
             case .ledger(let ledger):
                 figures(ledger)
-                DaysChart(days: ledger.recent(Self.span))
+                DaysChart(days: ledger.recent(Self.span), slots: Self.span)
                     .frame(height: DetailCardLayout.chartHeight)
                 topModel(ledger)
                 cacheHitRate(ledger)
@@ -1272,13 +1272,20 @@ private struct PromptCacheRow: View {
 /// A month of days as bars, today's lit. Static: the card is on a panel that
 /// never becomes key, where a hover readout would not fire — the Token spend
 /// pane is where a chart is read closely.
+///
+/// **Bars are sized for the whole span, not for the days on record.** A
+/// ledger that starts today has one day in it; sized by that, its one bar
+/// took the full width, and the stub rule below — never shorter than it is
+/// wide — made it a disc as wide as the card, drawn over the rows under the
+/// chart. A short history now fills the left of the chart and grows rightward.
 private struct DaysChart: View {
     let days: [LedgerDay]
+    let slots: Int
 
     var body: some View {
         GeometryReader { proxy in
             let peak = max(days.map(\.tokens).max() ?? 1, 1)
-            let count = max(days.count, 1)
+            let count = max(days.count, slots, 1)
             let spacing = max(proxy.size.width / CGFloat(count) * 0.3, 1.5)
             let width = max((proxy.size.width - spacing * CGFloat(count - 1)) / CGFloat(count), 1)
 
@@ -1292,7 +1299,7 @@ private struct DaysChart: View {
                         .frame(
                             width: width,
                             height: day.tokens > 0
-                                ? max(proxy.size.height * CGFloat(day.tokens) / CGFloat(peak), width)
+                                ? min(max(proxy.size.height * CGFloat(day.tokens) / CGFloat(peak), width), proxy.size.height)
                                 : min(width, 2)
                         )
                 }

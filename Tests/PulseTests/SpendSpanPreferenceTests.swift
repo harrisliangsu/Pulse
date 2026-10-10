@@ -15,10 +15,8 @@ struct SpendSpanPreferenceTests {
     /// and two tests could not run beside each other. Unique per call so
     /// parallel tests cannot see one another's value.
     private func withIsolatedDefaults(_ body: (UserDefaults) throws -> Void) rethrows {
-        let name = "PulseTests.spendSpan.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: name)!
-        defaults.removePersistentDomain(forName: name)
-        defer { defaults.removePersistentDomain(forName: name) }
+        let (defaults, cleanup) = TestDefaults.make("spendSpan")
+        defer { cleanup() }
         try body(defaults)
     }
 

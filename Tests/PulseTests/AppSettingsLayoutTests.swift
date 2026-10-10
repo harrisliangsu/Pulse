@@ -48,6 +48,7 @@ struct AppSettingsLayoutTests {
         ("showsForecast", { $0.showsForecast = true }),
         ("detailedCards", { $0.setShowsDetailedCard(true, for: AccountKey(.codex)) }),
         ("usesGlass", { $0.usesGlass = true }),
+        ("panelAppearance", { $0.panelAppearance = .light }),
         ("autoCollapse", { $0.autoCollapse = false }),
         ("hidesInFullScreen", { $0.hidesInFullScreen = false }),
         ("followsActiveDisplay", { $0.followsActiveDisplay = true }),

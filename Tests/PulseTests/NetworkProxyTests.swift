@@ -5,10 +5,8 @@ import Testing
 @Suite("Network proxy")
 struct NetworkProxyTests {
     private func withIsolatedDefaults(_ body: (UserDefaults) throws -> Void) rethrows {
-        let name = "PulseTests.networkProxy.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: name)!
-        defaults.removePersistentDomain(forName: name)
-        defer { defaults.removePersistentDomain(forName: name) }
+        let (defaults, cleanup) = TestDefaults.make("networkProxy")
+        defer { cleanup() }
         try body(defaults)
     }
 

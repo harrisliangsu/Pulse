@@ -113,10 +113,8 @@ struct UsageWindowTests {
 @Suite("Window clock direction preference")
 struct WindowClockDirectionPreferenceTests {
     private func withIsolatedDefaults(_ body: (UserDefaults) throws -> Void) rethrows {
-        let name = "PulseTests.windowClockDirection.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: name)!
-        defaults.removePersistentDomain(forName: name)
-        defer { defaults.removePersistentDomain(forName: name) }
+        let (defaults, cleanup) = TestDefaults.make("windowClockDirection")
+        defer { cleanup() }
         try body(defaults)
     }
 

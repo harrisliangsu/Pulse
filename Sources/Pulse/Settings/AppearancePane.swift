@@ -87,7 +87,7 @@ struct AppearancePane: View {
                 }
 
                 // Only while glass is on: it is how clear the glass is, and on
-                // the black panel there is no glass to be clear.
+                // a solid panel there is no glass to be clear.
                 if settings.usesGlass {
                     SettingsRowDivider()
 

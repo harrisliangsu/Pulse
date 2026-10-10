@@ -321,9 +321,12 @@ final class AppSettings {
     /// **One setting, not a glass toggle beside a colour.** Glass used to be a
     /// separate switch that silently overrode Light, so both looked on and
     /// only one was showing. Dark stays the default. Light, Auto and Glass
-    /// are the other cases. A layout change: it re-places the panel and does
-    /// not ask every provider again. The old `settings.usesGlass` bool is
-    /// kept in step so a downgrade does not resurrect glass on top of Light.
+    /// are the other cases. Light (and Auto when the Mac is light) is the
+    /// light panel (#74): a light solid surface, including at the notch, with
+    /// deeper usage colours. Glass stays pinned dark. A layout change: it
+    /// re-places the panel and does not ask every provider again. The old
+    /// `settings.usesGlass` bool is kept in step so a downgrade does not
+    /// resurrect glass on top of Light.
     var panelAppearance: PanelAppearance {
         didSet { panelAppearanceChanged(from: oldValue) }
     }

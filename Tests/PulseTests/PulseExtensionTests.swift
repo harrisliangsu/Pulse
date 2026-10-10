@@ -406,9 +406,8 @@ struct ExtensionAccountTests {
 
     @Test("Its switch survives a launch while its folder is there, and only then")
     func selectionKeepsExtension() {
-        let name = "PulseTests.extensionSelection.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: name)!
-        defer { defaults.removePersistentDomain(forName: name) }
+        let (defaults, cleanup) = TestDefaults.make("extensionSelection")
+        defer { cleanup() }
         let builtIn = Set(Provider.builtIn.map(\.rawValue))
         defaults.set(["claudeCode", found.account.id], forKey: ProviderSelection.enabledKey)
 

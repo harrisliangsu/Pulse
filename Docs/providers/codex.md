@@ -38,6 +38,10 @@ How many one-off credits that clear a rate limit early the account holds. Only `
 
 The plan comes back as an internal tier name, not the name on the plan — `prolite` is the 5× Pro tier. `CodexUsageService.planName` maps the ones we know and passes anything else through verbatim rather than blanking it.
 
+## Credit balance
+
+`credits.balance` arrives as a decimal string with ten places (`"2500.0000000000"`), on both routes. `CodexUsageService.creditBalance` shows it as a number in the reader's locale with at most two places — credits, not money, so no currency. A balance that is not a number is passed through; `unlimited: true` is no balance at all.
+
 ## App-server / SIGPIPE / PATH
 
 **The folder `codex` was found in leads the helper's `PATH`** (`BoundedProcess.environment(leading:over:)`, which every launcher of another tool's CLI uses — Kiro's ACP client, `arkcli`, Alibaba's `bl` too). An npm install of `codex` is a Node script (`#!/usr/bin/env node`), and a GUI app's `PATH` has no `node` in it, so a `codex` found under `~/.nvm/versions/node/<v>/bin` started and died at once with `env: node: No such file or directory`: nothing only the app server reports — reset credits included — ever arrived, while the rings, read from the endpoint, looked fine (reported under #67; reproduced with `env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin`, and fixed: the same probe then read three credits). nvm, Homebrew and Volta put `node` beside the `codex` they installed. The path as found, not the link resolved: nvm's `codex` links into `lib/node_modules`, where there is no `node`.

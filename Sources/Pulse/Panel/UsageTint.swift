@@ -255,21 +255,39 @@ extension Color {
 extension Color {
     /// Picked to sit on the panel's black: bright enough to read at ring size,
     /// without the neon cast that fully saturated values take on there.
-    static let pulseGood = Color(red: 0.00, green: 0.90, blue: 0.55)
-    static let pulseCaution = Color(red: 1.00, green: 0.76, blue: 0.15)
-    static let pulseWarning = Color(red: 1.00, green: 0.31, blue: 0.26)
+    ///
+    /// Each has a deeper twin for a light appearance — the light panel (#74),
+    /// and the menu where macOS draws it light. The dark green and yellow are
+    /// about 1.5:1 against a light surface, which is no reading at all; the
+    /// twins are 3:1 or better on `PanelLight.fill`. Resolved by the
+    /// appearance of wherever they are drawn, so no call site has to choose.
+    static let pulseGood = usage(dark: (0.00, 0.90, 0.55), light: (0.00, 0.58, 0.35))
+    static let pulseCaution = usage(dark: (1.00, 0.76, 0.15), light: (0.76, 0.49, 0.00))
+    static let pulseWarning = usage(dark: (1.00, 0.31, 0.26), light: (0.87, 0.22, 0.17))
     /// Deeper and flatter than the warning red, so a spent limit doesn't just
     /// look like a slightly redder nearly-spent one.
-    static let pulseExhausted = Color(red: 0.85, green: 0.09, blue: 0.13)
+    static let pulseExhausted = usage(dark: (0.85, 0.09, 0.13), light: (0.68, 0.06, 0.10))
     /// Gradient's top: deeper amber/orange than the caution step, and not red.
-    static let pulseGradientPeak = Color(red: 0.95, green: 0.48, blue: 0.12)
+    /// The light twin stays orange, deep enough to read on `PanelLight.fill`.
+    static let pulseGradientPeak = usage(dark: (0.95, 0.48, 0.12), light: (0.62, 0.28, 0.02))
     /// Quiet's alarm-band grey — the muted stand-in for Red alert's warning
     /// red. Healthy usage stays `pulseGood`; this is only for the line at
-    /// or above the threshold.
-    static let pulseQuiet = Color(red: 0.58, green: 0.60, blue: 0.64)
+    /// or above the threshold. The light twin is darker so it still reads
+    /// on the light panel.
+    static let pulseQuiet = usage(dark: (0.58, 0.60, 0.64), light: (0.36, 0.38, 0.42))
     /// Quiet's spent grey: darker than the alarm step, still above the
     /// empty track so a full arc does not vanish into the rail.
-    static let pulseQuietDeep = Color(red: 0.46, green: 0.48, blue: 0.52)
+    static let pulseQuietDeep = usage(dark: (0.46, 0.48, 0.52), light: (0.24, 0.26, 0.30))
+
+    private static func usage(
+        dark: (Double, Double, Double),
+        light: (Double, Double, Double)
+    ) -> Color {
+        Color(nsColor: NSColor(name: nil) { appearance in
+            let (red, green, blue) = appearance.bestMatch(from: [.aqua, .darkAqua]) == .aqua ? light : dark
+            return NSColor(srgbRed: red, green: green, blue: blue, alpha: 1)
+        })
+    }
 }
 
 /// How full a limit has to be before Red alert draws it red, and which
