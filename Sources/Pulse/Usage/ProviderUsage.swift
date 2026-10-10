@@ -808,6 +808,10 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
     var isCached = false
     /// Only the latest fetch carries attempts; the cache stores the origin alone.
     var attempts: [ConnectionDiagnostic.Attempt] = []
+    /// Reset cards named on a Codex usage reply. Not banked: the card keeps
+    /// its own summary, and a reading restored from disk must not invent a
+    /// count the cache never stored.
+    var codexResetCredits: CodexCreditSummary? = nil
 
     /// Whether two readings of this account must agree on their source scope
     /// before one may stand in for the other.

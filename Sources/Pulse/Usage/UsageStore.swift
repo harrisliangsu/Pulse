@@ -255,16 +255,30 @@ final class UsageStore {
     }
 
     /// Settings already parsed credits out of a full account read.
-    /// Bumps the ask so a card read still in flight cannot put its older
-    /// count back over this one.
     func noteCodexCredits(_ usage: CodexAccountUsage) {
         guard usage.creditsKnown else { return }
-        codexCreditsAsk += 1
-        codexCredits = CodexCreditSummary(
+        noteCodexCreditSnapshot(CodexCreditSummary(
             available: usage.availableResetCredits,
             nextExpiresAt: usage.nextExpiringCredit?.expiresAt,
-            next: usage.nextExpiringCredit
-        )
+            next: usage.nextExpiringCredit,
+            basis: usage.resetCreditBasis
+        ))
+    }
+
+    /// A count or a list that arrived on a Codex usage reply, beside the
+    /// weekly window.
+    ///
+    /// A count-only reply fills the line when nothing is known yet, and it
+    /// may replace another count. It does not replace an inventory, including
+    /// one that already proved none are left. The ask moves only when the
+    /// line changes, so a snapshot that leaves an inventory in place does
+    /// not cancel a list read already in flight, and an older list cannot
+    /// write over a snapshot that did change the line.
+    func noteCodexCreditSnapshot(_ snapshot: CodexCreditSummary) {
+        let merged = CodexCreditSummary.merging(previous: codexCredits, snapshot: snapshot)
+        guard merged != codexCredits else { return }
+        codexCreditsAsk += 1
+        codexCredits = merged
         codexCreditsFetchedAt = clock()
     }
 
@@ -839,6 +853,13 @@ final class UsageStore {
             previous: diagnostics[id], now: clock()
         )
         guard let account = AccountKey(id: id) else { return }
+        // The usage reply already names how many reset cards are left. The
+        // primary login only: the app server, and this line, are that login.
+        // A reply that omits the block leaves the previous line alone; taking
+        // it off is the inventory read's job, once a list has proved it.
+        if account.provider == .codex, account.isPrimary, let snapshot = raw.codexResetCredits {
+            noteCodexCreditSnapshot(snapshot)
+        }
         // Before the alert rules, and regardless of whether they are on: the
         // mark's celebration is not a notification.
         resetWatch.observe(fetched, as: account)

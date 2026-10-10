@@ -167,6 +167,224 @@ struct CodexResetCreditsTests {
         #expect(CodexAccountUsageService.resetCredits(in: ["rateLimitResetCredits": [String: Any]()]) == .unreported)
         #expect(UsageDetailCard.resetCreditsText(.unreported) == String.localized("Not available"))
     }
+
+    @Test("Unknown, missing, and differently cased statuses still count until they expire")
+    func unknownStatusCounts() {
+        let now = Date(timeIntervalSince1970: 1_750_000_000)
+        let unknown: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": [["status": "unknown", "expiresAt": 1_800_000_000]],
+        ]]
+        let summary = CodexAccountUsageService.credits(from: unknown, now: now)
+        #expect(summary?.available == 1)
+        #expect(summary?.basis == .inventory)
+        #expect(summary?.showsOnCard(at: now) == true)
+        #expect(summary?.nextExpiresAt == Date(timeIntervalSince1970: 1_800_000_000))
+
+        let untitled: [String: Any] = ["title": "Full reset"]
+        let missing: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": [untitled],
+        ]]
+        #expect(CodexAccountUsageService.credits(from: missing, now: now)?.showsOnCard(at: now) == true)
+
+        let cased: [String: Any] = ["rateLimitResetCredits": [
+            "credits": [["status": "Available", "expiresAt": 1_800_000_000]],
+        ]]
+        #expect(CodexAccountUsageService.resetCredits(in: cased, now: now)
+                == .available(count: 1, nextExpiry: Date(timeIntervalSince1970: 1_800_000_000)))
+
+        let past: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": [["status": "unknown", "expiresAt": 1_700_000_000]],
+        ]]
+        #expect(CodexAccountUsageService.credits(from: past, now: now)?.available == 0)
+        #expect(CodexAccountUsageService.credits(from: past, now: now)?.showsOnCard(at: now) == false)
+
+        let word: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": [["status": "expired", "expiresAt": 1_900_000_000]],
+        ]]
+        #expect(CodexAccountUsageService.credits(from: word, now: now)?.available == 0)
+        #expect(CodexAccountUsageService.credits(from: word, now: now)?.showsOnCard(at: now) == false)
+    }
+
+    @Test("A shorter list keeps the stated count while any listed card is still usable")
+    func shorterMixedListKeepsStatedCount() {
+        let now = Date(timeIntervalSince1970: 1_750_000_000)
+        let mixed: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 3,
+            "credits": [
+                ["status": "available", "expiresAt": 1_800_000_000],
+                ["status": "redeemed", "expiresAt": 1_900_000_000],
+            ],
+        ]]
+        let summary = CodexAccountUsageService.credits(from: mixed, now: now)
+        #expect(summary?.available == 3)
+        #expect(summary?.nextExpiresAt == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(summary?.showsOnCard(at: now) == true)
+
+        // The list is not shorter than the stated count, so a spent row is zero.
+        let caughtUp: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": [["status": "redeemed", "expiresAt": 1_900_000_000]],
+        ]]
+        #expect(CodexAccountUsageService.credits(from: caughtUp, now: now)?.available == 0)
+    }
+
+    @Test("The usage document's snake_case count is the same inventory")
+    func snakeCaseUsageCount() {
+        let now = Date(timeIntervalSince1970: 1_750_000_000)
+        let countBlock: [String: Any] = ["available_count": 2]
+        let countOnly: [String: Any] = ["rate_limit_reset_credits": countBlock]
+        let summary = CodexAccountUsageService.credits(from: countOnly, now: now)
+        #expect(summary?.available == 2)
+        #expect(summary?.basis == .countOnly)
+        #expect(summary?.nextExpiresAt == nil)
+        #expect(summary?.showsOnCard(at: now) == true)
+        #expect(CodexAccountUsageService.resetCredits(in: countOnly, now: now) == .available(count: 2, nextExpiry: nil))
+
+        let row: [String: Any] = ["status": "available", "expires_at": "2027-01-15T08:00:00Z"]
+        let listed: [String: Any] = ["rate_limit_reset_credits": [
+            "available_count": 2,
+            "credits": [row],
+        ]]
+        let inventory = CodexAccountUsageService.credits(from: listed, now: now)
+        #expect(inventory?.available == 2)
+        #expect(inventory?.basis == .inventory)
+        #expect(inventory?.nextExpiresAt == Date(timeIntervalSince1970: 1_800_000_000))
+
+        // A null camel-case field must not hide the snake-case object beside it.
+        let snake: [String: Any] = ["available_count": 1]
+        let both: [String: Any] = [
+            "rateLimitResetCredits": NSNull(),
+            "rate_limit_reset_credits": snake,
+        ]
+        #expect(CodexAccountUsageService.credits(from: both, now: now)?.available == 1)
+    }
+
+    @Test("A millisecond expiry is a real date, and one already past is not a card")
+    func millisecondExpiry() {
+        let now = Date(timeIntervalSince1970: 1_750_000_000)
+        let ahead: [String: Any] = ["rateLimitResetCredits": [
+            "credits": [["status": "available", "expiresAt": 1_800_000_000_000]],
+        ]]
+        #expect(CodexAccountUsageService.resetCredits(in: ahead, now: now)
+                == .available(count: 1, nextExpiry: Date(timeIntervalSince1970: 1_800_000_000)))
+
+        let gone: [String: Any] = ["rateLimitResetCredits": [
+            "availableCount": 1,
+            "credits": [["status": "available", "expiresAt": 1_700_000_000_000]],
+        ]]
+        #expect(CodexAccountUsageService.credits(from: gone, now: now)?.available == 0)
+        #expect(CodexAccountUsageService.credits(from: gone, now: now)?.showsOnCard(at: now) == false)
+    }
+
+    @Test("A count-only reply fills an empty line and does not restore one an inventory removed")
+    func mergingCountAndInventory() {
+        let now = Date(timeIntervalSince1970: 1_750_000_000)
+        let count = CodexCreditSummary(available: 2, nextExpiresAt: nil, next: nil, basis: .countOnly)
+        #expect(CodexCreditSummary.merging(previous: nil, snapshot: count) == count)
+
+        let later = CodexCreditSummary(available: 1, nextExpiresAt: nil, next: nil, basis: .countOnly)
+        #expect(CodexCreditSummary.merging(previous: count, snapshot: later) == later)
+
+        let none = CodexCreditSummary(available: 0, nextExpiresAt: nil, next: nil, basis: .inventory)
+        #expect(CodexCreditSummary.merging(previous: count, snapshot: none) == none)
+        #expect(CodexCreditSummary.merging(previous: none, snapshot: count) == none)
+        #expect(none.showsOnCard(at: now) == false)
+        #expect(count.showsOnCard(at: now) == true)
+
+        let settings = AppSettings(enabledAccounts: ["codex"])
+        let scratch = FileManager.default.temporaryDirectory
+            .appending(path: "pulse-reset-cards-\(UUID().uuidString).json")
+        let store = UsageStore(
+            settings: settings,
+            cache: UsageCache(file: scratch),
+            clock: { now }
+        )
+        store.noteCodexCreditSnapshot(count)
+        #expect(store.codexCredits == count)
+        store.noteCodexCreditSnapshot(none)
+        #expect(store.codexCredits == none)
+        store.noteCodexCreditSnapshot(count)
+        #expect(store.codexCredits == none)
+
+        let fromHistory = CodexAccountUsage(
+            days: [],
+            lifetimeTokens: 0,
+            peakDailyTokens: 0,
+            currentStreakDays: 0,
+            longestStreakDays: 0,
+            availableResetCredits: 4,
+            nextExpiringCredit: nil,
+            creditsKnown: true,
+            resetCreditBasis: .countOnly
+        )
+        store.noteCodexCredits(fromHistory)
+        #expect(store.codexCredits == none)
+
+        let fresh = UsageStore(
+            settings: settings,
+            cache: UsageCache(file: FileManager.default.temporaryDirectory
+                .appending(path: "pulse-reset-cards-\(UUID().uuidString).json")),
+            clock: { now }
+        )
+        fresh.noteCodexCredits(fromHistory)
+        #expect(fresh.codexCredits?.available == 4)
+        #expect(fresh.codexCredits?.basis == .countOnly)
+        let unknown = CodexAccountUsage(
+            days: [],
+            lifetimeTokens: 0,
+            peakDailyTokens: 0,
+            currentStreakDays: 0,
+            longestStreakDays: 0,
+            availableResetCredits: 0,
+            nextExpiringCredit: nil,
+            creditsKnown: false,
+            resetCreditBasis: .countOnly
+        )
+        fresh.noteCodexCredits(unknown)
+        #expect(fresh.codexCredits?.available == 4)
+    }
+
+    @Test("The weekly usage reply carries the reset-card count onto the reading")
+    func usageReplyCarriesTheCount() {
+        let window: [String: Any] = [
+            "used_percent": 99,
+            "limit_window_seconds": 604_800,
+            "reset_at": 1_800_000_000,
+        ]
+        let countBlock: [String: Any] = ["available_count": 2]
+        let http: [String: Any] = [
+            "plan_type": "plus",
+            "rate_limit": ["primary_window": window],
+            "rate_limit_reset_credits": countBlock,
+        ]
+        let parsed = CodexUsageService.parseUsageResponse(http, for: AccountKey(.codex))
+        #expect(parsed.codexResetCredits?.available == 2)
+        #expect(parsed.codexResetCredits?.basis == .countOnly)
+        #expect(parsed.codexResetCredits?.showsOnCard() == true)
+        #expect(parsed.windows.isEmpty == false)
+
+        let primary: [String: Any] = [
+            "usedPercent": 99,
+            "windowDurationMins": 10_080,
+            "resetsAt": 1_800_000_000,
+        ]
+        let emptyCredits: [String: Any] = [
+            "availableCount": 1,
+            "credits": [[String: Any]](),
+        ]
+        let server: [String: Any] = [
+            "rateLimits": ["primary": primary],
+            "rateLimitResetCredits": emptyCredits,
+        ]
+        let fallback = CodexUsageService.parseAppServerResponse(server)
+        #expect(fallback.codexResetCredits?.available == 0)
+        #expect(fallback.codexResetCredits?.basis == .inventory)
+        #expect(fallback.codexResetCredits?.showsOnCard() == false)
+    }
 }
 
 /// Starting `codex app-server` from a GUI app, whose PATH has no `node`.

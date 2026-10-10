@@ -39,6 +39,9 @@ struct CodexAccountUsage: Equatable, Sendable {
     /// False when the rate-limit payload omitted `rateLimitResetCredits`.
     /// That is "unknown", not a count of zero.
     let creditsKnown: Bool
+    /// Whether `availableResetCredits` came from a credit list or from a
+    /// count with no list. Unknown when the block itself was missing.
+    let resetCreditBasis: CodexCreditSummary.Basis
 
     var todayTokens: Int { days.last?.tokens ?? 0 }
 
@@ -56,10 +59,23 @@ struct CodexAccountUsage: Equatable, Sendable {
 /// own switch. This summary is the line under the Codex Resets forecast: a
 /// known zero stays quiet, and an unknown read is not a summary at all.
 struct CodexCreditSummary: Equatable, Sendable {
+    /// Where the count came from.
+    ///
+    /// `countOnly` is a reply that named `availableCount` and did not include
+    /// a `credits` array — the usage document's shape. `inventory` is a reply
+    /// that included the array, including an empty one. A later count-only
+    /// reply must not put a positive number back over an inventory that
+    /// already proved none are left.
+    enum Basis: Equatable, Sendable {
+        case countOnly
+        case inventory
+    }
+
     var available: Int
     var nextExpiresAt: Date?
     /// Kept for the settings history card, which names the credit.
     var next: CodexAccountUsage.ResetCredit?
+    var basis: Basis = .inventory
 
     /// A known zero is still an answer, and the card stays quiet about it.
     /// An unknown read is not a summary at all. One card whose expiry has
@@ -69,6 +85,20 @@ struct CodexCreditSummary: Equatable, Sendable {
         guard available > 0 else { return false }
         if available == 1, let nextExpiresAt, nextExpiresAt <= now { return false }
         return true
+    }
+
+    /// The usage document's count, applied beside an app-server inventory.
+    ///
+    /// An inventory replaces whatever was showing, including a known zero.
+    /// A count-only reply fills in when nothing is known yet, and it may
+    /// replace another count-only reply. It does not replace an inventory:
+    /// that list is the later, more specific read, and a usage snapshot of
+    /// the old positive count is what kept a spent card on screen.
+    static func merging(previous: CodexCreditSummary?, snapshot: CodexCreditSummary) -> CodexCreditSummary {
+        if snapshot.basis == .countOnly, previous?.basis == .inventory {
+            return previous ?? snapshot
+        }
+        return snapshot
     }
 }
 
@@ -145,8 +175,7 @@ struct CodexAccountUsageService: Sendable {
             return .failed
         }
         guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return .failed }
-        let field = root["rateLimitResetCredits"]
-        if field == nil || field is NSNull { return .absent }
+        guard Self.creditBlock(in: root) != nil else { return .absent }
         guard let summary = Self.credits(from: root) else { return .absent }
         return .summary(summary)
     }
@@ -172,53 +201,89 @@ struct CodexAccountUsageService: Sendable {
     /// `now` decides which `expiresAt` is still ahead. Callers that care
     /// about a fixed instant pass it; the app passes the clock.
     static func resetCredits(in limits: [String: Any], now: Date = Date()) -> CodexResetCredits {
-        guard let block = limits["rateLimitResetCredits"] as? [String: Any] else { return .unreported }
+        guard let block = creditBlock(in: limits) else { return .unreported }
         guard let inventory = inventory(in: block, now: now) else { return .unreported }
         return .available(count: inventory.count, nextExpiry: inventory.next?.expiresAt)
     }
 
-    /// The cards still left in one `rateLimitResetCredits` object.
+    /// The cards still left in one reset-credit object.
     ///
-    /// Nil when the object names neither `availableCount` nor a `credits`
-    /// array — that is "not reported", the same as a missing block.
-    /// `credits: null` is count-only. An array is the inventory: a row counts
-    /// while `status` is `available` and `expiresAt` is missing or still
-    /// ahead. An empty array, or a list with nothing still usable, is zero
-    /// even when `availableCount` is still positive — that count is the
-    /// usage snapshot, and it lags a list that has already been spent.
-    /// A list of only still-usable rows that is shorter than `availableCount`
-    /// is capped, so the higher count stands.
+    /// Nil when the object names neither a count nor a `credits` array —
+    /// that is "not reported", the same as a missing block. `credits: null`
+    /// is count-only. An array is the inventory.
+    ///
+    /// A row counts unless its status says it has been spent, or its expiry
+    /// is already past. `available`, `unknown`, a missing status, and any
+    /// other word count: the app server maps a status it does not recognise
+    /// to `unknown`, and that credit is still inside the reported count.
+    /// An empty array, or a list with nothing still usable, is zero even
+    /// when the stated count is still positive — that count can lag a list
+    /// that has already been spent. A shorter list keeps the higher count
+    /// while at least one row is still usable.
+    ///
+    /// Camel case (`rateLimitResetCredits`, `availableCount`, `expiresAt`)
+    /// and the usage document's snake case (`rate_limit_reset_credits`,
+    /// `available_count`, `expires_at`) are the same object.
     private struct CreditInventory {
         var count: Int
         var next: CodexAccountUsage.ResetCredit?
+        var basis: CodexCreditSummary.Basis
     }
+
+    /// Statuses that are no longer a card to spend. Compared without case.
+    /// Anything else, including `unknown` and a missing status, still counts.
+    private static let spentStatuses: Set<String> = [
+        "redeemed", "redeeming", "used", "consumed", "expired",
+    ]
+
+    /// Unix milliseconds begin at 10^10, which is year 2286 in seconds.
+    /// A real `expiresAt` in seconds stays as it is.
+    private static let millisecondThreshold: Double = 10_000_000_000
 
     private static func inventory(in block: [String: Any], now: Date) -> CreditInventory? {
         // `Int(_:)` traps past its range, and a number in somebody's JSON
         // is not bounded by anything.
         let stated: Int?
-        if let value = number(block["availableCount"]), value.isFinite, value >= 0, value < 1_000_000 {
+        if let value = number(field(block["availableCount"], or: block["available_count"])),
+           value.isFinite, value >= 0, value < 1_000_000 {
             stated = Int(value)
         } else {
             stated = nil
         }
-        guard let rows = creditRows(block["credits"]) else {
+        guard let rows = creditRows(field(block["credits"])) else {
             guard let stated else { return nil }
-            return CreditInventory(count: stated, next: nil)
+            return CreditInventory(count: stated, next: nil, basis: .countOnly)
         }
 
         let usable = rows.filter { isUsable($0, now: now) }
-        guard !usable.isEmpty else { return CreditInventory(count: 0, next: nil) }
-        // A shorter list of only still-usable rows is capped, so the stated
-        // count stands. A list that also holds spent or expired rows is the
+        guard !usable.isEmpty else {
+            return CreditInventory(count: 0, next: nil, basis: .inventory)
+        }
+        // A shorter list keeps the stated count, including when some of the
+        // listed rows are already spent: the protocol allows the array to be
+        // capped below `availableCount`. A list that is not shorter is the
         // inventory, and the usable rows are the count.
         let count: Int
-        if let stated, usable.count == rows.count, stated > usable.count {
+        if let stated, stated > usable.count, rows.count < stated {
             count = stated
         } else {
             count = usable.count
         }
-        return CreditInventory(count: count, next: soonestCredit(in: usable))
+        return CreditInventory(count: count, next: soonestCredit(in: usable), basis: .inventory)
+    }
+
+    /// The first value that is present. `NSNull` is not absent to `??`, so a
+    /// null camel-case field must still reach the snake-case one beside it.
+    private static func field(_ value: Any?, or other: Any? = nil) -> Any? {
+        if let value, !(value is NSNull) { return value }
+        if let other, !(other is NSNull) { return other }
+        return nil
+    }
+
+    /// The reset-credit object, under either name the two routes use.
+    private static func creditBlock(in object: [String: Any]) -> [String: Any]? {
+        let value = field(object["rateLimitResetCredits"], or: object["rate_limit_reset_credits"])
+        return value as? [String: Any]
     }
 
     /// `nil` when `credits` is null or absent: only the count is known.
@@ -235,18 +300,27 @@ struct CodexAccountUsageService: Sendable {
         return objects
     }
 
-    /// Still redeemable. Anything but `available` has been spent or is not
-    /// a card yet. An `expiresAt` that has passed is the same, whichever
-    /// status the snapshot still carries.
+    /// Still redeemable. A spent status is not, and neither is an expiry that
+    /// has passed, whichever status the snapshot still carries. No status, or
+    /// one this build does not know, is still a card.
     private static func isUsable(_ credit: [String: Any], now: Date) -> Bool {
-        guard (credit["status"] as? String) == "available" else { return false }
-        if let expires = expiryDate(credit["expiresAt"]), expires <= now { return false }
+        if let status = (credit["status"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased(),
+           spentStatuses.contains(status) {
+            return false
+        }
+        if let expires = expiry(of: credit), expires <= now { return false }
         return true
+    }
+
+    private static func expiry(of credit: [String: Any]) -> Date? {
+        expiryDate(field(credit["expiresAt"], or: credit["expires_at"]))
     }
 
     private static func soonestCredit(in rows: [[String: Any]]) -> CodexAccountUsage.ResetCredit? {
         rows.compactMap { row -> (CodexAccountUsage.ResetCredit, Date)? in
-            guard let expires = expiryDate(row["expiresAt"]) else { return nil }
+            guard let expires = expiry(of: row) else { return nil }
             let title = (row["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             return (CodexAccountUsage.ResetCredit(title: title, expiresAt: expires), expires)
         }
@@ -254,13 +328,14 @@ struct CodexAccountUsageService: Sendable {
         .0
     }
 
-    /// Unix seconds, as app-server sends them, or an ISO-8601 string from an
-    /// older payload. Anything else is no date — the card is kept, and no
-    /// expiry line is invented.
+    /// Unix seconds, as app-server sends them, milliseconds when the number
+    /// is past any second-stamp this clock will see, or an ISO-8601 string.
+    /// Anything else is no date — the card is kept, and no expiry is invented.
     private static func expiryDate(_ value: Any?) -> Date? {
         if let seconds = number(value) {
             guard seconds.isFinite, seconds > 0 else { return nil }
-            return Date(timeIntervalSince1970: seconds)
+            let unix = seconds >= millisecondThreshold ? seconds / 1000 : seconds
+            return Date(timeIntervalSince1970: unix)
         }
         if let text = value as? String {
             return CodexResetDates.parse(text)
@@ -280,13 +355,8 @@ struct CodexAccountUsageService: Sendable {
             return CodexAccountUsage.Day(date: date, tokens: Int(tokens))
         }
 
-        let creditBlock = limits["rateLimitResetCredits"] as? [String: Any]
-        let inventory: CreditInventory?
-        if let creditBlock {
-            inventory = Self.inventory(in: creditBlock, now: Date())
-        } else {
-            inventory = nil
-        }
+        let block = Self.creditBlock(in: limits)
+        let inventory = block.flatMap { Self.inventory(in: $0, now: Date()) }
 
         return CodexAccountUsage(
             days: days,
@@ -296,21 +366,24 @@ struct CodexAccountUsageService: Sendable {
             longestStreakDays: Int(Self.number(summary["longestStreakDays"]) ?? 0),
             availableResetCredits: inventory?.count ?? 0,
             nextExpiringCredit: inventory?.next,
-            creditsKnown: inventory != nil
+            creditsKnown: inventory != nil,
+            resetCreditBasis: inventory?.basis ?? .countOnly
         )
     }
 
     /// Nil when the field is absent, or present but names neither a count nor
-    /// a list. A present count of zero is a summary.
+    /// a list. A present count of zero is a summary. The basis says whether
+    /// that count came from a list.
     static func credits(from limits: [String: Any], now: Date = Date()) -> CodexCreditSummary? {
         guard
-            let block = limits["rateLimitResetCredits"] as? [String: Any],
+            let block = creditBlock(in: limits),
             let inventory = inventory(in: block, now: now)
         else { return nil }
         return CodexCreditSummary(
             available: inventory.count,
             nextExpiresAt: inventory.next?.expiresAt,
-            next: inventory.next
+            next: inventory.next,
+            basis: inventory.basis
         )
     }
 
