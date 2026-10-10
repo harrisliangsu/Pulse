@@ -156,7 +156,7 @@ struct CodexUsageService: Sendable {
     }
 
     /// The shape `wham/usage` returns.
-    private static func parseUsageResponse(_ root: [String: Any], for account: AccountKey) -> ProviderUsage {
+    static func parseUsageResponse(_ root: [String: Any], for account: AccountKey) -> ProviderUsage {
         var windows: [UsageWindow] = []
 
         // Account-wide limits, which the server leaves unnamed.
@@ -191,7 +191,8 @@ struct CodexUsageService: Sendable {
             observedAt: Date(),
             state: windows.isEmpty ? .unavailable(.noLimitsReported) : .live,
             plan: (root["plan_type"] as? String).map(planName),
-            creditBalance: creditBalance(root["credits"] as? [String: Any])
+            creditBalance: creditBalance(root["credits"] as? [String: Any]),
+            codexResetCredits: CodexAccountUsageService.credits(from: root)
         )
     }
 
@@ -256,7 +257,7 @@ struct CodexUsageService: Sendable {
 
     /// The shape `account/rateLimits/read` returns, which names its fields
     /// differently from the HTTP endpoint.
-    private static func parseAppServerResponse(_ result: [String: Any]) -> ProviderUsage {
+    static func parseAppServerResponse(_ result: [String: Any]) -> ProviderUsage {
         let groups = result["rateLimitsByLimitId"] as? [String: [String: Any]]
             ?? (result["rateLimits"] as? [String: Any]).map { ["codex": $0] }
             ?? [:]
@@ -325,7 +326,8 @@ struct CodexUsageService: Sendable {
             observedAt: Date(),
             state: windows.isEmpty ? .unavailable(.noLimitsReported) : .live,
             plan: plan.map(planName),
-            creditBalance: credits
+            creditBalance: credits,
+            codexResetCredits: CodexAccountUsageService.credits(from: result)
         )
     }
 

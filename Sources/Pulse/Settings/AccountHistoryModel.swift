@@ -150,6 +150,9 @@ final class AccountHistoryModel {
 
         if provider == .codex {
             codexAccount = await store.codexAccountUsage()
+            if let codexAccount {
+                store.noteCodexCredits(codexAccount)
+            }
         }
     }
 }

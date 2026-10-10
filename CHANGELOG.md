@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.20
+
+- **Codex reset cards show again while any remain.** The Reset cards line counts a card whose status is available, unknown, or omitted, until its expiry. A shorter list keeps the reported count. An empty list, or a list whose rows are all redeemed or expired, still removes the line when an older count is attached. The count on the usage reply is shown with the weekly window; a later list that proves none are left replaces it, and a count-only reply does not bring that line back. The Banked reset credit row under Last reset is the public announcement, not this inventory.
+
 ## 1.4.19
 
 - **Codex's credit balance is a number.** The Credit balance row in Settings showed the raw value with ten decimal places, such as "2500.0000000000". It now uses the number format of the current language, with at most two decimal places.
