@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.20</title>
+            <pubDate>Sat, 10 Oct 2026 13:41:05 -0000</pubDate>
+            <sparkle:version>1.4.20</sparkle:version>
+            <sparkle:shortVersionString>1.4.20</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.20</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.20</h2><ul><li><strong>还有重置卡时，Codex 卡片会显示「重置卡」。</strong> 状态为仍可使用、无法识别，或未写明状态的卡都计入，直到过期。明细比报告的张数短时，显示报告的张数。明细为空，或每一张都已兑换或已过期时，这一行不显示，即使回复里还带着以前的张数。用量回复里的张数会和每周剩余一起出现；若之后的明细证明已经没有卡，这一行会去掉，只有张数的回复不会把这一行加回来。「最近重置」下面的「备用重置额度」是公开公告，不是这张卡的库存。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.20">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.20/Pulse-1.4.20.zip"
+                       length="15526210"
+                       type="application/octet-stream"
+                       sparkle:edSignature="8wbs61aVHmUxxX/DhQZDfV5PdgX+qSGbbxBBLAKwpInoap8M2jkntGfJmGyTfUIsb91OmEASmo4E7yaBAW1xBg==" />
+        </item>
+        <item>
             <title>1.4.19</title>
             <pubDate>Sat, 10 Oct 2026 01:21:54 -0000</pubDate>
             <sparkle:version>1.4.19</sparkle:version>

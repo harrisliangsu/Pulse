@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.20</title>
+            <pubDate>Sat, 10 Oct 2026 13:41:05 -0000</pubDate>
+            <sparkle:version>1.4.20</sparkle:version>
+            <sparkle:shortVersionString>1.4.20</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.20</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.20</h2><ul><li><strong>Codex reset cards show again while any remain.</strong> The Reset cards line counts a card whose status is available, unknown, or omitted, until its expiry. A shorter list keeps the reported count. An empty list, or a list whose rows are all redeemed or expired, still removes the line when an older count is attached. The count on the usage reply is shown with the weekly window; a later list that proves none are left replaces it, and a count-only reply does not bring that line back. The Banked reset credit row under Last reset is the public announcement, not this inventory.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.20">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.20/Pulse-1.4.20.zip"
+                       length="15526210"
+                       type="application/octet-stream"
+                       sparkle:edSignature="8wbs61aVHmUxxX/DhQZDfV5PdgX+qSGbbxBBLAKwpInoap8M2jkntGfJmGyTfUIsb91OmEASmo4E7yaBAW1xBg==" />
+        </item>
+        <item>
             <title>1.4.19</title>
             <pubDate>Sat, 10 Oct 2026 01:21:54 -0000</pubDate>
             <sparkle:version>1.4.19</sparkle:version>
