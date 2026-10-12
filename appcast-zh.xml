@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.22</title>
+            <pubDate>Mon, 12 Oct 2026 11:06:19 -0000</pubDate>
+            <sparkle:version>1.4.22</sparkle:version>
+            <sparkle:shortVersionString>1.4.22</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.22</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.22</h2><ul><li><strong>扩展可以上报自定义指标。</strong> 例如首字时间和输出速率，显示在卡片上并画出趋势线，<a href="https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md#metrics">写法</a>见文档。感谢 <a href="https://github.com/qunqin24/Pulse/issues/80">@xkaaaaaa</a> 提议。</li><li><strong>新增「不使用代理」和「使用代理」。</strong> 在「设置 → 网络与刷新 → 代理」中选择；「使用代理」在系统代理未开启时不联网，默认仍为「跟随系统」。</li><li><strong>截图时隐藏悬浮面板。</strong> 在「设置 → 位置与行为」中打开「截图时隐藏」，支持此设置的截图工具不会截到悬浮面板；录屏和共享屏幕时仍可能显示。</li><li><strong>服务商确认没有套餐后，不再显示旧额度。</strong> 适用于 z.ai、Xiaomi Coding Plan、Grok Bot 等。</li><li><strong>清除 Xiaomi Coding Plan 的登录后，卡片提示重新登录。</strong> 不再显示过期的旧额度。</li><li><strong>重新登录的账号不会被旧登录的续期覆盖。</strong> 适用于在 Pulse 中添加的 Claude Code 和 Grok 账号。</li><li><strong>Qoder 分项显示时，到期说明不再重复。</strong> 合计行不再显示到期，整行一起到期时写作「11月7日全部到期」。感谢 <a href="https://github.com/qunqin24/Pulse/issues/76">@momusticks</a> 反馈。</li><li><strong>Qoder 积分分多天到期时，卡片说明全部批次。</strong> 例如「11月8日起分 4 批全部到期」。<a href="https://github.com/qunqin24/Pulse/issues/76">#76</a></li><li><strong>打开「分项显示积分」后，圆环跟随最接近用完的一项。</strong> 原来固定在合计上的圆环会改回自动。<a href="https://github.com/qunqin24/Pulse/issues/76">#76</a></li><li><strong>同步上游 qunqin24/Pulse</strong>（21 个提交，直到其 1.11.0，自 1.4.21 起）。本仓库是更新来源，版本为 <strong>1.4.22</strong>。没有抄入上游 1.11.0 的 Sparkle 推送。<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。</li><li><strong>这次同步里为本仓库补上的衔接：</strong> Qoder 的个人令牌（<code>pt-</code> / <code>jt-</code>），以及 Qoder IDE 和 <code>~/.qoder</code> 的发现，仍留在同一个账号上。限额行上的数字仍按环颜色方案着色。浅色表面仍走原来的外观选择（深色、浅色、跟随 Mac、液态玻璃）。设置里的扩展说明打开本仓库。更新检查仍指向本仓库。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.22">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.22/Pulse-1.4.22.zip"
+                       length="15928704"
+                       type="application/octet-stream"
+                       sparkle:edSignature="eKXXUWyxNmS0D2vI91c78qfnVIDAWjksb1B6PEnrFWmF3LUo7H8ONULA4i08rhfLz5KvjaM06Mo+gIw0JTFRDw==" />
+        </item>
+        <item>
             <title>1.4.21</title>
             <pubDate>Mon, 12 Oct 2026 01:41:51 -0000</pubDate>
             <sparkle:version>1.4.21</sparkle:version>
