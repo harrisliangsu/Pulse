@@ -32,7 +32,8 @@ struct KiloCodeTests {
         #expect(pass.resetsAt == ProfileHTTP.date("2026-03-28T04:00:00.000Z"))
         // `totalBalance_mUsd` is micro-dollars: 12,750,000 is $12.75.
         #expect(usage.creditRemaining == .init(amount: 12.75, currency: "USD"))
-        #expect(usage.creditBalance?.contains("12.75") == true)
+        // Formatted for the reader's region, which may write 12,75 (issue #79).
+        #expect(usage.creditBalance?.contains(KiloCodeUsageService.money(.init(amount: 12.75, currency: "USD"))) == true)
     }
 
     @Test("Without Kilo's total, the balance is what is left in each block")

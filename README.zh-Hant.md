@@ -77,18 +77,18 @@
 - **可選的系統通知**：預設全部關閉，直到你開啟。額度越過 75/80/90/95%、服務商回報用盡、先前提醒過的視窗重新恢復、連續多次檢查失敗（面板正悄悄顯示較舊的數字），預付額度跌破你設定的金額，以及 Codex、Claude Code 或 DeepSeek 的官方狀態頁公布工具所依賴的服務發生故障時（只限你已開啟的服務），都會收到通知。每件事只說一次：開啟此功能時已經越線的額度會立刻告知一次，之後不再重複，直到它重設或變得更糟。
 - **額度重設後自動開啟視窗（可選）**：Claude Code 和 Codex 的用量視窗，要等重設後你送出第一則訊息才開始計時。開啟後，Pulse 會在每次重設後不久、你設定的時段內，透過服務商自己的命令列工具送出一句「hi」，讓視窗從那一刻起算，而不是等你回來才開始。預設關閉；這不是 Anthropic 或 OpenAI 提供的功能，開啟前會請你確認：這麼做可能被視為規避用量限制。
 - **全螢幕空間相容**：預設只留在你目前工作的 Space，全螢幕應用那邊交給它自己。
-- **macOS 質感**：經典沉穩的純黑底板，或在 macOS 26+ 上使用原生 **Liquid Glass**。
+- **macOS 質感**：經典沉穩的純黑底板、適合明亮螢幕的淺色底板，或在 macOS 26+ 上使用原生 **Liquid Glass**。
 - **動畫標記（可選）**：把供應商圖示換成一個會隨該帳號狀態反應的小機器人——正在工作、正在取數、額度用盡或閒置。預設關閉，逐個帳號開啟；八種人格、十八種形狀，顏色也可自行指定。
 - **浮動膠囊選單與快速鍵**：右鍵點按浮動膠囊——或收合後的細條，按住 Control 點按同樣有效——可開啟含「設定…」與「結束 Pulse」的選單。在 **設定 › 一般 › 快速鍵** 中，可選擇將全域快速鍵指派給**開啟設定**與**顯示或隱藏面板**；兩者在你指定之前都保持空白。
 - **選單列用量（可選）**：在選單列圖示旁顯示用得最多的那個圓環——或你指定的帳號——可選數字、迷你圓環，或並排顯示 5 小時與每週額度（`5h/9%  週/15%`），超過警示線時變紅。開啟「選單中顯示用量面板」後，點開圖示會顯示一個用量面板：概覽列出所有帳號，每個帳號一個分頁，含各項額度與重設時間、額度餘額、花費估算（開啟 Token 消耗時）與服務方官方用量頁連結。只想用選單列的話，可在同一選單裡關掉浮動面板。
-- **五種介面語言**：英文、簡體中文、繁體中文、日文與韓文；大數單位會隨語言調整，分別為 K/M/B、万/亿、萬/億、万/億 與 만/억。
+- **六種介面語言**：英文、簡體中文、繁體中文、日文、韓文與俄文；大數單位會隨語言調整，分別為 K/M/B（英文與俄文）、万/亿、萬/億、万/億 與 만/억。
 
 ### 多帳號與本機帳本
 - **多帳號支援**：可同時監看同一服務商的多個訂閱（Claude Code、Codex、Grok、Grok Bot、Kimi Code），並排顯示並自訂標籤。
 - **Token 用量支出（僅限設定）**：預設關閉，在頁面頂端開啟後才讀取本機記錄，關閉即可停止掃描。支援本機日誌、資料庫與匯出檔，來源目錄涵蓋 **54 個用戶端來源**，包括 Gemini CLI、Cline、Roo Code、OpenClaw 與 GitHub Copilot。Cursor、Trae 等來源需要事先匯出或擷取記錄。這些來源與浮動膠囊上的 77 個配額服務商不同；各來源的支援程度與真實用戶端驗證情形不一。[來源與涵蓋範圍](Docs/token-spend-sources.md)。
 - **清楚的用量估算**：預設開啟最近 7 天，並記住你選擇的區間。費用採用公開的 API 價格，而非訂閱費用。未知價格會保留為不可用，計數不完整或時間粒度較粗者會明確標示；沒有 token 計數器的來源會如實標示為不可用。
 - **模型詳情與圖表**：點開單一模型可查看輸入／輸出／快取用量與估算費用、記錄足以支撐時的每日與每小時圖表、各 agent 的貢獻，以及可排序、分頁的明細表。將指標移到圖表上，即可讀取對應日期或小時及其 token 數量。無法取得的每日或每小時明細會標註為不可用。
-- **月報與年報**：任選一個月或一年，用和 Token 消耗同一份本機紀錄產生一組適合分享的卡片：Token 總量與估算金額、與上個月相比的變化、每一天的日曆、你最常工作的時段、背後的模型、工具與專案、連續使用天數；填上每月訂閱花多少錢，還能看到訂閱回本了幾倍。每張卡都能存成圖片、複製或分享，五種語言都支援；專案名稱可以一鍵隱藏。從 Token 消耗頁面開啟；也可以開啟每月 1 日的提醒，告訴你上個月的月報好了。
+- **月報與年報**：任選一個月或一年，用和 Token 消耗同一份本機紀錄產生一組適合分享的卡片：Token 總量與估算金額、與上個月相比的變化、每一天的日曆、你最常工作的時段、背後的模型、工具與專案、連續使用天數；填上每月訂閱花多少錢，還能看到訂閱回本了幾倍。每張卡都能存成圖片、複製或分享，六種語言都支援；專案名稱可以一鍵隱藏。從 Token 消耗頁面開啟；也可以開啟每月 1 日的提醒，告訴你上個月的月報好了。
 - **七十七個服務商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（國際與中國大陸）、Volcengine、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX、Qoder 與階躍星辰（StepFun）；另有 Abacus AI、Aixy、Alibaba Coding Plan、Alibaba Token Plan、Amp、Atlas Cloud、Augment Code、Bifrost、Chutes、ClawRouter、ClinePass、Codebuff、DeepInfra、DevPass、ElevenLabs、Factory、Gemini、GitKraken AI、Hugging Face、Hyper、IBM Bob、JetBrains AI、Kilo Code、LiteLLM、LLM API Key Proxy、LongCat、Manus、Mistral、Moonshot、Neuralwatt、Notion AI、Nous Portal、OpenAI API、Perplexity、Poe、Qwen Cloud、Raycast AI、Replicate、Sakana AI、Synthetic、T3 Chat、TypeSafe、v0、Venice、Vercel AI Gateway、Warp、Windsurf、xAI API、xKiro、Zed、ZenMux、ZoomMate。
 - **可腳本化**：`Pulse --json` 印出最近一次讀數——方案、每一條額度、重設時間，以及數字有多舊——可接 tmux、sketchybar、Raycast 或 shell 提示字元。它只讀快取，所以高頻輪詢幾乎沒有成本。
 - **開發者整合**：在設定中匯出 Raycast 擴充功能，以及可直接設定的 tmux、sketchybar 與 shell 指令碼。帳號連結會直接開啟對應頁面。[設定指南](Docs/integrations.md)。
@@ -149,7 +149,7 @@ Pulse 只呈現各服務回報的數字，每個百分比都來自那份回覆�
 | **sub2api** | 貼上的群組金鑰；閘道位址自行輸入 | 讀取自架 [sub2api](https://github.com/Wei-Shaw/sub2api) 閘道依群組核算的用量——餘額、配額、訂閱或速率限制視窗，視群組設定而定（[Docs/providers/sub2api.md](Docs/providers/sub2api.md)） |
 | **New API** | 貼上的 `sk-` 金鑰；閘道位址自行輸入 | 讀取自架 [New API](https://github.com/QuantumNous/new-api) 閘道的餘額，依部署端設定的幣別顯示；不顯示百分比，因為回覆中的比例可能有兩種含義（[Docs/providers/newapi.md](Docs/providers/newapi.md)） |
 | **V2EX** | 貼上的個人存取權杖 | AI Chat 滾動 5 小時的 token 配額，買過加油包再多畫一個環；視窗尚未開始時不顯示倒數（[Docs/providers/v2ex.md](Docs/providers/v2ex.md)） |
-| **Qoder** | 無需輸入——讀取瀏覽器中 qoder.com 或 qoder.com.cn 的登入工作階段，也可以手動貼上 `Cookie:` 標頭或個人令牌（`pt-` / `jt-`） | 點數額度（方案加加購包），依 Qoder 回報的重設時間顯示；團隊方案的共用點數另外畫一個環，絕不相加；點數為零時會直接說明，而不是畫一個空環（[Docs/providers/qoder.md](Docs/providers/qoder.md)） |
+| **Qoder** | 無需輸入——讀取瀏覽器中 qoder.com 或 qoder.com.cn 的登入工作階段，也可以手動貼上 `Cookie:` 標頭或個人令牌（`pt-` / `jt-`） | 點數額度（方案加加購包），依 Qoder 回報的重設時間顯示；團隊方案的共用點數另外畫一個環，絕不相加；可選擇將方案點數、加購包與專屬點數分項顯示；點數為零時會直接說明，而不是畫一個空環（[Docs/providers/qoder.md](Docs/providers/qoder.md)） |
 | **階躍星辰（StepFun）** | 無需輸入——讀取瀏覽器中 platform.stepfun.com 或 platform.stepfun.ai 的登入工作階段，也可以手動貼上 `Cookie:` 標頭 | Step Plan：Token Plan 的每月 Credit 與加購包合成一個環，並顯示最早一批的到期日；舊版 Coding Plan 顯示 5 小時與每週兩個視窗；沒有訂閱時會直接說明，而不是畫一個環（[Docs/providers/stepfun.md](Docs/providers/stepfun.md)） |
 
 ### 更多服務商

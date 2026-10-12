@@ -17,7 +17,7 @@ Historical matrix and disagreement numbers: [decisions/panel-frame.md](decisions
 
 ## Localization
 
-Five languages: English, Simplified Chinese, Traditional Chinese, Japanese and Korean. Strings in `Sources/Pulse/Resources/{en,zh-Hans,zh-Hant,ja,ko}.lproj`. `Package.swift` sets `defaultLocalization: "en"`.
+Six languages: English, Simplified Chinese, Traditional Chinese, Japanese, Korean and Russian. Strings in `Sources/Pulse/Resources/{en,zh-Hans,zh-Hant,ja,ko,ru}.lproj`. `Package.swift` sets `defaultLocalization: "en"`.
 
 - Language follows the system unless Settings pins one. Takes effect **without relaunch**: `LocalizationSource` swaps the `.lproj` sub-bundle. Lookups are a function call, so SwiftUI has nothing to observe — views that show copy carry `.id(settings.language)`.
 - `UsageWindow.Kind` and `ProviderUsage.Unavailability` are **cases, not stored strings**, so a reading taken in one language is not frozen when the user switches.
@@ -28,6 +28,7 @@ Five languages: English, Simplified Chinese, Traditional Chinese, Japanese and K
 - **No conditional inside `Text(localized:)`.** The key scanner reads the bare tail after `localized:` and can match an unrelated key. Build the string in a property first.
 - Dates, times, and money use `LocalizationSource.locale`, not `Locale.autoupdatingCurrent`.
 - Large numbers: `TokenCount.short` uses 万 / 亿 where `LocalizationSource.myriadUnits` returns units. Those unit characters live in code, not the strings file.
+- No plural rules: a `.strings` value is one form for every count, and Russian needs three. Russian copy keeps a number out of agreement — an abbreviated unit (`%@ дн.`, `%@ мин`) or a label before the figure (`Токенов: %@`) — rather than picking one form that is wrong for most counts.
 - Chinese full stop `。` is full-width and already has trailing space; do not add another (`glassSubtitle`).
 - SwiftPM has lowercased `zh-Hans.lproj` to `zh-hans.lproj` in the built bundle (the current toolchain does not, and CI accepts either). Where it does, `Bundle.preferredLocalizations` is case-insensitive but `path(forResource: "zh-Hans", ofType: "lproj")` returns nil, so `LocalizationSource` matches the folder name case-insensitively.
 
@@ -48,7 +49,7 @@ Why implicit `Text` fails, and the scanner’s blind spots: [decisions/localizat
 
 ## Writing users can read
 
-**Everything a user can see is held to one standard**, in every language, on every surface: interface copy in the five `.strings` files, notification text, the Sparkle update window, the CHANGELOG entry (which becomes both the GitHub release page and the update dialog), the READMEs, the `Docs/setup/` pages and every issue reply. If somebody decides whether to install, click or trust something based on the words, the words are user-visible.
+**Everything a user can see is held to one standard**, in every language, on every surface: interface copy in the six `.strings` files, notification text, the Sparkle update window, the CHANGELOG entry (which becomes both the GitHub release page and the update dialog), the READMEs, the `Docs/setup/` pages and every issue reply. If somebody decides whether to install, click or trust something based on the words, the words are user-visible.
 
 The standard — no script checks any of this, it is a read-through job, done on the rows a user actually sees:
 
@@ -66,7 +67,7 @@ The standard — no script checks any of this, it is a read-through job, done on
 
 The package resource bundle must land in `Contents/Resources` in a real app (`Bundle.module` looks through `Bundle.main.resourceURL`). Leave it out and the app runs, silently in English, with no marks. [releasing.md](releasing.md).
 
-Shipping the `.lproj` folders is **not enough on its own**. CFBundle resolves a nested bundle's language against the **main** bundle's declared localizations, so with no `CFBundleLocalizations` in `Pulse.app/Contents/Info.plist`, `Bundle.module.preferredLocalizations` comes back `["en"]` on a Mac set to `zh-Hans-CN` and every lookup returns the English key — strings all present, all unused. `Scripts/bundle.sh` declares all five; CI asserts each one survives in the plist *and* as an `.lproj` inside the resource bundle. Adding a language means adding it in **four** places: a new `.lproj`, an `AppLanguage` case, `CFBundleLocalizations` in `bundle.sh`, and the CI loop.
+Shipping the `.lproj` folders is **not enough on its own**. CFBundle resolves a nested bundle's language against the **main** bundle's declared localizations, so with no `CFBundleLocalizations` in `Pulse.app/Contents/Info.plist`, `Bundle.module.preferredLocalizations` comes back `["en"]` on a Mac set to `zh-Hans-CN` and every lookup returns the English key — strings all present, all unused. `Scripts/bundle.sh` declares all six; CI asserts each one survives in the plist *and* as an `.lproj` inside the resource bundle. Adding a language means adding it in **four** places: a new `.lproj`, an `AppLanguage` case, `CFBundleLocalizations` in `bundle.sh`, and the CI loop.
 
 **Numbers are part of the translation.** `LocalizationSource.myriadUnits` decides whether a token count is grouped by thousands or by 10⁴/10⁸, and in whose characters — 亿 for simplified Chinese, 億 for traditional Chinese and Japanese, 억 for Korean. It returns the characters rather than a `Bool` precisely so those cannot be shared by accident; the characters live in code, not in the `.strings` files, because they belong to the numeral system rather than to the copy. `MyriadUnitsTests` pins it, including that `zh_TW` / `zh_HK` / `zh_MO` are read as traditional when the locale names a region but no script.
 

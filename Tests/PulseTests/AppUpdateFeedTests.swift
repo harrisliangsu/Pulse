@@ -19,6 +19,7 @@ struct AppUpdateFeedTests {
         #expect(AppUpdate.feedURL(for: .english) == Self.base + "appcast-en.xml")
         #expect(AppUpdate.feedURL(for: .japanese) == Self.base + "appcast-en.xml")
         #expect(AppUpdate.feedURL(for: .korean) == Self.base + "appcast-en.xml")
+        #expect(AppUpdate.feedURL(for: .russian) == Self.base + "appcast-en.xml")
     }
 
     @Test func anotherBaseStillPicksTheFile() {

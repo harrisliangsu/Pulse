@@ -74,15 +74,13 @@ struct RecapDeckTests {
         #expect(abs(payback.multiple - 6.71) < 0.001)
     }
 
-    @Test("Payback is left out when 1% or more of the tokens had no price, and floor-noted below that")
+    @Test("Unpriced work keeps the payback card, with the floor noted")
     func unpricedPayback() throws {
         let tenth = Self.deck(RecapSamples.month(unpricedShare: 0.1))
-        #expect(tenth.payback == nil)
-        #expect(!tenth.cards.contains(.payback))
+        #expect(tenth.payback != nil)
+        #expect(tenth.cards.contains(.payback))
         #expect(tenth.costIsFloor)
-
-        let one = Self.deck(RecapSamples.month(unpricedShare: 0.01))
-        #expect(one.payback == nil, "1% is not below 1%")
+        #expect(tenth.provenance.contains(String.localized("Some work had no published price, so the money is a floor.")))
 
         let sliver = Self.deck(RecapSamples.month(unpricedShare: 0.004))
         #expect(sliver.payback != nil)
@@ -99,8 +97,12 @@ struct RecapDeckTests {
     private static func running(_ period: Recap.Period, now: Date, tokens: Int = 1_000) -> Recap {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
+        // A record a year back as well, so the records reach before the period
+        // and these test the proration by days gone, not `recordsBegin`.
+        let yearBack = calendar.date(byAdding: .year, value: -1, to: now)!
         let ledger = UsageLedgerReader.price(
-            [UsageLedgerReader.slotKey(for: now, calendar: calendar): ["claude": TokenTally(input: tokens)]],
+            [UsageLedgerReader.slotKey(for: now, calendar: calendar): ["claude": TokenTally(input: tokens)],
+             UsageLedgerReader.slotKey(for: yearBack, calendar: calendar): ["claude": TokenTally(input: 1)]],
             with: ["claude": ModelPrice(input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75, name: "Claude")],
             calendar: calendar
         )

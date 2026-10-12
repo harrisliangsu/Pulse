@@ -15,10 +15,10 @@ Usage:
 files (Chinese in CHANGELOG.zh-CN.md, English in CHANGELOG.md). Each new item
 carries one `<description xml:lang="…">` per language and Sparkle shows the one
 the system's preferred languages pick. Chinese goes out as both `zh-Hans` and
-`zh-Hant`. Japanese and Korean readers get English. Pulse can also be set to a
-language other than the system's, which Sparkle cannot see, so the script
-writes one feed per language as well (`appcast-zh.xml`, `appcast-en.xml`) and
-the app reads the one for the language it is set to.
+`zh-Hant`. Japanese, Korean and Russian readers get English. Pulse can also be
+set to a language other than the system's, which Sparkle cannot see, so the
+script writes one feed per language as well (`appcast-zh.xml`, `appcast-en.xml`)
+and the app reads the one for the language it is set to.
 
 Every feed URL is this repository's own file on GitHub
 (`raw.githubusercontent.com/<owner>/Pulse/main/`). This fork does not publish

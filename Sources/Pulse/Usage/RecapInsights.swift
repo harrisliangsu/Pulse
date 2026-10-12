@@ -24,24 +24,30 @@ struct RecapInsights: Sendable {
 
     // MARK: - Weekdays and weekends
 
-    /// Tokens by day of the week, Monday first. Nil for a weekday the period
-    /// has not had a single day of (the first days of a running month), which
-    /// is unknown rather than quiet.
-    var weekdayTokens: [Int?] {
+    /// Tokens on an average day of each day of the week, Monday first: the
+    /// total over how many of that day the period had (quiet ones included,
+    /// none before the first record). Nil for a weekday the period has not had
+    /// a single day of (the first days of a running month), which is unknown
+    /// rather than quiet.
+    ///
+    /// **An average, not a total.** September 2026 had five Tuesdays and
+    /// Wednesdays and four of the rest, and the totals called Wednesday the
+    /// busiest when Monday was, day for day.
+    var weekdayAverages: [Int?] {
         var tokens = [Int](repeating: 0, count: 7)
-        var seen = [Bool](repeating: false, count: 7)
-        for day in recap.days {
+        var count = [Int](repeating: 0, count: 7)
+        for day in recap.days where !recap.isBeforeRecords(day.date) {
             let index = weekdayIndex(of: day.date)
             tokens[index] += day.tokens
-            seen[index] = true
+            count[index] += 1
         }
-        return (0..<7).map { seen[$0] ? tokens[$0] : nil }
+        return (0..<7).map { count[$0] > 0 ? tokens[$0] / count[$0] : nil }
     }
 
-    /// The heaviest day of the week (Monday = 0), the earliest of a tie; nil
-    /// when none had work.
+    /// The heaviest day of the week on average (Monday = 0), the earliest of a
+    /// tie; nil when none had work.
     var busiestWeekday: Int? {
-        let tokens = weekdayTokens
+        let tokens = weekdayAverages
         var best: Int?
         for index in 0..<7 where (tokens[index] ?? 0) > (best.flatMap { tokens[$0] } ?? 0) { best = index }
         return best
@@ -68,7 +74,9 @@ struct RecapInsights: Sendable {
         guard recap.days.contains(where: { $0.tokens > 0 }) else { return nil }
         var weekday = (tokens: 0, days: 0, active: 0)
         var weekend = (tokens: 0, days: 0, active: 0)
-        for day in recap.days {
+        // Days before the first record were not seen, so they are not days
+        // the period "had" of either kind.
+        for day in recap.days where !recap.isBeforeRecords(day.date) {
             let isWeekend = Self.isWeekend(weekdayIndex: weekdayIndex(of: day.date))
             if isWeekend {
                 weekend = (weekend.tokens + day.tokens, weekend.days + 1, weekend.active + (day.tokens > 0 ? 1 : 0))
@@ -239,40 +247,34 @@ struct RecapInsights: Sendable {
         return cost / Double(recap.activeDays)
     }
 
-    /// Whether every day with work has a cost, and some do: only then can a
-    /// day be called the dearest, or the days drawn as a series.
-    private var daysAreFullyPriced: Bool {
-        let worked = recap.days.filter { $0.tokens > 0 }
-        // A price of exactly zero (a free model) is a price; only nil is not.
-        return !worked.isEmpty && worked.allSatisfy { $0.cost != nil }
-    }
-
-    /// The day that cost most, the earliest of a tie. Nil where any working
-    /// day has no price: the dearest might be that one.
+    /// The day that cost most among the days with a price, the earliest of a
+    /// tie; nil when no day had one. A day with work and no price at all is
+    /// left out of the running rather than taking the tile away — it once did,
+    /// and one Kimi-only day (0.05% of July) removed it. The card already says
+    /// the money is a floor where any work went unpriced.
     var costliestDay: Recap.Day? {
-        guard daysAreFullyPriced else { return nil }
         var best: Recap.Day?
         for day in recap.days where (day.cost ?? 0) > (best?.cost ?? 0) { best = day }
         return best
     }
 
     /// Money by day (a month) or by month (a year), one entry per day or
-    /// month with a quiet one a real zero and a month still to come in a
-    /// running year nil — **nil altogether unless every one with work has a
-    /// cost**: a bar for an unpriced day would be drawn as a zero.
+    /// month: a quiet one a real zero, and **nil for one with no figure** — a
+    /// month still to come or before the first record, or work with no price
+    /// at all, which is not a zero. Nil altogether when nothing had a price.
     var costBars: [Double?]? {
+        let bars: [Double?]
         switch recap.period {
         case .month:
-            guard daysAreFullyPriced else { return nil }
-            return recap.days.map { $0.tokens > 0 ? ($0.cost ?? 0) : 0 }
+            bars = recap.days.map { $0.tokens > 0 ? $0.cost : 0 }
         case .year:
-            let worked = recap.months.filter { $0.tokens > 0 }
-            guard recap.months.count == 12, !worked.isEmpty, worked.allSatisfy({ $0.cost != nil }) else { return nil }
-            return recap.months.enumerated().map { index, month in
-                if isMonthToCome(index) { return nil }
-                return month.tokens > 0 ? (month.cost ?? 0) : 0
+            guard recap.months.count == 12 else { return nil }
+            bars = recap.months.enumerated().map { index, month in
+                if isMonthUnrecorded(index) { return nil }
+                return month.tokens > 0 ? month.cost : 0
             }
         }
+        return bars.contains { ($0 ?? 0) > 0 } ? bars : nil
     }
 
     /// Whether month `index` (0 for January) of a running year has not begun:
@@ -281,6 +283,21 @@ struct RecapInsights: Sendable {
         guard recap.isInProgress, case .year = recap.period, let last = recap.days.last?.date else { return false }
         let starts = recap.monthStarts
         return index < starts.count && starts[index] > last
+    }
+
+    /// Whether month `index` of a year ended before this Mac's first record:
+    /// nothing was seen in it, so it is not a quiet month either.
+    func isMonthBeforeRecords(_ index: Int) -> Bool {
+        guard case .year = recap.period, let begin = recap.recordsBegin else { return false }
+        let starts = recap.monthStarts
+        guard index < starts.count,
+              let next = recap.calendar.date(byAdding: .month, value: 1, to: starts[index]) else { return false }
+        return next <= begin
+    }
+
+    /// A month with nothing to show: still to come, or before the records.
+    func isMonthUnrecorded(_ index: Int) -> Bool {
+        isMonthToCome(index) || isMonthBeforeRecords(index)
     }
 
     // MARK: - Who worked when
@@ -313,7 +330,7 @@ struct RecapInsights: Sendable {
     func monthMarks(of agent: Recap.AgentShare) -> [Mark] {
         let used = Set(agent.activeDates.map { calendar.component(.month, from: $0) })
         return recap.months.enumerated().map { index, month in
-            if isMonthToCome(index) { return .toCome }
+            if isMonthUnrecorded(index) { return .toCome }
             if used.contains(month.month) { return .used }
             return month.tokens > 0 ? .other : .quiet
         }
