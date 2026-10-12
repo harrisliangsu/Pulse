@@ -40,16 +40,16 @@ extension PanelGlobalsSuite {
                 let localRail = CGRect(x: offsets.leading, y: offsets.top, width: rail.width, height: rail.height)
                 let surface = PanelHitArea.notchSurface(rail: localRail, notchSize: notch.size)
                 #expect(surface.minY == 0)
-                // The berth is the free rail, centred on the docked one. The
-                // docked rail is longer by the flare room at each end, which
-                // the berth does not claim, so it does not contain that rail.
-                let free = DockLayout.size(for: count, on: .horizontal, docked: false)
-                #expect(abs(surface.width - max(free.width, notch.width)) < 0.01)
-                #expect(abs(surface.midX - localRail.midX) < 0.01)
-                let flareRoom = DockLayout.endPadding(docked: true) - DockLayout.endPadding(docked: false)
-                #expect(surface.contains(localRail.insetBy(dx: flareRoom, dy: 0)))
-                // The housing sits above the rings, and nothing is added under
-                // them to answer it.
+                // Shorter than the docked rail by the room its own flares would
+                // take (the notch's fillets are drawn outside the body), but every
+                // ring is still on it.
+                let firstRing = localRail.minX + DockLayout.firstRingAlong(on: .horizontal)
+                let lastRing = firstRing + CGFloat(count - 1) * DockLayout.ringStep(on: .horizontal)
+                #expect(surface.minX <= firstRing - DockLayout.ringDiameter / 2)
+                #expect(surface.maxX >= lastRing + DockLayout.ringDiameter / 2)
+                #expect(surface.minY <= localRail.minY)
+                // The rail ends the surface: the housing sits above the rings,
+                // and nothing is added under them to answer it.
                 #expect(surface.maxY == localRail.maxY)
                 #expect(surface.width >= notch.width)
                 #expect(panel.width >= surface.width)

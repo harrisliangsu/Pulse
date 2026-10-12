@@ -100,8 +100,8 @@ struct Recap: Sendable, Equatable {
     let cost: Double?
     /// Tokens of the period with no published price behind them
     /// (`SpendSummary.unpricedTokens`). Above zero, `cost` is the priced part
-    /// only — a floor — and the cards say so; at 1% or more of `tokens` the
-    /// payback card is left out (`RecapDeck.payback`).
+    /// only — a floor — and the cards say so, the payback card included
+    /// (`RecapDeck.payback`).
     let unpricedTokens: Int
     /// The same span of the previous period, for "up 38% on August". Nil when
     /// nothing was recorded then.
@@ -117,17 +117,17 @@ struct Recap: Sendable, Equatable {
     /// Year recaps: twelve entries. Month recaps: empty.
     let months: [Month]
 
-    /// Tokens by local hour, 24 entries, 0 = midnight. Nil when any store
-    /// behind the period has only session- or report-level timing, so an
-    /// hour shape would be invented (`SpendSummary.hasAggregateTiming`).
+    /// Tokens by local hour, 24 entries, 0 = midnight, from the tools that
+    /// record a time of day (`untimedTokens` is the rest). Nil when none did.
     let hours: [Int]?
     let peakHour: Int?
     /// Share of the period's tokens in 21:00–04:59.
     let lateShare: Double?
-    /// The latest a session ran past midnight, as minutes after midnight
-    /// (0..<300, i.e. before 05:00). Nil when no session did.
+    /// The latest any stretch of work ended, as minutes after the midnight of
+    /// the day it began — past 1440 when it ran into the next morning
+    /// (`Recap.workdays`). Nil with no timed work.
     let latestMinute: Int?
-    /// Nights on which a session ran past midnight.
+    /// Stretches of work that ran over a midnight.
     let lateNights: Int
     let persona: Persona?
 
@@ -162,11 +162,51 @@ struct Recap: Sendable, Equatable {
     /// Whether some store behind it may be missing counts: the total is a floor.
     let isPartial: Bool
 
+    /// The first day this Mac has any record for, when that falls inside the
+    /// period after its first day; nil when the records reach back to the
+    /// start or before it.
+    ///
+    /// **Before it Pulse saw nothing, which is not a quiet day.** A year whose
+    /// records began in May drew January to April as zeros and counted them in
+    /// every denominator — "active 88 of 282 days", the workday split, the
+    /// plan price prorated from January 1. `observedDays` is the count those
+    /// use, and a month entirely before it is drawn as unrecorded.
+    var recordsBegin: Date? = nil
+
+    /// The days `previousTokens` was counted over: as many as this period has
+    /// had while it runs (fewer where the period before is shorter), all of
+    /// the period before once this one is over, and none from before the
+    /// first record. Nil where `previousTokens` is.
+    var previousDays: Int? = nil
+
+    /// Tokens from tools that record no time of day, left out of `hours` and
+    /// everything read from it (peak, persona, busiest hours, late nights).
+    /// Zero when every tool records one.
+    var untimedTokens: Int = 0
+
+    /// Tokens from tools whose counts may be missing or do not add up, left
+    /// out of `cacheHitRate`. Zero when the rate covers every tool that
+    /// records the cache, or when there is no rate.
+    var cacheUnmeasuredTokens: Int = 0
+
     /// The calendar the recap was built with, so the cards that lay out its
     /// days (the year's twelve months) count them the way it did.
     var calendar: Calendar = Recap.calendar
 
     var isEmpty: Bool { tokens == 0 }
+
+    /// The period's days Pulse could have seen work on: from `recordsBegin`
+    /// (or the start) up to today or the end. `elapsedDays` without a later
+    /// first record; the "same period" comparison keeps `elapsedDays`.
+    var observedDays: Int {
+        guard let recordsBegin else { return elapsedDays }
+        return days.count { $0.date >= recordsBegin }
+    }
+
+    /// Whether a day falls before the first record this Mac holds.
+    func isBeforeRecords(_ date: Date) -> Bool {
+        recordsBegin.map { date < $0 } ?? false
+    }
 
     /// The calendar every recap is built, offered and drawn in: Gregorian,
     /// weeks from Monday, the system's time zone. **Not `Calendar.current`** —
@@ -213,5 +253,50 @@ struct Recap: Sendable, Equatable {
             index -= 1
         }
         return (current, longest)
+    }
+}
+
+extension Recap {
+    /// The four hours in a row, wrapping past midnight, that held the most of
+    /// the period's tokens — where this person's day actually bunched.
+    ///
+    /// It replaced a fixed 21:00–04:59 band on the rhythm card, which read as
+    /// a claim about when *you* worked ("8% … between 9 PM and 5 AM") while
+    /// saying the same hours for everyone. `lateShare` still measures that
+    /// band for `--recap`.
+    struct HourWindow: Equatable, Sendable {
+        static let length = 4
+
+        /// The first hour, 0..<24.
+        let start: Int
+        /// Of the period's hour tokens, 0...1.
+        let share: Double
+
+        /// The hour the window stops at, exclusive: 10 for one starting at 6.
+        var end: Int { (start + Self.length) % 24 }
+
+        func contains(_ hour: Int) -> Bool {
+            ((hour - start) % 24 + 24) % 24 < Self.length
+        }
+    }
+
+    var busiestHours: HourWindow? { hours.flatMap(Self.busiestHours(in:)) }
+
+    /// The earliest start among equals, so a tie reads the same twice — the
+    /// rule `peakHour` follows. Nil without 24 hours or without any work.
+    static func busiestHours(in hours: [Int]) -> HourWindow? {
+        guard hours.count == 24 else { return nil }
+        let total = hours.reduce(0, +)
+        guard total > 0 else { return nil }
+        var best = 0
+        var bestTokens = -1
+        for start in 0..<24 {
+            let tokens = (0..<HourWindow.length).reduce(0) { $0 + hours[(start + $1) % 24] }
+            if tokens > bestTokens {
+                best = start
+                bestTokens = tokens
+            }
+        }
+        return HourWindow(start: best, share: Double(bestTokens) / Double(total))
     }
 }

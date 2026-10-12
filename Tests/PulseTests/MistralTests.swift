@@ -89,7 +89,9 @@ struct MistralTests {
         #expect(usage.windows.map(\.usedFraction) == [0.425, 0.12])
         #expect(usage.windows.allSatisfy { $0.kind == .monthly && !$0.reportsLength })
         #expect(usage.creditRemaining == .init(amount: 13.25, currency: "USD"))
-        #expect(usage.creditBalance?.contains("13.25") == true)
+        // Formatted for the reader's region, which may write 13,25: compare
+        // against the same formatting rather than a decimal point (issue #79).
+        #expect(usage.creditBalance?.contains(MistralUsageService.money(.init(amount: 13.25, currency: "USD"))) == true)
     }
 
     @Test("Nothing reported at all is no limits")

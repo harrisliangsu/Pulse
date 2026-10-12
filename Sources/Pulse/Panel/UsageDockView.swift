@@ -53,7 +53,12 @@ enum DockLayout {
     /// the usual 6pt sat on it — under the ring, beside it, across or down a
     /// side (issue #73). The extra keeps the same clear gap from the arc as
     /// from a ring without one.
-    static var ringToTextSpacing: CGFloat { (PanelMetrics.showsWindowClock ? 11 : 6) * PanelMetrics.scale }
+    static var ringToTextSpacing: CGFloat { 6 * PanelMetrics.scale + clockReach }
+
+    /// How much further the time-until-reset arc stands out than the ring it
+    /// circles: 5pt at standard size while it is on, nothing while it is off.
+    /// Measured from `UsageRingView.clockDiameter` and the clock's stroke.
+    static var clockReach: CGFloat { PanelMetrics.showsWindowClock ? 5 * PanelMetrics.scale : 0 }
     static var percentFontSize: CGFloat { 13 * PanelMetrics.scale }
     /// Rendered line height of the percent label, and its width at "100%".
     ///
@@ -253,7 +258,31 @@ enum DockLayout {
     static func thickness(on axis: PanelEdge.Axis, docked: Bool = true) -> CGFloat {
         guard axis == .horizontal, showsPercentages(on: .horizontal),
               !labelsBeside(on: axis, docked: docked) else { return width }
-        return itemHeight + crossPadding(on: axis, docked: docked) * 2
+        let insets = crossInsets(on: axis, docked: docked)
+        return itemHeight + insets.leading + insets.trailing
+    }
+
+    /// The padding either side of the items across the rail — top and bottom
+    /// lying across, left and right down a side.
+    ///
+    /// **The ring's side gets 10pt more while the time-until-reset arc is
+    /// on**, when the rail lies across with its figures stacked over or under
+    /// the rings. The arc stands 5pt further out than the ring, and with
+    /// figures above the rings at the top dock it sat 3pt off the rail's
+    /// bottom edge, under a notch's whole housing of black (issue #78). Its
+    /// own reach alone (5pt) was tried first and still read cramped; 10 was
+    /// picked by eye on the bundled app, which leaves 5pt more past the arc
+    /// than a ring without one has. The figures' side is left as it was: the
+    /// gap between a ring and its figure already allows for the arc
+    /// (`ringToTextSpacing`). Down a side, and with figures beside or off, the
+    /// rail is far wider than a ring and its arc, so nothing is added.
+    static func crossInsets(on axis: PanelEdge.Axis,
+                            docked: Bool = true) -> (leading: CGFloat, trailing: CGFloat) {
+        let padding = crossPadding(on: axis, docked: docked)
+        guard axis == .horizontal, showsPercentages(on: .horizontal),
+              !labelsBeside(on: axis, docked: docked) else { return (padding, padding) }
+        let extra = PanelMetrics.showsWindowClock ? 10 * PanelMetrics.scale : 0
+        return labelLeads ? (padding, padding + extra) : (padding + extra, padding)
     }
 
     /// Rail length for a given number of providers: the padding at each end +
@@ -285,8 +314,10 @@ enum DockLayout {
         let item = axis == .vertical
             ? ringDiameter
             : (showsPercentages(on: axis) ? itemHeight : ringDiameter)
-        let lead = axis == .horizontal ? ringOffsetInItem(on: axis) : 0
-        return (thickness(on: axis, docked: docked) - item) / 2 + lead + ringDiameter / 2
+        guard axis == .horizontal, showsPercentages(on: axis) else {
+            return (thickness(on: axis, docked: docked) - item) / 2 + ringDiameter / 2
+        }
+        return crossInsets(on: axis, docked: docked).leading + ringOffsetInItem(on: axis) + ringDiameter / 2
     }
 
     /// How far along the rail the first ring's centre sits, and the step from
@@ -625,7 +656,8 @@ struct UsageDockView: View {
         // the flare needs room inside, and the flare is at the rail's ends
         // whichever way it is lying.
         .padding(edge.isVertical ? .vertical : .horizontal, DockLayout.endPadding(docked: isDocked))
-        .padding(edge.isVertical ? .horizontal : .vertical, DockLayout.crossPadding(on: edge.axis, docked: isDocked))
+        .padding(edge.isVertical ? .leading : .top, DockLayout.crossInsets(on: edge.axis, docked: isDocked).leading)
+        .padding(edge.isVertical ? .trailing : .bottom, DockLayout.crossInsets(on: edge.axis, docked: isDocked).trailing)
         .frame(width: railSize.width, height: railSize.height)
     }
 }

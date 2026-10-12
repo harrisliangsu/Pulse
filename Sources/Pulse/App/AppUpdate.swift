@@ -87,7 +87,7 @@ final class AppUpdate {
     /// language setting cannot reach. So a Pulse set to a language reads that
     /// language's copy of the feed (`appcast-zh.xml`, `appcast-en.xml`, written
     /// by `Scripts/appcast.py` beside the main one). The changelog is written in
-    /// Chinese and English; Japanese and Korean read the English.
+    /// Chinese and English; Japanese, Korean and Russian read the English.
     ///
     /// `base` defaults to this fork. A bundle's `SUFeedURL` is used only when
     /// it already names harrisliangsu/Pulse on `raw.githubusercontent.com`, so
@@ -96,7 +96,7 @@ final class AppUpdate {
         let file = switch language {
         case .system: "appcast.xml"
         case .chineseSimplified, .chineseTraditional: "appcast-zh.xml"
-        case .english, .japanese, .korean: "appcast-en.xml"
+        case .english, .japanese, .korean, .russian: "appcast-en.xml"
         }
         let root = base.hasSuffix("/") ? base : base + "/"
         return root + file

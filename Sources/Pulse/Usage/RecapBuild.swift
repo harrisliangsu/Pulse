@@ -64,6 +64,47 @@ extension Recap {
     /// Work before this local hour, after midnight, belongs to the night before.
     static let nightEndsAtHour = 5
 
+    /// The quiet that ends a stretch of work.
+    static let workBreak: TimeInterval = 3 * 3600
+    /// A stretch longer than this is a process left running, not a workday.
+    static let longestWorkday: TimeInterval = 20 * 3600
+
+    /// One stretch of work: when it ended, as minutes after the midnight of
+    /// the day it belongs to (so past 1440 the next morning), and whether it
+    /// ran past that midnight. **A stretch that begins before 05:00
+    /// (`nightEndsAtHour`) belongs to the evening before** — 01:30 to 02:00
+    /// after an early night is a late night, not a morning's start.
+    struct Workday: Equatable, Sendable {
+        let endMinute: Int
+        let crossesMidnight: Bool
+    }
+
+    static func workdays(_ instants: [Date], calendar: Calendar) -> [Workday] {
+        let sorted = instants.sorted()
+        guard var first = sorted.first else { return [] }
+        var last = first
+        var result: [Workday] = []
+        func close() {
+            guard last.timeIntervalSince(first) <= longestWorkday else { return }
+            let owner = calendar.date(byAdding: .hour, value: -nightEndsAtHour, to: first) ?? first
+            let midnight = calendar.startOfDay(for: owner)
+            let next = calendar.date(byAdding: .day, value: 1, to: midnight) ?? midnight
+            result.append(Workday(
+                endMinute: Int(last.timeIntervalSince(midnight) / 60),
+                crossesMidnight: last >= next
+            ))
+        }
+        for instant in sorted.dropFirst() {
+            if instant.timeIntervalSince(last) > workBreak {
+                close()
+                first = instant
+            }
+            last = instant
+        }
+        close()
+        return result
+    }
+
     /// A calendar month's or year's recap from the Token spend ledgers — the
     /// same input `SpendSummary.of` takes.
     ///
@@ -85,19 +126,29 @@ extension Recap {
     /// - `hours`: nil when any contributing store has only session- or
     ///   report-level timing, and when no quarter-hour work was recorded. The
     ///   shares behind `lateShare` and `persona` are of the quarter-hour tokens.
-    /// - Late nights (`lateNights`, `latestMinute`): any work with a recorded
-    ///   quarter-hour from 00:00 to 04:59 local counts toward the night it
-    ///   belongs to (the evening before), so a session running past midnight
-    ///   does, and so does one that began at 01:00. The minute is the quarter
-    ///   hour's start, or a session's own last record where that is later and
-    ///   in the same window. Work with only day-level timing has no minute and
-    ///   cannot be counted: where `hours` is nil, `lateNights` is a floor.
-    /// - `cacheHitRate`: the rule of `UsageLedger.cacheHitRate`, over every
-    ///   contributing agent — nil when any of them has counts that may be
-    ///   missing or tokens no kind can claim; agents whose store records no
-    ///   cache (`SpendAgent.reportsCacheReads`) are left out of it.
-    /// - `cacheSavings`: per model, cache-read tokens billed at the input rate
-    ///   less what they were billed at (`TokenTally.costBreakdown`, long-context
+    /// - Late nights (`lateNights`, `latestMinute`) are read from **stretches
+    ///   of work** (`workdays`): every agent's quarter-hours and sessions' last
+    ///   records, split wherever nothing happened for `workBreak`. A stretch
+    ///   ends at its last instant, measured from the midnight of the day it
+    ///   began (one that began before 05:00 belongs to the evening before), so
+    ///   an all-nighter that stops at 07:00 finishes at 31:00 — later than
+    ///   anything that stopped the same evening — and `latestMinute` is the
+    ///   latest of them (shown on a clock, so 07:00). A stretch that runs past
+    ///   its day's midnight is a late night; one that begins at 05:00 or later
+    ///   is that day's. A stretch longer than `longestWorkday` is not
+    ///   a person's day and is left out. It once took only 00:00–04:59: the
+    ///   all-nighter read 04:45, and someone who always stopped at 23:50 got no
+    ///   figure at all. Work with only day-level timing has no instants: where
+    ///   `hours` is nil, both are floors.
+    /// - `cacheHitRate`: the rule of `UsageLedger.cacheHitRate`, over the
+    ///   contributing agents that vouch for their counts. One whose counts may
+    ///   be missing or that has tokens no kind can claim is left out and its
+    ///   tokens counted in `cacheUnmeasuredTokens`, which the cards state;
+    ///   agents whose store records no cache (`SpendAgent.reportsCacheReads`)
+    ///   are left out silently, having no cache to miss.
+    /// - `cacheSavings`: per model, the work with no cache at all — reads and
+    ///   writes both billed at the input rate (`withoutCache`) — less what it
+    ///   was billed at (`TokenTally.costBreakdown`, long-context
     ///   tiers included), at the price `prices` holds for that raw model id and
     ///   the agent's plan vendor — the lookup the ledgers were priced with.
     ///   **From each day's own per-model tallies** (`LedgerDay.modelTallies`),
@@ -128,17 +179,33 @@ extension Recap {
 
         let summary = SpendSummary.of(ledgers, from: start, until: end, now: now, calendar: calendar)
         let elapsedDays = summary.days.count
+        // Only a first record inside the span moves anything: one before the
+        // start leaves the whole period observed.
+        let firstRecord = RecapPeriods.earliest(in: ledgers, calendar: calendar).map { calendar.startOfDay(for: $0) }
+        let recordsBegin = firstRecord.flatMap { $0 > start && $0 < end ? $0 : nil }
         let inSpan: (Date) -> Bool = { $0 >= start && $0 < end }
 
         // MARK: The previous period, as long as this one has run.
 
+        // A running period against the same number of days of the one before
+        // (capped at its end: March 29 has no February 29); a finished one
+        // against the whole of it. Either way the days are kept, and the
+        // change is worked out per day (`RecapCopy.change`), so 31 days are
+        // never weighed against 28 nor September against August 1–30. Days
+        // before this Mac's first record are not part of the span.
         var previousTokens: Int?
+        var previousDays: Int?
         if elapsedDays > 0, let previous = period.previous.bounds(calendar: calendar) {
             let same = calendar.date(byAdding: .day, value: elapsedDays, to: previous.start) ?? previous.end
-            let before = SpendSummary.of(
-                ledgers, from: previous.start, until: min(previous.end, same), now: now, calendar: calendar
-            )
-            previousTokens = before.tokens > 0 ? before.tokens : nil
+            let until = isInProgress ? min(previous.end, same) : previous.end
+            let from = max(previous.start, firstRecord ?? previous.start)
+            if from < until {
+                let before = SpendSummary.of(ledgers, from: from, until: until, now: now, calendar: calendar)
+                if before.tokens > 0 {
+                    previousTokens = before.tokens
+                    previousDays = calendar.dateComponents([.day], from: from, to: until).day
+                }
+            }
         }
 
         // MARK: Days and months
@@ -170,9 +237,23 @@ extension Recap {
 
         // MARK: Time of day
 
+        // Read from the tools that record a time of day. A tool with only
+        // session- or report-level timing would put its work at invented
+        // hours, so it is left out of the shape — but **only it**: one such
+        // tool with 0.1% of the month used to take the whole hour shape, the
+        // timetable, the rhythm card and the persona away with it. What is
+        // left out is counted (`untimedTokens`) and the cards say so.
+        var hourSummary = summary
+        var untimedTokens = 0
+        if summary.hasAggregateTiming {
+            hourSummary = SpendSummary.of(
+                ledgers.filter { !$0.value.hasAggregateTiming }, from: start, until: end, now: now, calendar: calendar
+            )
+            untimedTokens = max(summary.tokens - hourSummary.tokens, 0)
+        }
         var hours: [Int]?
-        if !summary.hasAggregateTiming, summary.hours.values.reduce(0, +) > 0 {
-            hours = (0..<24).map { summary.hours[$0] ?? 0 }
+        if hourSummary.hours.values.reduce(0, +) > 0 {
+            hours = (0..<24).map { hourSummary.hours[$0] ?? 0 }
         }
         let hourTotal = hours?.reduce(0, +) ?? 0
         var peakHour: Int?
@@ -189,10 +270,9 @@ extension Recap {
 
         let contributing = summary.agents.map(\.agent)
         var lookup = ModelPriceLookup(prices)
-        var nights: Set<Date> = []
-        var latestMinute: Int?
+        var instants: [Date] = []
         var cacheTally = TokenTally()
-        var cacheUnvouched = false
+        var cacheUnmeasured = 0
         var savings = 0.0
         var pricedCacheReads = 0
         var modelMoney: [String: Double] = [:]
@@ -200,17 +280,14 @@ extension Recap {
         for agent in contributing {
             guard let ledger = ledgers[agent] else { continue }
 
-            // A quarter-hour's start, and where a session's own last record
-            // falls later in that window, are the instants of work after midnight.
-            var instants = ledger.slots.filter { $0.tokens > 0 && inSpan($0.start) }.map(\.start)
-            for session in ledger.sessions where !session.slots.isEmpty && inSpan(session.end) {
-                instants.append(session.end)
-            }
-            for instant in instants {
-                let parts = calendar.dateComponents([.hour, .minute], from: instant)
-                guard let hour = parts.hour, let minute = parts.minute, hour < Self.nightEndsAtHour else { continue }
-                nights.insert(calendar.startOfDay(for: instant))
-                latestMinute = max(latestMinute ?? 0, hour * 60 + minute)
+            // A quarter-hour's start, and a session's own last record, are the
+            // instants of work the stretches below are read from.
+            // Not from a store without a time of day: its times are invented.
+            if !ledger.hasAggregateTiming {
+                instants += ledger.slots.filter { $0.tokens > 0 && inSpan($0.start) }.map(\.start)
+                for session in ledger.sessions where !session.slots.isEmpty && inSpan(session.end) {
+                    instants.append(session.end)
+                }
             }
 
             let span = ledger.days.filter { inSpan($0.date) }
@@ -219,7 +296,11 @@ extension Recap {
                 switch ledger.cacheReading(in: span) {
                 case .measured(let tally): cacheTally = cacheTally + tally
                 case .unrecorded: break
-                case .unvouched: cacheUnvouched = true
+                // Counted out of the rate, and said on the cards, instead of
+                // taking the rate away: one small tool with partial counts
+                // used to remove the cache tile from every card.
+                case .unvouched:
+                    cacheUnmeasured += summary.agents.first { $0.agent == agent }?.tokens ?? 0
                 }
             }
 
@@ -228,16 +309,16 @@ extension Recap {
                     modelMoney[ledger.modelNames[raw] ?? raw, default: 0] += costs.total
                 }
                 guard agent.reportsCacheReads else { continue }
-                for (raw, tally) in day.modelTallies where tally.cacheRead > 0 {
+                for (raw, tally) in day.modelTallies where tally.cacheRead > 0 || tally.cacheWrite > 0 {
                     guard let price = lookup.price(for: raw, vendor: agent.priceVendor) else { continue }
-                    savings += tally.cacheReadAsInput.cost(at: price) - tally.cost(at: price)
+                    savings += tally.withoutCache.cost(at: price) - tally.cost(at: price)
                     pricedCacheReads += tally.cacheRead
                 }
             }
         }
 
         let cacheInput = cacheTally.input + cacheTally.cacheWrite + cacheTally.cacheRead
-        let cacheHitRate = cacheUnvouched || cacheInput == 0 ? nil : Double(cacheTally.cacheRead) / Double(cacheInput)
+        let cacheHitRate = cacheInput == 0 ? nil : Double(cacheTally.cacheRead) / Double(cacheInput)
 
         // MARK: Shares
 
@@ -253,6 +334,10 @@ extension Recap {
                 activeDates: Set(own.days.filter { $0.tokens > 0 }.map(\.date))
             )
         }
+
+        let workdays = Self.workdays(instants, calendar: calendar)
+        let latestMinute = workdays.map(\.endMinute).max()
+        let lateNights = workdays.count { $0.crossesMidnight }
 
         let streaks = Self.streaks(of: days, isInProgress: isInProgress)
 
@@ -274,7 +359,7 @@ extension Recap {
             peakHour: peakHour,
             lateShare: lateShare,
             latestMinute: latestMinute,
-            lateNights: nights.count,
+            lateNights: lateNights,
             persona: hours.flatMap(Persona.of(hours:)),
             models: summary.models.map { model in
                 ModelShare(name: model.name, tokens: model.tokens, share: share(model.tokens), cost: modelMoney[model.name])
@@ -290,6 +375,10 @@ extension Recap {
             busiestDay: busiest,
             currency: "USD",
             isPartial: summary.hasPartialCounts,
+            recordsBegin: recordsBegin,
+            previousDays: previousDays,
+            untimedTokens: untimedTokens,
+            cacheUnmeasuredTokens: cacheHitRate == nil ? 0 : cacheUnmeasured,
             calendar: calendar
         )
     }
@@ -302,13 +391,17 @@ extension Recap {
 }
 
 private extension TokenTally {
-    /// The same work with every cache read billed as fresh input, long-context
-    /// bands included — what it would have cost with no cache to read from.
-    var cacheReadAsInput: TokenTally {
+    /// The same work with no cache at all, long-context bands included: every
+    /// cache read **and every cache write** billed as fresh input. Writes
+    /// carry a premium (1.25× or 2× input) that only exists because of the
+    /// cache; leaving it in overstated what the work would cost without one.
+    var withoutCache: TokenTally {
         var copy = self
-        copy.input += cacheRead
+        copy.input += cacheRead + cacheWrite
         copy.cacheRead = 0
-        copy.contextBands = contextBands.mapValues(\.cacheReadAsInput)
+        copy.cacheWrite = 0
+        copy.cacheWrite1h = 0
+        copy.contextBands = contextBands.mapValues(\.withoutCache)
         return copy
     }
 }

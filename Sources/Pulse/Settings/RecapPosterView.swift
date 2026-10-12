@@ -264,7 +264,11 @@ struct RecapPosterView: View {
         RecapBox(padding: EdgeInsets(top: 24, leading: 26, bottom: 24, trailing: 26)) {
             VStack(alignment: .leading, spacing: 14) {
                 cardTitle(.localized("Month by month"), note: nil)
-                RecapMonthBars(months: recap.months, labelSize: 14, labelHeight: 22)
+                RecapMonthBars(
+                    months: recap.months,
+                    unrecorded: Set((0..<12).filter(RecapInsights(recap).isMonthUnrecorded)),
+                    labelSize: 14, labelHeight: 22
+                )
             }
         }
     }
@@ -287,15 +291,17 @@ struct RecapPosterView: View {
                     }
                 }
                 ZStack {
-                    RecapClock(hours: recap.hours ?? [], inner: 54, longest: 62, barWidth: 7, labelSize: 11)
+                    RecapClock(hours: recap.hours ?? [], highlight: recap.busiestHours, inner: 54, longest: 62, barWidth: 7, labelSize: 11)
                         .frame(width: 236, height: 236)
                     if let persona = recap.persona {
                         RecapPersonaGlyph(persona: persona, side: 30)
                     }
                 }
                 .frame(maxHeight: .infinity)
-                if let late = recap.lateShare {
-                    Text(String.localized("\(RecapFormat.percent(late)) of it came between 9 PM and 5 AM."))
+                if let window = recap.busiestHours {
+                    Text(String.localized(
+                        "\(RecapFormat.percent(window.share)) of it came between \(RecapFormat.hourLabel(window.start)) and \(RecapFormat.hourLabel(window.end))."
+                    ))
                         .font(.recap(16))
                         .foregroundStyle(RecapColor.paper.opacity(0.72))
                         .multilineTextAlignment(.center)
@@ -410,7 +416,7 @@ struct RecapPosterView: View {
                 Spacer(minLength: 0)
                 if let saved = deck.cacheSavings {
                     RecapRichText(
-                        text: .localized("Repeated context is read from the cache, saving about \(RecapEmphasis.mark(RecapFormat.money(saved, currency: recap.currency)))"),
+                        text: .localized("Reading repeated context from the cache took about \(RecapEmphasis.mark(RecapFormat.money(saved, currency: recap.currency))) off the API price"),
                         size: 15, color: RecapColor.paper.opacity(0.72), emphasisWeight: .bold, highlights: false
                     )
                     .environment(\.colorScheme, .dark)
@@ -550,7 +556,7 @@ struct RecapPosterView: View {
     private var footer: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
-                ForEach(deck.provenance, id: \.self) { line in
+                ForEach(deck.provenance + [deck.hoursNote].compactMap { $0 }, id: \.self) { line in
                     Text(line)
                         .font(.recap(14))
                         .foregroundStyle(RecapColor.tertiary)

@@ -61,26 +61,49 @@ struct RecapMonthGrid {
 
 /// A line over a filled area, the area in lime and the line in ink.
 struct RecapSparkline: View {
-    let values: [Double]
+    /// Nil is a point with no figure (work with no price): the line breaks
+    /// there rather than dipping to a zero it never had.
+    let values: [Double?]
 
     var body: some View {
         Canvas { context, size in
-            guard values.count > 1, let maximum = values.max(), maximum > 0 else { return }
-            let points = values.enumerated().map { index, value in
-                CGPoint(x: CGFloat(index) / CGFloat(values.count - 1) * size.width,
-                        y: size.height - 6 - CGFloat(value / maximum) * (size.height - 12))
+            guard values.count > 1, let maximum = values.compactMap({ $0 }).max(), maximum > 0 else { return }
+            for run in RecapLineRuns.of(values) {
+                let points = run.map { index in
+                    CGPoint(x: CGFloat(index) / CGFloat(values.count - 1) * size.width,
+                            y: size.height - 6 - CGFloat((values[index] ?? 0) / maximum) * (size.height - 12))
+                }
+                var line = Path()
+                line.move(to: points[0])
+                points.dropFirst().forEach { line.addLine(to: $0) }
+                var area = line
+                area.addLine(to: CGPoint(x: points[points.count - 1].x, y: size.height))
+                area.addLine(to: CGPoint(x: points[0].x, y: size.height))
+                area.closeSubpath()
+                context.fill(area, with: .color(RecapColor.lime))
+                context.stroke(line, with: .color(RecapColor.ink),
+                               style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
             }
-            var line = Path()
-            line.move(to: points[0])
-            points.dropFirst().forEach { line.addLine(to: $0) }
-            var area = line
-            area.addLine(to: CGPoint(x: size.width, y: size.height))
-            area.addLine(to: CGPoint(x: 0, y: size.height))
-            area.closeSubpath()
-            context.fill(area, with: .color(RecapColor.lime))
-            context.stroke(line, with: .color(RecapColor.ink),
-                           style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
         }
+    }
+}
+
+/// The unbroken stretches of a series with gaps: each run is the indices of
+/// consecutive values that have one. A lone point is a run of one.
+enum RecapLineRuns {
+    static func of(_ values: [Double?]) -> [[Int]] {
+        var runs: [[Int]] = []
+        var current: [Int] = []
+        for (index, value) in values.enumerated() {
+            if value == nil {
+                if !current.isEmpty { runs.append(current) }
+                current = []
+            } else {
+                current.append(index)
+            }
+        }
+        if !current.isEmpty { runs.append(current) }
+        return runs
     }
 }
 
@@ -122,10 +145,12 @@ struct RecapDonut: View {
 
 // MARK: - Clock
 
-/// 24 bars around a ring, one per hour, midnight at the top. The late hours
-/// are lime; the rest are a muted grey that gets lighter with less work.
+/// 24 bars around a ring, one per hour, midnight at the top. The busiest
+/// four hours (`Recap.busiestHours`) are lime; the rest are a muted grey that
+/// gets lighter with less work.
 struct RecapClock: View {
     let hours: [Int]
+    let highlight: Recap.HourWindow?
     let inner: CGFloat
     let longest: CGFloat
     let barWidth: CGFloat
@@ -149,7 +174,7 @@ struct RecapClock: View {
                 layer.rotate(by: .degrees(Double(hour) * 15))
                 let bar = Path(roundedRect: CGRect(x: -barWidth / 2, y: -(inner + length), width: barWidth, height: length),
                                cornerRadius: barWidth / 2)
-                if RecapFormat.isLate(hour) {
+                if highlight?.contains(hour) == true {
                     layer.fill(bar, with: .color(RecapColor.lime))
                 } else {
                     layer.fill(bar, with: .color(RecapColor.darkRest.opacity(0.38 + 0.62 * fraction)))
