@@ -805,8 +805,21 @@ final class UsageStore {
     /// cache's say. Returns both, because the alert rules and the diagnostics
     /// want the raw answer as well as the reconciled one.
     private func settle(_ raw: ProviderUsage) async -> (raw: ProviderUsage, fetched: ProviderUsage) {
-        let answered = ringed(raw)
+        let answered = ringed(Self.namingHeldBack(raw, isHoldingBack: NetworkSession.isHoldingBack))
         return (answered, await cache.reconciled(answered))
+    }
+
+    /// A request "System Proxy Only" refused fails like a dropped connection,
+    /// and a service reports that as unreachable. While the guard is refusing,
+    /// that is what happened, so the reading says so — a route that did not
+    /// need the network (a helper, a local file) answers as it would anyway.
+    nonisolated static func namingHeldBack(_ raw: ProviderUsage, isHoldingBack: Bool) -> ProviderUsage {
+        guard isHoldingBack, raw.state == .unavailable(.unreachable) else { return raw }
+        var named = ProviderUsage.unavailable(raw.account, reason: .systemProxyOff)
+        named.attempts = raw.attempts
+        named.origin = raw.origin
+        named.sourceScope = raw.sourceScope
+        return named
     }
 
     /// An API account's balance with the ring its basis gives it. DeepSeek

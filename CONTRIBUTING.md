@@ -72,7 +72,7 @@ Before merging a docs-or-behaviour change:
 - [ ] Current facts (counts, intervals, which accounts are multi) match the code you just read.
 - [ ] Historical measurements are labelled historical.
 - [ ] README and its zh-CN / zh-Hant / ja / ko translations still match if you touched user-facing claims.
-- [ ] Links from CLAUDE.md’s “Read by task” table still resolve.
+- [ ] Links from CLAUDE.md’s 「按任务查阅」 table still resolve.
 - [ ] You did not add build or shipping instructions that contradict [Docs/build-from-source.md](Docs/build-from-source.md) / [Docs/releasing.md](Docs/releasing.md).
 
 ## Answering an issue

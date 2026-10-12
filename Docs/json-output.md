@@ -25,7 +25,7 @@ Window names are localized in the app and would change under a script's feet, so
 - `kind` — a flat token: `fiveHour`, `daily`, `weekly`, `monthly`, `spend`, `balance`, `messages`, `topUp`, `credits`, `sharedCredits`, `planCredits`, `dedicatedCredits`, or `other:<seconds>`. `messages` is an allowance counted in messages rather than in time ([providers/devin.md](providers/devin.md)): no window, no reset, `reportsLength` false. `balance` is prepaid credit, which is **not a limit**: it never turns over, so `reportsLength` is false and `resetsAt` is null on those rows ([providers/deepseek.md](providers/deepseek.md)). `topUp` is an allowance bought on top of a window's and spent after it, with a size the provider states, no expiry and no clock ([providers/v2ex.md](providers/v2ex.md)) — same nulls as `balance`, and the same rule that only the provider's own remainder may call it spent. `credits` is an allowance counted in the provider's own credits and `sharedCredits` a team's pool of them, reported beside it and never summed with it ([providers/qoder.md](providers/qoder.md)): each carries the provider's reset where it states one, and `reportsLength` false. `planCredits` and `dedicatedCredits` are two of the parts Qoder's total adds up, present only with that provider's "Show each part of the credits" on; the third part is a `topUp`. `UsageWindow.Kind` is `Codable`, but its synthesised form is an object with an associated value in it; fine on disk, awkward in a `jq` filter.
 - `scope`, `name` — product names, the same in every language.
 - `estimated` / `estimatedFrom` — true where the provider said how much of an allowance is **left** and never how large it is, so the denominator behind `usedFraction` was inferred; `estimatedFrom` is a stable token saying which inference — `planPrice` ([providers/command-code.md](providers/command-code.md)), `sinceTopUp` or `yourBudget` ([providers/deepseek.md](providers/deepseek.md)). The wording that marks it on screen is localized; neither of these is, which is why they are not folded into `scope`.
-- `label` — the user's own name for an added account, theirs to have written in any language; an extension's name from its manifest. On a **window**, `label` is an extension's own name for that limit — absent for every built-in provider, whose limits are named by `kind`. See [extensions.md](extensions.md).
+- `label` — the user's own name for an added account, theirs to have written in any language; an extension's name from its manifest. On a **window**, `label` is an extension's own name for that limit — absent for every built-in provider, whose limits are named by `kind`. See [extensions.md](extensions.md). An extension's `metrics[]` carry its own `label` and `unit` the same way.
 
 ## Shape
 
@@ -58,6 +58,10 @@ accounts[]
     resetsAt
     expiresAt          when part of the allowance lapses (not a reset); Qoder and StepFun
     expiringAmount     how much lapses then, in the allowance's own unit
+  metrics[]            an extension's figures that are not limits; absent when there are none
+    id, label, unit    the program's own, untranslated; unit absent when it gave none
+    value              as stated, unrounded
+    history[]          { t, v }, oldest first; absent when it gave none
 ```
 
 `headline` repeats a window from `windows` on purpose: the common case is one number in a status line, and making every consumer re-implement "which limit matters" — the fullest, or the provider's included pool, unless one is pinned — is how they end up disagreeing with the ring.

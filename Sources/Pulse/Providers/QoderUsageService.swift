@@ -484,7 +484,7 @@ struct QoderUsageService: Sendable {
         let resetsAt = snapshot.resetsAt.flatMap { $0 > now ? $0 : nil }
         if var window = window(snapshot.personal, id: "qoder.credits", kind: .credits,
                                resetsAt: resetsAt) {
-            window.nextExpiry = nextExpiry(of: snapshot.packs, at: now)
+            window.nextExpiry = nextExpiry(of: snapshot.packs, at: now, remaining: snapshot.personal.remaining)
             windows.append(window)
         }
         if showsParts, !windows.isEmpty {
@@ -496,10 +496,17 @@ struct QoderUsageService: Sendable {
             let drawn = parts.compactMap { part, id, kind, resetsAt -> UsageWindow? in
                 guard let part, var window = window(part.pool, id: id, kind: kind, resetsAt: resetsAt)
                 else { return nil }
-                window.nextExpiry = nextExpiry(of: part.packs, at: now)
+                window.nextExpiry = nextExpiry(of: part.packs, at: now, remaining: part.pool.remaining)
                 return window
             }
-            if drawn.count > 1 { windows += drawn }
+            if drawn.count > 1 {
+                // **Each part says its own expiry; the total no longer does.**
+                // The total's soonest lapse is always one of the parts', so
+                // with the parts drawn it repeated a part's line word for word
+                // and read as the same row listed twice (issue #76).
+                windows[0].nextExpiry = nil
+                windows += drawn
+            }
         }
         // The reset Qoder states is the account's. Whether a team's pool turns
         // over on the same day is not something the reply says, so it is not
@@ -512,10 +519,15 @@ struct QoderUsageService: Sendable {
     }
 
     /// The soonest packs to lapse, by `UsageWindow.Expiry.soonest`'s rule.
-    static func nextExpiry(of packs: [QoderSnapshot.Pack], at now: Date,
+    /// `remaining` is what the row has left, as Qoder states it: when the
+    /// soonest lapse is all of that, the card says so instead of "of which".
+    static func nextExpiry(of packs: [QoderSnapshot.Pack], at now: Date, remaining: Double? = nil,
                            calendar: Calendar = .current) -> UsageWindow.Expiry? {
-        UsageWindow.Expiry.soonest(of: packs.map { ($0.remaining, $0.expiresAt) },
-                                   after: now, calendar: calendar)
+        guard var expiry = UsageWindow.Expiry.soonest(of: packs.map { ($0.remaining, $0.expiresAt) },
+                                                      after: now, calendar: calendar)
+        else { return nil }
+        if let remaining { expiry.coversRemainder = (expiry.totalAmount ?? expiry.amount) >= remaining }
+        return expiry
     }
 
     private static func window(_ pool: QoderSnapshot.Pool, id: String, kind: UsageWindow.Kind,

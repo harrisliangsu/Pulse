@@ -40,7 +40,8 @@ struct WarpTests {
         let addOn = usage.windows[1]
         #expect(addOn.usedFraction == 600.0 / 1_500.0)
         #expect(addOn.resetsAt == nil)
-        #expect(addOn.nextExpiry == UsageWindow.Expiry(amount: 400, at: ProfileHTTP.date("2026-10-15T12:00:00Z")!))
+        #expect(addOn.nextExpiry?.amount == 400)
+        #expect(addOn.nextExpiry?.at == ProfileHTTP.date("2026-10-15T12:00:00Z")!)
     }
 
     @Test("An unlimited plan has no limit to draw")

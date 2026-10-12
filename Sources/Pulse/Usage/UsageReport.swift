@@ -103,6 +103,9 @@ enum UsageReport {
         /// re-implementation of which limit matters.
         let headline: Headline?
         let windows: [Window]
+        /// An extension's figures that are not limits. Absent when there are
+        /// none, which is every built-in provider.
+        let metrics: [Metric]?
 
         init(
             _ account: AccountKey,
@@ -122,7 +125,31 @@ enum UsageReport {
             source = reading?.origin?.rawValue
             settingsURL = PulseLink.account(account).url
             windows = (reading?.windows ?? []).map(Window.init)
+            metrics = reading.flatMap { $0.metrics.isEmpty ? nil : $0.metrics.map(Metric.init) }
             headline = reading?.headlineWindow(preferring: pinned).map(Headline.init)
+        }
+    }
+
+    /// As the program stated it: its label and unit untranslated, its value
+    /// unrounded, its series oldest first.
+    private struct Metric: Encodable {
+        let id: String
+        let label: String
+        let value: Double
+        let unit: String?
+        let history: [Point]?
+
+        struct Point: Encodable {
+            let t: Date
+            let v: Double
+        }
+
+        init(_ metric: UsageMetric) {
+            id = metric.id
+            label = metric.label
+            value = metric.value
+            unit = metric.unit
+            history = metric.history.isEmpty ? nil : metric.history.map { Point(t: $0.at, v: $0.value) }
         }
     }
 

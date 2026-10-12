@@ -129,6 +129,13 @@ enum DetailCardLayout {
     static var unpricedFiguresHeight: CGFloat { figureLabelHeight + 2 * PanelMetrics.scale + figureValueHeight }
     static var chartHeight: CGFloat { 30 * PanelMetrics.scale }
 
+    /// How many of an extension's metrics may draw their series on the card
+    /// (issue #80). A trend under a metric is a limit row's height, so four
+    /// of them beside a few limits would run past `maximumHeight`, which the
+    /// window was sized for; the rest show their figure alone, and Settings
+    /// draws every series.
+    static var metricTrendLimit: Int { 2 }
+
     /// The whole activity section: rule, heading, figures, chart, top model,
     /// cache hit rate, the prompt cache's lapse, the line saying what the
     /// money is. Each part is drawn at the height
@@ -330,6 +337,14 @@ struct UsageDetailCard: View {
                 ValueRow(title: String.localized("Credit balance"), value: balance)
             }
 
+            // An extension's figures that are not limits, in its own words
+            // and units (issue #80), and under the first few that carry one,
+            // the series they came from.
+            ForEach(usage.metrics) { metric in
+                MetricRow(metric: metric, showsTrend: trendedMetrics.contains(metric.id))
+                    .transition(Self.rowTransition)
+            }
+
             // The same rule for the other way a body can come out empty: a
             // reading that says nothing at all still has to say *that*.
             if saysNothing {
@@ -439,6 +454,12 @@ struct UsageDetailCard: View {
         }
     }
 
+    /// The metrics that draw their series here: the first ones that have one,
+    /// up to the card's budget.
+    private var trendedMetrics: Set<String> {
+        Set(usage.metrics.filter(\.hasTrend).prefix(DetailCardLayout.metricTrendLimit).map(\.id))
+    }
+
     /// Whether the body would otherwise be nothing but the header.
     ///
     /// An unavailable reading is excluded because its own message is about to
@@ -537,12 +558,33 @@ struct UsageDetailCard: View {
         formatter.setLocalizedDateFormatFromTemplate(
             Calendar.current.isDateInToday(expiry.at) ? "jmm" : "MMMd"
         )
-        // StepFun counts in Credits of which a plan holds billions: "1,599,913,834"
-        // does not fit the slot, and the scale is the point, as with tokens.
-        let amount = expiry.amount >= 10_000
-            ? TokenCount.short(Int(expiry.amount))
-            : expiry.amount.formatted(.number.precision(.fractionLength(0...1)).locale(LocalizationSource.locale))
-        return String.localized("\(formatter.string(from: expiry.at)): \(amount) credits expire")
+        let date = formatter.string(from: expiry.at)
+        // **Several days of lots are said as several.** Naming the soonest
+        // alone said 100 of 400 had a deadline when all four had (issue #76):
+        // the line gives everything that lapses, from the first day, and in
+        // how many lots.
+        // **Everything the row has left needs no amount**: the bar beside it
+        // already says how much that is, and the line has to fit beside the
+        // percentage. "Of which" only where it is part of the row: a part
+        // whose credits all lapse together read as a fraction of itself.
+        if expiry.coversRemainder == true {
+            if let lots = expiry.lots {
+                return String.localized("All expire from \(date), in \(String(lots)) lots")
+            }
+            return String.localized("All expire \(date)")
+        }
+        if let total = expiry.totalAmount {
+            return String.localized("From \(date): \(expiryAmount(total)) credits expire in turn")
+        }
+        return String.localized("\(date): \(expiryAmount(expiry.amount)) credits expire")
+    }
+
+    /// StepFun counts in Credits of which a plan holds billions: "1,599,913,834"
+    /// does not fit the slot, and the scale is the point, as with tokens.
+    private static func expiryAmount(_ amount: Double) -> String {
+        amount >= 10_000
+            ? TokenCount.short(Int(amount))
+            : amount.formatted(.number.precision(.fractionLength(0...1)).locale(LocalizationSource.locale))
     }
 
     private static func relative(_ date: Date) -> String {
@@ -1344,6 +1386,93 @@ private struct ValueRow: View {
     }
 }
 
+/// One of an extension's metrics: its figure, and optionally its series as a
+/// line underneath.
+private struct MetricRow: View {
+    let metric: UsageMetric
+    let showsTrend: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
+            ValueRow(title: metric.label, value: metric.valueText)
+            if showsTrend {
+                MetricTrendLine(points: metric.history)
+                    .frame(height: DetailCardLayout.chartHeight)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(metric.label)
+                    .accessibilityValue(MetricTrendLine.summary(of: metric))
+            }
+        }
+    }
+}
+
+/// A metric's series as a line, placed by time and scaled between its own
+/// lowest and highest point, with the newest point marked.
+///
+/// **Static, like the days chart above it** — the panel never becomes key, so
+/// a hover readout would not fire. Settings draws the same series with one.
+/// **Placed by time, not by index**, so a gap in the program's points reads as
+/// a gap rather than being closed up into an even line it never reported.
+/// **One colour whichever way it moves**: lower is better for a first token's
+/// time and worse for an output rate, and only the program knows which this is.
+struct MetricTrendLine: View {
+    let points: [UsageMetric.Point]
+    var lineWidth: CGFloat = 1.5 * PanelMetrics.scale
+    var colour: Color = .primary.opacity(0.75)
+
+    /// Room round the plot, so the line's ends and the newest point's mark
+    /// are not cut by the frame. A hover readout over the line places its
+    /// points with the same figure.
+    var inset: CGFloat { lineWidth * 2 }
+
+    var body: some View {
+        Canvas { context, size in
+            guard let path = Self.path(points, in: size, inset: inset) else { return }
+            context.stroke(path, with: .color(colour), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+            if let last = Self.location(of: points.count - 1, in: points, size: size, inset: inset) {
+                let dot = lineWidth * 2.4
+                context.fill(Path(ellipseIn: CGRect(x: last.x - dot / 2, y: last.y - dot / 2, width: dot, height: dot)),
+                             with: .color(colour))
+            }
+        }
+    }
+
+    /// Where point `index` sits: across by its time between the first and the
+    /// last, up by its value between the lowest and the highest. A series that
+    /// never moves is drawn flat through the middle.
+    static func location(of index: Int, in points: [UsageMetric.Point], size: CGSize, inset: CGFloat) -> CGPoint? {
+        guard points.indices.contains(index), let first = points.first, let last = points.last else { return nil }
+        let span = last.at.timeIntervalSince(first.at)
+        guard span > 0 else { return nil }
+        let values = points.map(\.value)
+        let low = values.min() ?? 0
+        let high = values.max() ?? 0
+        let width = max(size.width - inset * 2, 1)
+        let height = max(size.height - inset * 2, 1)
+        let point = points[index]
+        let x = inset + width * CGFloat(point.at.timeIntervalSince(first.at) / span)
+        let y = high > low
+            ? inset + height * CGFloat(1 - (point.value - low) / (high - low))
+            : size.height / 2
+        return CGPoint(x: x, y: y)
+    }
+
+    private static func path(_ points: [UsageMetric.Point], in size: CGSize, inset: CGFloat) -> Path? {
+        let locations = points.indices.compactMap { location(of: $0, in: points, size: size, inset: inset) }
+        guard locations.count >= 2 else { return nil }
+        var path = Path()
+        path.addLines(locations)
+        return path
+    }
+
+    /// What VoiceOver says for the line: its lowest and highest point.
+    static func summary(of metric: UsageMetric) -> String {
+        let values = metric.history.map(\.value)
+        guard let low = values.min(), let high = values.max() else { return metric.valueText }
+        return .localized("\(metric.valueText). Lowest \(metric.text(for: low)), highest \(metric.text(for: high)).")
+    }
+}
+
 private struct ProgressMetricRow: View {
     let title: String
     let resetDescription: String
@@ -1397,6 +1526,14 @@ private struct ProgressMetricRow: View {
                 Text(figureLabel)
                     .font(.system(size: DetailCardLayout.rowFontSize, weight: .medium, design: .rounded))
                     .foregroundStyle(accent)
+                    // **The figure keeps its line.** The reset line beside it
+                    // took the room first, and a long one — Russian's
+                    // "Сброс 9 нояб., 00:00", an expiry in lots — folded
+                    // "Осталось 58%" onto two lines, a row taller than the card
+                    // is budgeted for. The reset line gives way instead.
+                    // The colour stays the ring's: the scheme, including Quiet,
+                    // is what `accent` already decided.
+                    .fixedSize()
                     // Swapped outright. A cross-fade drew two figures over each
                     // other; a numeric roll left the digits mid-turn — blank —
                     // for most of a sweep down the rail, since every switch
@@ -1410,6 +1547,8 @@ private struct ProgressMetricRow: View {
                     .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
                     .foregroundStyle(.primary.opacity(0.45))
                     .lineLimit(1)
+                    // Smaller before it is cut short.
+                    .minimumScaleFactor(0.8)
                     .layoutPriority(1)
             }
 

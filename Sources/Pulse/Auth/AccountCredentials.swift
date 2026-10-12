@@ -1,4 +1,5 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
+import CryptoKit
 import Foundation
 
 /// The login Pulse holds for one account it signed in to itself.
@@ -18,10 +19,31 @@ struct AccountCredentials: Codable, Equatable, Sendable {
     /// Codex's usage endpoint wants the account named in a header of its own,
     /// and the token is the only place it appears.
     var accountID: String?
+    /// Which sign-in this login came from: minted when the account is signed
+    /// in to, carried unchanged by every renewal. Claude Code's and Grok's
+    /// tokens name no account, so without it a renewal still out when the
+    /// slot was signed in to again — as another account — could be written
+    /// over the new login. Absent from logins saved before it existed; see
+    /// `renewalOf`.
+    var signIn: String? = UUID().uuidString
 
     /// A minute's headroom: a token that expires while the request is in
     /// flight comes back refused, and the retry costs more than renewing early.
     var isFresh: Bool { expiresAt.timeIntervalSinceNow > 60 }
+
+    /// What a renewal of this login is: the renewed tokens under this login's
+    /// sign-in. A login saved before sign-ins were recorded gets one derived
+    /// from its refresh token, so two passes renewing the same old login
+    /// agree on it and the newer answer still wins between them.
+    func renewalOf(_ renewed: AccountCredentials) -> AccountCredentials {
+        var result = renewed
+        result.signIn = signIn ?? Self.signIn(derivedFrom: refreshToken)
+        return result
+    }
+
+    static func signIn(derivedFrom refreshToken: String) -> String {
+        SHA256.hash(data: Data(refreshToken.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
 }
 
 /// Where those logins are kept: encrypted, in Pulse's own folder, one file for
@@ -95,6 +117,11 @@ enum AccountCredentialStore {
         guard let existing else { return false }
         if existing.expiresAt >= credentials.expiresAt { return false }
         if let held = existing.accountID, let renewing = credentials.accountID, held != renewing { return false }
+        // A different sign-in is a different login, whatever its expiry. A
+        // login from before sign-ins were recorded is matched by the one its
+        // refresh token gives, which is what `renewalOf` stamps on its renewal.
+        let held = existing.signIn ?? AccountCredentials.signIn(derivedFrom: existing.refreshToken)
+        if let renewing = credentials.signIn, renewing != held { return false }
         return true
     }
 

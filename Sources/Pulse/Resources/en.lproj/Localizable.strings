@@ -40,7 +40,7 @@
 "Copy diagnostics" = "Copy diagnostics";
 "Not recorded" = "Not recorded";
 "Read cached usage" = "Read cached usage";
-"Reads saved figures without fetching or opening credentials." = "Reads saved figures without fetching or opening credentials.";
+"Prints Pulse's saved readings, not the provider's original reply, without fetching or opening credentials." = "Prints Pulse's saved readings, not the provider's original reply, without fetching or opening credentials.";
 "Copy command" = "Copy command";
 "Developer kit" = "Developer kit";
 "Raycast extension, tmux and shell status, and a sketchybar plugin." = "Raycast extension, tmux and shell status, and a sketchybar plugin.";
@@ -77,6 +77,8 @@
 "The usage rail at the edge of the screen." = "The usage rail at the edge of the screen.";
 "Hide in full screen" = "Hide in full screen";
 "Keep the floating panel out of full-screen apps." = "Keep the floating panel out of full-screen apps.";
+"Hide from screenshots" = "Hide from screenshots";
+"Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it." = "Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it.";
 "Follow the active display" = "Follow the active display";
 "With more than one display, the rail moves to the one the pointer is on." = "With more than one display, the rail moves to the one the pointer is on.";
 "Left" = "Left";
@@ -643,9 +645,16 @@
 /* Network proxy */
 "Network" = "Network";
 "Proxy" = "Proxy";
-"Use macOS settings or a proxy only for Pulse." = "Use macOS settings or a proxy only for Pulse.";
+"No Proxy" = "No Proxy";
 "Follow System" = "Follow System";
-"Manual" = "Manual";
+"System Proxy Only" = "System Proxy Only";
+"Custom Proxy" = "Custom Proxy";
+"Pulse connects directly and ignores the proxy in macOS settings." = "Pulse connects directly and ignores the proxy in macOS settings.";
+"Uses the proxy in macOS settings, or connects directly when there is none." = "Uses the proxy in macOS settings, or connects directly when there is none.";
+"Uses the proxy in macOS settings, and doesn't connect when there is none." = "Uses the proxy in macOS settings, and doesn't connect when there is none.";
+"A proxy for Pulse only." = "A proxy for Pulse only.";
+"macOS has no proxy switched on, so Pulse isn't connecting." = "macOS has no proxy switched on, so Pulse isn't connecting.";
+"No proxy is switched on in macOS, so Pulse didn't connect." = "No proxy is switched on in macOS, so Pulse didn't connect.";
 "Type" = "Type";
 "HTTP" = "HTTP";
 "SOCKS5" = "SOCKS5";
@@ -737,6 +746,9 @@
 "Show each part of the credits" = "Show each part of the credits";
 "Plan credits, a top-up pack and dedicated credits are spent separately. The total can look ample while one of them is nearly gone." = "Plan credits, a top-up pack and dedicated credits are spent separately. The total can look ample while one of them is nearly gone.";
 "%@: %@ credits expire" = "%@: %@ credits expire";
+"All expire %@" = "All expire %@";
+"All expire from %@, in %@ lots" = "All expire from %1$@, in %2$@ lots";
+"From %@: %@ credits expire in turn" = "From %1$@: %2$@ credits expire in turn";
 "Sign in to Qoder in a browser to see usage." = "Sign in to Qoder in a browser to see usage.";
 "Qoder's saved session expired. Sign in again in your browser." = "Qoder's saved session expired. Sign in again in your browser.";
 "This Qoder account has no credits." = "This Qoder account has no credits.";
@@ -770,6 +782,7 @@
 "Its program isn't there, or isn't executable." = "Its program isn't there, or isn't executable.";
 "Look again" = "Look again";
 "Manage extensions" = "Manage extensions";
+"Metrics" = "Metrics";
 "No pulse-extension.json in this folder." = "No pulse-extension.json in this folder.";
 "None yet" = "None yet";
 "Program" = "Program";
@@ -785,6 +798,7 @@
 "Time limit" = "Time limit";
 "Written for extension schema %@, which this version of Pulse doesn't read." = "Written for extension schema %@, which this version of Pulse doesn't read.";
 "pulse-extension.json isn't valid JSON, or is missing a field." = "pulse-extension.json isn't valid JSON, or is missing a field.";
+"%@. Lowest %@, highest %@." = "%@. Lowest %@, highest %@.";
 
 /* Profiled providers: shared wording */
 "No session found. Sign in at %@ first." = "No session found. Sign in at %@ first.";

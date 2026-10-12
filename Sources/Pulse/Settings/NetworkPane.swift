@@ -13,6 +13,9 @@ struct NetworkPane: View {
     @State private var proxyHostInvalid = false
     @State private var proxyPortInvalid = false
     private enum ProxyField: Hashable { case host, port }
+    /// macOS's proxy switch, read again every few seconds while the pane is
+    /// open: it changes in another app, which tells Pulse nothing.
+    @State private var systemProxyOn = SystemProxy.isOn
     @FocusState private var proxyField: ProxyField?
 
     var body: some View {
@@ -38,7 +41,7 @@ struct NetworkPane: View {
             SettingsGroup(String.localized("Network")) {
                 SettingsRow(
                     String.localized("Proxy"),
-                    subtitle: String.localized("Use macOS settings or a proxy only for Pulse.")
+                    subtitle: proxySubtitle
                 ) {
                     Picker("", selection: Binding(
                         get: { settings.networkProxy.mode },
@@ -46,7 +49,7 @@ struct NetworkPane: View {
                             var proxy = settings.networkProxy
                             proxy.mode = mode
                             settings.networkProxy = proxy
-                            if mode == .system {
+                            if mode != .manual {
                                 proxyHostInvalid = false
                                 proxyPortInvalid = false
                             }
@@ -119,10 +122,28 @@ struct NetworkPane: View {
             proxyHostInvalid = false
             proxyPortInvalid = false
         }
+        .task {
+            while !Task.isCancelled {
+                let on = SystemProxy.isOn
+                if systemProxyOn != on { systemProxyOn = on }
+                try? await Task.sleep(for: .seconds(3))
+            }
+        }
         .onChange(of: proxyField) { previous, current in
             guard previous != nil, previous != current else { return }
             saveManualProxy()
         }
+    }
+
+    /// What the chosen mode does — or, for "System Proxy Only" with nothing
+    /// switched on in macOS, that Pulse is not connecting at all, which is
+    /// otherwise only visible as every ring going stale.
+    private var proxySubtitle: String {
+        let mode = settings.networkProxy.mode
+        if mode == .systemRequired, !systemProxyOn {
+            return .localized("macOS has no proxy switched on, so Pulse isn't connecting.")
+        }
+        return mode.explanation
     }
 
     /// Host and port become one setting only after both fields are valid. The

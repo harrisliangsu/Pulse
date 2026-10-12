@@ -60,6 +60,10 @@ struct AccountPane: View {
                 )
 
                 AccountLiveUsageGroup(account: account, store: store, settings: settings)
+
+                if provider == .pulseExtension {
+                    ExtensionMetricsGroup(account: account, store: store, settings: settings)
+                }
             }
 
             // The service, not the account, so every account of it shows

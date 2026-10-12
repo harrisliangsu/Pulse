@@ -272,13 +272,80 @@ struct ExtensionUsageService: Sendable {
 /// reports what is left and no allowance, so the report carries the amount and
 /// its currency, and the ring it gets is every API account's — `BalanceRing`,
 /// with a denominator Pulse watched, one the reader typed, or none.
+///
+/// **Metrics are an addition, and cannot take the reading down.** `metrics[]`
+/// came after the first extensions were written (issue #80), so a metric Pulse
+/// cannot use — a value written as text, a list that is not a list — drops
+/// that metric, or the list, and leaves the limits and the balance as they
+/// were.
 enum ExtensionReport {
+    /// As many as the card has room for beside a few limits and a balance.
+    /// The rest are left off, in the program's order.
+    static let metricLimit = 4
+    /// The newest points of a series, at most. Older ones are left off rather
+    /// than thinned: a point Pulse kept is a point the program stated.
+    static let historyLimit = 120
+
     private struct Report: Decodable {
         let schemaVersion: Int
         let status: String?
         let plan: String?
         let limits: [Limit]?
         let balance: Balance?
+        let metrics: Lossy<Metric>?
+    }
+
+    /// A list whose bad entries are skipped, and which is empty rather than an
+    /// error when it is not a list at all.
+    private struct Lossy<Element: Decodable>: Decodable {
+        let elements: [Element]
+
+        init(from decoder: Decoder) throws {
+            guard var container = try? decoder.unkeyedContainer() else {
+                elements = []
+                return
+            }
+            var kept: [Element] = []
+            while !container.isAtEnd {
+                if let element = try? container.decode(Element.self) {
+                    kept.append(element)
+                } else if (try? container.decode(Skipped.self)) == nil {
+                    break
+                }
+            }
+            elements = kept
+        }
+
+        /// Anything at all, to step past an entry that did not decode.
+        private struct Skipped: Decodable {
+            init(from decoder: Decoder) throws {}
+        }
+    }
+
+    /// Every field optional, so a wrong type drops this metric and nothing
+    /// else.
+    private struct Metric: Decodable {
+        let id: String?
+        let label: String?
+        let value: Double?
+        let unit: String?
+        let history: Lossy<Point>?
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try? container.decodeIfPresent(String.self, forKey: .id)
+            label = try? container.decodeIfPresent(String.self, forKey: .label)
+            value = try? container.decodeIfPresent(Double.self, forKey: .value)
+            unit = try? container.decodeIfPresent(String.self, forKey: .unit)
+            history = try? container.decodeIfPresent(Lossy<Point>.self, forKey: .history)
+        }
+
+        private enum CodingKeys: String, CodingKey { case id, label, value, unit, history }
+    }
+
+    private struct Point: Decodable {
+        let t: String
+        let v: Double
     }
 
     /// Optional fields, so a balance missing one is dropped rather than
@@ -353,7 +420,43 @@ enum ExtensionReport {
             creditBalance: money.map(formatted)
         )
         usage.creditRemaining = money
+        usage.metrics = metrics(from: report.metrics?.elements ?? [])
         return usage.recording(.extensionProgram)
+    }
+
+    /// The metrics Pulse can draw, in the program's order: each with a label
+    /// and a value that is a number, no id twice, at most `metricLimit`.
+    private static func metrics(from reported: [Metric]) -> [UsageMetric] {
+        var seen: Set<String> = []
+        var kept: [UsageMetric] = []
+        for (index, metric) in reported.enumerated() {
+            guard kept.count < metricLimit else { break }
+            guard let value = metric.value, value.isFinite,
+                  let label = metric.label?.trimmingCharacters(in: .whitespacesAndNewlines), !label.isEmpty
+            else { continue }
+            let id = metric.id.map { String($0.prefix(64)) } ?? String(index)
+            guard seen.insert(id).inserted else { continue }
+            let unit = metric.unit?.trimmingCharacters(in: .whitespacesAndNewlines).prefix(16)
+            kept.append(UsageMetric(
+                id: id,
+                label: String(label.prefix(60)),
+                value: value,
+                unit: unit.flatMap { $0.isEmpty ? nil : String($0) },
+                history: history(from: metric.history?.elements ?? [])
+            ))
+        }
+        return kept
+    }
+
+    /// The points with a time and a number, oldest first, one per moment —
+    /// the first stated wins — and only the newest `historyLimit` of them.
+    private static func history(from points: [Point]) -> [UsageMetric.Point] {
+        var seen: Set<Date> = []
+        let dated = points.compactMap { point -> UsageMetric.Point? in
+            guard point.v.isFinite, let at = date(from: point.t), seen.insert(at).inserted else { return nil }
+            return UsageMetric.Point(at: at, value: point.v)
+        }
+        return Array(dated.sorted { $0.at < $1.at }.suffix(historyLimit))
     }
 
     /// The amount as stated, in a currency named by its ISO code. Below zero

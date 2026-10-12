@@ -82,8 +82,8 @@ struct StepFunParsingTests {
         #expect(windows.count == 1)
         #expect(window.usedFraction == 0.45)
         #expect(window.resetsAt == Date(timeIntervalSince1970: 1_790_582_456))
-        #expect(window.nextExpiry == .init(amount: 40_000_000,
-                                           at: Date(timeIntervalSince1970: 1_791_187_256)))
+        #expect(window.nextExpiry?.amount == 40_000_000)
+        #expect(window.nextExpiry?.at == Date(timeIntervalSince1970: 1_791_187_256))
     }
 
     /// Everything zeroed: no window and no credit. The account has no plan,

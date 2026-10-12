@@ -29,37 +29,23 @@ If the user asked for a review first ("审查一下再发版"), run `/code-revie
 
 ## 3. The CHANGELOG entry
 
-A `## x.y.z` section at the top of `CHANGELOG.md`, **above** the previous one. It is the GitHub release page and the Sparkle update window, so it is written for someone deciding whether to install:
+A `## x.y.z` section at the top of both `CHANGELOG.zh-CN.md` and `CHANGELOG.md`, **above** the previous one. Chinese is the GitHub page's first half and the Sparkle window; English is the second half. Write each for someone deciding whether to install:
 
 ```markdown
 ## 1.6.0
 
-**中文**
-
-**新功能**
-
-- **一句话说清楚是什么。** 再用一两句说怎么用、在哪里打开。感谢 [@name](https://github.com/qunqin24/Pulse/issues/NN) 提议。
-
-**改进与修复**
-
-- **用户看得到的变化。** 原因一句话。
-
-**English**
-
-**New**
-
-- **The same items, in the same order.** …
-
-**Changed and fixed**
-
-- …
+- **短标题。** 一句话：是什么、在哪开启。感谢 [@name](https://github.com/qunqin24/Pulse/issues/NN) 提议。
+- **用户看得到的变化。** 一句话。[#NN](https://github.com/qunqin24/Pulse/issues/NN)
 ```
 
-- Both `**中文**` and `**English**` markers are required; the workflow refuses an entry without them.
+The English file uses the same bullets, in the same order.
+
+- This fork keeps the two languages in two files. Chinese is a `## x.y.z` section in `CHANGELOG.zh-CN.md`; English is the same section in `CHANGELOG.md`. Do not add `**中文**` / `**English**` markers to `CHANGELOG.md`. `Scripts/release-notes.py` builds the GitHub page Chinese-first. The workflow refuses a tag that lacks either heading.
+- **Open WebUI's shape** ([its changelog](https://github.com/open-webui/open-webui/blob/main/CHANGELOG.md)), without the emoji: a short bold title, **one sentence** — what it is and where to turn it on — and the issue / PR links. No background, reasoning or caveats; link the Docs page instead. A Docs link points at this repository.
 - Only what a user notices. Refactors, tests and docs stay out.
 - Thank the reporter of any issue the release closes, linking the issue.
 - Grammar is limited to bullets, `**bold**`, `` `code` `` and links (`Scripts/changelog.py`).
-- Validate: `python3 Scripts/changelog.py x.y.z > /dev/null` must exit cleanly.
+- Validate: `python3 Scripts/changelog.py x.y.z > /dev/null` and `python3 Scripts/changelog.py x.y.z --zh > /dev/null` must both exit cleanly.
 
 If a new feature is user-visible, add it to the feature list in **all five** READMEs (`README.md`, `README.zh-CN.md`, `README.zh-Hant.md`, `README.ja.md`, `README.ko.md`), in its own commit before the release commit.
 
@@ -67,12 +53,12 @@ If a new feature is user-visible, add it to the feature list in **all five** REA
 
 ```bash
 echo x.y.z > VERSION
-git add CHANGELOG.md VERSION && git commit -m "Pulse x.y.z"
+git add CHANGELOG.md CHANGELOG.zh-CN.md VERSION && git commit -m "Pulse x.y.z"
 git tag vx.y.z
 git push origin main && git push origin vx.y.z
 ```
 
-- The release commit holds `CHANGELOG.md` and `VERSION` and nothing else.
+- The release commit holds `CHANGELOG.md`, `CHANGELOG.zh-CN.md` and `VERSION` and nothing else.
 - **No `Co-Authored-By` or any other trailer** in any commit message. The user has objected to them.
 
 ## 5. Watch the workflow

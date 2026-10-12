@@ -6,6 +6,21 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.22
+
+- **扩展可以上报自定义指标。** 例如首字时间和输出速率，显示在卡片上并画出趋势线，[写法](https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md#metrics)见文档。感谢 [@xkaaaaaa](https://github.com/qunqin24/Pulse/issues/80) 提议。
+- **新增「不使用代理」和「使用代理」。** 在「设置 → 网络与刷新 → 代理」中选择；「使用代理」在系统代理未开启时不联网，默认仍为「跟随系统」。
+- **截图时隐藏悬浮面板。** 在「设置 → 位置与行为」中打开「截图时隐藏」，支持此设置的截图工具不会截到悬浮面板；录屏和共享屏幕时仍可能显示。
+- **服务商确认没有套餐后，不再显示旧额度。** 适用于 z.ai、Xiaomi Coding Plan、Grok Bot 等。
+- **清除 Xiaomi Coding Plan 的登录后，卡片提示重新登录。** 不再显示过期的旧额度。
+- **重新登录的账号不会被旧登录的续期覆盖。** 适用于在 Pulse 中添加的 Claude Code 和 Grok 账号。
+- **Qoder 分项显示时，到期说明不再重复。** 合计行不再显示到期，整行一起到期时写作「11月7日全部到期」。感谢 [@momusticks](https://github.com/qunqin24/Pulse/issues/76) 反馈。
+- **Qoder 积分分多天到期时，卡片说明全部批次。** 例如「11月8日起分 4 批全部到期」。[#76](https://github.com/qunqin24/Pulse/issues/76)
+- **打开「分项显示积分」后，圆环跟随最接近用完的一项。** 原来固定在合计上的圆环会改回自动。[#76](https://github.com/qunqin24/Pulse/issues/76)
+- **同步上游 qunqin24/Pulse**（21 个提交，直到其 1.11.0，自 1.4.21 起）。本仓库是更新来源，版本为 **1.4.22**。没有抄入上游 1.11.0 的 Sparkle 推送。`appcast.xml` 保持不动，等这个版本打 tag 后再由发布流程写入。
+- **这次同步里为本仓库补上的衔接：** Qoder 的个人令牌（`pt-` / `jt-`），以及 Qoder IDE 和 `~/.qoder` 的发现，仍留在同一个账号上。限额行上的数字仍按环颜色方案着色。浅色表面仍走原来的外观选择（深色、浅色、跟随 Mac、液态玻璃）。设置里的扩展说明打开本仓库。更新检查仍指向本仓库。
+- **保留本仓库特有能力：** Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 `~/.qoder` 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.4.21
 
 - **Qoder 的积分可以分项显示。** 积分额度由套餐积分、加油包和专属积分相加而成，三者各自扣减。合计看起来还充裕时，其中一项可能已所剩无几。在 Qoder 设置的「面板」中打开「分项显示积分」后，合计之下分别显示这三项，圆环默认跟随最接近用完的一项。只有一项有额度时不重复显示。默认关闭。个人令牌（`pt-` / `jt-`）仍可登录。感谢 [@momusticks](https://github.com/qunqin24/Pulse/issues/76) 提议。

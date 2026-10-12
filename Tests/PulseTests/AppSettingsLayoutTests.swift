@@ -51,6 +51,7 @@ struct AppSettingsLayoutTests {
         ("panelAppearance", { $0.panelAppearance = .light }),
         ("autoCollapse", { $0.autoCollapse = false }),
         ("hidesInFullScreen", { $0.hidesInFullScreen = false }),
+        ("hidesFromScreenCapture", { $0.hidesFromScreenCapture = true }),
         ("followsActiveDisplay", { $0.followsActiveDisplay = true }),
         ("showsSecondRing", { $0.showsSecondRing = true })
     ]

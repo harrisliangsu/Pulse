@@ -61,6 +61,18 @@ extension AppSettings {
     func qoderShowsPartsChanged(from old: Bool) {
         guard qoderShowsParts != old else { return }
         defaults.set(qoderShowsParts, forKey: Key.qoderShowsParts)
+        // **Turning the parts on frees a ring pinned to the total.** Before
+        // the parts existed the total was the only limit, so a pin to it —
+        // made by hand or by choosing the only entry there was — was the same
+        // as automatic. Kept, it held the ring on the total and silently
+        // overrode the new default of following the part closest to spent
+        // (issue #76). A pin to anything else is a choice and stays.
+        if qoderShowsParts {
+            for account in allAccounts where account.provider == .qoder
+                && pinnedWindows[account.id] == "qoder.credits" {
+                pinnedWindows[account.id] = nil
+            }
+        }
         onChange?()
     }
 

@@ -12,7 +12,7 @@ struct ExtensionsSettingsView: View {
     /// Opens an extension's own pane.
     let open: (AccountKey) -> Void
 
-    static let guideURL = URL(string: "https://github.com/qunqin24/Pulse/blob/main/Docs/extensions.md")!
+    static let guideURL = URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md")!
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {

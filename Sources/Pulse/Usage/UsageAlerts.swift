@@ -527,6 +527,11 @@ struct AlertMemory: Codable, Sendable, Equatable {
              // A program taken out of its folder is a setup change somebody
              // made, not an outage.
              .extensionMissing,
+             // "System Proxy Only" holding back because the proxy app was
+             // quit: Pulse chose not to ask, so nothing about the provider is
+             // known, and every account announcing an outage at once would
+             // be a notification about a switch.
+             .systemProxyOff,
              // Nothing set up yet, for a profiled provider.
              .sessionMissing, .localLoginMissing, .localAppMissing,
              // An app that was never installed or never signed in, which is
