@@ -218,6 +218,35 @@ struct UsageReportTests {
         let windows = try #require(entry["windows"] as? [[String: Any]])
         #expect(windows.first?["label"] as? String == "Monthly requests")
         #expect(windows.first?["reportsLength"] as? Bool == false)
+        // No metrics, no key: a built-in provider's entry is unchanged.
+        #expect(entry["metrics"] == nil)
+    }
+
+    @Test("An extension's metrics are printed as the program stated them")
+    func extensionMetrics() throws {
+        let account = AccountKey(.pulseExtension, slot: "relay")
+        let rail = AppSettings.StoredRail(accounts: [account], labels: [:], pinnedWindows: [:])
+        var reading = Self.reading(account, [], observedAt: Self.generatedAt)
+        reading.metrics = [
+            UsageMetric(id: "ttft", label: "首字时间", value: 320.25, unit: "ms", history: [
+                .init(at: Self.generatedAt.addingTimeInterval(-3600), value: 410),
+                .init(at: Self.generatedAt, value: 320.25),
+            ]),
+            UsageMetric(id: "1", label: "Output rate", value: 87.4, unit: nil),
+        ]
+        let entry = try Self.accounts(try Self.object(rail: rail, readings: [account.id: reading]))[0]
+        let metrics = try #require(entry["metrics"] as? [[String: Any]])
+
+        #expect(metrics.map { $0["id"] as? String } == ["ttft", "1"])
+        #expect(metrics[0]["label"] as? String == "首字时间")
+        // Unrounded, and the unit untouched.
+        #expect(metrics[0]["value"] as? Double == 320.25)
+        #expect(metrics[0]["unit"] as? String == "ms")
+        let history = try #require(metrics[0]["history"] as? [[String: Any]])
+        #expect(history.map { $0["v"] as? Double } == [410, 320.25])
+        #expect(history.allSatisfy { $0["t"] is String })
+        #expect(metrics[1]["unit"] == nil)
+        #expect(metrics[1]["history"] == nil)
     }
 
     @Test("An added account is named by the user's own label")

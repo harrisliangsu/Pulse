@@ -62,9 +62,9 @@ Locating the executable cannot rely on `PATH`: a GUI app inherits almost none of
 
 ## Proxies
 
-The HTTP endpoint uses Pulse's Network setting: macOS system proxy by default, or the manual HTTP/SOCKS5 proxy. On a machine behind a VPN, following the system is usually what you want (the endpoint may only be reachable through it). A tunnel that stumbles surfaces as a Pulse error, typically `-1005 networkConnectionLost`; transient `URLError`s are retried a couple of times.
+The HTTP endpoint uses Pulse's Network setting: macOS's proxy by default (**Follow System**), macOS's proxy and never a direct connection (**System Proxy Only**), no proxy at all (**No Proxy**), or Pulse's own HTTP/SOCKS5 proxy (**Custom Proxy**). On a machine behind a VPN, following the system is usually what you want (the endpoint may only be reachable through it). A tunnel that stumbles surfaces as a Pulse error, typically `-1005 networkConnectionLost`; transient `URLError`s are retried a couple of times.
 
-`codex app-server` is different: it is a child process rather than a `URLSession`. Manual HTTP starts it with `HTTP_PROXY` / `HTTPS_PROXY`, manual SOCKS5 with `ALL_PROXY`, and both with loopback in `NO_PROXY`. Changing the proxy shuts down a running helper; the next request starts it with the new environment. Follow System injects nothing and preserves the environment Pulse itself inherited. Full boundary: [../networking.md](../networking.md).
+`codex app-server` is different: it is a child process rather than a `URLSession`. Manual HTTP starts it with `HTTP_PROXY` / `HTTPS_PROXY`, manual SOCKS5 with `ALL_PROXY`, and both with loopback in `NO_PROXY`. Changing the proxy shuts down a running helper; the next request starts it with the new environment. Follow System and System Proxy Only inject nothing and preserves the environment Pulse itself inherited; No Proxy removes every proxy variable it would have inherited. Full boundary: [../networking.md](../networking.md).
 
 ## Added accounts
 

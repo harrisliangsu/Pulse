@@ -60,7 +60,7 @@ While the Appearance picker is on Glass, a **Transparency** slider appears under
 |---|---|---|
 | Panel | **Appearance** | Size, Spacing, Round ends, Appearance (dark / light / auto / glass) and Transparency while glass is on, Ring activity animation |
 | Panel | **Rings and figures** | *Figures*: percentages at the side / across (*Percentages across*: any rail lying across — docked to the top or bottom, or free), figures beside the rings (free across only, off by default; needs percentages across), figure above the ring, show what's left, forecast. *Rings*: second limit, time until reset, time ring direction, ring colour scheme (Red alert / Gradient / Quiet), turn red at (under Red alert and Quiet), alert colour when docked |
-| Panel | **Position and behavior** | Show floating panel, hide in full screen, hide until pointed at, position (Left, Top, Bottom, Free across, Free upright, Right — a segmented control sized to its labels, since that many segments truncate under `controlWidth`), follow the active display; **Order** |
+| Panel | **Position and behavior** | Show floating panel, hide in full screen, hide from screenshots, hide until pointed at, position (Left, Top, Bottom, Free across, Free upright, Right — a segmented control sized to its labels, since that many segments truncate under `controlWidth`), follow the active display; **Order** |
 | Panel | Token spend | unchanged |
 | Application | **General** | Open at login, hide menu bar icon; Shortcuts; Language |
 | Application | **Notifications** | Warn at, when a limit comes back, when a reading stops arriving, when a service is down, when a recap is ready; Reset reminders (predicted and regular); Celebrations, including the optional five-hour / hourly ribbon |

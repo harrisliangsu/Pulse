@@ -10,6 +10,21 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.22
+
+- **Extensions can report metrics of their own.** Figures such as time to first token and output rate appear on the card with a trend line. [How to report them](https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md#metrics). Thanks to [@xkaaaaaa](https://github.com/qunqin24/Pulse/issues/80) for the suggestion.
+- **No Proxy and System Proxy Only.** Choose them under Settings → Network and refresh → Proxy; System Proxy Only connects nowhere while macOS has no proxy switched on, and Follow System stays the default.
+- **Hide the floating panel from screenshots.** Turn on Hide from screenshots under Settings → Position and behavior, and screenshot tools that support it leave the panel out; recordings and screen sharing may still show it.
+- **Old figures are no longer shown once a provider confirms there is no plan.** This covers z.ai, Xiaomi Coding Plan, Grok Bot and others.
+- **Clearing Xiaomi Coding Plan's sign-in asks you to sign in again.** The card no longer shows the old figures.
+- **An account signed in to again is no longer replaced by the old login's renewal.** This covers Claude Code and Grok accounts added in Pulse.
+- **Qoder's expiry lines no longer repeat when its credits are shown part by part.** The total no longer shows one, and a row whose credits all lapse together reads "All expire Nov 7". Thanks to [@momusticks](https://github.com/qunqin24/Pulse/issues/76) for the report.
+- **Qoder credits lapsing over several days are described in full.** For example, "All expire from Nov 8, in 4 lots". [#76](https://github.com/qunqin24/Pulse/issues/76)
+- **Turning on Show each part of the credits lets the ring follow the part closest to spent.** A ring pinned to the total returns to automatic. [#76](https://github.com/qunqin24/Pulse/issues/76)
+- **Synced from upstream qunqin24/Pulse** (21 commits, through their 1.11.0, since 1.4.21). This repository is the update source, and this fork's version is **1.4.22**. Their Sparkle offer for 1.11.0 was not copied. `appcast.xml` is unchanged until this version is tagged.
+- **Fork fixes in this sync:** Qoder's personal token (`pt-` / `jt-`) and discovery of Qoder IDE and `~/.qoder` stay. The figure on a limit row keeps the ring colour scheme. The light surface stays on the existing Appearance choice (dark, light, auto, or glass). The extensions guide in Settings opens this repository. Update checks stay on this repository.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen's cookie store; bilingual release notes; and this repo's Sparkle feed and signing key.
+
 ## 1.4.21
 
 - **Qoder's credits can be shown part by part.** The allowance adds up plan credits, a top-up pack and dedicated credits, and each is spent on its own, so the total can look ample while one part is nearly gone. In Qoder's settings, under Panel, turn on Show each part of the credits. The three parts follow the total, and the ring follows whichever is closest to spent. A single part with an allowance is not shown twice. Off by default. A personal token (`pt-` / `jt-`) still signs in. Thanks to [@momusticks](https://github.com/qunqin24/Pulse/issues/76) for the suggestion.

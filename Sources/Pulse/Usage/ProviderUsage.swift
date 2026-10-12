@@ -205,6 +205,19 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         /// In the allowance's own unit — Qoder's or StepFun's credits.
         let amount: Double
         let at: Date
+        /// Whether `amount` is all the row has left, so the card says those
+        /// credits expire rather than "of which" — a Qoder part whose one pack
+        /// is the whole of it (issue #76). Nil where nobody said: the reading
+        /// is "of which", which is never wrong about the total.
+        var coversRemainder: Bool? = nil
+        /// When the credits lapse on more than one day: how many days, and
+        /// how much in all. Qoder's daily sign-in grant expires thirty days
+        /// after each claim, so a pack row can hold a lot a day for a month,
+        /// and naming only the soonest said 100 of 400 had a deadline when all
+        /// of them did (issue #76). Nil for a single day. `amount` and `at`
+        /// stay the soonest lot's, which is what `--json` reports.
+        var lots: Int? = nil
+        var totalAmount: Double? = nil
 
         /// The soonest parts to lapse: everything ending on the same day as
         /// the first one to, added up. Six packs a day apart are six dates;
@@ -217,7 +230,13 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
             let ahead = parts.filter { $0.at > now && $0.amount > 0 }
             guard let first = ahead.map(\.at).min() else { return nil }
             let sameDay = ahead.filter { calendar.isDate($0.at, inSameDayAs: first) }
-            return .init(amount: sameDay.reduce(0) { $0 + $1.amount }, at: first)
+            var expiry = Expiry(amount: sameDay.reduce(0) { $0 + $1.amount }, at: first)
+            let days = Set(ahead.map { calendar.startOfDay(for: $0.at) })
+            if days.count > 1 {
+                expiry.lots = days.count
+                expiry.totalAmount = ahead.reduce(0) { $0 + $1.amount }
+            }
+            return expiry
         }
     }
 
@@ -679,6 +698,9 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
         /// There is a key, and the service refused it.
         case apiKeyRefused
         case unreachable
+        /// "System Proxy Only" is on and macOS has no proxy switched on, so
+        /// the request was never sent (`NetworkSession.refuses`).
+        case systemProxyOff
         case unreadableReply
         case rateLimited
         case serverError
@@ -758,6 +780,7 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             case .apiKeyMissing: .localized("Add an API key in Settings.")
             case .apiKeyRefused: .localized("That key was refused. Check it in Settings.")
             case .unreachable: .localized("The service didn't respond.")
+            case .systemProxyOff: .localized("No proxy is switched on in macOS, so Pulse didn't connect.")
             case .unreadableReply: .localized("Couldn't read the reply.")
             case .rateLimited: .localized("Checking too often — easing off.")
             case .serverError: .localized("The service returned an error.")
@@ -806,6 +829,10 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
     /// money, and it must not compare ¥ against $, so the currency travels
     /// with the amount.
     var creditRemaining: CreditAmount?
+    /// Figures that are not limits, as an extension stated them
+    /// (`UsageMetric`). Empty for every built-in provider. Drawn on the card
+    /// under the limits; never the ring, and never a reading on their own.
+    var metrics: [UsageMetric] = []
 
     var origin: UsageRoute?
     /// The account *and organization* the figures belong to, where the route

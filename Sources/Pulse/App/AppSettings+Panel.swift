@@ -20,6 +20,7 @@ import Foundation
 extension AppSettings.Key {
     static let panelVisible = "settings.panelVisible"
     static let hidesInFullScreen = "settings.hidesInFullScreen"
+    static let hidesFromScreenCapture = "settings.hidesFromScreenCapture"
     static let followsActiveDisplay = "settings.followsActiveDisplay"
     static let panelSize = "settings.panelSize"
     static let railSpacing = "settings.railSpacing"
@@ -41,6 +42,7 @@ extension AppSettings.Key {
 extension AppSettings.Default {
     static let isPanelVisible = true
     static let hidesInFullScreen = true
+    static let hidesFromScreenCapture = false
     static let followsActiveDisplay = false
     static let topRailShowsPercentages = false
     static let sideRailShowsPercentages = true
@@ -64,6 +66,12 @@ extension AppSettings {
     func hidesInFullScreenChanged(from old: Bool) {
         guard hidesInFullScreen != old else { return }
         defaults.set(hidesInFullScreen, forKey: Key.hidesInFullScreen)
+        onLayoutChange?()
+    }
+
+    func hidesFromScreenCaptureChanged(from old: Bool) {
+        guard hidesFromScreenCapture != old else { return }
+        defaults.set(hidesFromScreenCapture, forKey: Key.hidesFromScreenCapture)
         onLayoutChange?()
     }
 

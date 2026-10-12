@@ -655,7 +655,7 @@ enum OAuthLogin {
         if renewed.refreshToken.isEmpty { renewed.refreshToken = credentials.refreshToken }
         renewed.accountName = renewed.accountName ?? credentials.accountName
         renewed.accountID = renewed.accountID ?? credentials.accountID
-        return renewed
+        return credentials.renewalOf(renewed)
     }
 
     private static func post(_ body: [String: String], to configuration: Configuration) async throws -> AccountCredentials {

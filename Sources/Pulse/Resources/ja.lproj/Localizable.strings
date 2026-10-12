@@ -40,7 +40,7 @@
 "Copy diagnostics" = "診断情報をコピー";
 "Not recorded" = "記録なし";
 "Read cached usage" = "キャッシュされた使用量を読む";
-"Reads saved figures without fetching or opening credentials." = "保存済みの数値を読むだけで、通信も認証情報へのアクセスも行いません。";
+"Prints Pulse's saved readings, not the provider's original reply, without fetching or opening credentials." = "Pulse が保存した読み取り結果を出力します。プロバイダの元の応答ではありません。通信や認証情報へのアクセスは行いません。";
 "Copy command" = "コマンドをコピー";
 "Developer kit" = "開発者キット";
 "Raycast extension, tmux and shell status, and a sketchybar plugin." = "Raycast 拡張、tmux とシェルのステータス、sketchybar プラグインが含まれます。";
@@ -77,6 +77,8 @@
 "The usage rail at the edge of the screen." = "画面の端に使用量のレールを表示します。";
 "Hide in full screen" = "フルスクリーン中は隠す";
 "Keep the floating panel out of full-screen apps." = "他の App がフルスクリーンのときは自動的に隠します。";
+"Hide from screenshots" = "スクリーンショットに写さない";
+"Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it." = "対応するスクリーンショットツールにはフローティングパネルが写りません。画面収録や画面共有では写ることがあります。";
 "Follow the active display" = "使用中のディスプレイを追う";
 "With more than one display, the rail moves to the one the pointer is on." = "ディスプレイが複数あるとき、ポインタのある方へレールが移動します。";
 "Left" = "左";
@@ -645,9 +647,16 @@
 /* ネットワークプロキシ */
 "Network" = "ネットワーク";
 "Proxy" = "プロキシ";
-"Use macOS settings or a proxy only for Pulse." = "macOS のシステム設定を使うか、Pulse 専用のプロキシを指定します。";
+"No Proxy" = "プロキシを使わない";
 "Follow System" = "システム設定に従う";
-"Manual" = "手動";
+"System Proxy Only" = "システムのプロキシのみ";
+"Custom Proxy" = "カスタムプロキシ";
+"Pulse connects directly and ignores the proxy in macOS settings." = "Pulse は直接接続し、macOS の設定にあるプロキシを使いません。";
+"Uses the proxy in macOS settings, or connects directly when there is none." = "macOS の設定にあるプロキシを使います。設定がなければ直接接続します。";
+"Uses the proxy in macOS settings, and doesn't connect when there is none." = "macOS の設定にあるプロキシを使います。プロキシがオフのときは接続しません。";
+"A proxy for Pulse only." = "Pulse 専用のプロキシを指定します。";
+"macOS has no proxy switched on, so Pulse isn't connecting." = "macOS でプロキシがオンになっていないため、Pulse は接続していません。";
+"No proxy is switched on in macOS, so Pulse didn't connect." = "macOS でプロキシがオンになっていないため、Pulse は接続しませんでした。";
 "Type" = "種類";
 "HTTP" = "HTTP";
 "SOCKS5" = "SOCKS5";
@@ -739,6 +748,9 @@
 "Show each part of the credits" = "クレジットを内訳ごとに表示";
 "Plan credits, a top-up pack and dedicated credits are spent separately. The total can look ample while one of them is nearly gone." = "プランのクレジット、追加パック、専用クレジットは別々に消費されます。合計に余裕があるように見えても、そのうち一つが残りわずかなことがあります。";
 "%@: %@ credits expire" = "うち %2$@ クレジットが %1$@に失効";
+"All expire %@" = "%@にすべて失効";
+"All expire from %@, in %@ lots" = "%1$@から%2$@回ですべて失効";
+"From %@: %@ credits expire in turn" = "うち %2$@ クレジットが %1$@から順次失効";
 "Sign in to Qoder in a browser to see usage." = "ブラウザで Qoder にサインインすると使用量が表示されます。";
 "Qoder's saved session expired. Sign in again in your browser." = "Qoder の保存済みセッションが期限切れです。ブラウザでサインインし直してください。";
 "This Qoder account has no credits." = "この Qoder アカウントにクレジットはありません。";
@@ -772,6 +784,7 @@
 "Its program isn't there, or isn't executable." = "プログラムが見つからないか、実行できません。";
 "Look again" = "再読み込み";
 "Manage extensions" = "拡張機能の管理";
+"Metrics" = "指標";
 "No pulse-extension.json in this folder." = "このフォルダに pulse-extension.json がありません。";
 "None yet" = "まだありません";
 "Program" = "プログラム";
@@ -787,6 +800,7 @@
 "Time limit" = "制限時間";
 "Written for extension schema %@, which this version of Pulse doesn't read." = "拡張機能スキーマ %@ 向けに書かれていますが、このバージョンの Pulse は読み込めません。";
 "pulse-extension.json isn't valid JSON, or is missing a field." = "pulse-extension.json が正しい JSON ではないか、必要な項目が欠けています。";
+"%@. Lowest %@, highest %@." = "%@。最低 %@、最高 %@。";
 
 /* Profiled providers: shared wording */
 "No session found. Sign in at %@ first." = "セッションが見つかりません。先に %@ でサインインしてください。";

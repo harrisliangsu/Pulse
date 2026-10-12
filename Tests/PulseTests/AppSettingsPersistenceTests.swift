@@ -40,6 +40,7 @@ struct AppSettingsPersistenceTests {
             ("settings.showsUsageInMenuBar", \.showsUsageInMenuBar, true),
             ("settings.showsMenuDashboard", \.showsMenuDashboard, true),
             ("settings.hidesInFullScreen", \.hidesInFullScreen, false),
+            ("settings.hidesFromScreenCapture", \.hidesFromScreenCapture, true),
             ("settings.followsActiveDisplay", \.followsActiveDisplay, true),
             ("settings.showsCodexResetCredits", \.showsCodexResetCredits, true),
             ("settings.usesGlass", \.usesGlass, true),

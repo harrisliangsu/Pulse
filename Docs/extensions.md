@@ -2,12 +2,12 @@
 
 Owns: the extension contract. That covers where an extension lives, what its manifest says, how Pulse runs it, and what it has to print. The source is [`Sources/Pulse/Providers/PulseExtension.swift`](../Sources/Pulse/Providers/PulseExtension.swift), and [`Tests/PulseTests/PulseExtensionTests.swift`](../Tests/PulseTests/PulseExtensionTests.swift) pins this page. Proposal and discussion: [issue #51](https://github.com/qunqin24/Pulse/issues/51).
 
-An extension is a program you add yourself, and it reports **one account's** usage: its limits, its prepaid balance, or both. Pulse runs it, reads one JSON object from its standard output, and draws that object with its own ring and card. Use one when a service does not belong in Pulse itself, such as an API relay, an organization's internal quota endpoint or a personal script. It saves you from keeping a fork of Pulse. Relay balances: [issue #40](https://github.com/qunqin24/Pulse/issues/40).
+An extension is a program you add yourself, and it reports **one account's** usage: its limits, its prepaid balance, or both, and beside them any figures of its own, such as a relay's response time. Pulse runs it, reads one JSON object from its standard output, and draws that object with its own ring and card. Use one when a service does not belong in Pulse itself, such as an API relay, an organization's internal quota endpoint or a personal script. It saves you from keeping a fork of Pulse. Relay balances: [issue #40](https://github.com/qunqin24/Pulse/issues/40).
 
 Scope, schema 1:
 
-- **Rings only.** One account per extension, drawn with Pulse's own components. An extension cannot draw anything of its own, and cannot load code into Pulse.
-- **Not yet in this schema:** several accounts from one program, an icon of its own, and a detail section on the card. Every extension shows the same puzzle-piece mark, and its name tells it apart.
+- **Rings, and rows on the card.** One account per extension, drawn with Pulse's own components: its limits and balance drive the ring, and its metrics are rows on the card under them. An extension cannot draw anything of its own, and cannot load code into Pulse.
+- **Not yet in this schema:** several accounts from one program, an icon of its own, and a metric shown on the rail. Every extension shows the same puzzle-piece mark, and its name tells it apart.
 
 ## Where it lives
 
@@ -49,7 +49,7 @@ Reading a manifest never runs anything.
 - **Only once it is switched on.** A new extension appears in Settings switched off. It runs after **Show in panel** is turned on in its own pane, the same rule every built-in service follows.
 - **On the refresh schedule**: every full refresh, and whenever its ring is clicked. Extensions run side by side, so a slow one does not hold the others up.
 - **No arguments. Standard input is empty.** The working directory is the extension's folder.
-- **A small environment, not Pulse's.** `HOME`, `USER`, `LOGNAME`, `TMPDIR`, `LANG`, `LC_ALL`, `LC_CTYPE` and `SHELL` are passed on, plus any proxy variables, including the manual proxy from **Network and refresh**; see [networking.md](networking.md). `PATH` is `/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin`, so `#!/usr/bin/env node` and `python3` resolve. Pulse also sets `PULSE_EXTENSION_ID` and `PULSE_EXTENSION_SCHEMA=1`. Nothing else from Pulse's environment is passed on, so a token exported for another tool does not reach the program.
+- **A small environment, not Pulse's.** `HOME`, `USER`, `LOGNAME`, `TMPDIR`, `LANG`, `LC_ALL`, `LC_CTYPE` and `SHELL` are passed on, plus any proxy variables, including the custom proxy from **Network and refresh** (none at all under **No Proxy**); see [networking.md](networking.md). `PATH` is `/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin`, so `#!/usr/bin/env node` and `python3` resolve. Pulse also sets `PULSE_EXTENSION_ID` and `PULSE_EXTENSION_SCHEMA=1`. Nothing else from Pulse's environment is passed on, so a token exported for another tool does not reach the program.
 - **No credentials.** The program owns its login. Pulse does not read one for it, store one for it, or pass it one.
 - **Bounded.** A program still running at its time limit is stopped: SIGTERM to its process group, then SIGKILL. Output past 256 KiB is discarded. This uses the same runner as `arkcli` (`BoundedProcess`).
 
@@ -107,6 +107,41 @@ A balance is drawn the way every API account's is (`BalanceRing`; see [providers
 - **With limits**, the limits drive the ring and the card still lists the balance.
 - **Never spent on Pulse's say-so.** A balance at or below zero does not mark the account spent. Only a limit at 100% does.
 - **Warn below.** Once an extension has reported a balance, its pane offers the low-balance notification, in the balance's own currency. See [notifications.md](notifications.md).
+
+### Metrics
+
+Figures that are not limits — a relay's time to first token, its output rate, its success rate — go in an optional `metrics` list. It was added to schema 1 after the first extensions were written ([issue #80](https://github.com/qunqin24/Pulse/issues/80)), so an extension without it is read exactly as before.
+
+```json
+{
+  "schemaVersion": 1,
+  "balance": { "amount": 16.33, "currency": "USD" },
+  "metrics": [
+    { "id": "ttft", "label": "Time to first token", "value": 320, "unit": "ms",
+      "history": [
+        { "t": "2026-10-12T14:00:00+08:00", "v": 410 },
+        { "t": "2026-10-12T15:00:00+08:00", "v": 355 },
+        { "t": "2026-10-12T16:00:00+08:00", "v": 320 }
+      ] },
+    { "id": "tps", "label": "Output rate", "value": 87.4, "unit": "tok/s" }
+  ]
+}
+```
+
+| Field | Rule |
+|---|---|
+| `metrics[].label` | Required. The row's name, in the program's own words. Cut to 60 characters. |
+| `metrics[].value` | Required. A JSON number, not a string. Any finite number, below zero included. |
+| `metrics[].id` | Optional, but recommended. Without it the metric's position is used. A repeated id is drawn once. |
+| `metrics[].unit` | Optional, such as `ms`, `tok/s` or `%`. Shown after the figure, never converted. Cut to 16 characters. |
+| `metrics[].history[]` | Optional series of `{"t": ISO 8601 time, "v": number}`, in any order. Pulse sorts it, keeps one point per time (the first given), and keeps the newest 120 points. |
+
+- **Rows on the card, under the limits and the balance.** At most **four** metrics are read; the rest are left off, in the program's order. The figure is rounded to two decimal places for display, and a figure too small for that keeps two significant digits rather than reading as zero.
+- **A trend line for the first two with a series** of at least two points at different times. It is placed by time, so a gap in the points shows as a gap, and scaled between the series' own lowest and highest point. It has one colour whichever way it moves: only the program knows whether lower is better. The card draws no more than two lines because the panel's window is sized for its tallest card, and a third would push a card with a few limits past it.
+- **Read each point in Settings.** The panel never becomes the key window, so its lines have no hover readout. The extension's own pane has a **Metrics** group that lists every metric and draws every series, with the time and value of each point on hover.
+- **Never the ring, and never a reading on its own.** A metric has no ceiling, so a reply with metrics and neither a limit nor a balance still shows "No limits reported."
+- **A metric Pulse cannot use takes nothing else with it.** One without a label, or with a value that is not a number, is left off; so is a history point without a valid time or number. A `metrics` value that is not a list is ignored. The limits and the balance beside it are read as usual.
+- **Kept with the reading.** A failed run leaves the last metrics on the card with the rest of the stale reading, and `--json` prints them under `metrics`; see [json-output.md](json-output.md).
 
 ### When there is no reading
 

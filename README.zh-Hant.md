@@ -77,6 +77,7 @@
 - **可選的系統通知**：預設全部關閉，直到你開啟。額度越過 75/80/90/95%、服務商回報用盡、先前提醒過的視窗重新恢復、連續多次檢查失敗（面板正悄悄顯示較舊的數字），預付額度跌破你設定的金額，以及 Codex、Claude Code 或 DeepSeek 的官方狀態頁公布工具所依賴的服務發生故障時（只限你已開啟的服務），都會收到通知。每件事只說一次：開啟此功能時已經越線的額度會立刻告知一次，之後不再重複，直到它重設或變得更糟。
 - **額度重設後自動開啟視窗（可選）**：Claude Code 和 Codex 的用量視窗，要等重設後你送出第一則訊息才開始計時。開啟後，Pulse 會在每次重設後不久、你設定的時段內，透過服務商自己的命令列工具送出一句「hi」，讓視窗從那一刻起算，而不是等你回來才開始。預設關閉；這不是 Anthropic 或 OpenAI 提供的功能，開啟前會請你確認：這麼做可能被視為規避用量限制。
 - **全螢幕空間相容**：預設只留在你目前工作的 Space，全螢幕應用那邊交給它自己。
+- **截圖時隱藏（可選）**：支援此設定的截圖工具不會截到浮動面板，自動選取視窗時也不會選中它。
 - **macOS 質感**：經典沉穩的純黑底板、適合明亮螢幕的淺色底板，或在 macOS 26+ 上使用原生 **Liquid Glass**。
 - **動畫標記（可選）**：把供應商圖示換成一個會隨該帳號狀態反應的小機器人——正在工作、正在取數、額度用盡或閒置。預設關閉，逐個帳號開啟；八種人格、十八種形狀，顏色也可自行指定。
 - **浮動膠囊選單與快速鍵**：右鍵點按浮動膠囊——或收合後的細條，按住 Control 點按同樣有效——可開啟含「設定…」與「結束 Pulse」的選單。在 **設定 › 一般 › 快速鍵** 中，可選擇將全域快速鍵指派給**開啟設定**與**顯示或隱藏面板**；兩者在你指定之前都保持空白。
@@ -92,10 +93,10 @@
 - **七十七個服務商**：Claude Code、Codex、Kiro、Antigravity、Cursor、GitHub Copilot、Grok、Grok Bot、OpenCode Go、Kimi Code、Ollama Cloud、z.ai、Zhipu、MiniMax（國際與中國大陸）、Volcengine、Command Code、DeepSeek、Devin、小米 Coding Plan、sub2api、New API、V2EX、Qoder 與階躍星辰（StepFun）；另有 Abacus AI、Aixy、Alibaba Coding Plan、Alibaba Token Plan、Amp、Atlas Cloud、Augment Code、Bifrost、Chutes、ClawRouter、ClinePass、Codebuff、DeepInfra、DevPass、ElevenLabs、Factory、Gemini、GitKraken AI、Hugging Face、Hyper、IBM Bob、JetBrains AI、Kilo Code、LiteLLM、LLM API Key Proxy、LongCat、Manus、Mistral、Moonshot、Neuralwatt、Notion AI、Nous Portal、OpenAI API、Perplexity、Poe、Qwen Cloud、Raycast AI、Replicate、Sakana AI、Synthetic、T3 Chat、TypeSafe、v0、Venice、Vercel AI Gateway、Warp、Windsurf、xAI API、xKiro、Zed、ZenMux、ZoomMate。
 - **可腳本化**：`Pulse --json` 印出最近一次讀數——方案、每一條額度、重設時間，以及數字有多舊——可接 tmux、sketchybar、Raycast 或 shell 提示字元。它只讀快取，所以高頻輪詢幾乎沒有成本。
 - **開發者整合**：在設定中匯出 Raycast 擴充功能，以及可直接設定的 tmux、sketchybar 與 shell 指令碼。帳號連結會直接開啟對應頁面。[設定指南](Docs/integrations.md)。
-- **擴充功能**：自己寫個小程式，就能讓 Pulse 顯示某個帳號的用量，例如公司內部的額度 API，不必再維護一份分支。開啟之前不會執行，Pulse 也不會交給它任何憑證。[撰寫說明](Docs/extensions.md)（英文）。
+- **擴充功能**：自己寫個小程式，就能讓 Pulse 顯示某個帳號的用量，例如公司內部的額度 API，不必再維護一份分支。開啟之前不會執行，Pulse 也不會交給它任何憑證。擴充功能也可以回報自訂指標，例如中轉站的首字時間，顯示在卡片上並畫出趨勢線。[撰寫說明](Docs/extensions.md)（英文）。
 - **服務狀態**：Codex、Claude Code 和 DeepSeek 的設定頁照各自官方狀態頁的樣式顯示服務狀態——每一項現在是否正常、過去 90 天每天一根直條，以及狀態頁公布的可用率。開啟設定頁時讀取，開著時每 5 分鐘更新一次。
 - **連線診斷**：查看實際的讀取來源、快取使用情形、最近一次檢查與備援結果。情境化操作可協助重新連線、重新登入或修正憑證；可複製不含帳號資訊與金鑰的診斷報告。
-- **隱私優先**：Pulse 跑在你自己的 Mac 上，用你自己的登入狀態。它只發起四類連線，這裡列的就是全部——你原本就在使用的服務商、為「服務狀態」及其通知讀取的公開狀態頁（status.openai.com、status.claude.com、status.deepseek.com）、為 Token 消耗頁取得公開模型價格的 [models.dev](https://models.dev)，以及檢查更新的 GitHub/Sparkle。服務商請求、狀態頁、登入時的權杖交換與 models.dev 會使用「設定 › 網路與重新整理」中選擇的代理，Pulse 也會把手動代理傳給支援的輔助程序。Sparkle 的更新檢查一律跟隨 macOS 系統代理設定。
+- **隱私優先**：Pulse 跑在你自己的 Mac 上，用你自己的登入狀態。它只發起四類連線，這裡列的就是全部——你原本就在使用的服務商、為「服務狀態」及其通知讀取的公開狀態頁（status.openai.com、status.claude.com、status.deepseek.com）、為 Token 消耗頁取得公開模型價格的 [models.dev](https://models.dev)，以及檢查更新的 GitHub/Sparkle。服務商請求、狀態頁、登入時的權杖交換與 models.dev 會使用「設定 › 網路與重新整理」中選擇的代理，Pulse 也會把自訂代理傳給支援的輔助程序；選擇「不使用代理」時，輔助程序也不經過代理。Sparkle 的更新檢查一律跟隨 macOS 系統代理設定。
 
 <p align="center">
   <img src="Docs/settings.webp" height="300" alt="Pulse 設定">
@@ -125,91 +126,153 @@
 
 Pulse 只呈現各服務回報的數字，每個百分比都來自那份回覆本身。各產品的通道不同（已文件化的用戶端 API、編輯器登入、本機 language server、貼上的金鑰）——並不是每一行都有公開的官方額度 API。貢獻者細節見 [Docs/providers/README.md](Docs/providers/README.md)。
 
-| 服務商 | 資料通道與驗證方式 | 說明 |
-|---|---|---|
-| **Claude Code** | 帳號 OAuth 用量端點；自動備援至 Claude 桌面版工作階段與狀態列 | 讀取現有的 CLI／桌面版工作階段；無縫自動備援 |
-| **Codex** | 用戶端用量端點；備援至 `codex app-server` | 直接讀取本機 Codex 憑證 |
-| **Kiro** | Kiro CLI 原生 ACP 用量方法 | 沿用 Kiro CLI 已登入的工作階段；Pulse 從不讀取或保存 Kiro 憑證（[詳情](Docs/providers/kiro.md)） |
-| **Antigravity** | 本機 Language Server（LSP） | 僅在 Antigravity 編輯器執行期間有效 |
-| **Cursor** | Cursor 帳號用量摘要 API | 以現有編輯器登入顯示 fast 與 slow 兩個請求池 |
-| **Grok** | Grok Build CLI 代理（`cli-chat-proxy.grok.com`） | 所有 Grok 產品共用一個統一的每週額度池 |
-| **Grok Bot** | Cursor 儀表板 API | Cursor 訂閱內含的 xAI 額度 |
-| **GitHub Copilot** | GitHub Device Code 驗證 | 只請求 `read:user` 這一項權限 |
-| **OpenCode Go** | API 金鑰，或現有的 OpenCode CLI 憑證；也可讀取瀏覽器裡 OpenCode 控制台的登入 | 讀取控制台登入後，詳細卡片還會顯示帳號的請求紀錄：所有裝置、所有應用程式，以及每次請求的實際花費 |
-| **Kimi Code** | 直接使用 API 金鑰 | 在設定中設定 |
-| **z.ai** | 直接使用 API 金鑰 | 國際站（`api.z.ai`） |
-| **Zhipu** | 直接使用 API 金鑰，或已儲存的 GLM 工具憑證 | 中國大陸站（`open.bigmodel.cn`） |
-| **MiniMax / MiniMax CN** | 直接使用 API 金鑰 | 支援國際站（`minimax.io`）與中國大陸站（`minimaxi.com`） |
-| **Ollama Cloud** | 瀏覽器工作階段 cookie | 從瀏覽器本機讀取。詳見 [Docs/ollama-cloud.md](Docs/ollama-cloud.md) |
-| **Volcengine（火山引擎）** | `arkcli` 登入，否則使用貼上的 access-key 組（簽署 Top OpenAPI） | Ark Coding 與 Agent 方案；自動模式偏好貼上的金鑰而非 CLI |
-| **Command Code** | 貼上的金鑰，否則使用 `cmd login` 已儲存的登入 | 以美元計價的額度餘額，含滾動 5 小時／每週限額；每月方案列標示為**估算** |
-| **DeepSeek** | 貼上的金鑰；官方文件化的 `GET /user/balance` | 僅有預付餘額、沒有額度；圓環要對照什麼由你決定 |
-| **Devin** | 無需輸入——讀取你的瀏覽器工作階段，無需鑰匙圈授權 | Devin 回報的每日與每週額度。沒有瀏覽器工作階段或貼上的憑證時，讀取應用程式存下的帶日期方案。端點失敗時只使用相符的端點快取，保留帳號與組織界線（[Docs/providers/devin.md](Docs/providers/devin.md)） |
-| **小米 Coding Plan** | 無需輸入——讀取瀏覽器中已登入的工作階段，也可以手動貼上 `Cookie:` 標頭 | 小米 MiMo 主控台上的月度 token 額度，有結束時間就一併顯示。預付餘額會附在卡片上。帳號上沒有 Coding Plan 時會直接說明，而不是畫一個 0%（[Docs/providers/xiaomi-coding-plan.md](Docs/providers/xiaomi-coding-plan.md)） |
-| **sub2api** | 貼上的群組金鑰；閘道位址自行輸入 | 讀取自架 [sub2api](https://github.com/Wei-Shaw/sub2api) 閘道依群組核算的用量——餘額、配額、訂閱或速率限制視窗，視群組設定而定（[Docs/providers/sub2api.md](Docs/providers/sub2api.md)） |
-| **New API** | 貼上的 `sk-` 金鑰；閘道位址自行輸入 | 讀取自架 [New API](https://github.com/QuantumNous/new-api) 閘道的餘額，依部署端設定的幣別顯示；不顯示百分比，因為回覆中的比例可能有兩種含義（[Docs/providers/newapi.md](Docs/providers/newapi.md)） |
-| **V2EX** | 貼上的個人存取權杖 | AI Chat 滾動 5 小時的 token 配額，買過加油包再多畫一個環；視窗尚未開始時不顯示倒數（[Docs/providers/v2ex.md](Docs/providers/v2ex.md)） |
-| **Qoder** | 無需輸入——讀取瀏覽器中 qoder.com 或 qoder.com.cn 的登入工作階段，也可以手動貼上 `Cookie:` 標頭或個人令牌（`pt-` / `jt-`） | 點數額度（方案加加購包），依 Qoder 回報的重設時間顯示；團隊方案的共用點數另外畫一個環，絕不相加；可選擇將方案點數、加購包與專屬點數分項顯示；點數為零時會直接說明，而不是畫一個空環（[Docs/providers/qoder.md](Docs/providers/qoder.md)） |
-| **階躍星辰（StepFun）** | 無需輸入——讀取瀏覽器中 platform.stepfun.com 或 platform.stepfun.ai 的登入工作階段，也可以手動貼上 `Cookie:` 標頭 | Step Plan：Token Plan 的每月 Credit 與加購包合成一個環，並顯示最早一批的到期日；舊版 Coding Plan 顯示 5 小時與每週兩個視窗；沒有訂閱時會直接說明，而不是畫一個環（[Docs/providers/stepfun.md](Docs/providers/stepfun.md)） |
-
+| 圖示 | 服務商 | 資料通道與驗證方式 | 說明 |
+|---|---|---|---|
+| <img src="Docs/icons/claude.svg" width="24" height="24" alt=""> | **Claude Code** | 帳號 OAuth 用量端點；自動備援至 Claude 桌面版工作階段與狀態列 | 讀取現有的 CLI／桌面版工作階段；無縫自動備援 |
+| <img src="Docs/icons/openai.svg" width="24" height="24" alt=""> | **Codex** | 用戶端用量端點；備援至 `codex app-server` | 直接讀取本機 Codex 憑證 |
+| <img src="Docs/icons/kiro.svg" width="24" height="24" alt=""> | **Kiro** | Kiro CLI 原生 ACP 用量方法 | 沿用 Kiro CLI 已登入的工作階段；Pulse 從不讀取或保存 Kiro 憑證（[詳情](Docs/providers/kiro.md)） |
+| <img src="Docs/icons/antigravity.svg" width="24" height="24" alt=""> | **Antigravity** | 本機 Language Server（LSP） | 僅在 Antigravity 編輯器執行期間有效 |
+| <img src="Docs/icons/cursor.svg" width="24" height="24" alt=""> | **Cursor** | Cursor 帳號用量摘要 API | 以現有編輯器登入顯示 fast 與 slow 兩個請求池 |
+| <img src="Docs/icons/grok.svg" width="24" height="24" alt=""> | **Grok** | Grok Build CLI 代理（`cli-chat-proxy.grok.com`） | 所有 Grok 產品共用一個統一的每週額度池 |
+| <img src="Docs/icons/xai.svg" width="24" height="24" alt=""> | **Grok Bot** | Cursor 儀表板 API | Cursor 訂閱內含的 xAI 額度 |
+| <img src="Docs/icons/github.svg" width="24" height="24" alt=""> | **GitHub Copilot** | GitHub Device Code 驗證 | 只請求 `read:user` 這一項權限 |
+| <img src="Docs/icons/opencode.svg" width="24" height="24" alt=""> | **OpenCode Go** | API 金鑰，或現有的 OpenCode CLI 憑證；也可讀取瀏覽器裡 OpenCode 控制台的登入 | 讀取控制台登入後，詳細卡片還會顯示帳號的請求紀錄：所有裝置、所有應用程式，以及每次請求的實際花費 |
+| <img src="Docs/icons/kimi.svg" width="24" height="24" alt=""> | **Kimi Code** | 直接使用 API 金鑰 | 在設定中設定 |
+| <img src="Docs/icons/zai.svg" width="24" height="24" alt=""> | **z.ai** | 直接使用 API 金鑰 | 國際站（`api.z.ai`） |
+| <img src="Docs/icons/zai.svg" width="24" height="24" alt=""> | **Zhipu** | 直接使用 API 金鑰，或已儲存的 GLM 工具憑證 | 中國大陸站（`open.bigmodel.cn`） |
+| <img src="Docs/icons/minimax.svg" width="24" height="24" alt=""> | **MiniMax / MiniMax CN** | 直接使用 API 金鑰 | 支援國際站（`minimax.io`）與中國大陸站（`minimaxi.com`） |
+| <img src="Docs/icons/ollama.svg" width="24" height="24" alt=""> | **Ollama Cloud** | 瀏覽器工作階段 cookie | 從瀏覽器本機讀取。詳見 [Docs/ollama-cloud.md](Docs/ollama-cloud.md) |
+| <img src="Docs/icons/volcengine.svg" width="24" height="24" alt=""> | **Volcengine（火山引擎）** | `arkcli` 登入，否則使用貼上的 access-key 組（簽署 Top OpenAPI） | Ark Coding 與 Agent 方案；自動模式偏好貼上的金鑰而非 CLI |
+| <img src="Docs/icons/commandcode.svg" width="24" height="24" alt=""> | **Command Code** | 貼上的金鑰，否則使用 `cmd login` 已儲存的登入 | 以美元計價的額度餘額，含滾動 5 小時／每週限額；每月方案列標示為**估算** |
+| <img src="Docs/icons/deepseek.svg" width="24" height="24" alt=""> | **DeepSeek** | 貼上的金鑰；官方文件化的 `GET /user/balance` | 僅有預付餘額、沒有額度；圓環要對照什麼由你決定 |
+| <img src="Docs/icons/devin.svg" width="24" height="24" alt=""> | **Devin** | 無需輸入——讀取你的瀏覽器工作階段，無需鑰匙圈授權 | Devin 回報的每日與每週額度。沒有瀏覽器工作階段或貼上的憑證時，讀取應用程式存下的帶日期方案。端點失敗時只使用相符的端點快取，保留帳號與組織界線（[Docs/providers/devin.md](Docs/providers/devin.md)） |
+| <img src="Docs/icons/xiaomimimo.svg" width="24" height="24" alt=""> | **小米 Coding Plan** | 無需輸入——讀取瀏覽器中已登入的工作階段，也可以手動貼上 `Cookie:` 標頭 | 小米 MiMo 主控台上的月度 token 額度，有結束時間就一併顯示。預付餘額會附在卡片上。帳號上沒有 Coding Plan 時會直接說明，而不是畫一個 0%（[Docs/providers/xiaomi-coding-plan.md](Docs/providers/xiaomi-coding-plan.md)） |
+| <img src="Docs/icons/sub2api.svg" width="24" height="24" alt=""> | **sub2api** | 貼上的群組金鑰；閘道位址自行輸入 | 讀取自架 [sub2api](https://github.com/Wei-Shaw/sub2api) 閘道依群組核算的用量——餘額、配額、訂閱或速率限制視窗，視群組設定而定（[Docs/providers/sub2api.md](Docs/providers/sub2api.md)） |
+| <img src="Docs/icons/newapi.svg" width="24" height="24" alt=""> | **New API** | 貼上的 `sk-` 金鑰；閘道位址自行輸入 | 讀取自架 [New API](https://github.com/QuantumNous/new-api) 閘道的餘額，依部署端設定的幣別顯示；不顯示百分比，因為回覆中的比例可能有兩種含義（[Docs/providers/newapi.md](Docs/providers/newapi.md)） |
+| <img src="Docs/icons/v2ex.svg" width="24" height="24" alt=""> | **V2EX** | 貼上的個人存取權杖 | AI Chat 滾動 5 小時的 token 配額，買過加油包再多畫一個環；視窗尚未開始時不顯示倒數（[Docs/providers/v2ex.md](Docs/providers/v2ex.md)） |
+| <img src="Docs/icons/qoder.svg" width="24" height="24" alt=""> | **Qoder** | 無需輸入——讀取瀏覽器中 qoder.com 或 qoder.com.cn 的登入工作階段，也可以手動貼上 `Cookie:` 標頭或個人令牌（`pt-` / `jt-`） | 點數額度（方案加加購包），依 Qoder 回報的重設時間顯示；團隊方案的共用點數另外畫一個環，絕不相加；可選擇將方案點數、加購包與專屬點數分項顯示；點數為零時會直接說明，而不是畫一個空環（[Docs/providers/qoder.md](Docs/providers/qoder.md)） |
+| <img src="Docs/icons/stepfun.svg" width="24" height="24" alt=""> | **階躍星辰（StepFun）** | 無需輸入——讀取瀏覽器中 platform.stepfun.com 或 platform.stepfun.ai 的登入工作階段，也可以手動貼上 `Cookie:` 標頭 | Step Plan：Token Plan 的每月 Credit 與加購包合成一個環，並顯示最早一批的到期日；舊版 Coding Plan 顯示 5 小時與每週兩個視窗；沒有訂閱時會直接說明，而不是畫一個環（[Docs/providers/stepfun.md](Docs/providers/stepfun.md)） |
 ### 更多服務商
 
 參照 [CodexBar](https://github.com/steipete/CodexBar) 的實作撰寫。**尚未用真實帳號驗證**——如果某家用不了，歡迎[回報 issue](https://github.com/harrisliangsu/Pulse/issues)。各家的設定步驟見 [Docs/setup/](Docs/setup/)（英文），維護說明見 [Docs/providers/README.md](Docs/providers/README.md#profiled-providers)。
 
-| 服務商 | 資料通道與驗證方式 | 顯示內容 |
-|---|---|---|
-| **Abacus AI** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 算力點數與帳單日期 |
-| **Aixy** | 貼上的 API 金鑰 | 依週期的閘道預算 |
-| **Alibaba Coding Plan** | 貼上的 API 金鑰 | 5 小時、每週、每月額度；先查國際站，再查中國站 |
-| **Alibaba Token Plan** | 執行阿里 `bl` CLI，使用其已儲存的登入 | 5 小時、每週、每月用量比例 |
-| **Amp** | 貼上的 API 金鑰 | 免費每日額度、方案額度與餘額 |
-| **Atlas Cloud** | 貼上的 API 金鑰 | 餘額 |
-| **Augment Code** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 本週期已用點數 |
-| **Bifrost** | 貼上的金鑰；自架閘道位址由你填寫 | 虛擬金鑰的美元預算 |
-| **Chutes** | 貼上的 API 金鑰 | 滾動視窗與每月額度 |
-| **ClawRouter** | 貼上的 API 金鑰 | 每月預算 |
-| **ClinePass** | 貼上的 API 金鑰 | 5 小時、每週、每月限額 |
-| **Codebuff** | 貼上的金鑰，或讀取其 CLI 已儲存的登入 | 點數；使用 CLI 登入時另有每週限額 |
-| **DeepInfra** | 貼上的 API 金鑰 | 餘額；在其後台設過限額時顯示花費比例 |
-| **DevPass** | 貼上的 API 金鑰 | 每週高級額度與方案點數 |
-| **ElevenLabs** | 貼上的 API 金鑰 | 本計費週期的字元額度 |
-| **Factory** | 貼上的 API 金鑰 | 5 小時、每週、每月限額（舊計費為 Standard 與 Premium）；額外用量餘額 |
-| **Gemini** | 讀取 Gemini CLI 儲存的登入，只讀、從不代為更新 | 每個模型的配額。該登入約一小時過期，只在近期用過 Gemini CLI 時有讀數 |
-| **GitKraken AI** | 貼上的 token | 個人點數與共用池 |
-| **Hugging Face** | 貼上的 token，或讀取 `hf auth login` 儲存的 | ZeroGPU 配額 |
-| **Hyper** | 貼上的 API 金鑰 | Hypercredit 餘額 |
-| **IBM Bob** | 貼上的 API 金鑰 | Bobcoins 相對團隊預算的用量 |
-| **JetBrains AI** | 讀取 JetBrains IDE 儲存的配額檔案，不向任何地方傳送資料 | AI Assistant 配額；IDE 執行時才更新 |
-| **Kilo Code** | 貼上的金鑰，或讀取其 CLI 已儲存的登入 | 點數餘額與 Kilo Pass |
-| **LiteLLM** | 貼上的金鑰；自架閘道位址由你填寫 | 團隊與使用者預算 |
-| **LLM API Key Proxy** | 貼上的金鑰；自架閘道位址由你填寫 | 依上游劃分的配額組 |
-| **LongCat** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | Token 包額度與加油包 |
-| **Manus** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 每日與每月點數 |
-| **Mistral** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | API 與 Vibe 的每月額度，以及可用餘額 |
-| **Moonshot** | 貼上的 API 金鑰 | Kimi 開放平台餘額，美元或人民幣 |
-| **Neuralwatt** | 貼上的 API 金鑰 | kWh 訂閱、消費額度與餘額 |
-| **Notion AI** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 滾動視窗與計費週期額度（Business 與 Enterprise） |
-| **Nous Portal** | 讀取 Hermes Agent 儲存的登入，只讀 | 每月點數額度與餘額 |
-| **OpenAI API** | 貼上的 API 金鑰 | 預付餘額（舊計費介面仍可用時） |
-| **Perplexity** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | API 餘額 |
-| **Poe** | 貼上的 API 金鑰 | 點數餘額 |
-| **Qwen Cloud** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 5 小時、每週、每月比例，以及方案等級 |
-| **Raycast AI** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | AI 點數與續期日期 |
-| **Replicate** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 預付餘額 |
-| **Sakana AI** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 5 小時與每週限額 |
-| **Synthetic** | 貼上的 API 金鑰 | 5 小時、每週與搜尋額度 |
-| **T3 Chat** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 4 小時視窗與每月用量 |
-| **TypeSafe** | 貼上的 `Cookie:` 標頭 | 餘額與方案 |
-| **v0** | 貼上的 API 金鑰 | 計費額度 |
-| **Venice** | 貼上的 API 金鑰 | 餘額，美元或 DIEM |
-| **Vercel AI Gateway** | 貼上的 API 金鑰 | 餘額 |
-| **Warp** | 貼上的 API 金鑰 | 方案點數與附加點數 |
-| **Windsurf** | 從 Chromium 核心瀏覽器讀取 windsurf.com 的登入 | 每日與每週配額 |
-| **xAI API** | 以 `TeamID:ManagementKey` 格式填入 | 團隊預付餘額（xAI 已入帳的數額） |
-| **xKiro** | 貼上的 API 金鑰 | 5 小時與每週視窗、每日免費 Token 與錢包 |
-| **Zed** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 編輯預測額度與消費上限 |
-| **ZenMux** | 貼上的管理金鑰 | 5 小時與 7 天配額，以及餘額 |
-| **ZoomMate** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 點數相對預算上限的用量 |
+| 圖示 | 服務商 | 資料通道與驗證方式 | 顯示內容 |
+|---|---|---|---|
+| | **Abacus AI** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 算力點數與帳單日期 |
+| | **Aixy** | 貼上的 API 金鑰 | 依週期的閘道預算 |
+| <img src="Docs/icons/alibabacloud.svg" width="24" height="24" alt=""> | **Alibaba Coding Plan** | 貼上的 API 金鑰 | 5 小時、每週、每月額度；先查國際站，再查中國站 |
+| <img src="Docs/icons/alibabacloud.svg" width="24" height="24" alt=""> | **Alibaba Token Plan** | 執行阿里 `bl` CLI，使用其已儲存的登入 | 5 小時、每週、每月用量比例 |
+| <img src="Docs/icons/amp.svg" width="24" height="24" alt=""> | **Amp** | 貼上的 API 金鑰 | 免費每日額度、方案額度與餘額 |
+| <img src="Docs/icons/atlascloud.svg" width="24" height="24" alt=""> | **Atlas Cloud** | 貼上的 API 金鑰 | 餘額 |
+| | **Augment Code** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 本週期已用點數 |
+| | **Bifrost** | 貼上的金鑰；自架閘道位址由你填寫 | 虛擬金鑰的美元預算 |
+| <img src="Docs/icons/chutes.svg" width="24" height="24" alt=""> | **Chutes** | 貼上的 API 金鑰 | 滾動視窗與每月額度 |
+| <img src="Docs/icons/openclaw.svg" width="24" height="24" alt=""> | **ClawRouter** | 貼上的 API 金鑰 | 每月預算 |
+| <img src="Docs/icons/cline.svg" width="24" height="24" alt=""> | **ClinePass** | 貼上的 API 金鑰 | 5 小時、每週、每月限額 |
+| | **Codebuff** | 貼上的金鑰，或讀取其 CLI 已儲存的登入 | 點數；使用 CLI 登入時另有每週限額 |
+| <img src="Docs/icons/deepinfra.svg" width="24" height="24" alt=""> | **DeepInfra** | 貼上的 API 金鑰 | 餘額；在其後台設過限額時顯示花費比例 |
+| | **DevPass** | 貼上的 API 金鑰 | 每週高級額度與方案點數 |
+| <img src="Docs/icons/elevenlabs.svg" width="24" height="24" alt=""> | **ElevenLabs** | 貼上的 API 金鑰 | 本計費週期的字元額度 |
+| | **Factory** | 貼上的 API 金鑰 | 5 小時、每週、每月限額（舊計費為 Standard 與 Premium）；額外用量餘額 |
+| <img src="Docs/icons/geminicli.svg" width="24" height="24" alt=""> | **Gemini** | 讀取 Gemini CLI 儲存的登入，只讀、從不代為更新 | 每個模型的配額。該登入約一小時過期，只在近期用過 Gemini CLI 時有讀數 |
+| | **GitKraken AI** | 貼上的 token | 個人點數與共用池 |
+| <img src="Docs/icons/huggingface.svg" width="24" height="24" alt=""> | **Hugging Face** | 貼上的 token，或讀取 `hf auth login` 儲存的 | ZeroGPU 配額 |
+| | **Hyper** | 貼上的 API 金鑰 | Hypercredit 餘額 |
+| <img src="Docs/icons/ibm.svg" width="24" height="24" alt=""> | **IBM Bob** | 貼上的 API 金鑰 | Bobcoins 相對團隊預算的用量 |
+| | **JetBrains AI** | 讀取 JetBrains IDE 儲存的配額檔案，不向任何地方傳送資料 | AI Assistant 配額；IDE 執行時才更新 |
+| <img src="Docs/icons/kilocode.svg" width="24" height="24" alt=""> | **Kilo Code** | 貼上的金鑰，或讀取其 CLI 已儲存的登入 | 點數餘額與 Kilo Pass |
+| | **LiteLLM** | 貼上的金鑰；自架閘道位址由你填寫 | 團隊與使用者預算 |
+| | **LLM API Key Proxy** | 貼上的金鑰；自架閘道位址由你填寫 | 依上游劃分的配額組 |
+| <img src="Docs/icons/longcat.svg" width="24" height="24" alt=""> | **LongCat** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | Token 包額度與加油包 |
+| <img src="Docs/icons/manus.svg" width="24" height="24" alt=""> | **Manus** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 每日與每月點數 |
+| <img src="Docs/icons/mistral.svg" width="24" height="24" alt=""> | **Mistral** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | API 與 Vibe 的每月額度，以及可用餘額 |
+| <img src="Docs/icons/moonshot.svg" width="24" height="24" alt=""> | **Moonshot** | 貼上的 API 金鑰 | Kimi 開放平台餘額，美元或人民幣 |
+| | **Neuralwatt** | 貼上的 API 金鑰 | kWh 訂閱、消費額度與餘額 |
+| <img src="Docs/icons/notion.svg" width="24" height="24" alt=""> | **Notion AI** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 滾動視窗與計費週期額度（Business 與 Enterprise） |
+| <img src="Docs/icons/hermesagent.svg" width="24" height="24" alt=""> | **Nous Portal** | 讀取 Hermes Agent 儲存的登入，只讀 | 每月點數額度與餘額 |
+| <img src="Docs/icons/openai.svg" width="24" height="24" alt=""> | **OpenAI API** | 貼上的 API 金鑰 | 預付餘額（舊計費介面仍可用時） |
+| <img src="Docs/icons/perplexity.svg" width="24" height="24" alt=""> | **Perplexity** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | API 餘額 |
+| <img src="Docs/icons/poe.svg" width="24" height="24" alt=""> | **Poe** | 貼上的 API 金鑰 | 點數餘額 |
+| <img src="Docs/icons/qwen.svg" width="24" height="24" alt=""> | **Qwen Cloud** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 5 小時、每週、每月比例，以及方案等級 |
+| | **Raycast AI** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | AI 點數與續期日期 |
+| <img src="Docs/icons/replicate.svg" width="24" height="24" alt=""> | **Replicate** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 預付餘額 |
+| <img src="Docs/icons/sakana.svg" width="24" height="24" alt=""> | **Sakana AI** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 5 小時與每週限額 |
+| | **Synthetic** | 貼上的 API 金鑰 | 5 小時、每週與搜尋額度 |
+| | **T3 Chat** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 4 小時視窗與每月用量 |
+| | **TypeSafe** | 貼上的 `Cookie:` 標頭 | 餘額與方案 |
+| <img src="Docs/icons/v0.svg" width="24" height="24" alt=""> | **v0** | 貼上的 API 金鑰 | 計費額度 |
+| <img src="Docs/icons/venice.svg" width="24" height="24" alt=""> | **Venice** | 貼上的 API 金鑰 | 餘額，美元或 DIEM |
+| <img src="Docs/icons/vercel.svg" width="24" height="24" alt=""> | **Vercel AI Gateway** | 貼上的 API 金鑰 | 餘額 |
+| | **Warp** | 貼上的 API 金鑰 | 方案點數與附加點數 |
+| <img src="Docs/icons/windsurf.svg" width="24" height="24" alt=""> | **Windsurf** | 從 Chromium 核心瀏覽器讀取 windsurf.com 的登入 | 每日與每週配額 |
+| <img src="Docs/icons/xai.svg" width="24" height="24" alt=""> | **xAI API** | 以 `TeamID:ManagementKey` 格式填入 | 團隊預付餘額（xAI 已入帳的數額） |
+| | **xKiro** | 貼上的 API 金鑰 | 5 小時與每週視窗、每日免費 Token 與錢包 |
+| | **Zed** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 編輯預測額度與消費上限 |
+| <img src="Docs/icons/zenmux.svg" width="24" height="24" alt=""> | **ZenMux** | 貼上的管理金鑰 | 5 小時與 7 天配額，以及餘額 |
+| | **ZoomMate** | 讀取瀏覽器登入工作階段，或貼上 `Cookie:` 標頭 | 點數相對預算上限的用量 |
+
+### Token 消耗的來源
+
+在設定中開啟 Token 消耗後，Pulse 讀取各用戶端留在本機的日誌、資料庫與匯出檔，不會傳送到任何地方。下表列出的是 macOS 上的預設位置，Linux 風格的路徑與編輯器的其他版本也會讀取。如果 Pulse 同時以圓環顯示該產品的額度，最後一欄列出對應的服務商。各來源的依據與限制見 [Docs/token-spend-sources.md](Docs/token-spend-sources.md)。
+
+| 圖示 | 用戶端 | 讀取位置 | Pulse 中的圓環 |
+|---|---|---|---|
+| <img src="Docs/icons/claude.svg" width="24" height="24" alt=""> | **Claude Code** | `~/.claude/projects/` | Claude Code |
+| <img src="Docs/icons/openai.svg" width="24" height="24" alt=""> | **Codex** | `~/.codex/sessions/`, `~/.codex/archived_sessions/` | Codex |
+| <img src="Docs/icons/opencode.svg" width="24" height="24" alt=""> | **OpenCode** | `~/.local/share/opencode/opencode.db` | OpenCode Go |
+| <img src="Docs/icons/kilocode.svg" width="24" height="24" alt=""> | **Kilo CLI** | `~/.local/share/kilo/kilo.db` | Kilo Code |
+| <img src="Docs/icons/grok.svg" width="24" height="24" alt=""> | **Grok Build** | `~/.grok/sessions/` | Grok |
+| <img src="Docs/icons/kimi.svg" width="24" height="24" alt=""> | **Kimi CLI** | `~/.kimi/sessions/` | Kimi Code |
+| <img src="Docs/icons/devin.svg" width="24" height="24" alt=""> | **Devin** | `~/.local/share/devin/cli/sessions.db` | Devin |
+| <img src="Docs/icons/devin.svg" width="24" height="24" alt=""> | **Devin Desktop** | `~/Library/Application Support/Devin/User/acp-events/` | Devin |
+| <img src="Docs/icons/cursor.svg" width="24" height="24" alt=""> | **Cursor** | `~/.config/tokscale/cursor-cache/` † | Cursor |
+| <img src="Docs/icons/github.svg" width="24" height="24" alt=""> | **GitHub Copilot** | `~/.copilot/otel/`, `~/.copilot/data.db`, VS Code `workspaceStorage/*/chatSessions/` | GitHub Copilot |
+| <img src="Docs/icons/kiro.svg" width="24" height="24" alt=""> | **Kiro** | `~/.kiro/sessions/cli/` | Kiro |
+| <img src="Docs/icons/antigravity.svg" width="24" height="24" alt=""> | **Antigravity CLI** | `~/.gemini/antigravity-cli/conversations/` | Antigravity |
+| <img src="Docs/icons/antigravity.svg" width="24" height="24" alt=""> | **Antigravity IDE** | `~/.gemini/antigravity/conversations/`, `~/.gemini/antigravity-ide/conversations/` | Antigravity |
+| <img src="Docs/icons/antigravity.svg" width="24" height="24" alt=""> | **Antigravity (export)** | `~/.config/tokscale/antigravity-cache/sessions/` † | Antigravity |
+| <img src="Docs/icons/gemini.svg" width="24" height="24" alt=""> | **Gemini CLI** | `~/.gemini/tmp/` | Gemini |
+| <img src="Docs/icons/qwen.svg" width="24" height="24" alt=""> | **Qwen Code** | `~/.qwen/projects/` | — |
+| <img src="Docs/icons/amp.svg" width="24" height="24" alt=""> | **Amp** | `~/.local/share/amp/threads/` | Amp |
+| | **Droid** | `~/.factory/sessions/` | Factory |
+| <img src="Docs/icons/cline.svg" width="24" height="24" alt=""> | **Cline** | VS Code `globalStorage/saoudrizwan.claude-dev/tasks/`, `~/.cline/data/sessions/` | ClinePass |
+| <img src="Docs/icons/roocode.svg" width="24" height="24" alt=""> | **Roo Code** | VS Code `globalStorage/rooveterinaryinc.roo-cline/tasks/` | — |
+| <img src="Docs/icons/kilocode.svg" width="24" height="24" alt=""> | **Kilo Code** | VS Code `globalStorage/kilocode.kilo-code/tasks/` | Kilo Code |
+| <img src="Docs/icons/commandcode.svg" width="24" height="24" alt=""> | **Command Code** | `~/.commandcode/projects/` | Command Code |
+| | **Codebuff** | `~/.config/manicode/` | Codebuff |
+| | **Freebuff** | `~/.config/manicode/` | Codebuff |
+| | **Augment** | `~/.augment/sessions/` | Augment Code |
+| <img src="Docs/icons/junie.svg" width="24" height="24" alt=""> | **Junie** | `~/.junie/sessions/` | JetBrains AI |
+| | **Zed** | `~/Library/Application Support/Zed/threads/threads.db` | Zed |
+| | **Warp** | `~/.config/tokscale/warp-cache/` † | Warp |
+| <img src="Docs/icons/minimax.svg" width="24" height="24" alt=""> | **MiniMax Code** | `~/.config/tokscale/headless/mcode/` † | MiniMax |
+| <img src="Docs/icons/openclaw.svg" width="24" height="24" alt=""> | **OpenClaw** | `~/.openclaw/agents/` | — |
+| <img src="Docs/icons/hermesagent.svg" width="24" height="24" alt=""> | **Hermes** | `~/.hermes/state.db` | — |
+| <img src="Docs/icons/goose.svg" width="24" height="24" alt=""> | **Goose** | `~/Library/Application Support/goose/sessions/sessions.db` | — |
+| <img src="Docs/icons/tencent.svg" width="24" height="24" alt=""> | **CodeBuddy** | `~/.codebuddy/` | — |
+| <img src="Docs/icons/tencent.svg" width="24" height="24" alt=""> | **WorkBuddy** | `~/.workbuddy/`, `~/.workbuddy-ai/` | — |
+| <img src="Docs/icons/cherrystudio.svg" width="24" height="24" alt=""> | **Cherry Studio** | `~/Library/Application Support/CherryStudio/` | — |
+| <img src="Docs/icons/trae.svg" width="24" height="24" alt=""> | **Trae** | `~/.config/tokscale/trae-cache/sessions/` † | — |
+| <img src="Docs/icons/xiaomimimo.svg" width="24" height="24" alt=""> | **MiMo Code** | `~/.local/share/mimocode/` | — |
+| <img src="Docs/icons/deepseek.svg" width="24" height="24" alt=""> | **DeepSeek Harness** | `~/.dsh/sessions/` | — |
+| <img src="Docs/icons/lmstudio.svg" width="24" height="24" alt=""> | **LM Studio** | `~/.lmstudio/server-logs/` | — |
+| <img src="Docs/icons/unsloth.svg" width="24" height="24" alt=""> | **Unsloth** | `~/.unsloth/studio/studio.db` | — |
+| <img src="Docs/icons/pi.svg" width="24" height="24" alt=""> | **Pi** | `~/.pi/agent/sessions/` | — |
+| | **Oh My Pi** | `~/.omp/agent/sessions/` | — |
+| | **OmO Native** | `~/.senpi/agent/sessions/` | — |
+| | **Gajae Code** | `~/.gjc/agent/sessions/` | — |
+| | **Kimchi** | `~/.config/kimchi/harness/sessions/` | — |
+| | **Prime Agent** | `~/.prime/agent/sessions/` | — |
+| <img src="Docs/icons/opencode.svg" width="24" height="24" alt=""> | **OpenCodeReview** | `~/.opencodereview/sessions/` | — |
+| | **ZCode** | `~/.zcode/projects/`, `~/.zcode/cli/db/db.sqlite` | — |
+| | **Crush** | `~/.local/share/crush/projects.json` | — |
+| | **Mux** | `~/.mux/sessions/` | — |
+| | **JCode** | `~/.jcode/sessions/` | — |
+| | **FX** | `~/.fx/sessions/` | — |
+| | **Reasonix** | `~/.reasonix/stats/` | — |
+| | **Hindsight** | `~/.hindsight/usage/` † | — |
+
+† 需要事先匯出或擷取記錄，或者把檔案放進 `~/Library/Application Support/Pulse/UsageImports/<client>/`。
 ---
 
 ## 安裝
@@ -234,7 +297,7 @@ Pulse 只呈現各服務回報的數字，每個百分比都來自那份回覆�
 ## 隱私與安全
 
 Pulse 以嚴格的「本機優先」安全原則設計：
-- **沒有 Pulse 後端**：你的 Mac 用你自己的登入狀態連線至你原本就在使用的服務商。同時會為「服務狀態」讀取 Codex、Claude Code 和 DeepSeek 的公開狀態頁（無需登入），為 Token 消耗頁從 [models.dev](https://models.dev) 取得公開模型價格，並向 GitHub/Sparkle 檢查應用程式更新。服務商請求、狀態頁、登入時的權杖交換與 models.dev 會使用「設定 › 網路與重新整理」中選擇的代理，Pulse 也會把手動代理傳給支援的輔助程序。Sparkle 的更新檢查一律跟隨 macOS 系統代理設定。
+- **沒有 Pulse 後端**：你的 Mac 用你自己的登入狀態連線至你原本就在使用的服務商。同時會為「服務狀態」讀取 Codex、Claude Code 和 DeepSeek 的公開狀態頁（無需登入），為 Token 消耗頁從 [models.dev](https://models.dev) 取得公開模型價格，並向 GitHub/Sparkle 檢查應用程式更新。服務商請求、狀態頁、登入時的權杖交換與 models.dev 會使用「設定 › 網路與重新整理」中選擇的代理，Pulse 也會把自訂代理傳給支援的輔助程序；選擇「不使用代理」時，輔助程序也不經過代理。Sparkle 的更新檢查一律跟隨 macOS 系統代理設定。
 - **本機憑證**：在產品本身如此運作的前提下，讀取開發工具已存放在本機的憑證（`~/.claude`、`~/.codex`、Cursor 儲存空間等）；部分服務商需要你在設定中輸入金鑰或登入。
 - **加密的本機儲存**：手動輸入的 API 金鑰與工作階段權杖會加密，並嚴格存放於 Pulse 的本機應用程式目錄，權限僅限擁有者。
 - **本機用量記錄**：Pulse 會讀取對話記錄、資料庫與匯出檔，以取得 token 數量，以及標題、工作目錄等這類工作階段中介資料。這些記錄可能包含對話文字；處理完全在你的 Mac 上完成，記錄也留在本機。Pulse 只讀取這些記錄，僅此而已。

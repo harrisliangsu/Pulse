@@ -40,7 +40,7 @@
 "Copy diagnostics" = "複製診斷資訊";
 "Not recorded" = "尚無記錄";
 "Read cached usage" = "讀取用量快取";
-"Reads saved figures without fetching or opening credentials." = "只讀取已儲存的數字，不向服務商請求，也不存取憑證。";
+"Prints Pulse's saved readings, not the provider's original reply, without fetching or opening credentials." = "輸出 Pulse 已儲存的讀數，不是服務商的原始回覆；不會連網，也不存取憑證。";
 "Copy command" = "複製指令";
 "Developer kit" = "開發者整合包";
 "Raycast extension, tmux and shell status, and a sketchybar plugin." = "包含 Raycast 擴充功能、tmux 和終端機裡的狀態顯示，以及 sketchybar 外掛。";
@@ -77,6 +77,8 @@
 "The usage rail at the edge of the screen." = "在螢幕邊緣顯示用量膠囊。";
 "Hide in full screen" = "全螢幕時隱藏";
 "Keep the floating panel out of full-screen apps." = "其他 App 進入全螢幕時自動隱藏，避免遮擋。";
+"Hide from screenshots" = "截圖時隱藏";
+"Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it." = "支援此設定的截圖工具不會截到浮動面板；錄影和共享螢幕時仍可能顯示。";
 "Follow the active display" = "跟隨使用中的螢幕";
 "With more than one display, the rail moves to the one the pointer is on." = "有多台螢幕時，膠囊會移到指標所在的那一台。";
 "Left" = "左側";
@@ -645,9 +647,16 @@
 /* 網路代理 */
 "Network" = "網路";
 "Proxy" = "代理";
-"Use macOS settings or a proxy only for Pulse." = "使用 macOS 系統設定，或只為 Pulse 指定代理。";
+"No Proxy" = "不使用代理";
 "Follow System" = "跟隨系統";
-"Manual" = "手動";
+"System Proxy Only" = "使用代理";
+"Custom Proxy" = "自訂代理";
+"Pulse connects directly and ignores the proxy in macOS settings." = "Pulse 直接連線，不使用 macOS 設定中的代理。";
+"Uses the proxy in macOS settings, or connects directly when there is none." = "使用 macOS 設定中的代理；未設定代理時直接連線。";
+"Uses the proxy in macOS settings, and doesn't connect when there is none." = "使用 macOS 設定中的代理；未開啟代理時不連網。";
+"A proxy for Pulse only." = "只為 Pulse 指定代理。";
+"macOS has no proxy switched on, so Pulse isn't connecting." = "macOS 目前沒有開啟代理，Pulse 暫不連網。";
+"No proxy is switched on in macOS, so Pulse didn't connect." = "macOS 沒有開啟代理，Pulse 未連網。";
 "Type" = "類型";
 "HTTP" = "HTTP";
 "SOCKS5" = "SOCKS5";
@@ -739,6 +748,9 @@
 "Show each part of the credits" = "分項顯示點數";
 "Plan credits, a top-up pack and dedicated credits are spent separately. The total can look ample while one of them is nearly gone." = "方案點數、加購包與專屬點數各自扣減。合計看起來尚有餘裕時，其中一項可能已所剩無幾。";
 "%@: %@ credits expire" = "其中 %2$@ 點數 %1$@ 到期";
+"All expire %@" = "%@全部到期";
+"All expire from %@, in %@ lots" = "%1$@起分 %2$@ 批全部到期";
+"From %@: %@ credits expire in turn" = "其中 %2$@ 點數 %1$@起陸續到期";
 "Sign in to Qoder in a browser to see usage." = "在瀏覽器登入 Qoder 後才能看到用量。";
 "Qoder's saved session expired. Sign in again in your browser." = "Qoder 的登入資訊已過期，請在瀏覽器重新登入。";
 "This Qoder account has no credits." = "這個 Qoder 帳號上沒有點數。";
@@ -772,6 +784,7 @@
 "Its program isn't there, or isn't executable." = "找不到它的程式，或者程式無法執行。";
 "Look again" = "重新尋找";
 "Manage extensions" = "管理擴充功能";
+"Metrics" = "指標";
 "No pulse-extension.json in this folder." = "這個資料夾裡沒有 pulse-extension.json。";
 "None yet" = "還沒有";
 "Program" = "程式";
@@ -787,6 +800,7 @@
 "Time limit" = "時間限制";
 "Written for extension schema %@, which this version of Pulse doesn't read." = "依擴充功能格式第 %@ 版撰寫，目前版本的 Pulse 無法讀取。";
 "pulse-extension.json isn't valid JSON, or is missing a field." = "pulse-extension.json 不是有效的 JSON，或者缺少必填欄位。";
+"%@. Lowest %@, highest %@." = "%@。最低 %@，最高 %@。";
 
 /* Profiled providers: shared wording */
 "No session found. Sign in at %@ first." = "沒有找到登入資訊。請先在 %@ 登入。";

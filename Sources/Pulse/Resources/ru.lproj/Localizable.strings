@@ -40,7 +40,7 @@
 "Copy diagnostics" = "Скопировать диагностику";
 "Not recorded" = "Не записано";
 "Read cached usage" = "Расход из кэша";
-"Reads saved figures without fetching or opening credentials." = "Выводит сохранённые значения, не обращаясь к сервисам и учётным данным.";
+"Prints Pulse's saved readings, not the provider's original reply, without fetching or opening credentials." = "Выводит сохранённые показания Pulse, а не исходный ответ сервиса, не обращаясь к сервисам и учётным данным.";
 "Copy command" = "Скопировать команду";
 "Developer kit" = "Набор для разработчиков";
 "Raycast extension, tmux and shell status, and a sketchybar plugin." = "Расширение для Raycast, строка состояния для tmux и оболочки, плагин для sketchybar.";
@@ -77,6 +77,8 @@
 "The usage rail at the edge of the screen." = "Лента расхода у края экрана.";
 "Hide in full screen" = "Скрывать в полноэкранном режиме";
 "Keep the floating panel out of full-screen apps." = "Не показывать плавающую панель поверх полноэкранных приложений.";
+"Hide from screenshots" = "Скрывать на снимках экрана";
+"Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it." = "Инструменты для снимков экрана, которые это поддерживают, не показывают плавающую панель. На записях и при демонстрации экрана она может остаться видна.";
 "Follow the active display" = "Переходить на активный дисплей";
 "With more than one display, the rail moves to the one the pointer is on." = "Если дисплеев несколько, лента переходит на тот, где находится указатель.";
 "Left" = "Слева";
@@ -607,9 +609,16 @@
 /* Network proxy */
 "Network" = "Сеть";
 "Proxy" = "Прокси";
-"Use macOS settings or a proxy only for Pulse." = "Использовать настройки macOS или отдельный прокси для Pulse.";
+"No Proxy" = "Без прокси";
 "Follow System" = "Как в системе";
-"Manual" = "Вручную";
+"System Proxy Only" = "Только системный прокси";
+"Custom Proxy" = "Свой прокси";
+"Pulse connects directly and ignores the proxy in macOS settings." = "Pulse подключается напрямую и не использует прокси из настроек macOS.";
+"Uses the proxy in macOS settings, or connects directly when there is none." = "Использует прокси из настроек macOS, а если его нет — подключается напрямую.";
+"Uses the proxy in macOS settings, and doesn't connect when there is none." = "Использует прокси из настроек macOS, а если он выключен — не подключается.";
+"A proxy for Pulse only." = "Отдельный прокси только для Pulse.";
+"macOS has no proxy switched on, so Pulse isn't connecting." = "В macOS не включён прокси, поэтому Pulse не подключается.";
+"No proxy is switched on in macOS, so Pulse didn't connect." = "В macOS не включён прокси, поэтому Pulse не подключался.";
 "Type" = "Тип";
 "HTTP" = "HTTP";
 "SOCKS5" = "SOCKS5";
@@ -667,6 +676,9 @@
 "Show each part of the credits" = "Показывать кредиты по частям";
 "Plan credits, a top-up pack and dedicated credits are spent separately. The total can look ample while one of them is nearly gone." = "Кредиты тарифа, пакет пополнения и целевые кредиты расходуются отдельно. Общий остаток может выглядеть большим, хотя одна из частей почти исчерпана.";
 "%@: %@ credits expire" = "Из них к %1$@ сгорит %2$@";
+"All expire %@" = "Всё сгорит к %@";
+"All expire from %@, in %@ lots" = "Сгорит частями с %1$@";
+"From %@: %@ credits expire in turn" = "Из них с %1$@ сгорит частями %2$@";
 "Sign in to Qoder in a browser to see usage." = "Войдите в Qoder в браузере, чтобы видеть расход.";
 "Qoder's saved session expired. Sign in again in your browser." = "Сохранённый сеанс Qoder истёк. Войдите снова в браузере.";
 "This Qoder account has no credits." = "У этого аккаунта Qoder нет кредитов.";
@@ -700,6 +712,7 @@
 "Its program isn't there, or isn't executable." = "Программа не найдена или не является исполняемой.";
 "Look again" = "Проверить снова";
 "Manage extensions" = "Управление расширениями";
+"Metrics" = "Показатели";
 "No pulse-extension.json in this folder." = "В этой папке нет pulse-extension.json.";
 "None yet" = "Пока нет";
 "Program" = "Программа";
@@ -715,6 +728,7 @@
 "Time limit" = "Время ожидания";
 "Written for extension schema %@, which this version of Pulse doesn't read." = "Расширение написано для схемы %@, которую эта версия Pulse не поддерживает.";
 "pulse-extension.json isn't valid JSON, or is missing a field." = "Файл pulse-extension.json содержит некорректный JSON или в нём не хватает поля.";
+"%@. Lowest %@, highest %@." = "%@. Минимум %@, максимум %@.";
 
 /* Profiled providers: shared wording */
 "No session found. Sign in at %@ first." = "Сеанс не найден. Сначала войдите на %@.";

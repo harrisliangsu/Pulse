@@ -11,7 +11,18 @@ struct ChartHoverOverlay: View {
     struct Sample: Equatable {
         let x: CGFloat
         let title: String
-        let tokens: Int
+        /// The figure, already worded: "1.2M tokens", "320 ms".
+        let value: String
+
+        init(x: CGFloat, title: String, value: String) {
+            self.x = x
+            self.title = title
+            self.value = value
+        }
+
+        init(x: CGFloat, title: String, tokens: Int) {
+            self.init(x: x, title: title, value: ChartTooltipCard.tokensText(tokens))
+        }
     }
 
     let samples: [Sample]
@@ -37,7 +48,7 @@ struct ChartHoverOverlay: View {
                             .position(x: sample.x, y: max(proxy.size.height - 2, 2))
 
                         TooltipPlacement(anchorX: sample.x) {
-                            ChartTooltipCard(title: sample.title, tokens: sample.tokens)
+                            ChartTooltipCard(title: sample.title, value: sample.value)
                         }
                     }
                     // A tooltip must not become a new hover target under the
@@ -102,18 +113,32 @@ struct ChartHoverOverlay: View {
 }
 
 /// The read-out card every Settings chart shows: a caption (the date, hour or
-/// week) over a token count. Shared so the activity grid, which positions its
-/// own card beside a cell, reads exactly like the bar charts' hover.
+/// week) over a figure — a token count, or an extension's metric. Shared so
+/// the activity grid, which positions its own card beside a cell, reads
+/// exactly like the bar charts' hover.
 struct ChartTooltipCard: View {
     let title: String
-    let tokens: Int
+    let value: String
+
+    init(title: String, value: String) {
+        self.title = title
+        self.value = value
+    }
+
+    init(title: String, tokens: Int) {
+        self.init(title: title, value: Self.tokensText(tokens))
+    }
+
+    nonisolated static func tokensText(_ tokens: Int) -> String {
+        String.localized("\(TokenCount.short(tokens)) tokens")
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(title)
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
-            Text(String.localized("\(TokenCount.short(tokens)) tokens"))
+            Text(verbatim: value)
                 .font(.system(size: 12, weight: .semibold))
                 .monospacedDigit()
         }

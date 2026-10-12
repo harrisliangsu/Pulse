@@ -46,7 +46,7 @@ enum ConnectionRemedy: Equatable {
              .qoderSessionMissing, .qoderSessionExpired,
              .xiaomiSessionMissing, .xiaomiSessionExpired,
              .stepFunSessionMissing, .stepFunSessionExpired: return .readBrowser
-        case .claudeDesktopKeyRefused, .unreachable, .rateLimited, .serverError,
+        case .claudeDesktopKeyRefused, .unreachable, .systemProxyOff, .rateLimited, .serverError,
              .codexServerFailed, .extensionTimedOut, .extensionFailed: return .retry
         // Its login is the program's own, so the page that says how an
         // extension works is the nearest thing to a remedy Pulse has.

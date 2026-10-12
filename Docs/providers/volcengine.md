@@ -29,7 +29,7 @@ The Ark Coding Plan, sold on Volcengine (火山引擎). Named for the platform r
 
 `arkcli usage plan --format json`. Located by `ARKCLI_PATH`, then `PATH`, then `~/.local/bin`, `/opt/homebrew/bin`, `/usr/local/bin` — a GUI app inherits almost no `PATH`, the same problem `CodexAppServer.locateCodex` solves.
 
-A manual proxy is added to each `arkcli` process as `HTTP_PROXY` / `HTTPS_PROXY` or `ALL_PROXY`, plus a loopback `NO_PROXY`; Follow System leaves its inherited environment alone. SOCKS5 support is up to `arkcli`. [../networking.md](../networking.md)
+A custom proxy is added to each `arkcli` process as `HTTP_PROXY` / `HTTPS_PROXY` or `ALL_PROXY`, plus a loopback `NO_PROXY`; Follow System and System Proxy Only leave its inherited environment alone, and No Proxy removes every proxy variable from it. SOCKS5 support is up to `arkcli`. [../networking.md](../networking.md)
 
 Run with stdin at `/dev/null` so a CLI that decides to prompt gets EOF instead of blocking the refresh pass behind it — and with the guarantees below, enforced rather than merely commented (they live in the shared [`BoundedProcess.swift`](../../Sources/Pulse/Providers/BoundedProcess.swift)), because a pass that never finishes never calls `scheduleNext` and the rail then freezes for **every** provider, not just this one:
 

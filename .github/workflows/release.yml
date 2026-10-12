@@ -157,6 +157,15 @@ jobs:
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
+          # **A pre-release is not offered to Sparkle.** Publishing it with
+          # --prerelease kept it off GitHub's "latest", but the feed has no
+          # beta channel, so an item here reached every installed copy as an
+          # ordinary update.
+          case "$VERSION" in *-*)
+            echo "Pre-release $VERSION — the feed is left as it is."
+            exit 0;;
+          esac
+
           if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
             echo "::error::SPARKLE_PRIVATE_KEY is not set — installed copies would never see this release."
             exit 1
