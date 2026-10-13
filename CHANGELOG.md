@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.23
+
+- **Codex’s predicted reset follows an announced reset.** After Codex Resets publishes a reset, Predicted reset and Last reset on the Codex card show that announcement. [#43](https://github.com/harrisliangsu/Pulse/pull/43)
+
 ## 1.4.22
 
 - **Extensions can report metrics of their own.** Figures such as time to first token and output rate appear on the card with a trend line. [How to report them](https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md#metrics). Thanks to [@xkaaaaaa](https://github.com/qunqin24/Pulse/issues/80) for the suggestion.

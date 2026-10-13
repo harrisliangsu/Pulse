@@ -6,6 +6,10 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.23
+
+- **Codex 的预测重置会跟上已经公布的重置。** Codex Resets 公布一次重置之后，Codex 卡片上的「预测重置」和「最近重置」显示这次公布的结果。[#43](https://github.com/harrisliangsu/Pulse/pull/43)
+
 ## 1.4.22
 
 - **扩展可以上报自定义指标。** 例如首字时间和输出速率，显示在卡片上并画出趋势线，[写法](https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md#metrics)见文档。感谢 [@xkaaaaaa](https://github.com/qunqin24/Pulse/issues/80) 提议。
