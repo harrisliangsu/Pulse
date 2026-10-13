@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.23</title>
+            <pubDate>Tue, 13 Oct 2026 07:52:10 -0000</pubDate>
+            <sparkle:version>1.4.23</sparkle:version>
+            <sparkle:shortVersionString>1.4.23</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.23</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.23</h2><ul><li><strong>Codex 的预测重置会跟上已经公布的重置。</strong> Codex Resets 公布一次重置之后，Codex 卡片上的「预测重置」和「最近重置」显示这次公布的结果。<a href="https://github.com/harrisliangsu/Pulse/pull/43">#43</a></li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.23">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.23/Pulse-1.4.23.zip"
+                       length="15928685"
+                       type="application/octet-stream"
+                       sparkle:edSignature="Rv9xtU2dlqMuN67cBlcG+Hzk5vDThsKSy4OpHdIHwAmW7ryrjTJMxfrDYUqGoyQGiY1BLWYmOOXK5Ik2F96ACA==" />
+        </item>
+        <item>
             <title>1.4.22</title>
             <pubDate>Mon, 12 Oct 2026 11:06:19 -0000</pubDate>
             <sparkle:version>1.4.22</sparkle:version>
