@@ -709,6 +709,83 @@ struct CodexResetForecastTests {
         #expect(CodexResetClient.endpoint.absoluteString == "https://codex-resets.com/api/v1/status")
     }
 
+    @Test("The status request is not answered from URLSession's cache")
+    func requestBypassesTheHTTPCache() {
+        let request = CodexResetClient.request(etag: "\"abc\"")
+        #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
+        #expect(request.value(forHTTPHeaderField: "If-None-Match") == "\"abc\"")
+        #expect(request.value(forHTTPHeaderField: "Accept") == "application/json")
+        #expect(CodexResetClient.request(etag: nil).value(forHTTPHeaderField: "If-None-Match") == nil)
+        #expect(CodexResetClient.request(etag: "").value(forHTTPHeaderField: "If-None-Match") == nil)
+    }
+
+    /// The document the card was still showing at 14:30 UTC+8, and the one the
+    /// site was already publishing: a scheduled 15:00, then an announcement
+    /// at 13:06 with no schedule left.
+    @Test("An announcement replaces a scheduled time that is still ahead")
+    func announcedResetReplacesTheScheduledTime() throws {
+        let now = try #require(CodexResetDates.parse("2026-10-13T06:30:00Z"))
+        let scheduledFor = try #require(CodexResetDates.parse("2026-10-13T07:00:00Z"))
+        var shanghai = Calendar(identifier: .gregorian)
+        shanghai.timeZone = try #require(TimeZone(identifier: "Asia/Shanghai"))
+        let zh = Locale(identifier: "zh_CN")
+
+        let stale = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": {
+              "id": "older",
+              "reset_type": "regular",
+              "announced_at": "2026-10-11T04:01:00Z",
+              "text": "Reset."
+            },
+            "scheduled_reset": {
+              "id": "slot",
+              "status": "scheduled",
+              "reset_type": "regular",
+              "scheduled_for": "2026-10-13T07:00:00Z"
+            },
+            "active_watch": null
+          }
+        }
+        """)))
+        let staleLines = CodexResetCardLines.make(stale, now: now, locale: zh, calendar: shanghai)
+        let relative = CodexResetPresentation.relative(announcedAt: scheduledFor, now: now, locale: zh)
+        #expect(staleLines.prediction.countdown == CodexResetPresentation.resets(relative: relative))
+        #expect(staleLines.prediction.bound == CodexResetPresentation.predictionStamp(
+            date: scheduledFor, locale: zh, calendar: shanghai
+        ))
+        #expect(staleLines.prediction.bound != CodexResetPresentation.expectedBefore(
+            CodexResetPresentation.predictionStamp(date: scheduledFor, locale: zh, calendar: shanghai)
+        ))
+        #expect(stale.latest?.announcedAt == CodexResetDates.parse("2026-10-11T04:01:00Z"))
+
+        let announced = try #require(CodexResetDates.parse("2026-10-13T05:06:06Z"))
+        let fresh = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": {
+              "id": "2109873287853707513",
+              "reset_type": "regular",
+              "announced_at": "2026-10-13T05:06:06.000Z",
+              "text": "It's done."
+            },
+            "scheduled_reset": null,
+            "active_watch": null
+          }
+        }
+        """)))
+        let freshLines = CodexResetCardLines.make(fresh, now: now, locale: zh, calendar: shanghai)
+        #expect(fresh.card == .empty)
+        #expect(fresh.explicitReset == nil)
+        #expect(freshLines.prediction.countdown == nil)
+        #expect(freshLines.prediction.bound == nil)
+        #expect(freshLines.prediction.trailing == String.localized("No prediction yet"))
+        #expect(freshLines.latest?.absolute == CodexResetPresentation.absolute(
+            announcedAt: announced, locale: zh, calendar: shanghai
+        ))
+    }
+
     @Test("A body that is not a status document is a failure, not an empty card")
     func malformed() {
         #expect(CodexResetStatus.parse(Data("[]".utf8)) == nil)
