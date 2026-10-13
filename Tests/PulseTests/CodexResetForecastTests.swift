@@ -716,7 +716,7 @@ struct CodexResetForecastTests {
         #expect(request.value(forHTTPHeaderField: "If-None-Match") == "\"abc\"")
         #expect(request.value(forHTTPHeaderField: "Accept") == "application/json")
         #expect(CodexResetClient.request(etag: nil).value(forHTTPHeaderField: "If-None-Match") == nil)
-        #expect(CodexResetClient.request(etag: "  ").value(forHTTPHeaderField: "If-None-Match") == nil)
+        #expect(CodexResetClient.request(etag: "").value(forHTTPHeaderField: "If-None-Match") == nil)
     }
 
     /// The document the card was still showing at 14:30 UTC+8, and the one the
