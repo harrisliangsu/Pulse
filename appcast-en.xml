@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.25</title>
+            <pubDate>Wed, 14 Oct 2026 12:58:02 -0000</pubDate>
+            <sparkle:version>1.4.25</sparkle:version>
+            <sparkle:shortVersionString>1.4.25</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.25</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.25</h2><ul><li><strong>The reasoning lattice is shown as a figure.</strong> On the Codex account in Settings, under Signs of a weaker model, each model&#x27;s share of long replies that stopped at a fixed point is listed on its own, with Too few to tell under 20 long replies, and without a Possibly weakened or Normal label. <a href="https://github.com/qunqin24/Pulse/pull/84">#84</a></li><li><strong>The group is named Reasoning stopped at fixed points.</strong> Under Signs of a weaker model on the Codex account in Settings, the former Reasoning cut off group uses this name, and the footnote says the cause has not been published and that the share alone does not show a model was weakened. <a href="https://github.com/qunqin24/Pulse/pull/84">#84</a></li><li><strong>Synced from upstream qunqin24/Pulse</strong> (1 commit, <code>b3bf083</code>, through <a href="https://github.com/qunqin24/Pulse/pull/84">#84</a>, since 1.4.24). This repository is the update source, and this fork&#x27;s version is <strong>1.4.25</strong>. <code>appcast.xml</code> is unchanged until this version is tagged.</li><li><strong>Fork-only pieces kept:</strong> Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and <code>~/.qoder</code>); Zen&#x27;s cookie store; bilingual release notes; and this repo&#x27;s Sparkle feed and signing key.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.25">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.25/Pulse-1.4.25.zip"
+                       length="15925530"
+                       type="application/octet-stream"
+                       sparkle:edSignature="j+ymSRJAse3oGgh/euVCl8q8uJz+MTs7CO+NYHW2MNO3ROhaBPbAJlpR4gdzQU2RGIS8D0WWLN5G9gwLigO4AQ==" />
+        </item>
+        <item>
             <title>1.4.24</title>
             <pubDate>Wed, 14 Oct 2026 01:40:46 -0000</pubDate>
             <sparkle:version>1.4.24</sparkle:version>

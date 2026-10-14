@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.25</title>
+            <pubDate>Wed, 14 Oct 2026 12:58:02 -0000</pubDate>
+            <sparkle:version>1.4.25</sparkle:version>
+            <sparkle:shortVersionString>1.4.25</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.25</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.25</h2><ul><li><strong>推理停在固定位置时，只显示比例。</strong> 在设置的 Codex 账号下，「降智迹象」列出各模型长回复停在固定位置的比例，不足 20 条时仍标明「数据太少」，不再把比例标成「疑似降智」或「正常」。<a href="https://github.com/qunqin24/Pulse/pull/84">#84</a></li><li><strong>分组改称「推理停在固定位置」。</strong> 在设置的 Codex 账号下，「降智迹象」里原来的「推理被打断」改为「推理停在固定位置」，下方的说明写明原因尚未公开，仅凭比例不能判断模型是否被降智。<a href="https://github.com/qunqin24/Pulse/pull/84">#84</a></li><li><strong>同步上游 qunqin24/Pulse</strong>（1 个提交，<code>b3bf083</code>，即 <a href="https://github.com/qunqin24/Pulse/pull/84">#84</a>，自 1.4.24 起）。本仓库是更新来源，版本为 <strong>1.4.25</strong>。<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.25">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.25/Pulse-1.4.25.zip"
+                       length="15925530"
+                       type="application/octet-stream"
+                       sparkle:edSignature="j+ymSRJAse3oGgh/euVCl8q8uJz+MTs7CO+NYHW2MNO3ROhaBPbAJlpR4gdzQU2RGIS8D0WWLN5G9gwLigO4AQ==" />
+        </item>
+        <item>
             <title>1.4.24</title>
             <pubDate>Wed, 14 Oct 2026 01:40:46 -0000</pubDate>
             <sparkle:version>1.4.24</sparkle:version>
