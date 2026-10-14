@@ -10,6 +10,13 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.24
+
+- **Codex’s effort ranking includes max and ultra.** On the Codex account in Settings, Signs of a weaker model now records a turn lowered from max or ultra, the levels above xhigh. [#83](https://github.com/qunqin24/Pulse/pull/83)
+- **A smaller context window is no longer listed as a cut.** Editing the context window in Codex’s `config.toml` is your own change, and Settings quietly lowered no longer lists it. [#83](https://github.com/qunqin24/Pulse/pull/83)
+- **Synced from upstream qunqin24/Pulse** (1 commit, `7579dcd`, through [#83](https://github.com/qunqin24/Pulse/pull/83), since 1.4.23). This repository is the update source, and this fork's version is **1.4.24**. `appcast.xml` is unchanged until this version is tagged.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen's cookie store; bilingual release notes; and this repo's Sparkle feed and signing key.
+
 ## 1.4.23
 
 - **Codex’s predicted reset follows an announced reset.** After Codex Resets publishes a reset, Predicted reset and Last reset on the Codex card show that announcement. [#43](https://github.com/harrisliangsu/Pulse/pull/43)
