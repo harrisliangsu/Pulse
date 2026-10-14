@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.24</title>
+            <pubDate>Wed, 14 Oct 2026 01:40:46 -0000</pubDate>
+            <sparkle:version>1.4.24</sparkle:version>
+            <sparkle:shortVersionString>1.4.24</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.24</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.24</h2><ul><li><strong>Codex’s effort ranking includes max and ultra.</strong> On the Codex account in Settings, Signs of a weaker model now records a turn lowered from max or ultra, the levels above xhigh. <a href="https://github.com/qunqin24/Pulse/pull/83">#83</a></li><li><strong>A smaller context window is no longer listed as a cut.</strong> Editing the context window in Codex’s <code>config.toml</code> is your own change, and Settings quietly lowered no longer lists it. <a href="https://github.com/qunqin24/Pulse/pull/83">#83</a></li><li><strong>Synced from upstream qunqin24/Pulse</strong> (1 commit, <code>7579dcd</code>, through <a href="https://github.com/qunqin24/Pulse/pull/83">#83</a>, since 1.4.23). This repository is the update source, and this fork&#x27;s version is <strong>1.4.24</strong>. <code>appcast.xml</code> is unchanged until this version is tagged.</li><li><strong>Fork-only pieces kept:</strong> Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and <code>~/.qoder</code>); Zen&#x27;s cookie store; bilingual release notes; and this repo&#x27;s Sparkle feed and signing key.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.24">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.24/Pulse-1.4.24.zip"
+                       length="15927798"
+                       type="application/octet-stream"
+                       sparkle:edSignature="pViYVvOMtzyG41be9y1dmisjf9NVfxJKhHmuisYwUDypGIabNjDiVGhvzhvfGcj8I3JcIjk5h5fnysraI8WHDg==" />
+        </item>
+        <item>
             <title>1.4.23</title>
             <pubDate>Tue, 13 Oct 2026 07:52:10 -0000</pubDate>
             <sparkle:version>1.4.23</sparkle:version>
