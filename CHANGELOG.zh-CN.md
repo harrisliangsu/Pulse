@@ -6,6 +6,13 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.25
+
+- **推理停在固定位置时，只显示比例。** 在设置的 Codex 账号下，「降智迹象」列出各模型长回复停在固定位置的比例，不足 20 条时仍标明「数据太少」，不再把比例标成「疑似降智」或「正常」。[#84](https://github.com/qunqin24/Pulse/pull/84)
+- **分组改称「推理停在固定位置」。** 在设置的 Codex 账号下，「降智迹象」里原来的「推理被打断」改为「推理停在固定位置」，下方的说明写明原因尚未公开，仅凭比例不能判断模型是否被降智。[#84](https://github.com/qunqin24/Pulse/pull/84)
+- **同步上游 qunqin24/Pulse**（1 个提交，`b3bf083`，即 [#84](https://github.com/qunqin24/Pulse/pull/84)，自 1.4.24 起）。本仓库是更新来源，版本为 **1.4.25**。`appcast.xml` 保持不动，等这个版本打 tag 后再由发布流程写入。
+- **保留本仓库特有能力：** Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 `~/.qoder` 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.4.24
 
 - **Codex 的推理强度排序包含 max 和 ultra。** 在设置的 Codex 账号下，「降智迹象」会把从 max 或 ultra（高于 xhigh 的两档）降下来的一轮记入「设置被静默调低」。[#83](https://github.com/qunqin24/Pulse/pull/83)
