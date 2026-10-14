@@ -10,6 +10,13 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.25
+
+- **The reasoning lattice is shown as a figure.** On the Codex account in Settings, under Signs of a weaker model, each model's share of long replies that stopped at a fixed point is listed on its own, with Too few to tell under 20 long replies, and without a Possibly weakened or Normal label. [#84](https://github.com/qunqin24/Pulse/pull/84)
+- **The group is named Reasoning stopped at fixed points.** Under Signs of a weaker model on the Codex account in Settings, the former Reasoning cut off group uses this name, and the footnote says the cause has not been published and that the share alone does not show a model was weakened. [#84](https://github.com/qunqin24/Pulse/pull/84)
+- **Synced from upstream qunqin24/Pulse** (1 commit, `b3bf083`, through [#84](https://github.com/qunqin24/Pulse/pull/84), since 1.4.24). This repository is the update source, and this fork's version is **1.4.25**. `appcast.xml` is unchanged until this version is tagged.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen's cookie store; bilingual release notes; and this repo's Sparkle feed and signing key.
+
 ## 1.4.24
 
 - **Codex’s effort ranking includes max and ultra.** On the Codex account in Settings, Signs of a weaker model now records a turn lowered from max or ultra, the levels above xhigh. [#83](https://github.com/qunqin24/Pulse/pull/83)
