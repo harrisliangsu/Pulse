@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.26
+
+- **Codex’s predicted reset does not stay after the reset has happened.** Once the weekly limit has refilled, or the predicted time has passed, the Codex card no longer shows that countdown as still coming; opening the card or a usage refresh reads Codex Resets again. [#47](https://github.com/harrisliangsu/Pulse/pull/47)
+
 ## 1.4.25
 
 - **The reasoning lattice is shown as a figure.** On the Codex account in Settings, under Signs of a weaker model, each model's share of long replies that stopped at a fixed point is listed on its own, with Too few to tell under 20 long replies, and without a Possibly weakened or Normal label. [#84](https://github.com/qunqin24/Pulse/pull/84)

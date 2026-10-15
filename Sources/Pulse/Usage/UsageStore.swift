@@ -860,6 +860,7 @@ final class UsageStore {
     /// restored cache through the alert rules would announce a fortnight of
     /// crossings the moment the app opened.
     private func commit(_ fetched: ProviderUsage, raw: ProviderUsage, for id: String) {
+        let previous = usage[id]
         usage[id] = fetched
         diagnostics[id] = ConnectionDiagnostic(
             raw: raw.recordingSoleRoute(), displayed: fetched,
@@ -872,6 +873,29 @@ final class UsageStore {
         // it off is the inventory read's job, once a list has proved it.
         if account.provider == .codex, account.isPrimary, let snapshot = raw.codexResetCredits {
             noteCodexCreditSnapshot(snapshot)
+        }
+        // The public forecast is a different document from this reading.
+        // A weekly refill means the countdown still on the card is for a
+        // reset the account has already received, so it comes off before
+        // the next poll. Every other Codex reading asks again once two
+        // minutes have passed, instead of sitting out the document's
+        // `max-age`.
+        if account.provider == .codex, account.isPrimary {
+            let restored: Bool
+            if case .live = fetched.state {
+                restored = CodexResetSchedule.weeklyQuotaRestored(
+                    previous: previous?.windows ?? [],
+                    current: fetched.windows
+                )
+            } else {
+                restored = false
+            }
+            if restored {
+                ensureCodexResets()
+                codexResets?.noteQuotaRestored()
+            } else {
+                refreshCodexResetForecast()
+            }
         }
         // Before the alert rules, and regardless of whether they are on: the
         // mark's celebration is not a notification.

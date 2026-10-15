@@ -4,9 +4,11 @@ import Foundation
 /// predicted-reset reminder is on.
 ///
 /// One in-flight request, then a sleep of whatever the last response asked
-/// for. Opening the panel fetches only once that interval has elapsed, so a
-/// hover cannot hammer the endpoint. A failure leaves the last status in
-/// place.
+/// for. Opening the panel, or a Codex usage refresh, wakes that sleep once
+/// two minutes have passed: a hover cannot hammer the endpoint, and it also
+/// cannot sit out the document's `max-age` after the site has published the
+/// reset. While the cached status still names a `scheduled_for`, the sleep
+/// itself is those two minutes. A failure leaves the last status in place.
 @MainActor
 final class CodexResetMonitor {
     private let settings: AppSettings
@@ -17,10 +19,18 @@ final class CodexResetMonitor {
     private var etag: String?
     private var maxAge: TimeInterval?
     private var freshUntil = Date.distantPast
+    private var fetchedAt = Date.distantPast
     private var sleepFor: TimeInterval = CodexResetSchedule.default
     private var loop: Task<Void, Never>?
     private var sleeper: Task<Void, Never>?
     private var inFlight = false
+    private var lookRequested = false
+    /// A weekly refill dropped the countdown. Until this instant, a document
+    /// that still names the same forecast is shown without it: the copy in
+    /// hand is the one the refill has already outgrown. A document that
+    /// names a different forecast is shown as it arrived.
+    private var quietUntil = Date.distantPast
+    private var quietKey = ""
     /// The file predates the stored window end. The next request must not
     /// send `If-None-Match`: a 304 has no body, so `expires_at` would never
     /// be parsed and the card would stay on confidence alone.
@@ -57,11 +67,47 @@ final class CodexResetMonitor {
         return status
     }
 
-    /// The panel was opened or the reminder was switched on. No-op while the
-    /// last response is still fresh.
+    /// The panel was opened, the Codex card was opened, or a Codex usage
+    /// refresh landed. No-op inside the floor, and while a request is
+    /// already in flight: a hover cannot hammer the endpoint. Past the
+    /// floor it asks even when the document's `max-age` has not elapsed.
+    /// Cancelling the sleep is not enough on its own — the loop only
+    /// fetches when it was asked, or when `freshUntil` has passed.
     func poke() {
-        guard interested, Date() >= freshUntil, !inFlight else { return }
+        guard interested, !inFlight else { return }
+        let now = Date()
+        guard now >= freshUntil || CodexResetSchedule.lookIsDue(fetchedAt: fetchedAt, now: now) else { return }
+        lookRequested = true
         sleeper?.cancel()
+    }
+
+    /// The primary Codex weekly window refilled. The countdown still on the
+    /// card is a forecast of a reset the account has already received, so
+    /// it comes off now, and the next document is fetched without waiting
+    /// out the cache. The last announcement stays. A document that still
+    /// names this same forecast stays quiet until the floor has passed; one
+    /// that names a new announcement replaces the row immediately.
+    func noteQuotaRestored() {
+        guard let status, !status.predictionKey.isEmpty else {
+            poke()
+            return
+        }
+        quietKey = status.predictionKey
+        quietUntil = Date().addingTimeInterval(CodexResetSchedule.floor)
+        onUpdate(presenting(status))
+        freshUntil = .distantPast
+        lookRequested = true
+        sleeper?.cancel()
+    }
+
+    private func presenting(_ status: CodexResetStatus, now: Date = Date()) -> CodexResetStatus {
+        guard !quietKey.isEmpty else { return status }
+        if now < quietUntil, status.predictionKey == quietKey {
+            return status.withoutPrediction()
+        }
+        quietKey = ""
+        quietUntil = .distantPast
+        return status
     }
 
     private var interested: Bool {
@@ -71,10 +117,21 @@ final class CodexResetMonitor {
 
     private func run() async {
         while !Task.isCancelled {
-            if interested, Date() >= freshUntil {
+            let asked = lookRequested
+            lookRequested = false
+            if interested, asked || Date() >= freshUntil {
                 await fetch()
             } else if !interested {
                 sleepFor = CodexResetSchedule.ceiling
+            } else if sleepFor <= 0 {
+                sleepFor = CodexResetSchedule.floor
+            }
+            // A refill that landed during the request has to be asked
+            // again. Sleeping out the wait would put the pre-announcement
+            // document back in front of the one just requested.
+            if lookRequested {
+                sleepFor = 0
+                freshUntil = .distantPast
             }
             let wait = sleepFor
             let sleep = Task {
@@ -98,7 +155,7 @@ final class CodexResetMonitor {
             refetchingForecastTiming = false
             if let etag = reply.etag { self.etag = etag }
             if let maxAge = reply.maxAge { self.maxAge = maxAge }
-            onUpdate(status)
+            onUpdate(presenting(status))
             save()
         case .notModified:
             // A 304 cannot fill in a window end the file never stored.
@@ -110,17 +167,32 @@ final class CodexResetMonitor {
             if let etag = reply.etag { self.etag = etag }
             if let maxAge = reply.maxAge { self.maxAge = maxAge }
             save()
+            // The store may be showing the countdown taken off after a
+            // refill. A 304 says the cached document is still the server's,
+            // and once the quiet window has passed that document is what
+            // the card shows again.
+            if !quietKey.isEmpty, let status {
+                onUpdate(presenting(status))
+            }
         case .failed:
             break
         }
         let failed = reply.payload == .failed
-        let wait = CodexResetSchedule.delay(
+        let now = Date()
+        fetchedAt = now
+        var wait = CodexResetSchedule.delay(
             maxAge: reply.maxAge ?? (failed ? nil : previousMaxAge),
             retryAfter: reply.retryAfter,
             failed: failed
         )
+        // A rate-limit wait is the server's, and a countdown does not
+        // shorten it. Every other wait does, while a `scheduled_for` is
+        // still what the card would count toward.
+        if reply.retryAfter == nil {
+            wait = CodexResetSchedule.paced(wait, status: status)
+        }
         sleepFor = wait
-        freshUntil = Date().addingTimeInterval(wait)
+        freshUntil = now.addingTimeInterval(wait)
     }
 
     private func load() {
@@ -130,6 +202,7 @@ final class CodexResetMonitor {
         else { return }
 
         status = disk.status
+        fetchedAt = disk.fetchedAt
         if disk.omitsForecastTiming {
             etag = nil
             maxAge = nil
@@ -140,14 +213,20 @@ final class CodexResetMonitor {
             etag = disk.etag
             maxAge = disk.maxAge
             refetchingForecastTiming = false
+            let now = Date()
+            let elapsed = now.timeIntervalSince(disk.fetchedAt)
             let interval = CodexResetSchedule.interval(maxAge: disk.maxAge)
-            let remaining = interval - Date().timeIntervalSince(disk.fetchedAt)
+            let cadence = CodexResetSchedule.paced(interval, status: disk.status)
+            let remaining = cadence - elapsed
             if remaining > 0 {
-                freshUntil = Date().addingTimeInterval(remaining)
+                freshUntil = now.addingTimeInterval(remaining)
                 sleepFor = remaining
+            } else {
+                freshUntil = .distantPast
+                sleepFor = 0
             }
         }
-        onUpdate(disk.status)
+        onUpdate(presenting(disk.status))
     }
 
     /// The next request will send `If-None-Match`. Tests read this: a cache
