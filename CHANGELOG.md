@@ -12,7 +12,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.4.26
 
-- **Codex’s predicted reset does not stay after the reset has happened.** Once the weekly limit has refilled, or the predicted time has passed, the Codex card no longer shows that countdown as still coming; opening the card or a usage refresh reads Codex Resets again.
+- **Codex’s predicted reset does not stay after the reset has happened.** Once the weekly limit has refilled, or the predicted time has passed, the Codex card no longer shows that countdown as still coming; opening the card or a usage refresh reads Codex Resets again. [#47](https://github.com/harrisliangsu/Pulse/pull/47)
 
 ## 1.4.25
 
