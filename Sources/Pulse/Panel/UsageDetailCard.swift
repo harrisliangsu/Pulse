@@ -604,8 +604,20 @@ struct UsageDetailCard: View {
     /// prediction is empty. Account reset cards, when the app server has
     /// them, stay underneath: they are this login's inventory, not the
     /// public announcement.
+    ///
+    /// The lines tick on their own. A card left open used to keep "in 22
+    /// minutes" after that minute had passed, because nothing else on the
+    /// card changed and the body never ran again. The same tick drops a
+    /// reset card whose only expiry has passed.
     private var codexIntel: some View {
-        let prediction = codexLines.prediction
+        TimelineView(.periodic(from: .now, by: 30)) { context in
+            codexIntelBody(now: context.date)
+        }
+    }
+
+    private func codexIntelBody(now: Date) -> some View {
+        let lines = CodexResetCardLines.make(resolvedCodexReset, now: now)
+        let prediction = lines.prediction
         return VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(localized: "Predicted reset")
@@ -643,12 +655,12 @@ struct UsageDetailCard: View {
                     .lineLimit(2)
             }
 
-            if let latest = codexLines.latest {
+            if let latest = lines.latest {
                 latestAnnouncement(latest)
             }
 
-            if let codexCredits, codexCredits.showsOnCard(), usage.account.isPrimary {
-                creditLine(codexCredits)
+            if let codexCredits, codexCredits.showsOnCard(at: now), usage.account.isPrimary {
+                creditLine(codexCredits, now: now)
             }
         }
         .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
@@ -667,10 +679,6 @@ struct UsageDetailCard: View {
         } else {
             codexReset
         }
-    }
-
-    private var codexLines: CodexResetCardLines {
-        CodexResetCardLines.make(resolvedCodexReset)
     }
 
     /// Relative time, then type and local clock. Hovering the type — not an
@@ -735,7 +743,7 @@ struct UsageDetailCard: View {
         }
     }
 
-    private func creditLine(_ credits: CodexCreditSummary) -> some View {
+    private func creditLine(_ credits: CodexCreditSummary, now: Date) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(localized: "Reset cards")
@@ -745,7 +753,7 @@ struct UsageDetailCard: View {
                     .foregroundStyle(.primary.opacity(0.9))
                     .lineLimit(1)
             }
-            if let expiry = creditExpiry(credits) {
+            if let expiry = creditExpiry(credits, now: now) {
                 Text(expiry)
                     .foregroundStyle(.primary.opacity(0.55))
                     .lineLimit(1)
@@ -759,11 +767,11 @@ struct UsageDetailCard: View {
             : .localized("\("\(available)") available")
     }
 
-    private func creditExpiry(_ credits: CodexCreditSummary) -> String? {
+    private func creditExpiry(_ credits: CodexCreditSummary, now: Date) -> String? {
         guard
             let expires = credits.nextExpiresAt,
-            expires > Date(),
-            let remaining = Self.remainingFormatter.string(from: Date(), to: expires)
+            expires > now,
+            let remaining = Self.remainingFormatter.string(from: now, to: expires)
         else { return nil }
         return .localized("Next expires in \(remaining)")
     }

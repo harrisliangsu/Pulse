@@ -682,7 +682,8 @@ struct CodexResetForecastTests {
             locale: Locale(identifier: "en_US")
         )
         #expect(ago.prediction.countdown == nil)
-        #expect(ago.prediction.bound?.isEmpty == false)
+        #expect(ago.prediction.bound == nil)
+        #expect(ago.prediction.trailing == String.localized("No prediction yet"))
     }
 
     @Test("A cached watch from before the window end still decodes")
@@ -784,6 +785,186 @@ struct CodexResetForecastTests {
         #expect(freshLines.latest?.absolute == CodexResetPresentation.absolute(
             announcedAt: announced, locale: zh, calendar: shanghai
         ))
+    }
+
+    /// 14:34 in Shanghai: the card was still counting to 14:56, and the site
+    /// had already published the reset at 14:28 with no schedule left.
+    @Test("A countdown that has passed is not left on the card, and the 15 October announcement replaces it")
+    func passedCountdownIsNotUpcoming() throws {
+        let now = try #require(CodexResetDates.parse("2026-10-15T06:34:00Z"))
+        let scheduledFor = try #require(CodexResetDates.parse("2026-10-15T06:56:00Z"))
+        var shanghai = Calendar(identifier: .gregorian)
+        shanghai.timeZone = try #require(TimeZone(identifier: "Asia/Shanghai"))
+        let zh = Locale(identifier: "zh_CN")
+
+        let stale = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": {
+              "id": "older",
+              "reset_type": "regular",
+              "announced_at": "2026-10-13T05:06:06.000Z",
+              "text": "Reset."
+            },
+            "scheduled_reset": {
+              "id": "slot",
+              "scheduled_for": "2026-10-15T06:56:00Z"
+            },
+            "active_watch": null
+          }
+        }
+        """)))
+        let staleLines = CodexResetCardLines.make(stale, now: now, locale: zh, calendar: shanghai)
+        let relative = CodexResetPresentation.relative(announcedAt: scheduledFor, now: now, locale: zh)
+        #expect(staleLines.prediction.countdown == CodexResetPresentation.resets(relative: relative))
+        #expect(staleLines.prediction.bound == CodexResetPresentation.predictionStamp(
+            date: scheduledFor, locale: zh, calendar: shanghai
+        ))
+
+        let passed = CodexResetCardLines.make(
+            stale, now: scheduledFor.addingTimeInterval(60), locale: zh, calendar: shanghai
+        )
+        #expect(passed.prediction.countdown == nil)
+        #expect(passed.prediction.bound == nil)
+        #expect(passed.prediction.trailing == String.localized("No prediction yet"))
+        #expect(passed.latest?.typeLabel == String.localized("Regular reset"))
+
+        let announced = try #require(CodexResetDates.parse("2026-10-15T06:28:13.000Z"))
+        let fresh = try #require(CodexResetStatus.parse(json("""
+        {
+          "data": {
+            "latest_reset": {
+              "id": "2110618732666257557",
+              "reset_type": "regular",
+              "announced_at": "2026-10-15T06:28:13.000Z",
+              "text": "Done and dusted https://t.co/0fehr43VS4"
+            },
+            "scheduled_reset": null,
+            "active_watch": null
+          }
+        }
+        """)))
+        #expect(fresh.card == .empty)
+        #expect(fresh.explicitReset == nil)
+        let freshLines = CodexResetCardLines.make(
+            fresh,
+            now: announced.addingTimeInterval(6 * 60),
+            locale: Locale(identifier: "en_US")
+        )
+        #expect(freshLines.prediction.countdown == nil)
+        #expect(freshLines.prediction.bound == nil)
+        #expect(freshLines.prediction.trailing == String.localized("No prediction yet"))
+        #expect(freshLines.latest?.relative == "6 minutes ago")
+        #expect(fresh.predictionKey.isEmpty)
+        #expect(stale.predictionKey != fresh.predictionKey)
+        let quiet = stale.withoutPrediction()
+        #expect(quiet.scheduled == nil)
+        #expect(quiet.latest?.id == "older")
+        #expect(quiet.predictionKey.isEmpty)
+        #expect(quiet.predictionKey != stale.predictionKey)
+    }
+
+    @Test("A countdown shortens the wait to the floor, and a look is due after it")
+    func countdownShortensTheWait() {
+        let scheduled = CodexResetStatus(
+            scheduled: .init(id: "slot", scheduledFor: Date().addingTimeInterval(3600)),
+            watch: nil
+        )
+        let empty = CodexResetStatus(scheduled: nil, watch: nil)
+        #expect(CodexResetSchedule.paced(CodexResetSchedule.ceiling, status: scheduled) == CodexResetSchedule.floor)
+        #expect(CodexResetSchedule.paced(30, status: scheduled) == 30)
+        #expect(CodexResetSchedule.paced(CodexResetSchedule.ceiling, status: empty) == CodexResetSchedule.ceiling)
+        #expect(CodexResetSchedule.countsDown(scheduled))
+        #expect(CodexResetSchedule.countsDown(empty) == false)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        #expect(CodexResetSchedule.lookIsDue(fetchedAt: now.addingTimeInterval(-90), now: now) == false)
+        #expect(CodexResetSchedule.lookIsDue(fetchedAt: now.addingTimeInterval(-180), now: now))
+    }
+
+    @Test("A weekly refill is a restore; a sliding clock and a five-hour window are not")
+    func weeklyRefillIsARestore() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let week = 604_800
+        let before = UsageWindow(
+            id: "week", kind: .weekly, scope: nil, usedFraction: 0.62,
+            windowSeconds: week, resetsAt: now
+        )
+        let refilled = UsageWindow(
+            id: "week", kind: .weekly, scope: nil, usedFraction: 0,
+            windowSeconds: week, resetsAt: now.addingTimeInterval(180)
+        )
+        #expect(CodexResetSchedule.weeklyQuotaRestored(previous: [before], current: [refilled]))
+
+        let slid = UsageWindow(
+            id: "week", kind: .weekly, scope: nil, usedFraction: 0.62,
+            windowSeconds: week, resetsAt: now.addingTimeInterval(180)
+        )
+        #expect(CodexResetSchedule.weeklyQuotaRestored(previous: [before], current: [slid]) == false)
+
+        let full = UsageWindow(
+            id: "week", kind: .weekly, scope: nil, usedFraction: 0,
+            windowSeconds: week, resetsAt: now
+        )
+        let fullSlid = UsageWindow(
+            id: "week", kind: .weekly, scope: nil, usedFraction: 0,
+            windowSeconds: week, resetsAt: now.addingTimeInterval(180)
+        )
+        #expect(CodexResetSchedule.weeklyQuotaRestored(previous: [full], current: [fullSlid]) == false)
+
+        let rolled = UsageWindow(
+            id: "week", kind: .weekly, scope: nil, usedFraction: 0,
+            windowSeconds: week, resetsAt: now.addingTimeInterval(7 * 24 * 3600)
+        )
+        #expect(CodexResetSchedule.weeklyQuotaRestored(previous: [full], current: [rolled]))
+
+        let fiveBefore = UsageWindow(
+            id: "five", kind: .fiveHour, scope: nil, usedFraction: 0.9,
+            windowSeconds: 18_000, resetsAt: now
+        )
+        let fiveAfter = UsageWindow(
+            id: "five", kind: .fiveHour, scope: nil, usedFraction: 0,
+            windowSeconds: 18_000, resetsAt: now.addingTimeInterval(5 * 3600)
+        )
+        #expect(CodexResetSchedule.weeklyQuotaRestored(previous: [fiveBefore], current: [fiveAfter]) == false)
+    }
+
+    @Test("A cached countdown older than the floor is fetched again, and a weekly refill drops it")
+    @MainActor
+    func staleCountdownIsDueAndARefillDropsIt() throws {
+        let when = Date().addingTimeInterval(22 * 60)
+        let announced = Date().addingTimeInterval(-2 * 24 * 3600)
+        let status = CodexResetStatus(
+            scheduled: .init(id: "slot", scheduledFor: when),
+            watch: nil,
+            latest: .init(id: "older", resetType: "regular", announcedAt: announced, text: "Reset.")
+        )
+        let stale = CodexResetDisk(
+            status: status, etag: "abc",
+            fetchedAt: Date().addingTimeInterval(-10 * 60), maxAge: 14_400
+        )
+        let staleURL = try Self.write(stale)
+        defer { try? FileManager.default.removeItem(at: staleURL) }
+        let due = CodexResetMonitor(settings: AppSettings(), file: staleURL) { _ in }
+        _ = due.restoreCache()
+        #expect(due.forecastFetchIsDue)
+        #expect(due.sendsConditionalRequest)
+
+        let fresh = CodexResetDisk(status: status, etag: "abc", fetchedAt: Date(), maxAge: 14_400)
+        let freshURL = try Self.write(fresh)
+        defer { try? FileManager.default.removeItem(at: freshURL) }
+        var delivered: CodexResetStatus?
+        let monitor = CodexResetMonitor(settings: AppSettings(), file: freshURL) { delivered = $0 }
+        _ = monitor.restoreCache()
+        #expect(monitor.forecastFetchIsDue == false)
+        #expect(delivered?.scheduled?.id == "slot")
+        monitor.noteQuotaRestored()
+        #expect(delivered?.scheduled == nil)
+        #expect(delivered?.latest?.id == "older")
+        #expect(monitor.forecastFetchIsDue)
+        let lines = CodexResetCardLines.make(delivered, now: Date())
+        #expect(lines.prediction.countdown == nil)
+        #expect(lines.prediction.bound == nil)
+        #expect(lines.latest != nil)
     }
 
     @Test("A body that is not a status document is a failure, not an empty card")

@@ -143,6 +143,37 @@ struct CodexResetStatus: Equatable, Sendable, Codable {
         let body = (text?.isEmpty == false) ? text : nil
         return Latest(id: id, resetType: type, announcedAt: announced, text: body)
     }
+
+    /// The forecast the card would count down to, coarse enough that a
+    /// disk round trip and a fresh parse of the same post still match.
+    /// Empty when there is nothing to drop. A later document matches only
+    /// while it still names the same schedule and the same announcement.
+    var predictionKey: String {
+        let scheduledPart = scheduled.map {
+            "\($0.id)|\(Self.minute($0.scheduledFor))"
+        } ?? ""
+        let watchPart = watch.map {
+            "\($0.level)|\(Self.minute($0.windowEnds))"
+        } ?? ""
+        guard !scheduledPart.isEmpty || !watchPart.isEmpty else { return "" }
+        let latestPart = latest.map { "\($0.id)|\($0.resetType)" } ?? ""
+        return "\(scheduledPart)|\(watchPart)||\(latestPart)"
+    }
+
+    /// The same status with the prediction taken off. The last announcement
+    /// stays: it is history, and dropping it would blank Last reset while
+    /// the next document is still on its way.
+    func withoutPrediction() -> CodexResetStatus {
+        var copy = self
+        copy.scheduled = nil
+        copy.watch = nil
+        return copy
+    }
+
+    private static func minute(_ date: Date?) -> String {
+        guard let date else { return "" }
+        return String(Int(date.timeIntervalSince1970 / 60))
+    }
 }
 
 /// How the Codex card says a latest announcement.
@@ -340,10 +371,12 @@ struct CodexResetCardLines: Equatable, Sendable {
         )
     }
 
-    /// Countdown and bound from a structured instant. A watch counts down
-    /// only while its window end is still ahead — a bound already past is
-    /// not shown as an upcoming reset. The event note never becomes a line.
-    /// An announced time is definite ("resets"), a watch is not ("may reset"
+    /// Countdown and bound from a structured instant. Either one counts
+    /// down only while its instant is still ahead. A bound already past is
+    /// not shown as an upcoming reset: the clock under the title would
+    /// still read as the time it was going to happen. The row then says
+    /// there is no prediction. The event note never becomes a line. An
+    /// announced time is definite ("resets"), a watch is not ("may reset"
     /// before the window ends).
     private static func prediction(
         _ status: CodexResetStatus?,
@@ -353,14 +386,13 @@ struct CodexResetCardLines: Equatable, Sendable {
     ) -> Prediction {
         switch status?.card {
         case .scheduled(let date):
+            guard date > now else { return noPrediction }
             let stamp = CodexResetPresentation.predictionStamp(
                 date: date, locale: locale, calendar: calendar
             )
-            let countdown = date > now
-                ? CodexResetPresentation.resets(relative: CodexResetPresentation.relative(
-                    announcedAt: date, now: now, locale: locale
-                ))
-                : nil
+            let countdown = CodexResetPresentation.resets(relative: CodexResetPresentation.relative(
+                announcedAt: date, now: now, locale: locale
+            ))
             return Prediction(trailing: nil, countdown: countdown, bound: stamp, note: nil)
         case .watch(let watch):
             let note = CodexResetPresentation.context(
@@ -383,13 +415,18 @@ struct CodexResetCardLines: Equatable, Sendable {
                 note: note
             )
         case .empty, nil:
-            return Prediction(
-                trailing: String.localized("No prediction yet"),
-                countdown: nil,
-                bound: nil,
-                note: nil
-            )
+            return noPrediction
         }
+    }
+
+    /// What the prediction row says when it has no instant left to count to.
+    private static var noPrediction: Prediction {
+        Prediction(
+            trailing: String.localized("No prediction yet"),
+            countdown: nil,
+            bound: nil,
+            note: nil
+        )
     }
 
     /// Identity of the intel block. Empty when there is nothing that can
@@ -445,6 +482,60 @@ enum CodexResetSchedule {
         if let retryAfter { return min(max(retryAfter, 30), ceiling) }
         if failed { return Self.default }
         return interval(maxAge: maxAge)
+    }
+
+    /// Whether the cached document still names a `scheduled_for`.
+    ///
+    /// That field is what the site removes when it publishes the reset.
+    /// Waiting out the document's `max-age` — four hours, capped here at
+    /// thirty minutes — is how the card kept counting toward 14:56 after
+    /// the post at 14:28 had already cleared it.
+    static func countsDown(_ status: CodexResetStatus?) -> Bool {
+        status?.scheduled?.scheduledFor != nil
+    }
+
+    /// The wait while a countdown is still the cached prediction: the
+    /// floor, never the document's own lifetime. Any other status keeps
+    /// the wait it was given.
+    static func paced(_ wait: TimeInterval, status: CodexResetStatus?) -> TimeInterval {
+        guard countsDown(status) else { return wait }
+        return min(wait, floor)
+    }
+
+    /// Opening the panel, or a Codex usage refresh, may ask again once the
+    /// floor has elapsed. The document's `max-age` is not a reason to keep
+    /// showing the copy from before the announcement.
+    static func lookIsDue(fetchedAt: Date, now: Date) -> Bool {
+        now.timeIntervalSince(fetchedAt) >= floor
+    }
+
+    /// The account's weekly window has refilled since the previous live
+    /// reading. A few minutes of clock slide is not this — Codex moves
+    /// `resetsAt` by that much on polls where nothing turned over — and a
+    /// five-hour window is not this either. It rolls on its own, several
+    /// times a day, and must not take an irregular forecast down with it.
+    ///
+    /// A refill that lands on zero from a window that was actually in use
+    /// counts even when the clock only slid: the irregular reset restores
+    /// the week without always pushing its end out by days. A week that
+    /// was already full counts only when the clock itself jumps by a large
+    /// share of the week.
+    static func weeklyQuotaRestored(previous: [UsageWindow], current: [UsageWindow]) -> Bool {
+        for after in current where after.kind == .weekly {
+            guard let before = previous.first(where: { $0.id == after.id }) else { continue }
+            if weeklyWindowRestored(before: before, after: after) { return true }
+        }
+        return false
+    }
+
+    private static func weeklyWindowRestored(before: UsageWindow, after: UsageWindow) -> Bool {
+        guard before.kind == .weekly, after.kind == .weekly else { return false }
+        guard after.usedFraction <= 0.02 else { return false }
+        if before.usedFraction - after.usedFraction >= 0.15 { return true }
+        guard let new = after.resetsAt, let old = before.resetsAt else { return false }
+        let jump = new.timeIntervalSince(old)
+        let week = TimeInterval(max(after.windowSeconds, before.windowSeconds, 0))
+        return before.usedFraction <= 0.02 && jump > max(6 * 3600, week * 0.25)
     }
 
     static func maxAge(from header: String?) -> TimeInterval? {

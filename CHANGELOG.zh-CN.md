@@ -6,6 +6,10 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.26
+
+- **Codex 的预测重置不会停在已经发生的重置上。** 每周限额已经恢复，或预测的时刻已经过去时，Codex 卡片不再把这次「预测重置」显示成即将到来；打开卡片或用量刷新时会重新读取 Codex Resets。
+
 ## 1.4.25
 
 - **推理停在固定位置时，只显示比例。** 在设置的 Codex 账号下，「降智迹象」列出各模型长回复停在固定位置的比例，不足 20 条时仍标明「数据太少」，不再把比例标成「疑似降智」或「正常」。[#84](https://github.com/qunqin24/Pulse/pull/84)
