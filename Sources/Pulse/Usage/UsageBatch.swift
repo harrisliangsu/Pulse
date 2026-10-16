@@ -17,6 +17,7 @@ struct UsageBatch: Sendable {
     var claudeCode: ClaudeCodeUsageService
     var claudeSource: UsageSource
     var antigravity: AntigravityUsageService
+    var antigravitySource: UsageSource
     var cursor: CursorUsageService
     var openCode: OpenCodeGoUsageService
     var kimi: KimiCodeUsageService
@@ -138,7 +139,7 @@ struct UsageBatch: Sendable {
         case .claudeCode:
             await claudeCode.fetch(source: claudeSource)
         case .antigravity:
-            await antigravity.fetch()
+            await antigravity.fetch(source: antigravitySource)
         case .cursor:
             await cursor.fetch()
         case .openCodeGo:
