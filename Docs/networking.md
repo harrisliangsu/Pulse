@@ -24,11 +24,12 @@ The boundary includes:
 - provider usage requests, including the isolated ephemeral sessions used for borrowed browser cookies;
 - OAuth, device-code and browser-login token exchanges;
 - the models.dev price download;
-- the status-page reads on the Codex, Claude Code and DeepSeek panes, and the outage notification's ([providers/codex.md](providers/codex.md#service-status), [providers/claude-code.md](providers/claude-code.md#service-status), [providers/deepseek.md](providers/deepseek.md#service-status)).
+- the status-page reads on every provider pane that has one (44 providers), and the outage notification's ([providers/README.md](providers/README.md#service-status));
+- the day's exchange rate from ExchangeRate-API's open access endpoint, only while estimates are shown in a currency other than the dollar ([refresh-and-data.md](refresh-and-data.md#currency)).
 
 Cookie storage, cache and redirect policies still belong to each caller. Applying a proxy must not turn a borrowed browser session into a process-wide cookie jar or allow its hand-written `Cookie` header across a redirect.
 
-Antigravity is the exception: its session reaches the editor's language server at `https://127.0.0.1:<port>` and stays outside `NetworkSession`. Loopback traffic is never sent to the custom proxy.
+Antigravity is the exception: its session reaches the editor's language server at `https://127.0.0.1:<port>` and stays outside `NetworkSession`. Loopback traffic is never sent to the custom proxy. Its `agy` CLI route is a helper process (see below).
 
 ## Holding back
 
@@ -40,15 +41,15 @@ A service reports that failure as unreachable, so while the guard is refusing, `
 
 ## Helper processes
 
-A custom HTTP proxy starts `codex app-server` and `arkcli` with `HTTP_PROXY` and `HTTPS_PROXY`; SOCKS5 uses `ALL_PROXY`. Both also receive `NO_PROXY=localhost,127.0.0.1,::1`. Conflicting inherited upper- and lower-case proxy variables are removed first. Whether a helper supports SOCKS5 is the helper's decision.
+A custom HTTP proxy starts `codex app-server`, `arkcli` and Antigravity's `agy` with `HTTP_PROXY` and `HTTPS_PROXY`; SOCKS5 uses `ALL_PROXY`. Each also receives `NO_PROXY=localhost,127.0.0.1,::1`. Conflicting inherited upper- and lower-case proxy variables are removed first. Whether a helper supports SOCKS5 is the helper's decision.
 
 Selecting Follow System or System Proxy Only sets no child environment. This is intentional: a helper launched from Finder or a login item inherits no shell proxy, while one launched from a terminal may. Follow System means preserving that existing behaviour, not manufacturing environment variables from macOS network settings. No Proxy is the opposite: it removes the upper- and lower-case `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` and `NO_PROXY` a helper would otherwise inherit, so a proxy exported in the shell that launched Pulse does not reach it either.
 
-Every helper CLI Pulse starts — `codex app-server`, Kiro's ACP client, `arkcli`, Alibaba's `bl` — gets the folder it was found in at the front of `PATH` (`BoundedProcess.environment(leading:over:)`), because an npm-installed CLI is a Node script and a GUI app's `PATH` has no `node` ([providers/codex.md](providers/codex.md#app-server--sigpipe--path)).
+Every helper CLI Pulse starts — `codex app-server`, Kiro's ACP client, `arkcli`, Alibaba's `bl`, Antigravity's `agy` — gets the folder it was found in at the front of `PATH` (`BoundedProcess.environment(leading:over:)`), because an npm-installed CLI is a Node script and a GUI app's `PATH` has no `node` ([providers/codex.md](providers/codex.md#app-server--sigpipe--path)).
 
 Extensions do **not** inherit Pulse's environment under either setting: they get a short list of basics plus whatever proxy variables are in effect, so a custom proxy reaches them, No Proxy leaves them none, and a token exported for another tool does not. [extensions.md](extensions.md)
 
-`UsageStore.settingsChanged` shuts down an existing Codex app server before it queues the new full pass. The next request starts a child with the new environment. `arkcli` is already one process per request.
+`UsageStore.settingsChanged` shuts down an existing Codex app server before it queues the new full pass. The next request starts a child with the new environment. `arkcli` and `agy` are already one process per request.
 
 ## Updates
 

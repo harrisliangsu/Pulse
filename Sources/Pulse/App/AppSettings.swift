@@ -134,6 +134,28 @@ final class AppSettings {
         didSet { languageChanged(from: oldValue) }
     }
 
+    /// The currency estimates are shown in. Dollars by default, which is what
+    /// the price lists are in; any other is converted at `exchangeRates` or a
+    /// rate typed into `manualExchangeRates`. What a service reports itself
+    /// is never converted — see `DisplayCurrency`.
+    var displayCurrency: DisplayCurrency = .default {
+        didSet { displayCurrencyChanged(from: oldValue) }
+    }
+
+    /// A rate the reader typed, units of the currency to one US dollar, keyed
+    /// by ISO code. Wins over the fetched rate; a missing entry means "use the
+    /// fetched one".
+    var manualExchangeRates: [String: Double] = [:] {
+        didSet { manualExchangeRatesChanged(from: oldValue) }
+    }
+
+    /// The last rates fetched (`ExchangeRateKeeper`), kept on disk rather
+    /// than here in `UserDefaults`. Nil until a currency other than the dollar
+    /// has been chosen once.
+    var exchangeRates: ExchangeRates.Stored? {
+        didSet { exchangeRatesChanged(from: oldValue) }
+    }
+
     // MARK: - Panel (AppSettings+Panel)
 
     /// Whether the floating panel is on screen.
@@ -177,6 +199,16 @@ final class AppSettings {
     /// which is the opposite of what this is for.
     var followsActiveDisplay: Bool {
         didSet { followsActiveDisplayChanged(from: oldValue) }
+    }
+
+    /// Whether dragging the panel near a screen edge docks it there, turning
+    /// it to run along that edge.
+    ///
+    /// On by default. Off, a drag only moves the panel: it stays free and
+    /// keeps the direction it had, so a rail lying across can be put in a
+    /// corner (issue #85). Choosing a position in Settings still docks it.
+    var snapsToEdges: Bool {
+        didSet { snapsToEdgesChanged(from: oldValue) }
     }
 
     /// How big the floating panel is drawn.
@@ -293,6 +325,13 @@ final class AppSettings {
         didSet { showsForecastChanged(from: oldValue) }
     }
 
+    /// How limit bars are drawn on the card and in the menu (`UsageBarStyle`).
+    /// A `PanelMetrics` entry for the forecast's reason: a segmented bar is
+    /// taller, and the card's frame is worked out before SwiftUI lays it out.
+    var usageBarStyle: UsageBarStyle {
+        didSet { usageBarStyleChanged(from: oldValue) }
+    }
+
     /// The accounts whose card is the detailed one, by account id: the plan,
     /// how far through each window the clock is and, with Token spend on,
     /// what this Mac has put through the account lately.
@@ -394,7 +433,7 @@ final class AppSettings {
     }
 
     /// Whether this is the settings the running app is drawn from, and so the
-    /// one allowed to move `PanelMetrics`.
+    /// one allowed to move `PanelMetrics` — and `Money`, by the same rule.
     ///
     /// **Global state, owned by one instance.** The rail's budget is a static
     /// the AppKit frame reads, and every other `AppSettings` — a preview's, a
@@ -700,6 +739,14 @@ final class AppSettings {
         didSet { stepFunSiteChanged(from: oldValue) }
     }
 
+    /// Which MiniMax site the key is from: `minimax.io` or `minimaxi.com`,
+    /// one company's two storefronts and two accounts. It decides where the
+    /// request goes and which key is used — each site keeps its own
+    /// (`keySlot(for:)`), so changing it loses neither.
+    var minimaxSite: MiniMaxSite {
+        didSet { minimaxSiteChanged(from: oldValue) }
+    }
+
     /// Where Pulse sends a self-hosted gateway's request, per account.
     ///
     /// sub2api and New API are somebody's own deployments, so unlike every
@@ -839,9 +886,9 @@ final class AppSettings {
         didSet { alertsOnFailureChanged(from: oldValue) }
     }
 
-    /// Say when a provider's own status page — Codex's, Claude Code's,
-    /// DeepSeek's — reports an outage: for whichever is switched on, and only
-    /// about what it runs on (`StatusPage.notifiesAbout`). Rules: `OutageMemory`.
+    /// Say when a provider's own status page reports an outage: for whichever
+    /// is switched on, and only about what it runs on
+    /// (`StatusPage.notifiesAbout`). Rules: `OutageMemory`.
     var alertsOnOutage = false {
         didSet { alertsOnOutageChanged(from: oldValue) }
     }
@@ -978,6 +1025,7 @@ final class AppSettings {
         hidesInFullScreen: Bool = Default.hidesInFullScreen,
         hidesFromScreenCapture: Bool = Default.hidesFromScreenCapture,
         followsActiveDisplay: Bool = Default.followsActiveDisplay,
+        snapsToEdges: Bool = Default.snapsToEdges,
         openSettingsShortcut: GlobalShortcut? = nil,
         togglePanelShortcut: GlobalShortcut? = nil,
         deepSeekBasis: BalanceBasis = .default,
@@ -985,6 +1033,7 @@ final class AppSettings {
         deepSeekCurrency: String? = nil,
         qoderSite: QoderSite = Default.qoderSite,
         stepFunSite: StepFunSite = Default.stepFunSite,
+        minimaxSite: MiniMaxSite = Default.minimaxSite,
         serverAddresses: [String: String] = [:],
         lowBalanceAlerts: [String: Double] = [:],
         enabledAccounts: Set<String> = Set(Provider.builtIn.map(\.rawValue)),
@@ -1018,6 +1067,7 @@ final class AppSettings {
         warningThreshold: WarningThreshold = .default,
         dockShowsAlertColor: Bool = Default.dockShowsAlertColor,
         showsForecast: Bool = Default.showsForecast,
+        usageBarStyle: UsageBarStyle = .default,
         showsSecondRing: Bool = Default.showsSecondRing,
         animatesRingActivity: Bool = Default.animatesRingActivity,
         splitAccounts: Set<String> = [],
@@ -1036,6 +1086,7 @@ final class AppSettings {
         self.hidesInFullScreen = hidesInFullScreen
         self.hidesFromScreenCapture = hidesFromScreenCapture
         self.followsActiveDisplay = followsActiveDisplay
+        self.snapsToEdges = snapsToEdges
         self.openSettingsShortcut = openSettingsShortcut
         self.togglePanelShortcut = togglePanelShortcut
         self.deepSeekBasis = deepSeekBasis
@@ -1043,6 +1094,7 @@ final class AppSettings {
         self.deepSeekCurrency = deepSeekCurrency
         self.qoderSite = qoderSite
         self.stepFunSite = stepFunSite
+        self.minimaxSite = minimaxSite
         self.serverAddresses = serverAddresses
         self.lowBalanceAlerts = lowBalanceAlerts
         self.enabledAccounts = enabledAccounts
@@ -1075,6 +1127,7 @@ final class AppSettings {
         self.warningThreshold = warningThreshold
         self.dockShowsAlertColor = dockShowsAlertColor
         self.showsForecast = showsForecast
+        self.usageBarStyle = usageBarStyle
         self.showsSecondRing = showsSecondRing
         self.animatesRingActivity = animatesRingActivity
         self.splitAccounts = splitAccounts
@@ -1092,6 +1145,8 @@ final class AppSettings {
     /// everything that has to follow it put into effect — the language, the
     /// proxy session, `PanelMetrics`.
     static func restored() -> AppSettings {
+        // Before anything is read: MiniMax CN's settings become MiniMax's.
+        MiniMaxMerge.migrate(defaults: .standard)
         let settings = restoredSettings(from: .standard)
         settings.applyRestored()
         return settings
@@ -1137,6 +1192,7 @@ final class AppSettings {
             followsActiveDisplay: defaults.settingsFlag(
                 Key.followsActiveDisplay, default: Default.followsActiveDisplay
             ),
+            snapsToEdges: defaults.settingsFlag(Key.snapsToEdges, default: Default.snapsToEdges),
             openSettingsShortcut: defaults.string(forKey: Key.openSettingsShortcut)
                 .flatMap(GlobalShortcut.init(storage:)),
             togglePanelShortcut: defaults.string(forKey: Key.togglePanelShortcut)
@@ -1146,6 +1202,7 @@ final class AppSettings {
             deepSeekCurrency: defaults.string(forKey: Key.deepSeekCurrency),
             qoderSite: defaults.settingsChoice(Key.qoderSite) ?? Default.qoderSite,
             stepFunSite: defaults.settingsChoice(Key.stepFunSite) ?? Default.stepFunSite,
+            minimaxSite: defaults.settingsChoice(Key.minimaxSite) ?? Default.minimaxSite,
             serverAddresses: defaults.dictionary(forKey: Key.serverAddresses) as? [String: String] ?? [:],
             lowBalanceAlerts: defaults.dictionary(forKey: Key.lowBalanceAlerts) as? [String: Double] ?? [:],
             enabledAccounts: selection.enabledAccounts,
@@ -1184,6 +1241,7 @@ final class AppSettings {
             warningThreshold: defaults.settingsIntChoice(Key.warningThreshold) ?? .default,
             dockShowsAlertColor: defaults.settingsFlag(Key.dockShowsAlertColor, default: Default.dockShowsAlertColor),
             showsForecast: defaults.settingsFlag(Key.showsForecast, default: Default.showsForecast),
+            usageBarStyle: defaults.settingsChoice(Key.usageBarStyle) ?? .default,
             showsSecondRing: defaults.settingsFlag(Key.showsSecondRing, default: Default.showsSecondRing),
             animatesRingActivity: defaults.settingsFlag(
                 Key.animatesRingActivity, default: Default.animatesRingActivity
@@ -1214,6 +1272,8 @@ final class AppSettings {
         applyLanguage()
         NetworkSession.apply(networkProxy)
         applyPanelMetrics()
+        exchangeRates = ExchangeRates.load()
+        applyMoney()
         drivesPanelMetrics = true
         resizeRail()
     }

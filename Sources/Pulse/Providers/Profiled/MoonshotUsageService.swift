@@ -122,10 +122,6 @@ enum MoonshotUsageService {
     }
 
     static func money(_ amount: Double, currency: String) -> String {
-        amount.formatted(
-            .currency(code: currency)
-                .precision(.fractionLength(2))
-                .locale(LocalizationSource.locale)
-        )
+        amount.formatted(Money.reportedStyle(currency))
     }
 }

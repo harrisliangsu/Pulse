@@ -81,6 +81,8 @@
 "Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it." = "Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it.";
 "Follow the active display" = "Follow the active display";
 "With more than one display, the rail moves to the one the pointer is on." = "With more than one display, the rail moves to the one the pointer is on.";
+"Snap to screen edges" = "Snap to screen edges";
+"Dragged near an edge, the rail docks to it and turns to run along it. When this is off, dragging only moves the rail and keeps its direction." = "Dragged near an edge, the rail docks to it and turns to run along it. When this is off, dragging only moves the rail and keeps its direction.";
 "Left" = "Left";
 "Top" = "Top";
 "Percentages across" = "Percentages across";
@@ -261,6 +263,8 @@
 "Reading logs" = "Reading logs";
 "No history yet" = "No history yet";
 "Nothing has been logged on this Mac yet, so there is no history to add up." = "Nothing has been logged on this Mac yet, so there is no history to add up.";
+"Token spend reading is off" = "“Read local usage records” is off";
+"This history comes from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "This history comes from the usage records on this Mac, which Pulse reads only while “Read local usage records” is on.";
 "Account total" = "Account total";
 
 /* Budget estimate */
@@ -291,6 +295,10 @@
 "Size" = "Size";
 "Spacing" = "Spacing";
 "Round ends" = "Round ends";
+"Progress bars" = "Progress bars";
+"How limit bars are drawn on the card and in the menu." = "How limit bars are drawn on the card and in the menu.";
+"Continuous" = "Continuous";
+"Segmented" = "Segmented";
 "The rail's ends and the card's tail follow the ring's own curve." = "The rail's ends and the card's tail follow the ring's own curve.";
 "How much air there is between the rings." = "How much air there is between the rings.";
 "Tight" = "Tight";
@@ -323,11 +331,14 @@
 "Frosted glass instead of a solid rail." = "Frosted glass instead of a solid rail.";
 "Clear glass that shows what is behind the panel, instead of solid black." = "Clear glass that shows what is behind the panel, instead of solid black.";
 "Transparency" = "Transparency";
-"Clearer to the right. Darker reads better over bright pages." = "Clearer to the right. Darker reads better over bright pages.";
+"Clearer to the right, and the text turns from white to black. Black text is hard to read over dark windows." = "Clearer to the right, and the text turns from white to black. Black text is hard to read over dark windows.";
 "Open Antigravity to see its usage." = "Open Antigravity to see its usage.";
 "Asks the language server Antigravity runs while it is open." = "Asks the language server Antigravity runs while it is open.";
-"Only while Antigravity is open." = "Only while Antigravity is open.";
-"Antigravity's language server" = "Antigravity's language server";
+"Reads Antigravity while it is open, and the agy CLI when it is not." = "Reads Antigravity while it is open, and the agy CLI when it is not.";
+"CLI" = "CLI";
+"Asks the agy CLI, using the login it already saved." = "Asks the agy CLI, using the login it already saved.";
+"The agy CLI isn't installed. Install it, or choose another source in Settings." = "The agy CLI isn't installed. Install it, or choose another source in Settings.";
+"This version of the agy CLI can't report usage. Update it to 1.1.11 or later." = "This version of the agy CLI can't report usage. Update it to 1.1.11 or later.";
 
 /* Cursor */
 "Sign in to Cursor to see usage." = "Sign in to Cursor to see usage.";
@@ -501,6 +512,8 @@
 
 /* Settings sidebar search */
 "Search" = "Search";
+"Back" = "Back";
+"Forward" = "Forward";
 "No matches" = "No matches";
 
 /* Resetting the rail order */
@@ -677,7 +690,7 @@
 "Enable a service in its settings to start monitoring." = "Enable a service in its settings to start monitoring.";
 "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage.";
 "Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access.";
-"Reads the running editor's local language server and connection token. No Keychain prompt." = "Reads the running editor's local language server and connection token. No Keychain prompt.";
+"Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Pulse does not request Keychain access." = "Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Pulse does not request Keychain access.";
 "Reads the login saved in Cursor's local database. No Keychain prompt." = "Reads the login saved in Cursor's local database. No Keychain prompt.";
 "Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "Reads the login saved in ~/.grok/auth.json. No Keychain prompt.";
 "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt.";
@@ -756,6 +769,7 @@
 "No Qoder session found. Sign in at %@ first." = "No Qoder session found. Sign in at %@ first.";
 "Site" = "Site";
 "Where you signed in. Changing it clears the saved session." = "Where you signed in. Changing it clears the saved session.";
+"Where your key is from. Each site keeps its own key." = "Where your key is from. Each site keeps its own key.";
 "Sign in to StepFun's platform in a browser to see usage." = "Sign in to StepFun's platform in a browser to see usage.";
 "StepFun's saved session expired. Sign in again in your browser." = "StepFun's saved session expired. Sign in again in your browser.";
 "No Step Plan on this StepFun account." = "No Step Plan on this StepFun account.";
@@ -1074,10 +1088,12 @@
 "Status page" = "Status page";
 "As %@ reports it on its status page, read when this page opens and every five minutes while it stays open." = "As %@ reports it on its status page, read when this page opens and every five minutes while it stays open.";
 "90 days ago" = "90 days ago";
+"%@ days ago" = "%@ days ago";
+"Now" = "Now";
 "%@ uptime" = "%@ uptime";
 "No data" = "No data";
 "When a service is down" = "When a service is down";
-"Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on." = "Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on.";
+"From each provider's own status page, for the providers you have switched on and only about what their accounts run on." = "From each provider's own status page, for the providers you have switched on and only about what their accounts run on.";
 "%@ reports %@." = "%@ reports %@.";
 "Back to normal: %@." = "Back to normal: %@.";
 "%@ (%@)" = "%@ (%@)";
@@ -1246,3 +1262,32 @@
 "Unclassified" = "Unclassified";
 "These records do not report this token category separately." = "These records do not report this token category separately.";
 "Reported tokens without a usable category breakdown." = "Reported tokens without a usable category breakdown.";
+
+// Currency (Settings → General)
+"Currency" = "Currency";
+"Show estimates in" = "Show estimates in";
+"Money worked out from API prices: Token spend, estimated value, usage history and the recap. Balances and charges a service reports stay in the currency it gives." = "Money worked out from API prices: Token spend, estimated value, usage history and the recap. Balances and charges a service reports stay in the currency it gives.";
+"Exchange rate" = "Exchange rate";
+"Rate source" = "Rate source";
+"Your rate is used. Clear the field to use the day's rate." = "Your rate is used. Clear the field to use the day's rate.";
+"The day's rate, updated %@. Type a rate to use your own." = "The day's rate, updated %@. Type a rate to use your own.";
+"No rate yet, so estimates stay in US dollars. Type a rate, or wait for the day's." = "No rate yet, so estimates stay in US dollars. Type a rate, or wait for the day's.";
+"US dollar" = "US dollar";
+"Chinese yuan" = "Chinese yuan";
+"Hong Kong dollar" = "Hong Kong dollar";
+"New Taiwan dollar" = "New Taiwan dollar";
+"Japanese yen" = "Japanese yen";
+"South Korean won" = "South Korean won";
+"Russian rouble" = "Russian rouble";
+
+// Connection diagnostics: server replies
+"Server replies" = "Server replies";
+"Copy replies" = "Copy replies";
+"No reply" = "No reply";
+"Credentials are hidden. A reply can still show the account's email, plan or balance, so it is not in the shared diagnostics. Kept until the next check." = "Credentials are hidden. A reply can still show the account's email, plan or balance, so it is not in the shared diagnostics. Kept until the next check.";
+"%@ bytes, not text" = "%@ bytes, not text";
+
+// Service status: why a read failed
+"No request was made." = "No request was made.";
+"The page answered, but not with anything Pulse reads for this provider." = "The page answered, but not with anything Pulse reads for this provider.";
+"The page answered HTTP %@." = "The page answered HTTP %@.";

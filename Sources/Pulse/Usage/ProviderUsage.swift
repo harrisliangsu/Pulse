@@ -630,6 +630,13 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
         /// because the remedy is a specific command and the alternative — an
         /// access key pair — is a different thing to be told about.
         case volcengineCLIMissing
+        /// Antigravity's `agy` CLI is not on this Mac, with *CLI* chosen as
+        /// the route. Automatically its absence is no reason at all: the
+        /// language server's stands (`AntigravityUsageService.weigh`).
+        case antigravityCLIMissing
+        /// `agy` is older than 1.1.11, where `/usage` would be sent to the
+        /// model as a prompt, so it is not asked (`cliMinimumVersion`).
+        case antigravityCLIOutdated
         /// It is installed and has never been signed in, or the session went.
         case volcengineSignInRequired
         /// The key works and the account has no Coding Plan running on it.
@@ -770,6 +777,8 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             case .ollamaSessionExpired: .localized("The Ollama session expired. Sign in again and add it.")
             case .ollamaPageChanged: .localized("Ollama's page has changed and can no longer be read.")
             case .volcengineCLIMissing: .localized("Install arkcli and run `arkcli auth login`, or add access keys in Settings.")
+            case .antigravityCLIMissing: .localized("The agy CLI isn't installed. Install it, or choose another source in Settings.")
+            case .antigravityCLIOutdated: .localized("This version of the agy CLI can't report usage. Update it to 1.1.11 or later.")
             case .volcengineSignInRequired: .localized("arkcli isn't signed in. Run `arkcli auth login`.")
             case .zaiNoCodingPlan: .localized("That key works. The account has no Coding Plan running on it.")
             case .devinAppMissing: .localized("Devin isn't installed.")
@@ -834,6 +843,11 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
     /// under the limits; never the ring, and never a reading on their own.
     var metrics: [UsageMetric] = []
 
+    /// What the servers said during the check that produced this reading,
+    /// for the connection diagnostics (`ResponseLog`). Only on a raw reading
+    /// fresh from a check; the table the panel draws from never keeps it.
+    var responses: [ResponseLog.Entry] = []
+
     var origin: UsageRoute?
     /// The account *and organization* the figures belong to, where the route
     /// can name them.
@@ -866,10 +880,11 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
     ///
     /// The two gateways too: each reading is only as good as the server it was
     /// read from, and the reader can point the account at another one. Qoder
-    /// likewise: its two sites are two accounts, and the site is a setting.
+    /// likewise: its two sites are two accounts, and the site is a setting;
+    /// and StepFun's and MiniMax's.
     var requiresScopeMatch: Bool {
         switch account.provider {
-        case .devin, .sub2api, .newAPI, .qoder, .stepFun: true
+        case .devin, .sub2api, .newAPI, .qoder, .stepFun, .minimax: true
         default: account.provider.profile?.requiresScopeMatch ?? false
         }
     }
@@ -924,14 +939,11 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             ) + suffix
         }
 
-        /// The currency's narrow symbol, taken from a formatted zero so the
-        /// locale's own choice is used rather than a table of symbols here.
+        /// The currency's symbol as every other amount in Pulse writes it
+        /// (`Money.symbol`), so the ring's short figure and the card's full
+        /// one agree.
         private func symbol(_ locale: Locale) -> String {
-            0.formatted(
-                .currency(code: currency).presentation(.narrow)
-                    .precision(.fractionLength(0)).locale(locale)
-            )
-            .filter { !$0.isNumber && !$0.isWhitespace }
+            Money.symbol(currency, locale: locale)
         }
     }
 

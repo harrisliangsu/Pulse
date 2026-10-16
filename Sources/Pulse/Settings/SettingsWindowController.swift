@@ -51,7 +51,6 @@ final class SettingsWindowController {
         if let pane { navigation.open(pane) }
         let window = window ?? makeWindow()
         self.window = window
-        window.title = String.localized("Pulse Settings")
 
         // The system may have taken the grant away since launch, and this
         // window is the only place Pulse reports it.
@@ -64,12 +63,6 @@ final class SettingsWindowController {
         if !wasVisible { window.center() }
         dock.apply()
         NSApp.activate(ignoringOtherApps: true)
-    }
-
-    /// Re-reads the title, which is set once at creation but has to follow a
-    /// language change while the window is open.
-    func refreshTitle() {
-        window?.title = String.localized("Pulse Settings")
     }
 
     private func makeWindow() -> NSWindow {
@@ -89,28 +82,19 @@ final class SettingsWindowController {
             backing: .buffered,
             defer: false
         )
-        // These two go together, and the pairing is the whole point.
-        //
-        // `.fullSizeContentView` lets the scrolling content run under the
-        // title bar, so it is *blurred away* as you scroll rather than being
-        // chopped off at a hard edge. Nothing is hidden at rest: AppKit
-        // reports the bar as a 52pt top safe area and the scroll view already
-        // insets by it.
-        //
-        // But that only works if something actually draws up there. A
-        // transparent title bar draws nothing, so the scrolled content came
-        // straight through and printed over "Pulse Settings" — which is the
-        // bug this pairing fixes. Opaque means AppKit's own material does the
-        // blurring.
-        //
-        // Measured, in case it comes up: the sidebar does *not* run behind the
-        // traffic lights either way. AppKit gives that treatment to an
-        // `NSSplitViewController` with a sidebar item, and SwiftUI's
-        // `NavigationSplitView` inside an `NSHostingView` doesn't get it —
-        // neither `.fullSizeContentView` nor a unified `NSToolbar` changes it.
-        window.titlebarAppearsTransparent = false
-        // The documented "hairline once content is scrolled under it" setting.
-        window.titlebarSeparatorStyle = .automatic
+        // **The window's title bar and toolbar are SwiftUI's**
+        // (`sceneBridgingOptions = [.toolbars, .title]` below): the pane's
+        // name as the title, back and forward as its items. That is what
+        // gives the window System Settings' look on macOS 26 — the sidebar
+        // running up behind the traffic lights, and content fading softly
+        // out under the title as it scrolls. Measured in a harness, each of
+        // the alternatives missed one half: an `NSToolbar` made here put the
+        // sidebar up top but drew a hard band and line under the title,
+        // because the soft fade is SwiftUI's and SwiftUI cannot see a toolbar
+        // it did not make; no toolbar at all kept the soft fade but the
+        // sidebar stopped under the title bar. A transparent title bar turns
+        // the fade off altogether and prints scrolled content over the title.
+        window.toolbarStyle = .unified
         window.isReleasedWhenClosed = false
         dock.track(window)
         window.onClose = { [weak self, weak window] in
@@ -119,12 +103,16 @@ final class SettingsWindowController {
             // window is named rather than read from `isVisible`.
             self?.dock.apply(closing: window)
         }
-        window.contentView = NSHostingView(
+        let content = NSHostingView(
             rootView: SettingsView(
                 store: store, settings: settings, placement: placement, update: update, alerts: alerts,
                 shortcuts: shortcuts, navigation: navigation, openRecap: openRecap
             )
         )
+        // A hosting **view**: with a hosting controller, the window binds its
+        // title to the controller's, which is nil.
+        content.sceneBridgingOptions = [.toolbars, .title]
+        window.contentView = content
         return window
     }
 }

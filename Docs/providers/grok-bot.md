@@ -2,7 +2,7 @@
 
 Service: [`GrokBotUsageService.swift`](../../Sources/Pulse/Providers/GrokBotUsageService.swift). Cookie: [`CursorAppLogin.swift`](../../Sources/Pulse/Auth/CursorAppLogin.swift). Extra accounts: [`CursorWebLogin.swift`](../../Sources/Pulse/Auth/CursorWebLogin.swift), [authentication.md](authentication.md).
 
-**Current behaviour lives here.** The pre-implementation investigation is historical: [`../grok-bot-usage.md`](../grok-bot-usage.md). Where that file and this one disagree, this file and the service win.
+**Current behaviour lives here.** The pre-implementation investigation is historical: [`../history/grok-bot-usage.md`](../history/grok-bot-usage.md). Where that file and this one disagree, this file and the service win.
 
 Grok Bot is xAI’s, sold through Cursor and billed against the **Cursor** account. It is not a share of Cursor’s monthly model pools, and it is not the SuperGrok weekly pool [grok.md](grok.md) reads. Two companies’ bills, one brand: they share no credential, no endpoint, and **no mark** (`grok.svg` vs `xai.svg`).
 
@@ -57,4 +57,4 @@ Pulse does not read the standalone app’s `sand-secrets.json`.
 
 ## Investigation leftovers (not current work)
 
-[`../grok-bot-usage.md`](../grok-bot-usage.md) still records: native Grok Bot client extra headers were not fully compared; Pulse chose not to decrypt `sand-secrets.json`. Those are historical open questions, not a claim that current REST-cookie behaviour is unverified in code. No runtime test of a live account is claimed in this directory.
+[`../history/grok-bot-usage.md`](../history/grok-bot-usage.md) still records: native Grok Bot client extra headers were not fully compared; Pulse chose not to decrypt `sand-secrets.json`. Those are historical open questions, not a claim that current REST-cookie behaviour is unverified in code. No runtime test of a live account is claimed in this directory.

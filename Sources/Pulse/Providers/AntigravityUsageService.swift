@@ -25,6 +25,10 @@ import Foundation
 /// refuses this RPC outright. Taking the first match and giving up if it did
 /// not work was a real fault — measured, the one that answers was second.
 /// Every candidate is tried, and every port each of them listens on.
+///
+/// **The `agy` CLI is the second route**, asked only when no language server
+/// produced figures: `agy -p "/usage"` answers the same quota from the CLI's
+/// own login with no editor open. See `AntigravityCLIUsage.swift`.
 struct AntigravityUsageService: Sendable {
     /// The RPCs this uses. Antigravity is built on Codeium's language server,
     /// hence the `exa.` package and the `x-codeium-` header.
@@ -39,7 +43,34 @@ struct AntigravityUsageService: Sendable {
     private static let statusMethod = "exa.language_server_pb.LanguageServerService/GetUserStatus"
     private static let csrfHeader = "x-codeium-csrf-token"
 
-    func fetch() async -> ProviderUsage {
+    /// The route Settings chose: the desktop app's language server, the
+    /// `agy` CLI, or — the default — the language server first, then the CLI.
+    ///
+    /// Automatically the server goes first because it is local and fast, and
+    /// it belongs to the account the open editor is using. The CLI starts a
+    /// process that makes a network request, so it is asked only when the
+    /// server produced no figures: with Antigravity closed, or open and not
+    /// answering.
+    func fetch(source: UsageSource) async -> ProviderUsage {
+        switch source {
+        case .desktopApp:
+            return await languageServer().recording(.languageServer)
+        case .tooling:
+            guard let binary = Self.locateCLI() else {
+                return ProviderUsage.unavailable(.antigravity, reason: .antigravityCLIMissing)
+                    .recording(.antigravityCLI)
+            }
+            return Self.cliOnly(await Self.askCLI(binary))
+        // `.endpoint` is never offered (`UsageSource.options(for:)`); a
+        // value stored before that is read as automatic by `source(for:)`.
+        case .automatic, .endpoint:
+            let server = await languageServer().recording(.languageServer)
+            guard !server.reportsSomething, let binary = Self.locateCLI() else { return server }
+            return Self.weigh(server: server, cli: await Self.askCLI(binary))
+        }
+    }
+
+    private func languageServer() async -> ProviderUsage {
         let servers = Self.locateServers()
         guard !servers.isEmpty else {
             return .unavailable(.antigravity, reason: .antigravityNotRunning)
@@ -295,7 +326,7 @@ struct AntigravityUsageService: Sendable {
         )
         defer { session.finishTasksAndInvalidate() }
 
-        guard let (data, response) = try? await session.data(for: request) else {
+        guard let (data, response) = try? await session.recordedData(for: request) else {
             return .failure(.wrongPort)
         }
 

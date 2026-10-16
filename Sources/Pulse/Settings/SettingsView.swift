@@ -62,8 +62,16 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        // **The sidebar stays.** With the toggle SwiftUI adds, collapsing it and
+        // drawing it back at a width that cannot hold the sidebar beside the
+        // pane overflowed both ways: the list slid out past the left edge, the
+        // pane past the right, and the title bar put up an overflow "»" for
+        // items it no longer had room for. A settings window's sidebar is how
+        // it is navigated, as System Settings' is; there is nothing to gain by
+        // hiding it.
+        NavigationSplitView(columnVisibility: .constant(.all)) {
             SettingsSidebar(settings: settings, navigation: navigation, search: search)
+                .toolbar(removing: .sidebarToggle)
                 // **The floor is this frame, not `navigationSplitViewColumnWidth`.**
                 //
                 // `ideal:` is read once, when a column is first laid out. The whole
@@ -104,9 +112,9 @@ struct SettingsView: View {
                 // land on the same width; `max` keeps a stretched sidebar from
                 // eating the pane.
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 320)
-                // `.sidebar`, not `.automatic`: this window has no `NSToolbar` —
-                // see `SettingsWindowController` on why the title bar is left to
-                // AppKit — and automatic placement has nowhere to put the field.
+                // `.sidebar`, not `.automatic`: at the top of the list, under the
+                // traffic lights, as System Settings has it. Automatic would put
+                // the field in the window's toolbar, which carries only the title.
                 .searchable(
                     text: $search,
                     placement: .sidebar,
@@ -116,7 +124,10 @@ struct SettingsView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
-                        heading
+                        // Where a new pane scrolls to. The pane's name is the
+                        // window's title now, in the toolbar, as System
+                        // Settings has it; it used to be drawn here too.
+                        Color.clear.frame(height: 0)
                             .id("heading")
 
                         switch pane {
@@ -160,9 +171,34 @@ struct SettingsView: View {
                 .task(id: spend.summaryRequest) { await spend.recompute() }
                 .onChange(of: navigation.requestID) { proxy.scrollTo("heading", anchor: .top) }
             }
+            .navigationTitle(pane.title(in: settings))
+            .toolbar {
+                // **The toolbar needs an item of its own.** A toolbar with
+                // nothing in it is not drawn, and without one the sidebar
+                // stops under the title bar instead of running up behind the
+                // traffic lights (`SettingsWindowController`). Back and
+                // forward are what System Settings puts there.
+                ToolbarItemGroup(placement: .navigation) {
+                    Button {
+                        navigation.goBack(where: exists)
+                    } label: {
+                        Image(systemName: "chevron.left")
+                    }
+                    .help(String.localized("Back"))
+                    .keyboardShortcut("[", modifiers: .command)
+                    .disabled(navigation.back.isEmpty)
+
+                    Button {
+                        navigation.goForward(where: exists)
+                    } label: {
+                        Image(systemName: "chevron.right")
+                    }
+                    .help(String.localized("Forward"))
+                    .keyboardShortcut("]", modifiers: .command)
+                    .disabled(navigation.forward.isEmpty)
+                }
+            }
         }
-        // No `navigationTitle`: each pane already prints its own heading, and
-        // the toolbar would repeat it right above.
         .frame(minWidth: 720, minHeight: 460)
         .onChange(of: navigation.requestID) { search = "" }
         // Rebuild everything when the language changes — the strings are read
@@ -170,15 +206,11 @@ struct SettingsView: View {
         .id(settings.language)
     }
 
-    private var heading: some View {
-        HStack(spacing: 9) {
-            if case .account(let account) = pane {
-                LobeIconView(provider: account.provider, size: 19)
-            }
-
-            Text(pane.title(in: settings))
-                .font(.system(size: 17, weight: .semibold))
-        }
+    /// Whether a pane in the history can still be shown: an account's only
+    /// while the account exists.
+    private func exists(_ pane: SettingsPane) -> Bool {
+        if case .account(let account) = pane { return settings.allAccounts.contains(account) }
+        return true
     }
 }
 

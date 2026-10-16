@@ -21,6 +21,13 @@ struct RecapPaybackView: View {
         RecapFormat.money(amount, currency: recap.currency)
     }
 
+    /// The currency the page is written in: the one chosen in Settings for a
+    /// recap priced in dollars (`Money`), and what one of its units is worth
+    /// in it. The ruler measures in it, so its steps fall on round numbers of
+    /// the currency the labels show.
+    private var shownCode: String { recap.currency == "USD" ? Money.shownCode : recap.currency }
+    private var unitValue: Double { recap.currency == "USD" ? Money.converted(1).amount : 1 }
+
     var body: some View {
         if let payback = deck.payback {
             RecapStoryPage(page: deck.page(of: .payback)) {
@@ -79,7 +86,8 @@ struct RecapPaybackView: View {
                 .fixedSize()
                 .padding(.bottom, 6)
             }
-            Text(String.localized("For every \(RecapFormat.axisMoney(1, step: 1, currency: recap.currency)) of subscription, you used \(money(payback.multiple)) of API value"))
+            // A ratio, not an amount: both sides are already in `shownCode`.
+            Text(String.localized("For every \(RecapFormat.axisMoney(1, step: 1, currency: shownCode)) of subscription, you used \(RecapFormat.money(payback.multiple, currency: shownCode)) of API value"))
                 .font(.recap(20))
                 .foregroundStyle(RecapColor.tertiary)
                 .recapFit(0.6)
@@ -95,13 +103,14 @@ struct RecapPaybackView: View {
     }
 
     private func ruler(_ payback: RecapPayback) -> some View {
-        let scale = RecapRulerScale(for: max(payback.used, payback.paid))
+        let unit = unitValue
+        let scale = RecapRulerScale(for: max(payback.used, payback.paid) * unit)
         let barArea: CGFloat = 690
         let named = Array(pricedModels.prefix(5))
         let shown = named.reduce(0.0) { $0 + ($1.cost ?? 0) }
         let rest = max(payback.used - shown, 0)
         let whole = max(shown + rest, 0.0001)
-        let usedWidth = max(8, barArea * payback.used / scale.maximum)
+        let usedWidth = max(8, barArea * payback.used * unit / scale.maximum)
         let gaps = CGFloat(named.count + (rest > 0.005 * payback.used ? 1 : 0) - 1) * 2
         return VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 18) {
@@ -109,7 +118,7 @@ struct RecapPaybackView: View {
                 HStack(spacing: 12) {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .strokeBorder(RecapColor.ink, lineWidth: 2)
-                        .frame(width: max(8, barArea * payback.paid / scale.maximum), height: 56)
+                        .frame(width: max(8, barArea * payback.paid * unit / scale.maximum), height: 56)
                     Text(verbatim: money(payback.paid)).font(.recap(24, .semibold)).lineLimit(1)
                 }
             }
@@ -157,7 +166,7 @@ struct RecapPaybackView: View {
                 VStack(spacing: 6) {
                     Rectangle().fill(RecapColor.ink).frame(width: 1.5, height: labelled ? 14 : 7)
                     if labelled {
-                        Text(verbatim: RecapFormat.axisMoney(value, step: scale.step, currency: recap.currency))
+                        Text(verbatim: RecapFormat.axisMoney(value, step: scale.step, currency: shownCode))
                             .font(.recap(14, .regular, mono: true))
                             .foregroundStyle(RecapColor.tertiary)
                             .fixedSize()

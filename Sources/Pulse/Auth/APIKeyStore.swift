@@ -80,6 +80,24 @@ enum APIKeyStore {
         return save(keys, in: directory)
     }
 
+    /// Moves a credential kept under an entry no `Provider` names any more —
+    /// a provider folded into another — to where its successor keeps it,
+    /// sealed as it is: the box is moved, never opened. A credential already
+    /// there stays, and the old entry goes either way. True when there was
+    /// nothing to move or the move was written.
+    @discardableResult
+    static func moveRetiredEntry(
+        _ retired: String, to provider: Provider, slot: String?, in directory: URL = PulseStorage.directory
+    ) -> Bool {
+        lock.withLock {
+            guard var keys = readable(directory) else { return false }
+            guard let box = keys.removeValue(forKey: retired) else { return true }
+            let target = entry(provider, slot)
+            if keys[target] == nil { keys[target] = box }
+            return save(keys, in: directory)
+        }
+    }
+
     /// The file's key for a credential. A slot is joined with `#`, which no
     /// provider's raw value contains, so a slot can never read another
     /// provider's key.

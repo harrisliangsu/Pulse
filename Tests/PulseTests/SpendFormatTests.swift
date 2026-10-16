@@ -28,7 +28,8 @@ struct SpendFormatTests {
         #expect(shown != "$0.00")
 
         #expect(shown == "< $0.01")
-        #expect(SpendFormat.money(0.0001, locale: Self.zh) == "< US$0.01")
+        // "$", not "US$": the narrow symbol, in every language (`Money.style`).
+        #expect(SpendFormat.money(0.0001, locale: Self.zh) == "< $0.01")
     }
 
     @Test("A tiny positive amount survives the hover in both locales")
@@ -40,7 +41,8 @@ struct SpendFormatTests {
 
         let chinese = SpendFormat.moneyExact(1e-7, locale: Self.zh)
         #expect(chinese.contains("0.0000001"))
-        #expect(chinese.contains("US$"))
+        #expect(chinese.contains("$"))
+        #expect(!chinese.contains("US$"))
     }
 
     @Test("A large amount keeps its real fraction in the hover")

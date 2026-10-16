@@ -62,7 +62,6 @@ enum BotMarkTint {
         case .volcengine: BotMarkPalette.rgb(0x1664FF)
         // Best-guess brand colours: right family, exact value unconfirmed.
         case .minimax: BotMarkPalette.rgb(0xE8483F)
-        case .minimaxCN: BotMarkPalette.rgb(0xE8483F)
         // Best-guess brand colours: right family, exact value unconfirmed.
         case .antigravity: BotMarkPalette.rgb(0x4285F4)
         case .glmCoding: BotMarkPalette.rgb(0x3A7BF7)

@@ -6,10 +6,29 @@ import SwiftUI
 struct AccountHistoryGroup: View {
     let account: AccountKey
     let history: AccountHistoryModel
+    let settings: AppSettings
+    let openTokenSpend: () -> Void
+
+    /// Read from other agents' records, which wait for Token spend reading.
+    private var needsTokenSpend: Bool {
+        guard case .agents = account.provider.cardHistory else { return false }
+        return !settings.readsTokenSpend
+    }
 
     @ViewBuilder
     var body: some View {
-        if let ledger = history.ledgers[account.provider], !ledger.days.isEmpty {
+        if needsTokenSpend {
+            // Said rather than left empty: "no history yet" would claim the
+            // agent has logged nothing, when Pulse has simply not looked.
+            SettingsGroup(String.localized("Usage history")) {
+                SettingsRow(
+                    String.localized("Token spend reading is off"),
+                    subtitle: String.localized("This history comes from the usage records on this Mac, which Pulse reads only while Token spend reading is on.")
+                ) {
+                    Button(String.localized("Open Token spend"), action: openTokenSpend)
+                }
+            }
+        } else if let ledger = history.ledgers[account.provider], !ledger.days.isEmpty {
             AccountUsageCard(
                 provider: account.provider,
                 ledger: ledger,
@@ -42,8 +61,9 @@ struct AccountHistoryGroup: View {
     /// A history read from the provider's own statistics has nothing to do
     /// with this Mac, and saying "nothing has been logged on this Mac" about
     /// it sends somebody looking for a log directory that was never going to
-    /// exist. `Provider.keepsLocalTranscripts` is the question, not
-    /// `providesHistory`: the latter is true for both sources.
+    /// exist. Whether the source is this Mac (`CardHistorySource.readsThisMac`:
+    /// the CLIs' transcripts and the agents that borrow a provider's mark) is
+    /// the question, not `providesHistory`: the latter is true for every source.
     ///
     /// The two original sentences are claims about the account, and neither is
     /// one Pulse can make until a read has actually answered. A read that
@@ -65,14 +85,18 @@ struct AccountHistoryGroup: View {
             break
         }
 
-        return provider.keepsLocalTranscripts
+        return readsThisMac(provider)
             ? .localized("Nothing has been logged on this Mac yet, so there is no history to add up.")
             : .localized("This account hasn't used anything yet, so there is nothing to chart.")
     }
 
     private static func loadingHistoryTitle(for provider: Provider) -> String {
-        provider.keepsLocalTranscripts
+        readsThisMac(provider)
             ? .localized("Reading logs")
             : .localized("Asking \(provider.displayName)")
+    }
+
+    private static func readsThisMac(_ provider: Provider) -> Bool {
+        provider.cardHistory?.readsThisMac ?? false
     }
 }

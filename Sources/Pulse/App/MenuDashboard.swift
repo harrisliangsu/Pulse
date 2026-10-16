@@ -273,19 +273,16 @@ private struct MenuAccountDetail: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            GeometryReader { proxy in
-                let fraction = remaining && !spent ? window.remainingFraction : window.usedFraction
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.primary.opacity(0.12))
-                    Capsule()
-                        .fill(window.tint(
-                            warningAt: settings.warningThreshold.fraction,
-                            scheme: settings.ringColourScheme
-                        ))
-                        .frame(width: proxy.size.width * min(max(fraction, 0), 1))
-                }
-            }
-            .frame(height: 6)
+            UsageBar(
+                fraction: remaining && !spent ? window.remainingFraction : window.usedFraction,
+                accent: window.tint(
+                    warningAt: settings.warningThreshold.fraction,
+                    scheme: settings.ringColourScheme
+                ),
+                track: Color.primary.opacity(0.12),
+                style: settings.usageBarStyle
+            )
+            .frame(height: settings.usageBarStyle == .segmented ? UsageBar.segmentedHeight : UsageBar.continuousHeight)
             Text(verbatim: remaining ? String.localized("\(percent) Left") : String.localized("\(percent) Used"))
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
                 .foregroundStyle(spent ? Color.red : Color.secondary)
@@ -351,19 +348,19 @@ private struct MenuAccountDetail: View {
                     VStack(alignment: .leading, spacing: 10) {
                         figure(String.localized("Today"),
                                cost: today.map { UsageLedger.shownCost($0.cost, tokens: $0.tokens, unpriced: $0.unpricedTokens) } ?? 0,
-                               tokens: today?.tokens ?? 0, currency: ledger.currency)
+                               tokens: today?.tokens ?? 0, currency: ledger.currency, isCharged: ledger.origin == .providerLogs)
                         figure(String.localized("Busiest day"),
                                cost: busiest.map { UsageLedger.shownCost($0.cost, tokens: $0.tokens, unpriced: $0.unpricedTokens) } ?? 0,
-                               tokens: busiest?.tokens ?? 0, currency: ledger.currency)
+                               tokens: busiest?.tokens ?? 0, currency: ledger.currency, isCharged: ledger.origin == .providerLogs)
                     }
                     Spacer(minLength: 12)
                     VStack(alignment: .leading, spacing: 10) {
                         figure(String.localized("Last 31 days"),
                                cost: UsageLedger.shownCost(recent.cost, tokens: recent.tokens, unpriced: recent.unpriced),
-                               tokens: recent.tokens, currency: ledger.currency)
+                               tokens: recent.tokens, currency: ledger.currency, isCharged: ledger.origin == .providerLogs)
                         figure(String.localized("All time"),
                                cost: UsageLedger.shownCost(all.cost, tokens: all.tokens, unpriced: all.unpriced),
-                               tokens: all.tokens, currency: ledger.currency)
+                               tokens: all.tokens, currency: ledger.currency, isCharged: ledger.origin == .providerLogs)
                     }
                     .frame(width: 120, alignment: .leading)
                 }
@@ -387,15 +384,15 @@ private struct MenuAccountDetail: View {
         }
     }
 
-    /// None of it priced is a dash, as the Token spend pane draws it, and the
-    /// money is in the ledger's own currency — DeepSeek's console charges in
-    /// yuan.
-    private func figure(_ title: String, cost: Double?, tokens: Int, currency: String?) -> some View {
+    /// None of it priced is a dash, as the Token spend pane draws it. What a
+    /// console charged is in the ledger's own currency — DeepSeek's charges
+    /// in yuan — and an estimate in the one chosen in Settings.
+    private func figure(_ title: String, cost: Double?, tokens: Int, currency: String?, isCharged: Bool) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(verbatim: title)
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
-            Text(verbatim: cost.map { AccountUsageCard.money($0, currency: currency) } ?? "—")
+            Text(verbatim: cost.map { AccountUsageCard.money($0, currency: currency, isCharged: isCharged) } ?? "—")
                 .font(.system(size: 15, weight: .semibold).monospacedDigit())
             Text(verbatim: String.localized("\(TokenCount.short(tokens)) tokens"))
                 .font(.system(size: 11).monospacedDigit())

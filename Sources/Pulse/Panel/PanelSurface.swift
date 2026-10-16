@@ -136,6 +136,36 @@ enum PanelGlass {
     static func dim(transparency: Double) -> Color {
         .black.opacity((1 - min(max(transparency, 0), 1)) * maximumDim)
     }
+
+    /// Where the text starts to darken: the default, so nobody who left the
+    /// slider alone sees anything change.
+    static let inkTurns = 0.5
+    /// Where the rest of the panel follows the text into the light scheme —
+    /// hairlines, tracks and the deeper usage colours (`Color.pulse*`). Past
+    /// here the text is darker than mid grey.
+    static let schemeTurns = 0.75
+
+    /// The text's colour on glass: white (the dark scheme's label colour) up
+    /// to `inkTurns`, then darkening with the slider to black at its clearest
+    /// end. Nil where the scheme's own label colour is the answer.
+    ///
+    /// **The reader asked for this, knowing the cost.** Clear glass takes on
+    /// whatever is behind it; past the middle the panel is mostly the page
+    /// under it, which is usually light, so white text vanished there. Black
+    /// text vanishes over a dark window instead — Pulse cannot see what is
+    /// behind the panel without recording the screen — and the slider's
+    /// caption says so.
+    static func ink(transparency: Double) -> Color? {
+        let t = min(max(transparency, 0), 1)
+        guard t > inkTurns else { return nil }
+        let white = 1 - (t - inkTurns) / (1 - inkTurns)
+        // At the opacity the label colour has, so the step off it is not seen.
+        return Color(white: white, opacity: 0.85)
+    }
+
+    static func scheme(transparency: Double) -> ColorScheme {
+        transparency > schemeTurns ? .light : .dark
+    }
 }
 
 /// The light panel's surface (#74). Not pure white: on a white page that is

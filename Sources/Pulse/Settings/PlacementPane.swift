@@ -112,6 +112,21 @@ struct PlacementPane: View {
                 SettingsRowDivider()
 
                 SettingsRow(
+                    String.localized("Snap to screen edges"),
+                    subtitle: String.localized("Dragged near an edge, the rail docks to it and turns to run along it. When this is off, dragging only moves the rail and keeps its direction.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.snapsToEdges },
+                        set: { settings.snapsToEdges = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
                     String.localized("Follow the active display"),
                     subtitle: String.localized("With more than one display, the rail moves to the one the pointer is on.")
                 ) {

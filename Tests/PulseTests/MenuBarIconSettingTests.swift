@@ -46,14 +46,20 @@ struct MenuBarIconSettingTests {
     @Test("The status menu can be rebuilt and keeps its keyboard shortcuts")
     @MainActor
     func statusMenuRebuild() {
-        let delegate = AppDelegate()
+        // Settings on their own defaults: `AppDelegate()` restores the app's,
+        // which rewrites the panel metrics and the language for every test
+        // still running (see `AppDelegate.init(settings:)`).
+        let (defaults, cleanup) = AppSettingsPersistenceTests.isolatedDefaults()
+        defer { cleanup() }
+        let delegate = AppDelegate(settings: AppSettings(defaults: defaults))
+        #expect(!delegate.settings.drivesPanelMetrics)
         let menu = NSMenu()
 
         delegate.menuNeedsUpdate(menu)
         delegate.menuNeedsUpdate(menu)
 
-        // Whether a service is chosen comes from this machine's defaults, so
-        // the menu is checked for either state rather than assuming one.
+        // Checked for either state rather than assuming one, so the test
+        // holds whatever fresh settings start as.
         // Until one is, the menu leads with the way back to the chooser.
         let lead = delegate.settings.needsProviderSelection ? 2 : 0
         if lead > 0 {

@@ -432,28 +432,11 @@ enum SpendFormat {
         return String.localized("\(number) tokens unpriced")
     }
 
-    /// A dollar figure, in dollars whatever the reader's currency is, at two
-    /// places — or none once it is over a thousand.
-    ///
-    /// **A positive amount too small to show is still not free.** Rounded to
-    /// cents it would print `$0.00`, which reads as nothing spent; it says
-    /// "less than a cent" instead. A real zero still prints `$0.00`, because
-    /// that one is a measurement.
+    /// An estimate priced in dollars, in the currency chosen in Settings
+    /// (`Money.estimate`): two places, none once it is over a thousand, and
+    /// "< $0.01" for a positive amount that would round to nothing.
     static func money(_ amount: Double, locale: Locale = LocalizationSource.locale) -> String {
-        if amount > 0, amount < 0.01 {
-            let cent = 0.01.formatted(
-                .currency(code: "USD")
-                    .precision(.fractionLength(2))
-                    .locale(locale)
-            )
-            return String.localized("< \(cent)")
-        }
-
-        return amount.formatted(
-            .currency(code: "USD")
-                .precision(.fractionLength(amount >= 1000 ? 0 : 2))
-                .locale(locale)
-        )
+        Money.estimate(amount, locale: locale)
     }
 
     /// The same figure as a help tag, where the visible rounding hides the
@@ -465,14 +448,7 @@ enum SpendFormat {
     /// fraction. Significant digits keep a tiny positive amount visible and a
     /// large one exact.
     static func moneyExact(_ amount: Double, locale: Locale = LocalizationSource.locale) -> String {
-        // A real zero keeps the same two places the page shows it with.
-        guard amount != 0 else { return money(amount, locale: locale) }
-
-        return amount.formatted(
-            .currency(code: "USD")
-                .precision(.significantDigits(1...15))
-                .locale(locale)
-        )
+        Money.exactEstimate(amount, locale: locale)
     }
 }
 

@@ -275,7 +275,7 @@ struct VolcengineUsageService: Sendable {
             request.setValue(value, forHTTPHeaderField: field)
         }
 
-        guard let (data, response) = try? await NetworkSession.shared.data(for: request) else {
+        guard let (data, response) = try? await NetworkSession.shared.recordedData(for: request) else {
             return .failure(Refusal(reason: .unreachable))
         }
 

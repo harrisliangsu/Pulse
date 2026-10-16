@@ -105,10 +105,6 @@ enum OpenAIPlatformUsageService {
     }
 
     static func money(_ amount: Double) -> String {
-        amount.formatted(
-            .currency(code: currency)
-                .precision(.fractionLength(2))
-                .locale(LocalizationSource.locale)
-        )
+        amount.formatted(Money.reportedStyle(currency))
     }
 }

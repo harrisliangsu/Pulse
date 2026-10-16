@@ -83,13 +83,9 @@ enum XAIAPIUsageService {
         else { return context.unavailable(.unreadableReply) }
 
         let dollars = -cents / 100
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        formatter.locale = LocalizationSource.locale
         return context.reading(
             [],
-            creditBalance: formatter.string(from: NSNumber(value: dollars)),
+            creditBalance: Money.reported(dollars, code: "USD"),
             creditRemaining: .init(amount: dollars, currency: "USD"),
             at: now
         )

@@ -14,7 +14,7 @@ extension Provider {
         case .kiro:
             .localized("Runs Kiro CLI's native ACP usage method with its saved login. Pulse does not read or store Kiro credentials.")
         case .antigravity:
-            .localized("Reads the running editor's local language server and connection token. No Keychain prompt.")
+            .localized("Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Pulse does not request Keychain access.")
         case .cursor, .grokBot:
             .localized("Reads the login saved in Cursor's local database. No Keychain prompt.")
         case .grok:
@@ -33,7 +33,7 @@ extension Provider {
             .localized("Uses a browser session you import in Settings. Importing may ask for browser Keychain access.")
         case .copilot:
             .localized("Uses the GitHub login you connect in Settings. No Keychain prompt.")
-        case .kimiCode, .zai, .minimax, .minimaxCN, .deepSeek, .v2ex:
+        case .kimiCode, .zai, .minimax, .deepSeek, .v2ex:
             .localized("Uses only the API key you enter in Settings. No Keychain prompt.")
         // The one provider whose address is the reader's own, so the sentence
         // says where the key goes: nowhere but the server they named.

@@ -418,7 +418,7 @@ struct AgentArchive: Codable, Equatable {
     static func day(ofSlot key: String) -> String { start(ofSlot: key).map(dayKey(for:)) ?? key }
 
     private static func date(ofDay key: String, calendar: Calendar) -> Date? {
-        UsageLedgerReader.sharedSlotFormatter.date(from: "\(key) 00:00").map { calendar.startOfDay(for: $0) }
+        UsageLedgerReader.slotDate("\(key) 00:00").map { calendar.startOfDay(for: $0) }
     }
 
     private static func combine(_ base: LedgerDay?, _ added: LedgerDay) -> LedgerDay {

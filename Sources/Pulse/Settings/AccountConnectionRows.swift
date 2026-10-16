@@ -42,6 +42,40 @@ struct QoderSiteRow: View {
     }
 }
 
+/// Which MiniMax site the key is from: minimax.io or minimaxi.com.
+///
+/// **Unlike Qoder's, changing it keeps the key.** A pasted key is not read
+/// back from a browser, so clearing it would lose it; instead each site keeps
+/// its own (`MiniMaxSite.keySlot`), and the field shows the chosen site's.
+struct MiniMaxSiteRow: View {
+    let account: AccountKey
+    let settings: AppSettings
+    let credentials: ProviderCredentialModel
+
+    var body: some View {
+        SettingsRow(
+            String.localized("Site"),
+            subtitle: String.localized("Where your key is from. Each site keeps its own key.")
+        ) {
+            Picker("", selection: Binding(
+                get: { settings.minimaxSite },
+                set: { site in
+                    guard site != settings.minimaxSite else { return }
+                    settings.minimaxSite = site
+                    credentials.seed(for: account)
+                }
+            )) {
+                ForEach(MiniMaxSite.allCases, id: \.self) { site in
+                    Text(verbatim: site.label).tag(site)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.segmented)
+            .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+        }
+    }
+}
+
 /// Which StepFun console the account is on. The same rule as
 /// `QoderSiteRow`: changing it discards the saved session, which belongs
 /// to the other host.

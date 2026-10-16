@@ -27,7 +27,6 @@ struct UsageBatch: Sendable {
     var zai: ZaiUsageService
     var glm: ZaiUsageService
     var minimax: MiniMaxUsageService
-    var minimaxCN: MiniMaxUsageService
     var copilot: CopilotUsageService
     var grok: GrokUsageService
     var grokBot: GrokBotUsageService
@@ -68,7 +67,6 @@ struct UsageBatch: Sendable {
         async let zaiUsage = load(.zai)
         async let glmUsage = load(.glmCoding)
         async let minimaxUsage = load(.minimax)
-        async let minimaxCNUsage = load(.minimaxCN)
         async let copilotUsage = load(.copilot)
         async let grokUsage = load(.grok)
         async let grokBotUsage = load(.grokBot)
@@ -89,7 +87,7 @@ struct UsageBatch: Sendable {
         for row in [
             await claudeUsage, await codexUsage, await kiroUsage, await antigravityUsage,
             await cursorUsage, await openCodeUsage, await kimiUsage, await ollamaUsage,
-            await zaiUsage, await glmUsage, await minimaxUsage, await minimaxCNUsage,
+            await zaiUsage, await glmUsage, await minimaxUsage,
             await copilotUsage, await grokUsage, await grokBotUsage, await volcengineUsage,
             await qoderUsage, await commandCodeUsage, await deepSeekUsage, await devinUsage,
             await xiaomiUsage, await sub2apiUsage, await newAPIUsage, await v2exUsage,
@@ -159,8 +157,6 @@ struct UsageBatch: Sendable {
             await glm.fetch()
         case .minimax:
             await minimax.fetch()
-        case .minimaxCN:
-            await minimaxCN.fetch()
         case .copilot:
             await copilot.fetch()
         case .grok:

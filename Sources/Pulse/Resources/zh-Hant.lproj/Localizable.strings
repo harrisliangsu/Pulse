@@ -81,6 +81,8 @@
 "Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it." = "支援此設定的截圖工具不會截到浮動面板；錄影和共享螢幕時仍可能顯示。";
 "Follow the active display" = "跟隨使用中的螢幕";
 "With more than one display, the rail moves to the one the pointer is on." = "有多台螢幕時，膠囊會移到指標所在的那一台。";
+"Snap to screen edges" = "自動貼齊螢幕邊緣";
+"Dragged near an edge, the rail docks to it and turns to run along it. When this is off, dragging only moves the rail and keeps its direction." = "拖到螢幕邊緣附近時，膠囊會貼齊該邊緣，並轉為沿邊緣排列。關閉後，拖移只改變位置，方向維持不變。";
 "Left" = "左側";
 "Top" = "上方";
 "Percentages across" = "橫放時顯示百分比";
@@ -261,6 +263,8 @@
 "Reading logs" = "正在讀取紀錄";
 "No history yet" = "尚無紀錄";
 "Nothing has been logged on this Mac yet, so there is no history to add up." = "本機上還沒有紀錄，無從統計。";
+"Token spend reading is off" = "「讀取本機用量記錄」未開啟";
+"This history comes from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "這一節依據這台 Mac 上的用量記錄統計。只有開啟「讀取本機用量記錄」後，Pulse 才會讀取這些記錄。";
 "Account total" = "帳號累計";
 
 /* Budget estimate */
@@ -291,6 +295,10 @@
 "Size" = "整體大小";
 "Spacing" = "間距";
 "Round ends" = "正圓兩端";
+"Progress bars" = "進度條";
+"How limit bars are drawn on the card and in the menu." = "詳情卡片和選單中額度進度條的樣式。";
+"Continuous" = "連續";
+"Segmented" = "分段";
 "The rail's ends and the card's tail follow the ring's own curve." = "膠囊兩端與卡片尾部，跟隨圓環自身的弧度。";
 "How much air there is between the rings." = "調整圓環之間的間距。";
 "Tight" = "緊湊";
@@ -317,11 +325,14 @@
 "Frosted glass instead of a solid rail." = "用半透明材質，取代實心軌道。";
 "Clear glass that shows what is behind the panel, instead of solid black." = "透出面板後方的內容，取代純黑背景。";
 "Transparency" = "透明度";
-"Clearer to the right. Darker reads better over bright pages." = "越往右越透。偏暗一點，在淺色頁面上更容易看清。";
+"Clearer to the right, and the text turns from white to black. Black text is hard to read over dark windows." = "越往右越透，文字也隨之從白色逐漸變黑。黑色文字在深色視窗上不易看清。";
 "Open Antigravity to see its usage." = "開啟 Antigravity 才讀得到它的用量。";
 "Asks the language server Antigravity runs while it is open." = "向 Antigravity 開啟時執行的語言伺服器讀取。";
-"Only while Antigravity is open." = "只有在 Antigravity 開啟時才讀得到。";
-"Antigravity's language server" = "Antigravity 的語言伺服器";
+"Reads Antigravity while it is open, and the agy CLI when it is not." = "Antigravity 開啟時從它讀取，未開啟時透過 agy CLI讀取。";
+"CLI" = "CLI";
+"Asks the agy CLI, using the login it already saved." = "透過 agy CLI 讀取，沿用它已儲存的登入。";
+"The agy CLI isn't installed. Install it, or choose another source in Settings." = "未安裝 agy CLI。請安裝它，或在設定中選擇其他用量來源。";
+"This version of the agy CLI can't report usage. Update it to 1.1.11 or later." = "目前版本的 agy CLI 無法回報用量，請更新到 1.1.11 或更新的版本。";
 
 /* Cursor */
 "Sign in to Cursor to see usage." = "在 Cursor 中登入後才讀得到用量。";
@@ -474,6 +485,8 @@
 
 /* Settings sidebar search */
 "Search" = "搜尋";
+"Back" = "上一頁";
+"Forward" = "下一頁";
 "No matches" = "沒有符合的項目";
 
 /* Resetting the rail order */
@@ -679,7 +692,7 @@
 "Enable a service in its settings to start monitoring." = "在服務的設定頁中開啟，即可開始監控。";
 "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "讀取 Claude Code 存在鑰匙圈或憑證檔案中的登入資訊。可能要求鑰匙圈存取權限，其中包括 Claude 桌面版的 cookie 儲存空間。";
 "Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "讀取 ~/.codex/auth.json，也可能啟動 codex app-server 使用已儲存的登入。Pulse 不會要求鑰匙圈存取權限。";
-"Reads the running editor's local language server and connection token. No Keychain prompt." = "連線至執行中的編輯器，讀取本機語言伺服器的用量與連線權杖。不會出現鑰匙圈提示。";
+"Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Pulse does not request Keychain access." = "連線至執行中的編輯器，讀取本機語言伺服器的用量與連線權杖；或啟動 agy CLI，使用它已儲存的登入。Pulse 不會要求鑰匙圈存取權限。";
 "Reads the login saved in Cursor's local database. No Keychain prompt." = "讀取 Cursor 本機資料庫中儲存的登入資訊。不會出現鑰匙圈提示。";
 "Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "讀取 ~/.grok/auth.json 中儲存的登入資訊。不會出現鑰匙圈提示。";
 "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取 OpenCode 的 auth.json。不會出現鑰匙圈提示。";
@@ -758,6 +771,7 @@
 "No Qoder session found. Sign in at %@ first." = "找不到 Qoder 的登入資訊，請先在 %@ 登入。";
 "Site" = "網站";
 "Where you signed in. Changing it clears the saved session." = "即你登入時使用的網站。更改後會清除已儲存的登入狀態。";
+"Where your key is from. Each site keeps its own key." = "即金鑰所屬的網站。兩個網站各自保存自己的金鑰。";
 "Sign in to StepFun's platform in a browser to see usage." = "在瀏覽器裡登入階躍星辰開放平台後才能看到用量。";
 "StepFun's saved session expired. Sign in again in your browser." = "階躍星辰的登入資訊已過期，請在瀏覽器裡重新登入。";
 "No Step Plan on this StepFun account." = "這個階躍星辰帳號沒有訂閱 Step Plan。";
@@ -1076,10 +1090,12 @@
 "Status page" = "狀態頁";
 "As %@ reports it on its status page, read when this page opens and every five minutes while it stays open." = "以 %@ 狀態頁公布的為準。開啟此頁時讀取一次，頁面保持開啟期間每 5 分鐘更新。";
 "90 days ago" = "90 天前";
+"%@ days ago" = "%@ 天前";
+"Now" = "現在";
 "%@ uptime" = "可用率 %@";
 "No data" = "無資料";
 "When a service is down" = "服務發生故障時";
-"Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on." = "Codex、Claude Code 和 DeepSeek，以各自的狀態頁為準，只通知你已開啟的服務。";
+"From each provider's own status page, for the providers you have switched on and only about what their accounts run on." = "以各服務商自己的狀態頁為準，只通知你已開啟的服務商，且只針對帳號實際用到的服務。";
 "%@ reports %@." = "%@ 公布：%@。";
 "Back to normal: %@." = "已恢復正常：%@。";
 "%@ (%@)" = "%@（%@）";
@@ -1248,3 +1264,32 @@
 "Unclassified" = "未分類";
 "These records do not report this token category separately." = "來源未單獨記錄這類 token。";
 "Reported tokens without a usable category breakdown." = "來源記錄了這些 token，但沒有可用的分類明細。";
+
+// Currency (Settings → General)
+"Currency" = "貨幣";
+"Show estimates in" = "估算金額的貨幣";
+"Money worked out from API prices: Token spend, estimated value, usage history and the recap. Balances and charges a service reports stay in the currency it gives." = "依 API 價格算出的金額會換算成這種貨幣：Token 消耗、額度價值推算、用量紀錄與月報、年報。服務商自己回報的餘額和扣款仍以其提供的貨幣顯示。";
+"Exchange rate" = "匯率";
+"Rate source" = "匯率來源";
+"Your rate is used. Clear the field to use the day's rate." = "正在使用你填寫的匯率。清空即改用當日匯率。";
+"The day's rate, updated %@. Type a rate to use your own." = "當日匯率，更新於 %@。也可以填寫自己的匯率。";
+"No rate yet, so estimates stay in US dollars. Type a rate, or wait for the day's." = "尚無匯率，估算金額暫時仍以美元顯示。可以填寫匯率，或等待取得當日匯率。";
+"US dollar" = "美元";
+"Chinese yuan" = "人民幣";
+"Hong Kong dollar" = "港幣";
+"New Taiwan dollar" = "新臺幣";
+"Japanese yen" = "日圓";
+"South Korean won" = "韓元";
+"Russian rouble" = "盧布";
+
+// Connection diagnostics: server replies
+"Server replies" = "伺服器原始回應";
+"Copy replies" = "複製回應";
+"No reply" = "沒有回應";
+"Credentials are hidden. A reply can still show the account's email, plan or balance, so it is not in the shared diagnostics. Kept until the next check." = "憑證已隱藏。回應中仍可能有帳號的電子郵件、方案或餘額，因此不會放進可分享的診斷資訊。下次檢查時取代。";
+"%@ bytes, not text" = "%@ 位元組，不是文字";
+
+// Service status: why a read failed
+"No request was made." = "沒有發出請求。";
+"The page answered, but not with anything Pulse reads for this provider." = "狀態頁有回應，但其中沒有 Pulse 能為這個服務商讀取的內容。";
+"The page answered HTTP %@." = "狀態頁回傳了 HTTP %@。";

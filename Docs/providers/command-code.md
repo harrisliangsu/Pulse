@@ -197,4 +197,4 @@ The billing period is a **stated length only where the reply gave both ends of i
 
 - **No extra accounts.** `supportsMultipleAccounts` is unchanged; there is no second login to add. See [authentication.md](authentication.md).
 - **No route choice.** One route, and it needs a credential, so `soleRoute` is nil and Settings states nothing.
-- **No history and no transcripts.** Command Code keeps sessions under `~/.commandcode/sessions`, not the JSONL the ledger reads, so `keepsLocalTranscripts` and `providesHistory` are both false — the same position OpenCode Go is in.
+- **No transcripts; the history is Token spend's.** Command Code keeps sessions under `~/.commandcode/sessions`, not the JSONL the ledger reads, so `keepsLocalTranscripts` is false. The detailed card and the settings pane show the Command Code Token spend agent's records instead (`SpendAgent.commandCode` borrows the mark), with Token spend on — the same position OpenCode Go is in before its console sign-in.

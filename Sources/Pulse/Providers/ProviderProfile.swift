@@ -203,7 +203,7 @@ enum ProfileHTTP {
         session: URLSession? = nil
     ) async -> Result<Reply, ProviderUsage.Unavailability> {
         guard let (data, response) = try? await (session ?? NetworkSession.shared)
-                .data(for: request, delegate: NoRedirects()),
+                .recordedData(for: request, delegate: NoRedirects()),
               let http = response as? HTTPURLResponse
         else { return .failure(.unreachable) }
         return .success(Reply(data: data, status: http.statusCode))

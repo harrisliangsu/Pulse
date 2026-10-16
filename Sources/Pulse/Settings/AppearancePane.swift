@@ -68,6 +68,27 @@ struct AppearancePane: View {
 
                 SettingsRowDivider()
 
+                // Not greyed out with the panel hidden: the menu's bars
+                // follow it too.
+                SettingsRow(
+                    String.localized("Progress bars"),
+                    subtitle: String.localized("How limit bars are drawn on the card and in the menu.")
+                ) {
+                    Picker("", selection: Binding(
+                        get: { settings.usageBarStyle },
+                        set: { settings.usageBarStyle = $0 }
+                    )) {
+                        ForEach(UsageBarStyle.allCases) { style in
+                            Text(style.title).tag(style)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                }
+
+                SettingsRowDivider()
+
                 SettingsRow(
                     String.localized("Appearance"),
                     subtitle: String.localized("Dark, light, match the Mac, or glass.")
@@ -93,7 +114,7 @@ struct AppearancePane: View {
 
                     SettingsRow(
                         String.localized("Transparency"),
-                        subtitle: String.localized("Clearer to the right. Darker reads better over bright pages.")
+                        subtitle: String.localized("Clearer to the right, and the text turns from white to black. Black text is hard to read over dark windows.")
                     ) {
                         Slider(
                             value: Binding(

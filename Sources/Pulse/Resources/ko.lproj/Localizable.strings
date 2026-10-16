@@ -81,6 +81,8 @@
 "Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it." = "이 설정을 지원하는 스크린샷 도구에는 플로팅 패널이 찍히지 않습니다. 화면 기록과 화면 공유에서는 표시될 수 있습니다.";
 "Follow the active display" = "사용 중인 디스플레이 따라가기";
 "With more than one display, the rail moves to the one the pointer is on." = "디스플레이가 여러 대일 때, 포인터가 있는 쪽으로 레일이 옮겨 갑니다.";
+"Snap to screen edges" = "화면 가장자리에 붙이기";
+"Dragged near an edge, the rail docks to it and turns to run along it. When this is off, dragging only moves the rail and keeps its direction." = "화면 가장자리 가까이 끌어 오면 레일이 그 가장자리에 붙고, 가장자리를 따라 놓이도록 방향이 바뀝니다. 끄면 끌어도 위치만 바뀌고 방향은 그대로입니다.";
 "Left" = "왼쪽";
 "Top" = "위";
 "Percentages across" = "가로일 때 백분율 표시";
@@ -261,6 +263,8 @@
 "Reading logs" = "로그를 읽는 중";
 "No history yet" = "아직 기록이 없습니다";
 "Nothing has been logged on this Mac yet, so there is no history to add up." = "이 Mac에는 아직 로그가 없어 합산할 기록이 없습니다.";
+"Token spend reading is off" = "‘로컬 사용량 기록 읽기’가 꺼져 있습니다";
+"This history comes from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "이 기록은 이 Mac의 사용량 기록으로 집계합니다. Pulse는 ‘로컬 사용량 기록 읽기’가 켜져 있는 동안에만 기록을 읽습니다.";
 "Account total" = "계정 누적";
 
 /* Budget estimate */
@@ -291,6 +295,10 @@
 "Size" = "전체 크기";
 "Spacing" = "간격";
 "Round ends" = "양 끝을 둥글게";
+"Progress bars" = "진행 막대";
+"How limit bars are drawn on the card and in the menu." = "카드와 메뉴에 표시되는 한도 막대의 모양입니다.";
+"Continuous" = "연속";
+"Segmented" = "분할";
 "The rail's ends and the card's tail follow the ring's own curve." = "레일의 양 끝과 카드 꼬리가 링과 같은 곡선을 그립니다.";
 "How much air there is between the rings." = "링 사이의 간격을 조절합니다.";
 "Tight" = "좁게";
@@ -317,11 +325,14 @@
 "Frosted glass instead of a solid rail." = "단단한 레일 대신 반투명 유리 재질을 씁니다.";
 "Clear glass that shows what is behind the panel, instead of solid black." = "완전한 검정 대신, 뒤에 있는 내용이 비쳐 보이는 유리를 씁니다.";
 "Transparency" = "투명도";
-"Clearer to the right. Darker reads better over bright pages." = "오른쪽으로 갈수록 투명해집니다. 어둡게 하면 밝은 페이지 위에서도 잘 읽힙니다.";
+"Clearer to the right, and the text turns from white to black. Black text is hard to read over dark windows." = "오른쪽으로 갈수록 투명해지고, 글자는 흰색에서 검은색으로 바뀝니다. 검은 글자는 어두운 창 위에서 읽기 어렵습니다.";
 "Open Antigravity to see its usage." = "사용량을 보려면 Antigravity를 여십시오.";
 "Asks the language server Antigravity runs while it is open." = "Antigravity가 열려 있을 때 실행하는 언어 서버에 물어봅니다.";
-"Only while Antigravity is open." = "Antigravity가 열려 있는 동안에만 읽을 수 있습니다.";
-"Antigravity's language server" = "Antigravity의 언어 서버";
+"Reads Antigravity while it is open, and the agy CLI when it is not." = "Antigravity가 열려 있으면 그곳에서, 열려 있지 않으면 agy CLI로 읽습니다.";
+"CLI" = "CLI";
+"Asks the agy CLI, using the login it already saved." = "agy CLI를 호출하며, 이미 저장된 로그인을 씁니다.";
+"The agy CLI isn't installed. Install it, or choose another source in Settings." = "agy CLI가 설치되어 있지 않습니다. 설치하거나 설정에서 다른 사용량 출처를 선택하세요.";
+"This version of the agy CLI can't report usage. Update it to 1.1.11 or later." = "이 버전의 agy CLI는 사용량을 알려 주지 않습니다. 1.1.11 이상으로 업데이트하세요.";
 
 /* Cursor */
 "Sign in to Cursor to see usage." = "사용량을 보려면 Cursor에 로그인하십시오.";
@@ -474,6 +485,8 @@
 
 /* Settings sidebar search */
 "Search" = "검색";
+"Back" = "뒤로";
+"Forward" = "앞으로";
 "No matches" = "일치하는 항목 없음";
 
 /* Resetting the rail order */
@@ -679,7 +692,7 @@
 "Enable a service in its settings to start monitoring." = "설정에서 서비스를 켜면 모니터링을 시작합니다.";
 "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "키체인 또는 인증 정보 파일에서 Claude Code의 로그인을 읽습니다. Claude 데스크탑의 쿠키 저장소를 포함해 키체인 접근 권한을 요청할 수 있습니다.";
 "Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "~/.codex/auth.json을 읽으며 저장된 로그인으로 codex app-server를 실행할 수 있습니다. Pulse는 키체인 접근 권한을 요청하지 않습니다.";
-"Reads the running editor's local language server and connection token. No Keychain prompt." = "실행 중인 편집기의 로컬 언어 서버에서 사용량과 연결 토큰을 읽습니다. 키체인 확인 창은 표시되지 않습니다.";
+"Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Pulse does not request Keychain access." = "실행 중인 편집기의 로컬 언어 서버에서 사용량과 연결 토큰을 읽거나, 저장된 로그인으로 agy CLI를 실행합니다. Pulse는 키체인 접근 권한을 요청하지 않습니다.";
 "Reads the login saved in Cursor's local database. No Keychain prompt." = "Cursor의 로컬 데이터베이스에 저장된 로그인을 읽습니다. 키체인 확인 창은 표시되지 않습니다.";
 "Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "~/.grok/auth.json에 저장된 로그인을 읽습니다. 키체인 확인 창은 표시되지 않습니다.";
 "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "설정에 입력한 키를 사용하거나 OpenCode의 auth.json을 읽습니다. 키체인 확인 창은 표시되지 않습니다.";
@@ -758,6 +771,7 @@
 "No Qoder session found. Sign in at %@ first." = "Qoder 세션을 찾지 못했습니다. 먼저 %@에 로그인하십시오.";
 "Site" = "사이트";
 "Where you signed in. Changing it clears the saved session." = "로그인한 사이트입니다. 바꾸면 저장된 세션이 지워집니다.";
+"Where your key is from. Each site keeps its own key." = "키를 발급받은 사이트입니다. 사이트마다 키가 따로 저장됩니다.";
 "Sign in to StepFun's platform in a browser to see usage." = "브라우저에서 StepFun 플랫폼에 로그인하면 사용량이 표시됩니다.";
 "StepFun's saved session expired. Sign in again in your browser." = "저장된 StepFun 세션이 만료되었습니다. 브라우저에서 다시 로그인하십시오.";
 "No Step Plan on this StepFun account." = "이 StepFun 계정에는 Step Plan이 없습니다.";
@@ -1076,10 +1090,12 @@
 "Status page" = "상태 페이지";
 "As %@ reports it on its status page, read when this page opens and every five minutes while it stays open." = "%@이(가) 상태 페이지에 공개한 내용입니다. 이 페이지를 열 때 읽어 오고, 열려 있는 동안 5분마다 업데이트합니다.";
 "90 days ago" = "90일 전";
+"%@ days ago" = "%@일 전";
+"Now" = "지금";
 "%@ uptime" = "가동률 %@";
 "No data" = "데이터 없음";
 "When a service is down" = "서비스에 장애가 있을 때";
-"Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on." = "Codex, Claude Code, DeepSeek 각각의 상태 페이지를 기준으로, 켜 둔 서비스만 알립니다.";
+"From each provider's own status page, for the providers you have switched on and only about what their accounts run on." = "각 서비스의 상태 페이지를 기준으로, 켜 둔 서비스에 대해 계정이 실제로 쓰는 부분만 알립니다.";
 "%@ reports %@." = "%@ 발표: %@.";
 "Back to normal: %@." = "정상으로 돌아왔습니다: %@.";
 "%@ (%@)" = "%@ (%@)";
@@ -1248,3 +1264,32 @@
 "Unclassified" = "미분류";
 "These records do not report this token category separately." = "이 유형의 토큰은 별도로 기록되지 않았습니다.";
 "Reported tokens without a usable category breakdown." = "토큰 수는 기록되었지만 사용할 수 있는 유형별 내역이 없습니다.";
+
+// Currency (Settings → General)
+"Currency" = "통화";
+"Show estimates in" = "추정 금액 통화";
+"Money worked out from API prices: Token spend, estimated value, usage history and the recap. Balances and charges a service reports stay in the currency it gives." = "API 가격으로 계산한 금액을 이 통화로 표시합니다(토큰 사용량, 사용분 추정 금액, 사용 기록, 리포트). 서비스가 직접 알려 주는 잔액과 청구 금액은 그 서비스의 통화로 표시합니다.";
+"Exchange rate" = "환율";
+"Rate source" = "환율 출처";
+"Your rate is used. Clear the field to use the day's rate." = "직접 입력한 환율을 사용합니다. 칸을 비우면 당일 환율로 돌아갑니다.";
+"The day's rate, updated %@. Type a rate to use your own." = "당일 환율이며 %@에 업데이트되었습니다. 직접 환율을 입력할 수도 있습니다.";
+"No rate yet, so estimates stay in US dollars. Type a rate, or wait for the day's." = "아직 환율이 없어 추정 금액은 미국 달러로 표시됩니다. 환율을 입력하거나 당일 환율을 받아올 때까지 기다려 주세요.";
+"US dollar" = "미국 달러";
+"Chinese yuan" = "중국 위안";
+"Hong Kong dollar" = "홍콩 달러";
+"New Taiwan dollar" = "신대만 달러";
+"Japanese yen" = "일본 엔";
+"South Korean won" = "대한민국 원";
+"Russian rouble" = "러시아 루블";
+
+// Connection diagnostics: server replies
+"Server replies" = "서버 원본 응답";
+"Copy replies" = "응답 복사";
+"No reply" = "응답 없음";
+"Credentials are hidden. A reply can still show the account's email, plan or balance, so it is not in the shared diagnostics. Kept until the next check." = "인증 정보는 가렸습니다. 응답에 계정의 이메일, 요금제, 잔액이 들어 있을 수 있어 공유용 진단 정보에는 넣지 않습니다. 다음 확인 때 바뀝니다.";
+"%@ bytes, not text" = "%@바이트, 텍스트 아님";
+
+// Service status: why a read failed
+"No request was made." = "요청을 보내지 않았습니다.";
+"The page answered, but not with anything Pulse reads for this provider." = "상태 페이지가 응답했지만, Pulse가 이 서비스에 대해 읽을 수 있는 내용이 없었습니다.";
+"The page answered HTTP %@." = "상태 페이지 응답: HTTP %@.";

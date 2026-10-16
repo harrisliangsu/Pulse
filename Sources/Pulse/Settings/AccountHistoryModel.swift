@@ -53,7 +53,10 @@ final class AccountHistoryModel {
             ? store.usage(for: account).observedAt?.timeIntervalSince1970 ?? 0 : 0
         // DeepSeek's money follows the currency the ring follows.
         let currency = account.provider == .deepSeek ? settings.deepSeekCurrency ?? "" : ""
-        return "\(account.id)|\(settings.isEnabled(account))|\(consoleRevision)|\(read)|\(currency)"
+        // Other agents' records are read only with Token spend on, so turning
+        // it on is what fills the pane.
+        let agents = if case .agents = account.provider.cardHistory { settings.readsTokenSpend } else { false }
+        return "\(account.id)|\(settings.isEnabled(account))|\(consoleRevision)|\(read)|\(currency)|\(agents)"
     }
 
     func load() async {
@@ -76,12 +79,15 @@ final class AccountHistoryModel {
         // A read id fences both progress and cleanup, even for the same provider.
         defer { if historyReadID == readID { loadingHistory = nil } }
 
-        // Asked of the provider rather than scanned off disk. Their own
-        // statistics cover the whole account, so there is nothing local to
-        // read and nothing to cache between panes.
+        // The source the detailed card reads, so the pane and the card show
+        // the same history. Most are asked of the provider rather than
+        // scanned off disk: their own statistics cover the whole account, so
+        // there is nothing local to read and nothing to cache between panes.
+        let source = provider.cardHistory
+
         // OpenCode Go's comes from the console's request log, the same read
         // the detailed card makes and shares.
-        if provider == .openCodeGo {
+        if source == .accountLogs, provider == .openCodeGo {
             guard let cookie = APIKeyStore.key(for: .openCodeGo, slot: OpenCodeConsole.slot) else {
                 ledgers[provider] = .empty
                 historyReads[provider] = .notConfigured
@@ -105,7 +111,7 @@ final class AccountHistoryModel {
             return
         }
 
-        if provider == .deepSeek {
+        if source == .accountLogs, provider == .deepSeek {
             guard let token = DeepSeekConsole.keptToken else {
                 ledgers[provider] = .empty
                 historyReads[provider] = .notConfigured
@@ -125,7 +131,7 @@ final class AccountHistoryModel {
             return
         }
 
-        if provider == .zai || provider == .glmCoding {
+        if source == .accountStatistics {
             let key = APIKeyStore.key(for: provider)
             let read = await ZaiUsageService(provider: provider, enteredKey: key).history()
 
@@ -136,6 +142,23 @@ final class AccountHistoryModel {
 
             historyReads[provider] = read
             ledgers[provider] = if case .answered(let ledger) = read { ledger } else { .empty }
+            return
+        }
+
+        // The Token spend agents that borrow this provider's mark — MiniMax
+        // Code's log for MiniMax. Other apps' records, which Pulse reads only
+        // with Token spend on, as the card does; off, nothing is read, and
+        // the history group says what to turn on instead.
+        if case .agents(let agents) = source {
+            guard settings.readsTokenSpend else {
+                ledgers[provider] = .empty
+                historyReads[provider] = nil
+                return
+            }
+            let read = await UsageLedger.reading(agents)
+            guard !Task.isCancelled else { return }
+            ledgers[provider] = read
+            historyReads[provider] = .answered(read)
             return
         }
 

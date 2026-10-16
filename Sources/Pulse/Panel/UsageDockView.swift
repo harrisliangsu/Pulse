@@ -503,6 +503,9 @@ struct UsageDockView: View {
             berth
 
             rings
+                // Still in the tree while collapsed, so nothing moves as it
+                // opens; but nothing in it may animate for nobody.
+                .environment(\.botMarksPaused, !isExpanded)
                 .opacity(isExpanded ? 1 : 0)
                 // Its own timing, overriding the spring the shape rides on:
                 // the contents appear once the berth has opened enough to hold

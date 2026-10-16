@@ -88,6 +88,7 @@ struct CapturedUsageReadersTests {
             "/home/tester/Library/Application Support/Pulse/UsageImports/hindsight",
         ])
         #expect(paths("mcode") == [
+            "/home/tester/.minimax/v2/sessions",
             "/opt/tokscale/headless/mcode",
             "/home/tester/Library/Application Support/Pulse/UsageImports/mcode",
         ])

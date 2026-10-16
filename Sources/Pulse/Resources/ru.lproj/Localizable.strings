@@ -81,6 +81,8 @@
 "Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it." = "Инструменты для снимков экрана, которые это поддерживают, не показывают плавающую панель. На записях и при демонстрации экрана она может остаться видна.";
 "Follow the active display" = "Переходить на активный дисплей";
 "With more than one display, the rail moves to the one the pointer is on." = "Если дисплеев несколько, лента переходит на тот, где находится указатель.";
+"Snap to screen edges" = "Прикреплять к краям экрана";
+"Dragged near an edge, the rail docks to it and turns to run along it. When this is off, dragging only moves the rail and keeps its direction." = "Если подвести ленту к краю экрана, она прикрепляется к нему и разворачивается вдоль него. Если выключено, перетаскивание только перемещает ленту, не меняя её направления.";
 "Left" = "Слева";
 "Top" = "Сверху";
 "Percentages across" = "Проценты в горизонтальной панели";
@@ -254,6 +256,8 @@
 "Reading logs" = "Чтение журналов";
 "No history yet" = "Истории пока нет";
 "Nothing has been logged on this Mac yet, so there is no history to add up." = "На этом Mac ещё нет записей в журналах, поэтому подсчитывать нечего.";
+"Token spend reading is off" = "Параметр «Читать локальные записи о расходе» выключен";
+"This history comes from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "Эта история складывается из записей о расходе на этом Mac, а Pulse читает их, только когда включено «Читать локальные записи о расходе».";
 "Account total" = "Всего по аккаунту";
 
 /* Budget estimate */
@@ -284,6 +288,10 @@
 "Size" = "Размер";
 "Spacing" = "Интервал";
 "Round ends" = "Скруглённые концы";
+"Progress bars" = "Шкалы";
+"How limit bars are drawn on the card and in the menu." = "Как рисуются шкалы лимитов на карточке и в меню.";
+"Continuous" = "Сплошные";
+"Segmented" = "Делениями";
 "The rail's ends and the card's tail follow the ring's own curve." = "Концы ленты и хвостик карточки повторяют изгиб кольца.";
 "How much air there is between the rings." = "Расстояние между кольцами.";
 "Tight" = "Узкий";
@@ -309,11 +317,14 @@
 "Liquid Glass" = "Liquid Glass";
 "Light" = "Светлый";
 "Transparency" = "Прозрачность";
-"Clearer to the right. Darker reads better over bright pages." = "Чем правее, тем прозрачнее. Тёмная панель лучше читается на светлых страницах.";
+"Clearer to the right, and the text turns from white to black. Black text is hard to read over dark windows." = "Чем правее, тем прозрачнее, а текст переходит от белого к чёрному. Чёрный текст плохо виден поверх тёмных окон.";
 "Open Antigravity to see its usage." = "Откройте Antigravity, чтобы видеть расход.";
 "Asks the language server Antigravity runs while it is open." = "Запрашивает языковой сервер, который работает, пока открыт Antigravity.";
-"Only while Antigravity is open." = "Только пока открыт Antigravity.";
-"Antigravity's language server" = "Языковой сервер Antigravity";
+"Reads Antigravity while it is open, and the agy CLI when it is not." = "Пока Antigravity открыт, данные читаются из него, а когда закрыт — через CLI agy.";
+"CLI" = "CLI";
+"Asks the agy CLI, using the login it already saved." = "Использует CLI agy и уже сохранённые в нём данные входа.";
+"The agy CLI isn't installed. Install it, or choose another source in Settings." = "CLI agy не установлен. Установите его или выберите другой источник в настройках.";
+"This version of the agy CLI can't report usage. Update it to 1.1.11 or later." = "Эта версия CLI agy не сообщает об использовании. Обновите её до 1.1.11 или новее.";
 
 /* Cursor */
 "Sign in to Cursor to see usage." = "Войдите в Cursor, чтобы видеть расход.";
@@ -465,6 +476,8 @@
 
 /* Settings sidebar search */
 "Search" = "Поиск";
+"Back" = "Назад";
+"Forward" = "Вперёд";
 "No matches" = "Нет совпадений";
 
 /* Resetting the rail order */
@@ -641,7 +654,7 @@
 "Enable a service in its settings to start monitoring." = "Включите сервис в его настройках, чтобы начать отслеживание.";
 "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "Читает сохранённый вход Claude Code из связки ключей или файла учётных данных. Может запросить доступ к связке ключей, в том числе к хранилищу cookie Claude Desktop.";
 "Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "Читает ~/.codex/auth.json и может запускать codex app-server с сохранённым входом. Pulse не запрашивает доступ к связке ключей.";
-"Reads the running editor's local language server and connection token. No Keychain prompt." = "Подключается к локальному языковому серверу запущенного редактора с помощью его токена. Доступ к связке ключей не запрашивается.";
+"Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Pulse does not request Keychain access." = "Подключается к локальному языковому серверу запущенного редактора с помощью его токена или запускает CLI agy с сохранённым в нём входом. Pulse не запрашивает доступ к связке ключей.";
 "Reads the login saved in Cursor's local database. No Keychain prompt." = "Читает данные входа из локальной базы данных Cursor. Доступ к связке ключей не запрашивается.";
 "Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "Читает данные входа из ~/.grok/auth.json. Доступ к связке ключей не запрашивается.";
 "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "Использует ключ, введённый в настройках, или читает auth.json OpenCode. Доступ к связке ключей не запрашивается.";
@@ -686,6 +699,7 @@
 "No Qoder session found. Sign in at %@ first." = "Сеанс Qoder не найден. Сначала войдите на %@.";
 "Site" = "Сайт";
 "Where you signed in. Changing it clears the saved session." = "Сайт, на котором выполнен вход. При смене сохранённый сеанс удаляется.";
+"Where your key is from. Each site keeps its own key." = "Сайт, на котором выдан ключ. Для каждого сайта хранится свой ключ.";
 "Sign in to StepFun's platform in a browser to see usage." = "Войдите на платформу StepFun в браузере, чтобы видеть расход.";
 "StepFun's saved session expired. Sign in again in your browser." = "Сохранённый сеанс StepFun истёк. Войдите снова в браузере.";
 "No Step Plan on this StepFun account." = "У этого аккаунта StepFun нет Step Plan.";
@@ -1004,10 +1018,12 @@
 "Status page" = "Страница статуса";
 "As %@ reports it on its status page, read when this page opens and every five minutes while it stays open." = "По данным страницы статуса %@. Обновляется при открытии этой страницы и каждые пять минут, пока она открыта.";
 "90 days ago" = "90 дней назад";
+"%@ days ago" = "%@ дн. назад";
+"Now" = "Сейчас";
 "%@ uptime" = "Доступность %@";
 "No data" = "Нет данных";
 "When a service is down" = "При сбое сервиса";
-"Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on." = "Codex, Claude Code и DeepSeek — по их страницам статуса; только включённые вами сервисы.";
+"From each provider's own status page, for the providers you have switched on and only about what their accounts run on." = "По страницам статуса самих сервисов — только для включённых вами сервисов и только о том, чем пользуется аккаунт.";
 "%@ reports %@." = "%@ сообщает: %@.";
 "Back to normal: %@." = "Снова в норме: %@.";
 "%@ (%@)" = "%@ (%@)";
@@ -1241,3 +1257,31 @@
 "Before each window's own reset, skipping any window shorter than the lead." = "До собственного сброса каждого периода. Период короче этого опережения не объявляется.";
 "Hours before that reset." = "На сколько часов раньше этого сброса.";
 "An announced Codex reset is set for %@." = "Объявленное время сброса Codex: %@.";
+// Currency (Settings → General)
+"Currency" = "Валюта";
+"Show estimates in" = "Валюта оценок";
+"Money worked out from API prices: Token spend, estimated value, usage history and the recap. Balances and charges a service reports stay in the currency it gives." = "Суммы, рассчитанные по ценам API, показываются в этой валюте: расход токенов, оценочная стоимость, история расхода и итоги. Баланс и списания, о которых сообщает сервис, остаются в его валюте.";
+"Exchange rate" = "Курс";
+"Rate source" = "Источник курса";
+"Your rate is used. Clear the field to use the day's rate." = "Используется ваш курс. Очистите поле, чтобы вернуться к курсу дня.";
+"The day's rate, updated %@. Type a rate to use your own." = "Курс дня, обновлён %@. Можно ввести свой.";
+"No rate yet, so estimates stay in US dollars. Type a rate, or wait for the day's." = "Курса пока нет, поэтому оценки показываются в долларах США. Введите курс или дождитесь курса дня.";
+"US dollar" = "Доллар США";
+"Chinese yuan" = "Китайский юань";
+"Hong Kong dollar" = "Гонконгский доллар";
+"New Taiwan dollar" = "Новый тайваньский доллар";
+"Japanese yen" = "Японская иена";
+"South Korean won" = "Южнокорейская вона";
+"Russian rouble" = "Российский рубль";
+
+// Connection diagnostics: server replies
+"Server replies" = "Ответы сервера";
+"Copy replies" = "Скопировать ответы";
+"No reply" = "Нет ответа";
+"Credentials are hidden. A reply can still show the account's email, plan or balance, so it is not in the shared diagnostics. Kept until the next check." = "Учётные данные скрыты. В ответе всё же может быть почта аккаунта, тариф или баланс, поэтому он не входит в диагностику для отправки. Заменяется при следующей проверке.";
+"%@ bytes, not text" = "%@ байт, не текст";
+
+// Service status: why a read failed
+"No request was made." = "Запрос не отправлялся.";
+"The page answered, but not with anything Pulse reads for this provider." = "Страница ответила, но в ответе нет того, что Pulse читает для этого сервиса.";
+"The page answered HTTP %@." = "Страница ответила HTTP %@.";

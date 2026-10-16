@@ -68,7 +68,7 @@ accounts[]
 
 `usedPercent` carries the display rule, so anything used never reads 0% and not quite full never reads 100%. `UsageWindow.percentValue` is the one copy of it; `percentText` is that plus a `%`.
 
-`source` is a stable token: `endpoint`, `statusLine`, `desktopSession`, `appServer`, `kiroACP`, `languageServer`, `webSession`, `arkCLI`, `appCache`, or `extension`. It describes where the saved figures came from, not the user's current route preference or the outcome of a later failed check. Old cache files carry no source; Pulse does not reconstruct one from today's settings. Consumers should tolerate future source tokens.
+`source` is a stable token: `endpoint`, `statusLine`, `desktopSession`, `appServer`, `kiroACP`, `languageServer`, `webSession`, `arkCLI`, `antigravityCLI`, `appCache`, or `extension`. It describes where the saved figures came from, not the user's current route preference or the outcome of a later failed check. Old cache files carry no source; Pulse does not reconstruct one from today's settings. Consumers should tolerate future source tokens.
 
 `settingsURL` exists even without a reading. Added-account `#` separators are encoded as `%23`, not URL fragments. The bundled app opens that account's settings. Ready-to-use consumers and installation: [integrations.md](integrations.md).
 

@@ -259,7 +259,7 @@ enum AgentUsageLedger {
             slotByStart[slot.start] = slot
         }
         for (key, models) in eventUnknown {
-            guard let start = UsageLedgerReader.sharedSlotFormatter.date(from: key) else { continue }
+            guard let start = UsageLedgerReader.slotDate(key) else { continue }
             let extra = models.values.reduce(0, +)
             let slot = slotByStart[start] ?? UsageLedger.Slot(start: start, tokens: 0, cost: 0)
             slotByStart[start] = UsageLedger.Slot(
@@ -354,7 +354,7 @@ enum AgentUsageLedger {
     /// The calendar day a slot key falls on, exactly as the shared pricing
     /// pass would group it.
     private static func day(for key: String, calendar: Calendar) -> Date? {
-        guard let start = UsageLedgerReader.sharedSlotFormatter.date(from: key) else { return nil }
+        guard let start = UsageLedgerReader.slotDate(key) else { return nil }
         return calendar.startOfDay(for: start)
     }
 

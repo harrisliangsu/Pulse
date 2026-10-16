@@ -169,11 +169,7 @@ final class CardLedgers {
         case .transcripts:
             return .answered(await UsageLedgerReader.shared.ledger(for: provider, refresh: true))
         case .agents(let agents):
-            var ledgers: [UsageLedger] = []
-            for agent in agents { ledgers.append(await AgentLedgers.shared.ledger(for: agent)) }
-            var combined = UsageLedger.adding(ledgers)
-            combined.reportsCacheReads = agents.contains { $0.reportsCacheReads }
-            return .answered(combined)
+            return .answered(await UsageLedger.reading(agents))
         case .accountStatistics:
             let read = await ZaiUsageService(provider: provider, enteredKey: APIKeyStore.key(for: provider)).history()
             switch read {
@@ -192,6 +188,17 @@ final class CardLedgers {
 }
 
 extension UsageLedger {
+    /// Every agent that borrows a provider's mark, read and added up: the
+    /// card's history for that provider and its settings pane's, read the
+    /// same way so the two cannot disagree.
+    static func reading(_ agents: [SpendAgent]) async -> UsageLedger {
+        var ledgers: [UsageLedger] = []
+        for agent in agents { ledgers.append(await AgentLedgers.shared.ledger(for: agent)) }
+        var combined = adding(ledgers)
+        combined.reportsCacheReads = agents.contains { $0.reportsCacheReads }
+        return combined
+    }
+
     /// Several agents' ledgers as one, day by day — what the card needs of
     /// them and no more: tokens, money, token kinds and models per day, the
     /// models' names, and the quarter-hours the value estimate reads. The finer detail

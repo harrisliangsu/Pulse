@@ -39,6 +39,7 @@ struct AppSettingsLayoutTests {
     private static let layoutSettings: [(name: String, change: (AppSettings) -> Void)] = [
         ("panelSize", { $0.panelSize = .large }),
         ("railSpacing", { $0.railSpacing = .roomy }),
+        ("usageBarStyle", { $0.usageBarStyle = .segmented }),
         ("topRailShowsPercentages", { $0.topRailShowsPercentages = true }),
         ("sideRailShowsPercentages", { $0.sideRailShowsPercentages = false }),
         ("labelAboveRing", { $0.labelAboveRing = true }),
@@ -53,6 +54,7 @@ struct AppSettingsLayoutTests {
         ("hidesInFullScreen", { $0.hidesInFullScreen = false }),
         ("hidesFromScreenCapture", { $0.hidesFromScreenCapture = true }),
         ("followsActiveDisplay", { $0.followsActiveDisplay = true }),
+        ("snapsToEdges", { $0.snapsToEdges = false }),
         ("showsSecondRing", { $0.showsSecondRing = true })
     ]
 

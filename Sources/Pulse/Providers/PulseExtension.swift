@@ -473,12 +473,7 @@ enum ExtensionReport {
     }
 
     private static func formatted(_ money: ProviderUsage.CreditAmount) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = money.currency
-        formatter.locale = LocalizationSource.locale
-        return formatter.string(from: NSNumber(value: money.amount))
-            ?? "\(money.amount) \(money.currency)"
+        return Money.reported(money.amount, code: money.currency)
     }
 
     /// The percentage as stated, or the used amount over the stated limit.

@@ -401,7 +401,7 @@ enum ClaudeDesktopSession {
 
         for attempt in 0...retryLimit {
             do {
-                let (data, response) = try await session.data(for: request)
+                let (data, response) = try await session.recordedData(for: request)
                 guard let http = response as? HTTPURLResponse else { return .failure(.unreachable) }
 
                 switch http.statusCode {

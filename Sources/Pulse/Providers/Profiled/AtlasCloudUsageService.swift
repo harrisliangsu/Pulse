@@ -72,10 +72,6 @@ enum AtlasCloudUsageService {
     }
 
     static func money(_ amount: Double, currency: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currency
-        formatter.locale = LocalizationSource.locale
-        return formatter.string(from: NSNumber(value: amount)) ?? "\(amount) \(currency)"
+        return Money.reported(amount, code: currency)
     }
 }

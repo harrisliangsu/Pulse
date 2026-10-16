@@ -222,6 +222,12 @@ actor UsageCache {
         return UsageScope.match(a.sourceScope, b.sourceScope)
     }
 
+    /// Drops an account's kept reading: its site changed, and the reading is
+    /// another account's (`UsageStore.settingsChanged`).
+    func forget(_ account: AccountKey) {
+        discard(for: account)
+    }
+
     private func discard(for account: AccountKey) {
         var all = load()
         guard all.removeValue(forKey: account.id) != nil else { return }

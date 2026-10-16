@@ -491,7 +491,7 @@ struct RecapPosterView: View {
                     RecapFigureText(figure: figure, numberSize: 46, unitSize: 24, numberWeight: .semibold,
                                     unitWeight: .regular, tracking: -0.03, unitGap: 3)
                     if let cost = day.cost {
-                        Text(verbatim: "≈ " + RecapFormat.money(cost, currency: recap.currency))
+                        Text(verbatim: RecapFormat.money(cost, currency: recap.currency))
                             .font(.recap(20))
                             .foregroundStyle(RecapColor.secondary)
                             .lineLimit(1)

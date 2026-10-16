@@ -119,6 +119,47 @@ struct ServiceStatusTests {
         #expect(components == current)
     }
 
+    // MARK: - status.cursor.com
+
+    @Test("Cursor's page is Statuspage too: every component it shows, in the page's order")
+    func cursorComponents() throws {
+        let components = try #require(ServiceStatus.statuspageComponents(from: try fixture("cursor-status-summary")))
+        #expect(components.map(\.name) == [
+            "Automations", "Review Agents", "CLI", "Cloud Agents", "cursor.com", "IDE", "Origin", "Grok Bot",
+        ])
+        #expect(components.allSatisfy { $0.state == .operational })
+    }
+
+    @Test("Only the IDE, the CLI and Cloud Agents raise a Cursor outage notification")
+    func cursorNotifies() throws {
+        let components = try #require(ServiceStatus.statuspageComponents(from: try fixture("cursor-status-summary")))
+        #expect(components.filter(StatusPage.cursor.notifiesAbout).map(\.name) == ["CLI", "Cloud Agents", "IDE"])
+        #expect(StatusPage.of(.cursor) == .cursor)
+        #expect(StatusPage.cursor.provider == .cursor)
+    }
+
+    @Test("Cursor's ninety days carry the page's colours and its uptime figures")
+    func cursorHistory() throws {
+        let current = try #require(ServiceStatus.statuspageComponents(from: try fixture("cursor-status-summary")))
+        // The fixture keeps two components' history; the rest have none.
+        let components = ServiceStatus.statuspageHistory(from: try fixture("cursor-status-uptime"), applyingTo: current)
+        let cli = try #require(components.first { $0.name == "CLI" })
+        #expect(cli.uptime == 99.82)
+        #expect(cli.days.count == 90)
+        #expect(cli.days.first?.date == DateComponents(year: 2026, month: 7, day: 18))
+        #expect(cli.days[13].date == DateComponents(year: 2026, month: 7, day: 31))
+        #expect(cli.days[13].state == .fullOutage)
+        #expect(cli.days[13].rgb == 0xDE2F1B)
+        #expect(components.first { $0.name == "IDE" }?.uptime == 99.56)
+        #expect(components.first { $0.name == "Automations" }?.days.isEmpty == true)
+
+        for component in components {
+            for day in component.days {
+                #expect((day.rgb == 0x1E8542) == (day.state == .operational), "\(component.name) \(day.date)")
+            }
+        }
+    }
+
     // MARK: - status.claude.com
 
     @Test("Every component the page shows, in the page's order")

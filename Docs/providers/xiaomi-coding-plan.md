@@ -19,7 +19,7 @@ It is eighteen characters, four past "GitHub Copilot", which is what the Setting
 
 ## One row, not two
 
-**Asked and answered: this is not another MiniMax.** Two providers on the rail are split into a mainland row and an international one — MiniMax / MiniMax CN, and z.ai / Zhipu — because those really are two storefronts: separate accounts, separate keys, and a key for one refused by the other. That split cost a real bug before it existed (issue #13, an international subscriber's key sent to the mainland service), so the question is worth asking of every Chinese provider added since.
+**Asked and answered: this is not another MiniMax.** z.ai / Zhipu are split into a mainland row and an international one, and MiniMax into two sites under one provider, because those really are two storefronts: separate accounts, separate keys, and a key for one refused by the other. That split cost a real bug before it existed (issue #13, an international subscriber's key sent to the mainland service), so the question is worth asking of every Chinese provider added since.
 
 Xiaomi is one storefront:
 
