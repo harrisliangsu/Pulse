@@ -100,7 +100,14 @@ struct OutageMemoryTests {
         let claude = ["rwppv331jlwc", "0qbwn08sd68x", "k8w3r06qmzrp", "yyzkbfz2thpt", "bpp5gb3hpjcl", "0scnb50nvy53"]
             .filter { StatusPage.claude.notifiesAbout(component($0, .fullOutage)) }
         #expect(claude == ["k8w3r06qmzrp", "yyzkbfz2thpt"])
-        #expect(StatusPage.openAI.notifiesAbout(component("anything in the Codex group", .fullOutage)))
+        var codex = component("anything in the Codex group", .fullOutage)
+        codex.group = "Codex"
+        #expect(StatusPage.openAI.notifiesAbout(codex))
+        // The same page's other groups are the OpenAI Platform's, not Codex's.
+        var api = component("Responses", .fullOutage)
+        api.group = "APIs"
+        #expect(!StatusPage.openAI.notifiesAbout(api))
+        #expect(StatusPage.of(.openAIPlatform)!.notifiesAbout(api))
     }
 
     @Test("The outage switch asks for permission but leaves the usage rules asleep")

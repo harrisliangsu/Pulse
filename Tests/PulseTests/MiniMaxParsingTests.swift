@@ -180,18 +180,15 @@ struct MiniMaxParsingTests {
         #expect(MiniMaxUsageService.balance([:], of: ["points_balance"]) == nil)
     }
 
-    // MARK: - Two regions, one service
+    // MARK: - Two sites, one provider
 
-    @Test("MiniMax and MiniMax CN are the same reply shape under different provider ids")
-    func twoRegionsShareOneShape() throws {
-        let root = try Self.root("minimax-normal")
-        let payload = MiniMaxUsageService.payload(from: root)
-        let intl = MiniMaxUsageService.windows(from: payload, provider: .minimax)
-        let cn = MiniMaxUsageService.windows(from: payload, provider: .minimaxCN)
-
-        #expect(intl.map(\.id) == cn.map(\.id).map { $0.replacingOccurrences(of: "minimaxCN", with: "minimax") })
-        #expect(cn[0].id.hasPrefix("minimaxCN."))
-        #expect(intl[0].id.hasPrefix("minimax."))
+    @Test("Each site asks its own host and keeps its own key; minimax.io keeps the key that was always there")
+    func sites() {
+        #expect(MiniMaxSite.international.apiHost == "https://api.minimax.io")
+        #expect(MiniMaxSite.china.apiHost == "https://api.minimaxi.com")
+        #expect(MiniMaxSite.international.keySlot == nil)
+        #expect(MiniMaxSite.china.keySlot != nil)
+        #expect(Provider(rawValue: "minimaxCN") == nil)
     }
 
     // MARK: - Unreadable

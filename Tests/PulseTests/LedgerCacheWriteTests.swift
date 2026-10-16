@@ -19,7 +19,7 @@ struct LedgerCacheWriteTests {
         let first = await reader.ledger(for: .claudeCode, prices: [:])
         #expect(first.allTime.tokens == 110)
         #expect(first.allTime.cost == 0)
-        let saved = cache.appending(path: "ledger-9-\(Provider.claudeCode.rawValue).json")
+        let saved = cache.appending(path: "ledger-9-\(Provider.claudeCode.rawValue).bin")
         // An old timestamp makes a write observable without sleeps or timing thresholds.
         let sentinel = Date(timeIntervalSince1970: 1_000_000)
         try FileManager.default.setAttributes([.modificationDate: sentinel], ofItemAtPath: saved.path)
@@ -42,8 +42,8 @@ struct LedgerCacheWriteTests {
         try FileManager.default.removeItem(at: log)
         let removed = await reader.ledger(for: .claudeCode, refresh: true, prices: prices)
         #expect(removed.allTime.tokens == 220)
-        let object = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: saved)) as? [String: Any])
-        #expect((object["files"] as? [String: Any])?.isEmpty == true)
+        #expect(FileManager.default.fileExists(atPath: saved.path))
+        #expect(FileCache.load(for: .claudeCode, directory: cache).files.isEmpty)
         #expect(TranscriptArchive.load(for: .claudeCode, directory: cache)?.files.keys.contains { $0.hasSuffix("/fixture/s.jsonl") } == true)
     }
 }

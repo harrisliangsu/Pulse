@@ -54,7 +54,7 @@ enum ConnectionRemedy: Equatable {
         case .sessionMissing, .sessionExpired: return .readBrowser
         case .localLoginMissing, .localLoginExpired, .localAppMissing, .noPlan: return .help
         case .codexNotInstalled, .kiroNotInstalled, .kiroVersionUnsupported,
-             .volcengineCLIMissing, .noLimitsReported,
+             .volcengineCLIMissing, .antigravityCLIMissing, .antigravityCLIOutdated, .noLimitsReported,
              .grokBotNotIncluded, .zaiNoCodingPlan, .xiaomiNoCodingPlan, .qoderNoCredits,
              .stepFunNoPlan,
              .ollamaPageChanged, .unreadableReply:
@@ -96,7 +96,7 @@ enum ConnectionRemedy: Equatable {
             case .ollamaCloud: "ollama-cloud"
             case .xiaomiMiMo: "xiaomi-coding-plan"
             case .zai, .glmCoding: "zai"
-            case .minimax, .minimaxCN: "minimax"
+            case .minimax: "minimax"
             case .copilot: "copilot"
             case .grok: "grok"
             case .grokBot: "grok-bot"

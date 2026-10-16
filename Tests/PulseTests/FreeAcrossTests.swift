@@ -37,16 +37,46 @@ extension PanelGlobalsSuite {
             #expect(abs(low.frame.minY - (low.railOrigin.y - rail.height)) < 0.01)
         }
 
-        @Test("The rail goes where the ratios say, kept off the sides")
+        @Test("The rail goes where both ratios say, flush into the corners (#85)")
         func railIsPlacedByBothRatios() {
             for v in [0.0, 0.3, 0.7, 1.0] {
                 for h in [0.0, 0.5, 1.0] {
                     let (_, placed) = layout(h, v)
                     let railBottom = placed.railOrigin.y - rail.height
                     #expect(abs(railBottom - (visible.minY + (1 - v) * (visible.height - rail.height))) < 0.01)
-                    #expect(placed.railOrigin.x >= visible.minX + PanelPlacement.dockDistance)
-                    #expect(placed.railOrigin.x + rail.width <= visible.maxX - PanelPlacement.dockDistance)
+                    #expect(abs(placed.railOrigin.x - (visible.minX + h * (visible.width - rail.width))) < 0.01)
                     #expect(visible.contains(placed.frame), "h \(h), v \(v): \(placed.frame)")
+                }
+            }
+        }
+
+        @Test("With snapping off a rail lying across reaches the screen's own top and bottom (#85)")
+        func reachesTheWholeScreenWithSnappingOff() {
+            let screen = CGRect(x: 0, y: 0, width: 1800, height: 1169)
+            for v in [0.0, 1.0] {
+                let placement = PanelPlacement(dock: .floating(.horizontal), horizontalRatio: 1, verticalRatio: v)
+                placement.snapsToEdges = false
+                let room = placement.room(visible: visible, screen: screen)
+                let placed = placement.layout(in: room, topEdge: 1169, panel: panel, rail: rail)
+                let expectedTop = v == 0 ? screen.maxY : screen.minY + rail.height
+                #expect(abs(placed.railOrigin.y - expectedTop) < 0.01, "v \(v)")
+                #expect(abs(placed.railOrigin.x + rail.width - screen.maxX) < 0.01)
+                #expect(PanelPlacement.isBeyond(visible, railOrigin: placed.railOrigin, rail: rail))
+            }
+        }
+
+        @Test("An upright free rail keeps off the sides only while snapping is on")
+        func uprightMarginFollowsSnapping() {
+            let upright = DockLayout.size(for: 5, on: .vertical, docked: false)
+            let uprightPanel = FloatingPanelController.Layout.size(for: .right)
+            for snaps in [true, false] {
+                let margin = snaps ? PanelPlacement.dockDistance : 0
+                for h in [0.0, 1.0] {
+                    let placement = PanelPlacement(dock: .floating(.vertical), horizontalRatio: h, verticalRatio: 0.5)
+                    placement.snapsToEdges = snaps
+                    let placed = placement.layout(in: visible, topEdge: 1169, panel: uprightPanel, rail: upright)
+                    let expected = h == 0 ? visible.minX + margin : visible.maxX - upright.width - margin
+                    #expect(abs(placed.railOrigin.x - expected) < 0.01, "snaps \(snaps), h \(h)")
                 }
             }
         }

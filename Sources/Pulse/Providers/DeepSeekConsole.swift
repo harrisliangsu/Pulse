@@ -224,7 +224,7 @@ enum DeepSeekConsole {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 20
 
-        guard let (data, response) = try? await NetworkSession.shared.data(for: request) else { return .failure(.failed) }
+        guard let (data, response) = try? await NetworkSession.shared.recordedData(for: request) else { return .failure(.failed) }
         switch (response as? HTTPURLResponse)?.statusCode {
         case 200: break
         // Only 401. A refused token answers 200 with a 400xx code; a 403 is

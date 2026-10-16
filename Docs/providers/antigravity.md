@@ -1,12 +1,14 @@
 # Antigravity
 
-Service: [`AntigravityUsageService.swift`](../../Sources/Pulse/Providers/AntigravityUsageService.swift).
+Service: [`AntigravityUsageService.swift`](../../Sources/Pulse/Providers/AntigravityUsageService.swift), with the CLI route in [`AntigravityCLIUsage.swift`](../../Sources/Pulse/Providers/AntigravityCLIUsage.swift).
+
+Two routes, chosen in Settings → *Read usage from*: **Automatic** (the default) tries the editor's **language server** while Antigravity is open, then the **`agy` CLI** when the server produced no figures; **CLI** asks only `agy`; **Desktop app** asks only the language server. The route that answered is recorded as `languageServer` or `antigravityCLI`.
 
 The odd one out. Extra accounts are not supported. `keepsLocalTranscripts` is false: it is an editor, not a CLI, and leaves no session files Pulse can read. History, the money estimate, and the activity mark are left out rather than shown as zeroes.
 
-## Route
+## The language server
 
-Antigravity starts a `language_server` of its own and talks to it over HTTPS on loopback. That process is the only thing that knows the quota, so **these figures exist only while something of Antigravity’s is running** — `.antigravityNotRunning` says that plainly rather than dressing it up as a failure.
+Antigravity starts a `language_server` of its own and talks to it over HTTPS on loopback. On this route **the figures exist only while something of Antigravity’s is running** — `.antigravityNotRunning` says that plainly rather than dressing it up as a failure. With Antigravity closed, the `agy` CLI is asked instead when it is installed (below).
 
 Three things are discovered and **none may be assumed**:
 
@@ -41,11 +43,32 @@ CodexBar’s notes say the IDE’s local endpoints expose only session/model quo
 
 That payload is committed as `Tests/PulseTests/Fixtures/antigravity-quota.json` and is what `AntigravityParsingTests` holds the parser against. `GetUserStatus` on the same port named the plan (`Pro`). Their note may be about an older IDE build; either way, do not drop the IDE origin on the strength of it without re-measuring.
 
-### The `agy` CLI, not implemented
+## The `agy` CLI
 
-There is a third source: Google ships a standalone CLI (`brew install --cask antigravity-cli`, binary `antigravity` symlinked to `agy`, state under `~/.gemini/antigravity-cli`) which runs its own embedded HTTPS server, and CodexBar reports it as the richest of the sources and the one that works with no editor open at all.
+Google's standalone CLI, `agy` (installed to `~/.local/bin/agy`; state under `~/.gemini/antigravity-cli`), is the second route. It works with no editor open, using the login the CLI saved. Pulse starts the program and reads its standard output; it never reads the CLI's credentials.
 
-It is **not implemented, because it could not be observed**: the cask is not installed on the machine this was written on, so whether `agy` spawns a matching `language_server` process with a `--csrf_token` on its command line — which is the whole of the discovery above — is unknown. Adding it is one `Origin` case once somebody can watch it run. Writing that case from a guess is exactly what “none may be assumed” is about.
+### What was measured (2026-10-14, `agy` 1.3.5)
+
+**The language-server discovery does not apply to it.** The interactive `agy` runs its server inside its own process: `ps` shows a bare `agy` with no `--csrf_token` on the command line and no `language_server` child, while `lsof` shows it listening on two loopback ports. There is no token to find, so it is not one more `Origin`.
+
+**It answers `/usage` itself in print mode.** `agy -p "/usage" --output-format json` prints a JSON envelope whose `command.data.groups[].buckets[]` holds the same data as `RetrieveUserQuotaSummary`: the same bucket ids (`gemini-5h`, `gemini-weekly`, `3p-5h`, `3p-weekly`), the same `5h` / `weekly` windows, `remaining_fraction` and `reset_time`, in snake case. Group names are under `name`, not `displayName`. `/quota` is an alias. The CLI's changelog says these print-mode answers start no agent turn, spend no quota and leave no conversation, and that held: no conversation, history entry or log appeared. The CLI's own `/help` lists no other command that names the plan, so `plan` stays nil on this route.
+
+The envelope's tab-separated `response` text rounds the percentages (a fraction of 0.998 prints as `100%`), so only `remaining_fraction` is read. A run took about 8.5 seconds, most of it the CLI's own eligibility check over the network; the deadline is 30 seconds. A failed run exits 1 with `"status": "ERROR"` and an `error` message — measured with an unreachable proxy — which does not say reliably whether the cause is the network or the login.
+
+### How it is asked
+
+1. **Only when the language server produced no figures.** The server is local and fast, and it belongs to the account the open editor is using. Asking the CLI first would start a process and a network request on every refresh, and the CLI may be signed in to a different Google account.
+2. **Only `agy` 1.1.11 or newer.** `agy --version` (about 40 ms) is read first. Before 1.1.11, a slash command in print mode fell through as literal prompt text, so `-p "/usage"` would be **sent to the model**, spend quota and leave a conversation behind — on every refresh. Pulse sends nothing on the user's behalf, so a version that cannot be read counts as too old and the CLI is not asked.
+3. **With `--log-file /dev/null`.** Without it, every run writes a new log file under `~/.gemini/antigravity-cli/log/` and repoints `cli.log` at it, away from the log of the session the user is running.
+4. **From the temporary directory**, because the CLI looks for project files around the folder it runs in.
+
+Only `agy` is looked for (`CommandLocator`). `antigravity` is also the name of the editor's own shell command, a different program.
+
+### When the CLI does not answer
+
+**Automatically, the language server's reason stands.** A CLI that exits with an error, times out or prints something unreadable leaves `.antigravityNotRunning` or `.antigravityNotAnswering` in place, and the CLI's attempt is recorded for the diagnostics. Reporting the CLI's failure instead would raise a notification for someone who installed `agy`, never signed in to it and closed the editor. A CLI that answers with no limits reports `.noLimitsReported`, which is an answer, not a fault. **Pinned to *CLI*, every failure is its own** (`cliOnly`): `.antigravityCLIMissing` when `agy` is not installed, `.antigravityCLIOutdated` below 1.1.11 or with an unreadable version, and the run's own reason otherwise. Both new reasons are setup, not outages, so they raise no failure notification.
+
+**`/credits` is not read.** It reports a separate balance of AI credits (`remaining_credits`) that can be bought, not the plan's quota, and a balance of 0 is what an account that never bought any reports.
 
 ## Mapping
 
@@ -81,4 +104,4 @@ The plan carries a Gemini allowance and a separate one for Claude and GPT, repor
 
 ## Settings copy
 
-`Provider.soleRoute` names “Antigravity’s language server” / “Only while Antigravity is open.” The second half is now slightly narrow — the IDE counts too — but it names the right condition and the right remedy, so it is left alone until the `agy` source makes it properly wrong. That wording must not leak to other single-route providers. See [README.md](README.md).
+A picker, not a stated route: every provider with more than one route offers the choice (`hasSourceChoice`), so `Provider.soleRoute` is nil. Options are *Automatic* / *CLI* / *Desktop app* (`UsageSource.options(for:)`; *CLI* is `.tooling` titled by `title(for:)`). The subtitles: automatic “Reads Antigravity while it is open, and the agy CLI when it is not.”, CLI “Asks the agy CLI, using the login it already saved.”, desktop app “Asks the language server Antigravity runs while it is open.” Claude's desktop-route availability filter does not apply to it. `UsageRoute.soleRoute(for:)` is nil because the service records which route answered. The wording must not leak to other single-route providers. See [README.md](README.md).

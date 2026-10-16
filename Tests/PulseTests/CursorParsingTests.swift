@@ -27,10 +27,10 @@ struct CursorParsingTests {
         return Calendar(identifier: .gregorian).date(from: components)!
     }()
 
+    /// The balance as every reported amount is written (`Money.reported`):
+    /// "$", never "US$", whatever the language.
     private static func dollars(_ amount: Double) -> String {
-        amount.formatted(
-            .currency(code: "USD").precision(.fractionLength(2)).locale(LocalizationSource.locale)
-        )
+        Money.reported(amount, code: "USD")
     }
 
     // MARK: - The two pools

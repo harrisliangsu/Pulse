@@ -1,6 +1,6 @@
 # Grok Bot usage investigation (historical)
 
-**Status: superseded as an implementation plan.** Pulse now ships Grok Bot as its own provider. Current behaviour, mapping rules, and extra-account login: [providers/grok-bot.md](providers/grok-bot.md). SuperGrok / Grok Build CLI pool: [providers/grok.md](providers/grok.md). Cursor monthly pools: [providers/cursor.md](providers/cursor.md).
+**Status: superseded as an implementation plan.** Pulse now ships Grok Bot as its own provider. Current behaviour, mapping rules, and extra-account login: [providers/grok-bot.md](../providers/grok-bot.md). SuperGrok / Grok Build CLI pool: [providers/grok.md](../providers/grok.md). Cursor monthly pools: [providers/cursor.md](../providers/cursor.md).
 
 This page is kept as **investigation evidence** — endpoints, headers, field names, protobuf notes, and the reasons the first product shape was rejected. It is not a description of what to build next. Where this file and `GrokBotUsageService` disagree, **the service wins**.
 
@@ -58,7 +58,7 @@ xAI docs (weekly included usage; Cursor vs SuperGrok eligibility uses the larger
 - https://docs.x.ai/grok-bot/faq
 - https://docs.x.ai/grok-bot/settings-and-notifications
 
-Claude fallback notes that used to live beside this investigation are in [providers/claude-code.md](providers/claude-code.md).
+Claude fallback notes that used to live beside this investigation are in [providers/claude-code.md](../providers/claude-code.md).
 
 ## Work state (investigation, frozen)
 

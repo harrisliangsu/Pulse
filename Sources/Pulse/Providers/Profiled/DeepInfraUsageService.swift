@@ -100,10 +100,6 @@ enum DeepInfraUsageService {
     }
 
     private static func money(_ amount: Double, currency: String) -> String? {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currency
-        formatter.locale = LocalizationSource.locale
-        return formatter.string(from: NSNumber(value: amount))
+        return Money.reported(amount, code: currency)
     }
 }

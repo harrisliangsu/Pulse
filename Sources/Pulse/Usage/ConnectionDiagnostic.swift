@@ -23,11 +23,15 @@ struct ConnectionDiagnostic: Equatable, Sendable {
     let state: ProviderUsage.State
     let attempts: [Attempt]
     let lastSuccessfulReadingAt: Date?
+    /// What the servers said during this check, oldest first (`ResponseLog`).
+    /// Shown in Settings; never in `report`.
+    let responses: [ResponseLog.Entry]
 
     init(raw: ProviderUsage, displayed: ProviderUsage, previous: Self?, now: Date) {
         checkedAt = now
         state = raw.state
         attempts = raw.attempts
+        responses = raw.responses
         // A captured reading keeps its own timestamp. Re-reading it is not a
         // newly observed figure, and a newer cache may still outrank it.
         lastSuccessfulReadingAt = [

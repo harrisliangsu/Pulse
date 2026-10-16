@@ -68,7 +68,7 @@ struct AccountPane: View {
 
             // The service, not the account, so every account of it shows
             // this; a switched-off one fetches nothing.
-            if let page = provider.statusPage, settings.isEnabled(account) {
+            if let page = settings.statusPage(for: provider), settings.isEnabled(account) {
                 ServiceStatusGroup(page: page)
             }
 
@@ -116,7 +116,10 @@ struct AccountPane: View {
                     EstimatedValueGroup(account: account, store: store, history: history)
                 }
 
-                AccountHistoryGroup(account: account, history: history)
+                AccountHistoryGroup(
+                    account: account, history: history, settings: settings,
+                    openTokenSpend: { navigation.open(.spend) }
+                )
             }
 
             // Read from this Mac's sessions, like the history above: the

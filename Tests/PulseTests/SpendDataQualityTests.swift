@@ -257,6 +257,8 @@ struct SpendDataQualityTests {
         // The real versions: nothing the running build writes is ever cleaned.
         #expect(!PulseStorage.isSuperseded("agent-\(AgentCache.version)-dsh.json"))
         #expect(!PulseStorage.isSuperseded("ledger-\(UsageLedgerReader.cacheVersion)-codex.json"))
+        #expect(!PulseStorage.isSuperseded("ledger-\(UsageLedgerReader.cacheVersion)-codex.bin"))
+        #expect(PulseStorage.isSuperseded("ledger-\(UsageLedgerReader.cacheVersion - 1)-codex.bin"))
         #expect(PulseStorage.isSuperseded("agent-\(AgentCache.version - 1)-dsh.json"))
         // Entries gained the review flag in 9; an 8 never holds it.
         #expect(PulseStorage.isSuperseded("ledger-8-codex.json"))
@@ -356,7 +358,7 @@ struct SpendDataQualityTests {
             #expect(!ordinary.isReview)
             #expect(ordinary.title == "add a retry")
         }
-        #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-9-codex.json").path))
+        #expect(FileManager.default.fileExists(atPath: cache.appending(path: "ledger-9-codex.bin").path))
     }
 
     // MARK: - What a row says

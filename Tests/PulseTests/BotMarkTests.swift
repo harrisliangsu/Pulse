@@ -114,14 +114,14 @@ struct BotMarkTests {
             [.claudeCode, .codex, .cursor, .openCodeGo, .kimiCode, .glmCoding, .devin],
             [.claudeCode, .codex],
             [.deepSeek, .grok, .volcengine, .grokBot, .antigravity, .copilot],
-            [.minimax, .cursor, .minimaxCN, .devin],
+            [.minimax, .cursor, .kimiCode, .devin],
         ]
         for rail in rails {
             let hues = BotMarkTint.deal(over: rail).map(Self.hue(of:))
             for index in hues.indices.dropLast() {
-                // Two brand colours side by side are what those brands are —
-                // MiniMax's two rows really are one red. Only a pair with a
-                // dealt colour in it is this code's to get right.
+                // Two brand colours side by side are what those brands are.
+                // Only a pair with a dealt colour in it is this code's to get
+                // right.
                 guard BotMarkTint.isDealt(rail[index]) || BotMarkTint.isDealt(rail[index + 1]) else {
                     continue
                 }

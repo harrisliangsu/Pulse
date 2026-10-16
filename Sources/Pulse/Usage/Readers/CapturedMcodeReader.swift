@@ -4,9 +4,11 @@ import Foundation
 /// A captured MiniMax Code headless stream: the JSONL `mcode exec
 /// --output-format stream-json` writes.
 ///
-/// There is no native local usage file. A user or a wrapper must run the CLI
-/// with the stream-json format and capture the output here; driving the CLI is
-/// out of scope, and Pulse only reads the capture.
+/// The fallback: MiniMax Code's desktop app now keeps its own session log
+/// (`MiniMaxCodeSessionReader`), and where that has records a capture is not
+/// read. Without one, a user or a wrapper must run the CLI with the stream-json
+/// format and capture the output here; driving the CLI is out of scope, and
+/// Pulse only reads the capture.
 ///
 /// **Usage is buffered per `turnId` and emitted only when a matching
 /// `exec.result` supplies the model.** A stream that never names a model is

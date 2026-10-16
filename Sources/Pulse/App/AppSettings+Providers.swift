@@ -14,6 +14,7 @@ extension AppSettings.Key {
     static let qoderSite = "settings.qoderSite"
     static let qoderShowsParts = "settings.qoderShowsParts"
     static let stepFunSite = "settings.stepFunSite"
+    static let minimaxSite = "settings.minimaxSite"
     static let serverAddresses = "settings.serverAddresses"
     static let showsCodexResetCredits = "settings.showsCodexResetCredits"
     static let balanceBases = "settings.balanceBases"
@@ -31,6 +32,7 @@ extension AppSettings.Key {
 extension AppSettings.Default {
     static let qoderSite = QoderSite.international
     static let stepFunSite = StepFunSite.china
+    static let minimaxSite = MiniMaxSite.international
 }
 
 extension AppSettings {
@@ -74,6 +76,21 @@ extension AppSettings {
             }
         }
         onChange?()
+    }
+
+    /// Through `onChange`: the store reloads its keys there, and the chosen
+    /// site's key is a different one (`keySlot(for:)`).
+    func minimaxSiteChanged(from old: MiniMaxSite) {
+        guard minimaxSite != old else { return }
+        defaults.set(minimaxSite.rawValue, forKey: Key.minimaxSite)
+        onChange?()
+    }
+
+    /// Where a provider's key is kept beside its own entry, for a provider
+    /// whose key depends on a setting: MiniMax's, one per site. Nil for every
+    /// other provider, which keeps one key.
+    func keySlot(for provider: Provider) -> String? {
+        provider == .minimax ? minimaxSite.keySlot : nil
     }
 
     func stepFunSiteChanged(from old: StepFunSite) {

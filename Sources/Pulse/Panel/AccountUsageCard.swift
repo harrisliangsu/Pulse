@@ -201,7 +201,7 @@ struct AccountUsageCard: View {
             // or a provider's own log of what it charged.
             if ledger.origin == .localTranscripts || ledger.origin == .providerLogs {
                 // None of it priced: a dash, as the Token spend pane draws it.
-                Text(verbatim: cost.map { Self.money($0, currency: ledger.currency) } ?? "—")
+                Text(verbatim: cost.map { Self.money($0, currency: ledger.currency, isCharged: ledger.origin == .providerLogs) } ?? "—")
                     .font(.system(size: 17, weight: .semibold))
                     .monospacedDigit()
 
@@ -403,17 +403,14 @@ struct AccountUsageCard: View {
 
     // MARK: - Formatting
 
-    static func money(_ amount: Double, currency: String? = nil) -> String {
-        // The price lists are in dollars, so the figure is in dollars whatever
-        // the reader's own currency is — hence a fixed code rather than the
-        // locale's. A console that charges in another (DeepSeek's yuan) says so.
-        let style = FloatingPointFormatStyle<Double>.Currency(code: currency ?? "USD")
-            .locale(LocalizationSource.locale)
-        // A positive amount under a cent is not free: "¥0.00" would say it was.
-        if amount > 0, amount < 0.01 {
-            return String.localized("< \(0.01.formatted(style.precision(.fractionLength(2))))")
-        }
-        return amount.formatted(style.precision(.fractionLength(amount >= 1000 ? 0 : 2)))
+    /// A day's or a period's money. **An estimate is converted** — no
+    /// `currency`, or dollars from the price lists — into the currency chosen
+    /// in Settings (`Money.estimate`). **What a console charged is not**: a
+    /// ledger whose origin is the provider's own logs passes `isCharged`, and
+    /// its figure is drawn in the currency the console gave (DeepSeek's yuan).
+    static func money(_ amount: Double, currency: String? = nil, isCharged: Bool = false) -> String {
+        guard isCharged || (currency != nil && currency != "USD") else { return Money.estimate(amount) }
+        return Money.format(amount, code: currency ?? "USD")
     }
 
     /// Built per call rather than kept around: it has to follow the language

@@ -440,10 +440,11 @@ enum PulseStorage {
             || isOlder(name, prefix: "ledger-", than: ledgerVersion)
     }
 
-    /// `<prefix><n>-<name>.json` with `n` below `current`. A name without the
-    /// number — `ledger-codex.json` — is not this rule's to judge.
+    /// `<prefix><n>-<name>.json` (or `.bin`, the transcript cache's bytes)
+    /// with `n` below `current`. A name without the number —
+    /// `ledger-codex.json` — is not this rule's to judge.
     private static func isOlder(_ name: String, prefix: String, than current: Int) -> Bool {
-        guard name.hasPrefix(prefix), name.hasSuffix(".json") else { return false }
+        guard name.hasPrefix(prefix), name.hasSuffix(".json") || name.hasSuffix(".bin") else { return false }
         let rest = name.dropFirst(prefix.count)
         guard let dash = rest.firstIndex(of: "-"), let number = Int(rest[..<dash]) else { return false }
         return number < current

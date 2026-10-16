@@ -251,10 +251,6 @@ enum TypeSafeUsageService {
     /// The console prices and shows credit in dollars; the reply carries the
     /// figure only.
     static func money(_ amount: Double) -> String {
-        amount.formatted(
-            .currency(code: "USD")
-                .precision(.fractionLength(2))
-                .locale(LocalizationSource.locale)
-        )
+        amount.formatted(Money.reportedStyle("USD"))
     }
 }

@@ -20,6 +20,20 @@ struct CardHistoryTests {
         #expect(Provider.openCodeGo.cardHistory(openCodeSession: true, deepSeekSession: false) == .accountLogs)
     }
 
+    /// The settings pane shows a history exactly where the card does: the
+    /// agents that borrow a provider's mark too, which the pane once left out
+    /// — MiniMax's card had MiniMax Code's history and its pane had none.
+    @Test func thePaneHasAHistoryWhereverTheCardDoes() {
+        #expect(Provider.minimax.providesHistory)
+        #expect(Provider.kimiCode.providesHistory)
+        #expect(Provider.commandCode.providesHistory)
+        #expect(Provider.claudeCode.providesHistory)
+        #expect(Provider.zai.providesHistory)
+        // Nothing reads a gateway's history.
+        #expect(Provider.sub2api.cardHistory == nil)
+        #expect(!Provider.sub2api.providesHistory)
+    }
+
     @Test func onlyThisMacsRecordsWaitForTokenSpend() {
         #expect(CardHistorySource.transcripts.readsThisMac)
         #expect(CardHistorySource.agents([.grok]).readsThisMac)

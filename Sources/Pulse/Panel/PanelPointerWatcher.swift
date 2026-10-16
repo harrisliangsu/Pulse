@@ -21,15 +21,19 @@ import SwiftUI
 /// Attach as a background of a view that fills the panel.
 struct PanelPointerWatcher: NSViewRepresentable {
     let onChange: (CGPoint?) -> Void
+    /// Answers where the pointer is now, in the same space, between samples.
+    var probe: PointerProbe?
 
     func makeNSView(context: Context) -> WatcherView {
         let view = WatcherView()
         view.onChange = onChange
+        probe?.view = view
         return view
     }
 
     func updateNSView(_ view: WatcherView, context: Context) {
         view.onChange = onChange
+        probe?.view = view
     }
 
     static func dismantleNSView(_ view: WatcherView, coordinator: ()) {
@@ -72,12 +76,22 @@ struct PanelPointerWatcher: NSViewRepresentable {
             self.timer = timer
         }
 
-        private func sample() {
-            guard let window else { return }
+        /// Makes the next sample report wherever the pointer is, even where
+        /// it was last reported. See `PointerProbe.reportAgain`.
+        func reportAgain() {
+            lastReported = nil
+        }
 
-            let inWindow = window.convertPoint(fromScreen: NSEvent.mouseLocation)
-            let local = convert(inWindow, from: nil)
-            let point = bounds.contains(local) ? local : nil
+        /// The pointer now, or nil off the panel. Not throttled or deduplicated.
+        func currentPoint() -> CGPoint? {
+            guard let window else { return nil }
+            let local = convert(window.convertPoint(fromScreen: NSEvent.mouseLocation), from: nil)
+            return bounds.contains(local) ? local : nil
+        }
+
+        private func sample() {
+            guard window != nil else { return }
+            let point = currentPoint()
 
             // Only speak up when something actually changed, so a resting
             // pointer doesn't churn SwiftUI state six times a second.
@@ -95,4 +109,26 @@ struct PanelPointerWatcher: NSViewRepresentable {
             }
         }
     }
+}
+
+/// Where the pointer is at this moment, for a decision that cannot wait for
+/// the next sample: the last one reported can be 150ms old, which is most of
+/// `PanelIntent.notchDwell`, so a pointer that had already left would still
+/// read as inside.
+@MainActor
+final class PointerProbe {
+    fileprivate weak var view: PanelPointerWatcher.WatcherView?
+
+    func current() -> CGPoint? { view?.currentPoint() }
+
+    /// Has the next sample report the pointer even if it has not moved.
+    ///
+    /// **Samples are deduplicated, so something that opens the panel by
+    /// another path has to ask for one.** A card or the rail opened by a
+    /// tracking area's enter that arrives late — behind a busy main thread,
+    /// or from a ring crossed between two samples — lands after the sampler
+    /// has already reported the pointer gone. Every later sample is that
+    /// same "gone", so nothing reported it again and the card stayed open
+    /// until the pointer came back and left once more.
+    func reportAgain() { view?.reportAgain() }
 }

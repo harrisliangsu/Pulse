@@ -6,7 +6,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Not private: the status-item menu reads the language from it so the
     /// menu rebuilds when the language changes.
-    let settings = AppSettings.restored()
+    let settings: AppSettings
     /// Not private for the same reason: the status-item menu shows a newer
     /// version when there is one.
     let update = AppUpdate()
@@ -20,6 +20,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private lazy var store = UsageStore(settings: settings, alerts: alerts, elsewhere: .shared)
     /// Reads Token spend in the background while it is on.
     private lazy var spendWarmer = SpendWarmer(settings: settings)
+    /// The day's exchange rates, while a currency other than the dollar is chosen.
+    private lazy var rateKeeper = ExchangeRateKeeper(settings: settings)
     /// Which tab the menu bar's menu last had open, kept between openings.
     private let dashboard = MenuDashboardModel()
     /// Starts usage windows after they reset, for the providers switched on.
@@ -28,6 +30,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// only while it still holds the latest, so the chain started by each
     /// settings change replaces the one before instead of running beside it.
     private var menuBarGeneration = 0
+
+    /// The app's own settings, restored — which moves the process-wide panel
+    /// metrics and the language to match them (`AppSettings.restored()`).
+    override convenience init() {
+        self.init(settings: .restored())
+    }
+
+    /// **A test passes settings on its own defaults.** Restored ones rewrite
+    /// `PanelMetrics` and the language for the whole test process, mid-run and
+    /// without putting them back, from whatever the test runner's own domain
+    /// holds: building a delegate in a menu test changed the window budget
+    /// under the layout suites (`FreeAcrossTests` failed now and then).
+    init(settings: AppSettings) {
+        self.settings = settings
+        super.init()
+    }
 
     private var panelController: FloatingPanelController?
     private var statusItem: NSStatusItem?
@@ -74,6 +92,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Daily at most, and only from a bundle — see `AppUpdate`.
         update.checkIfDue()
+        rateKeeper.start()
 
         settings.onChange = { [weak self] in
             self?.settingsChanged()
@@ -115,6 +134,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    /// The Dock's Quit closes Pulse's windows rather than Pulse (`DockQuit`);
+    /// every other way of quitting quits.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard DockQuit.isFromDock(NSAppleEventManager.shared().currentAppleEvent) else { return .terminateNow }
+        dock.closeWindows()
+        return .terminateCancel
+    }
+
     private func showProviderSelection(providers: Set<Provider>, isInitial: Bool) {
         let window = ProviderSetupWindowController(settings: settings, providers: providers, isInitial: isInitial)
         providerSetupWindow = window
@@ -123,7 +150,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func settingsChanged() {
         restoreMenuBarEntryPointIfNeeded()
-        settingsWindow?.refreshTitle()
+        // Settings has no title to re-read: it is the open pane's name,
+        // SwiftUI's, and the view is rebuilt in the new language.
         recapWindow?.refreshTitle()
         providerSetupWindow?.refreshTitle()
         guard !settings.needsProviderSelection else { return }

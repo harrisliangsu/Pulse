@@ -259,11 +259,7 @@ enum FactoryUsageService {
     }
 
     static func money(_ amount: ProviderUsage.CreditAmount) -> String {
-        amount.amount.formatted(
-            .currency(code: amount.currency)
-                .precision(.fractionLength(2))
-                .locale(LocalizationSource.locale)
-        )
+        amount.amount.formatted(Money.reportedStyle(amount.currency))
     }
 
     // MARK: - The older billing

@@ -2,7 +2,7 @@
 import SwiftUI
 
 /// Pulse as an app rather than as a panel: launch, menu bar, shortcuts,
-/// language.
+/// language, and the currency estimates are shown in.
 struct GeneralPane: View {
     let settings: AppSettings
     /// Not for reading settings — those are in `settings` — but for the one
@@ -206,6 +206,8 @@ struct GeneralPane: View {
                     .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
                 }
             }
+
+            CurrencySettingsGroup(settings: settings)
         }
     }
 

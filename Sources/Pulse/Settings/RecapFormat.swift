@@ -50,27 +50,23 @@ enum RecapFormat {
     /// Whole units from ten up ("$1,342", "$47"), cents below it ("$3.40"), and
     /// "< $0.01" for a positive amount under a cent — the same line
     /// `AccountUsageCard.money` draws, so a sliver of spend is never "$0".
+    ///
+    /// **Dollars are an estimate, and are converted** into the currency chosen
+    /// in Settings (`Money.estimate`): the recap prices tokens at the API's
+    /// dollar rates. An amount in any other `currency` is already in the
+    /// currency it is written in — `Money.shownCode` for a figure worked out
+    /// from converted ones.
     static func money(_ amount: Double, currency: String, locale: Locale = LocalizationSource.locale) -> String {
-        let style = Self.currencyStyle(currency, locale: locale)
-        if amount > 0, amount < 0.01 {
-            return String.localized("< \(0.01.formatted(style.precision(.fractionLength(2))))")
-        }
-        return amount.formatted(style.precision(.fractionLength(amount >= 10 ? 0 : 2)))
+        guard currency != "USD" else { return Money.estimate(amount, wholeFrom: 10, locale: locale) }
+        return Money.format(amount, code: currency, wholeFrom: 10, locale: locale)
     }
 
-    /// Dollars are written "$" in every language of the app: a Chinese locale
-    /// would print "US$1,342", which on a card that is shared reads as a
-    /// different currency from the one beside it. Any other currency is drawn
-    /// the way the locale draws it.
-    private static func currencyStyle(_ currency: String, locale: Locale) -> FloatingPointFormatStyle<Double>.Currency {
-        FloatingPointFormatStyle<Double>.Currency(code: currency)
-            .locale(currency == "USD" ? Locale(identifier: "en_US") : locale)
-    }
-
-    /// A ruler label: whole units unless the step between labels is under one.
+    /// A ruler label for an amount **already in `currency`** — the ruler
+    /// converts before it picks its steps, so they land on round numbers in
+    /// the currency shown: whole units unless the step between labels is
+    /// under one.
     static func axisMoney(_ amount: Double, step: Double, currency: String, locale: Locale = LocalizationSource.locale) -> String {
-        let style = Self.currencyStyle(currency, locale: locale)
-        return amount.formatted(style.precision(.fractionLength(step < 1 ? 2 : 0)))
+        amount.formatted(Money.style(currency, locale: locale).precision(.fractionLength(step < 1 && Money.hasCents(currency) ? 2 : 0)))
     }
 
     // MARK: - Ratios

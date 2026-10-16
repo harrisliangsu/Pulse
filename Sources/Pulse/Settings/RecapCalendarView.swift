@@ -55,10 +55,11 @@ struct RecapCalendarHero: View {
         }
     }
 
-    /// "TOKENS · ≈ $622"; without a cost, "TOKENS".
+    /// "TOKENS · $622"; without a cost, "TOKENS". The page's footnote says the
+    /// money is estimated at API prices (`RecapDeck.provenance`).
     private var tokensLine: String {
         guard let cost = recap.cost else { return "TOKENS" }
-        return "TOKENS · ≈ " + RecapFormat.money(cost, currency: recap.currency)
+        return "TOKENS · " + RecapFormat.money(cost, currency: recap.currency)
     }
 }
 
@@ -265,7 +266,7 @@ struct RecapCalendarTiles: View {
     private func busiestTile(_ day: Recap.Day) -> some View {
         let tone = RecapTileTone.ink
         var detail = RecapFormat.dayAndWeekday(day.date)
-        if let cost = day.cost { detail += " · ≈ " + RecapFormat.money(cost, currency: recap.currency) }
+        if let cost = day.cost { detail += " · " + RecapFormat.money(cost, currency: recap.currency) }
         return RecapTile(tone: tone) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(localized: "Busiest day")

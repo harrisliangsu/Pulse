@@ -81,6 +81,8 @@
 "Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it." = "支持此设置的截图工具不会截到悬浮面板；录屏和共享屏幕时仍可能显示。";
 "Follow the active display" = "跟随活动显示器";
 "With more than one display, the rail moves to the one the pointer is on." = "有多台显示器时，胶囊会移动到指针所在的那一台。";
+"Snap to screen edges" = "自动吸附到屏幕边缘";
+"Dragged near an edge, the rail docks to it and turns to run along it. When this is off, dragging only moves the rail and keeps its direction." = "拖到屏幕边缘附近时，胶囊会吸附到该边缘，并转为沿边缘排列。关闭后，拖动只改变位置，方向保持不变。";
 "Left" = "左侧";
 "Top" = "顶部";
 "Percentages across" = "横放时显示百分比";
@@ -261,6 +263,8 @@
 "Reading logs" = "正在读取日志";
 "No history yet" = "暂无记录";
 "Nothing has been logged on this Mac yet, so there is no history to add up." = "本机上还没有日志，无从统计。";
+"Token spend reading is off" = "「读取本机用量记录」未开启";
+"This history comes from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "这一节根据这台 Mac 上的用量记录统计。只有开启「读取本机用量记录」后，Pulse 才会读取这些记录。";
 "Account total" = "账号累计";
 
 /* Budget estimate */
@@ -291,6 +295,10 @@
 "Size" = "整体大小";
 "Spacing" = "间距";
 "Round ends" = "正圆两端";
+"Progress bars" = "进度条";
+"How limit bars are drawn on the card and in the menu." = "详情卡片和菜单中额度进度条的样式。";
+"Continuous" = "连续";
+"Segmented" = "分段";
 "The rail's ends and the card's tail follow the ring's own curve." = "胶囊两端与卡片尾部，跟随圆环自身的弧度。";
 "How much air there is between the rings." = "调整圆环之间的间距。";
 "Tight" = "紧凑";
@@ -323,11 +331,14 @@
 "Liquid Glass" = "液态玻璃";
 "Clear glass that shows what is behind the panel, instead of solid black." = "透出面板后面的内容，替代纯黑背景。";
 "Transparency" = "透明度";
-"Clearer to the right. Darker reads better over bright pages." = "越往右越透。偏暗一些，在浅色页面上更容易看清。";
+"Clearer to the right, and the text turns from white to black. Black text is hard to read over dark windows." = "越往右越透，文字也随之从白色逐渐变黑。黑色文字在深色窗口上不易看清。";
 "Open Antigravity to see its usage." = "打开 Antigravity 才能读到它的用量。";
 "Asks the language server Antigravity runs while it is open." = "向 Antigravity 打开时运行的语言服务器读取。";
-"Only while Antigravity is open." = "仅在 Antigravity 打开时可读。";
-"Antigravity's language server" = "Antigravity 语言服务器";
+"Reads Antigravity while it is open, and the agy CLI when it is not." = "Antigravity 打开时从它读取，未打开时通过 agy CLI读取。";
+"CLI" = "CLI";
+"Asks the agy CLI, using the login it already saved." = "通过 agy CLI 读取，沿用它已保存的登录。";
+"The agy CLI isn't installed. Install it, or choose another source in Settings." = "未安装 agy CLI。请安装它，或在设置中选择其他用量来源。";
+"This version of the agy CLI can't report usage. Update it to 1.1.11 or later." = "当前版本的 agy CLI 无法报告用量，请更新到 1.1.11 或更高版本。";
 
 /* Cursor */
 "Sign in to Cursor to see usage." = "在 Cursor 中登录后才能读到用量。";
@@ -501,6 +512,8 @@
 
 /* 设置侧边栏搜索 */
 "Search" = "搜索";
+"Back" = "后退";
+"Forward" = "前进";
 "No matches" = "没有匹配的项目";
 
 /* 重置排序 */
@@ -677,7 +690,7 @@
 "Enable a service in its settings to start monitoring." = "在服务的设置页中开启，即可开始监控。";
 "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "读取 Claude Code 保存在钥匙串或凭据文件里的登录信息。可能弹出钥匙串授权，其中包括 Claude 桌面版的 cookie 存储。";
 "Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "读取 ~/.codex/auth.json，也可能启动 codex app-server 使用它保存的登录。Pulse 不请求钥匙串授权。";
-"Reads the running editor's local language server and connection token. No Keychain prompt." = "连接运行中的编辑器，读取本机语言服务器的用量及连接令牌。无需钥匙串授权。";
+"Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Pulse does not request Keychain access." = "连接运行中的编辑器，读取本机语言服务器的用量及连接令牌；或启动 agy CLI，使用它保存的登录。Pulse 不请求钥匙串授权。";
 "Reads the login saved in Cursor's local database. No Keychain prompt." = "读取 Cursor 本地数据库里保存的登录信息。无需钥匙串授权。";
 "Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "读取 ~/.grok/auth.json 里保存的登录信息。无需钥匙串授权。";
 "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "使用在设置里填入的 key，或读取 OpenCode 的 auth.json。无需钥匙串授权。";
@@ -756,6 +769,7 @@
 "No Qoder session found. Sign in at %@ first." = "未找到 Qoder 的登录信息。请先在 %@ 登录。";
 "Site" = "站点";
 "Where you signed in. Changing it clears the saved session." = "即你登录时使用的站点。更改后会清除已保存的会话。";
+"Where your key is from. Each site keeps its own key." = "即密钥所属的站点。两个站点各自保存自己的密钥。";
 "Sign in to StepFun's platform in a browser to see usage." = "在浏览器里登录阶跃星辰开放平台后才能看到用量。";
 "StepFun's saved session expired. Sign in again in your browser." = "阶跃星辰的登录信息已过期，请在浏览器里重新登录。";
 "No Step Plan on this StepFun account." = "这个阶跃星辰账号没有订阅 Step Plan。";
@@ -1074,10 +1088,12 @@
 "Status page" = "状态页";
 "As %@ reports it on its status page, read when this page opens and every five minutes while it stays open." = "以 %@ 状态页公布的为准。打开此页时读取一次，页面保持打开期间每 5 分钟更新。";
 "90 days ago" = "90 天前";
+"%@ days ago" = "%@ 天前";
+"Now" = "现在";
 "%@ uptime" = "可用率 %@";
 "No data" = "无数据";
 "When a service is down" = "服务出故障时";
-"Codex, Claude Code and DeepSeek, from their own status pages — only the ones you have switched on." = "Codex、Claude Code 和 DeepSeek，以各自的状态页为准，只通知你已开启的服务。";
+"From each provider's own status page, for the providers you have switched on and only about what their accounts run on." = "以各服务商自己的状态页为准，只通知你已开启的服务商，且只针对账号实际用到的服务。";
 "%@ reports %@." = "%@ 公布：%@。";
 "Back to normal: %@." = "已恢复正常：%@。";
 "%@ (%@)" = "%@（%@）";
@@ -1246,3 +1262,32 @@
 "Unclassified" = "未分类";
 "These records do not report this token category separately." = "来源未单独记录这类 token。";
 "Reported tokens without a usable category breakdown." = "来源记录了这些 token，但没有可用的分类明细。";
+
+// Currency (Settings → General)
+"Currency" = "货币";
+"Show estimates in" = "估算金额的货币";
+"Money worked out from API prices: Token spend, estimated value, usage history and the recap. Balances and charges a service reports stay in the currency it gives." = "按 API 价格算出的金额会换算成这种货币：Token 消耗、额度价值推算、用量记录和月报、年报。服务商自己报告的余额和扣费仍按它给出的货币显示。";
+"Exchange rate" = "汇率";
+"Rate source" = "汇率来源";
+"Your rate is used. Clear the field to use the day's rate." = "正在使用你填写的汇率。清空即改用当日汇率。";
+"The day's rate, updated %@. Type a rate to use your own." = "当日汇率，更新于 %@。也可以填写自己的汇率。";
+"No rate yet, so estimates stay in US dollars. Type a rate, or wait for the day's." = "还没有汇率，估算金额暂时仍以美元显示。可以填写汇率，或等待获取当日汇率。";
+"US dollar" = "美元";
+"Chinese yuan" = "人民币";
+"Hong Kong dollar" = "港元";
+"New Taiwan dollar" = "新台币";
+"Japanese yen" = "日元";
+"South Korean won" = "韩元";
+"Russian rouble" = "卢布";
+
+// Connection diagnostics: server replies
+"Server replies" = "服务器原始回应";
+"Copy replies" = "复制回应";
+"No reply" = "没有回应";
+"Credentials are hidden. A reply can still show the account's email, plan or balance, so it is not in the shared diagnostics. Kept until the next check." = "凭证已隐藏。回应中仍可能有账号的邮箱、套餐或余额，因此不会放进可分享的诊断信息。下次检查时替换。";
+"%@ bytes, not text" = "%@ 字节，不是文本";
+
+// Service status: why a read failed
+"No request was made." = "没有发出请求。";
+"The page answered, but not with anything Pulse reads for this provider." = "状态页有回应，但其中没有 Pulse 能为这个服务商读取的内容。";
+"The page answered HTTP %@." = "状态页返回了 HTTP %@。";

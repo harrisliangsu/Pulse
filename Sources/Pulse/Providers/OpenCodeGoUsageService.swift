@@ -41,7 +41,7 @@ struct OpenCodeGoUsageService: Sendable {
         // The console stands in only where the key could not answer. A
         // reading the key did get — even one with no limits in it — stands.
         if case .unavailable(let reason) = byKey.state,
-           [.apiKeyRefused, .unreachable, .serverError, .unreadableReply].contains(reason),
+           [.apiKeyRefused, .noPlan, .unreachable, .serverError, .unreadableReply].contains(reason),
            let consoleCookie {
             let byConsole = await Self.fetchConsole(cookie: consoleCookie)
             if case .live = byConsole.state { return byConsole }
@@ -55,18 +55,12 @@ struct OpenCodeGoUsageService: Sendable {
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 15
 
-        guard let (data, response) = try? await NetworkSession.shared.data(for: request) else {
+        guard let (data, response) = try? await NetworkSession.shared.recordedData(for: request) else {
             return .unavailable(.openCodeGo, reason: .unreachable)
         }
 
-        switch (response as? HTTPURLResponse)?.statusCode {
-        case 200: break
-        // Not `.signInRequired`: that message names Codex, and a message that
-        // names the wrong provider is the exact trap this file's neighbours
-        // were fixed for once already.
-        case 401, 403: return .unavailable(.openCodeGo, reason: .apiKeyRefused)
-        case 429: return .unavailable(.openCodeGo, reason: .rateLimited)
-        default: return .unavailable(.openCodeGo, reason: .serverError)
+        if let refusal = Self.refusal(status: (response as? HTTPURLResponse)?.statusCode, body: data) {
+            return .unavailable(.openCodeGo, reason: refusal)
         }
 
         guard let reply = try? JSONDecoder().decode(Reply.self, from: data) else {
@@ -91,6 +85,34 @@ struct OpenCodeGoUsageService: Sendable {
     }
 
     /// The key `opencode` wrote when it signed in.
+    /// Why the usage endpoint said no, or nil for a 200.
+    ///
+    /// **A 403 is not always the key.** A valid key whose workspace has no Go
+    /// subscription is answered `403` with `"type":"EntitlementError"`
+    /// ("OpenCode Go subscription required."), measured 2026-10-15; calling
+    /// that a refused key sent people to replace a key that worked. A 401, and
+    /// any other 403, is the key.
+    static func refusal(status: Int?, body: Data) -> ProviderUsage.Unavailability? {
+        switch status {
+        case 200: return nil
+        case 403 where Self.isEntitlementError(body): return .noPlan
+        // Not `.signInRequired`: that message names Codex, and a message that
+        // names the wrong provider is the exact trap this file's neighbours
+        // were fixed for once already.
+        case 401, 403: return .apiKeyRefused
+        case 429: return .rateLimited
+        default: return .serverError
+        }
+    }
+
+    private static func isEntitlementError(_ body: Data) -> Bool {
+        struct Failure: Decodable {
+            struct Detail: Decodable { let type: String? }
+            let error: Detail?
+        }
+        return (try? JSONDecoder().decode(Failure.self, from: body))?.error?.type == "EntitlementError"
+    }
+
     static func storedKey() -> String? {
         let url = URL(fileURLWithPath: NSHomeDirectory())
             .appending(path: ".local/share/opencode/auth.json")
@@ -124,7 +146,7 @@ struct OpenCodeGoUsageService: Sendable {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 15
 
-        guard let (data, response) = try? await NetworkSession.shared.data(for: request) else {
+        guard let (data, response) = try? await NetworkSession.shared.recordedData(for: request) else {
             return .unavailable(.openCodeGo, reason: .unreachable)
         }
         switch (response as? HTTPURLResponse)?.statusCode {
@@ -162,7 +184,7 @@ struct OpenCodeGoUsageService: Sendable {
         request.setValue(cookie, forHTTPHeaderField: "Cookie")
         request.setValue(org, forHTTPHeaderField: "x-org-id")
         request.timeoutInterval = 15
-        guard let (data, response) = try? await NetworkSession.shared.data(for: request),
+        guard let (data, response) = try? await NetworkSession.shared.recordedData(for: request),
               (response as? HTTPURLResponse)?.statusCode == 200,
               let status = try? JSONDecoder().decode(ConsoleStatus.self, from: data)
         else { return false }

@@ -27,6 +27,9 @@ enum AgentRecordReaders {
     struct Read: Sendable {
         let records: [AgentUsageRecord]
         let notes: [String]
+        /// The records are a product's own log, not an export or capture
+        /// (`CapturedUsageReaders.mcodeRead`), as decided by this read.
+        var readsOwnLog = false
     }
 
     /// A scan's records and limits from the same decode. Compressed stores
@@ -35,6 +38,9 @@ enum AgentRecordReaders {
         switch client {
         case "dsh": return DSHUsageReader.readWithNotes(roots: roots)
         case "zed": return ZedReader.readWithNotes(roots: roots)
+        case "mcode":
+            let read = CapturedUsageReaders.mcodeRead(roots: roots)
+            return Read(records: read.records, notes: notes(client: client, roots: roots), readsOwnLog: read.ownLog)
         default: return Read(records: records(client: client, roots: roots), notes: notes(client: client, roots: roots))
         }
     }

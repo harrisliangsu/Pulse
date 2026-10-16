@@ -92,7 +92,7 @@ struct CodexUsageService: Sendable {
         // before it becomes an error in the UI.
         for attempt in 0...Self.retryLimit {
             do {
-                let (data, response) = try await NetworkSession.shared.data(for: request)
+                let (data, response) = try await NetworkSession.shared.recordedData(for: request)
                 guard let http = response as? HTTPURLResponse else { return .failed(.unreachable) }
 
                 switch http.statusCode {

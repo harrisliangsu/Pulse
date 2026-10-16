@@ -47,7 +47,7 @@ final class ProviderCredentialModel {
             savedKey = ""
             return
         }
-        apiKey = APIKeyStore.key(for: shown) ?? ""
+        apiKey = APIKeyStore.key(for: shown, slot: settings.keySlot(for: shown)) ?? ""
         savedKey = apiKey
     }
 
@@ -123,7 +123,7 @@ final class ProviderCredentialModel {
                     host = settings.stepFunSite.host
                     keep = { try? StepFunCookie.normalize($0) }
                 case .claudeCode, .codex, .kiro, .antigravity, .cursor, .openCodeGo,
-                     .kimiCode, .zai, .glmCoding, .minimax, .minimaxCN, .copilot,
+                     .kimiCode, .zai, .glmCoding, .minimax, .copilot,
                      .grok, .grokBot, .volcengine, .commandCode, .deepSeek, .devin,
                      .sub2api, .newAPI, .v2ex, .pulseExtension:
                     // Not session-based: `readSession` sends those to
@@ -239,7 +239,7 @@ final class ProviderCredentialModel {
     func saveKey(for account: AccountKey) {
         // Only call it saved if it was. Otherwise the Save button greys out
         // over a key that never reached disk.
-        guard APIKeyStore.setKey(apiKey, for: account.provider) else { return }
+        guard APIKeyStore.setKey(apiKey, for: account.provider, slot: settings.keySlot(for: account.provider)) else { return }
         savedKey = apiKey
         // The store keeps keys for the life of the launch, so it has to be
         // told; otherwise the key is saved and nothing uses it until restart.

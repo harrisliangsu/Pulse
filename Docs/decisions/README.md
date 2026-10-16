@@ -19,5 +19,6 @@ A decision records a reason, not proof the measurement still holds — a local p
 | [localization.md](localization.md) | [../development.md](../development.md) |
 | [bot-mark-geometry.md](bot-mark-geometry.md) — where the mark comes from, and why its motion follows the original | [../ui/rings-and-surface.md](../ui/rings-and-surface.md) |
 | [quiet-is-not-greyscale.md](quiet-is-not-greyscale.md) | [../ui/rings-and-surface.md](../ui/rings-and-surface.md) |
+| [settings-window-title-bar.md](settings-window-title-bar.md) — how System Settings' title bar was matched, and every variant that missed | [../architecture.md](../architecture.md) |
 
 When the *reason* changes, edit the decision. When only the current fact changes (counts, intervals), edit the topic doc.

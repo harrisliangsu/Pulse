@@ -51,7 +51,7 @@ extension Provider {
             return [local(".stepcode")]
         // sub2api is somebody's own deployment and V2EX is a website; there
         // is nothing on this Mac that says either is in use.
-        case .kimiCode, .ollamaCloud, .zai, .minimax, .minimaxCN, .copilot,
+        case .kimiCode, .ollamaCloud, .zai, .minimax, .copilot,
              .volcengine, .deepSeek, .xiaomiMiMo, .sub2api, .newAPI, .v2ex:
             return []
         // Found by its manifest in the extensions folder, not by anything

@@ -36,9 +36,10 @@ struct RecapWindowView: View {
                 .background(.background)
         }
         .frame(minWidth: 780, minHeight: 620)
-        // Copy follows the language without a relaunch, and nothing observes a
-        // function call — see `Docs/development.md`.
-        .id(settings.language)
+        // Copy and money follow the language and the currency without a
+        // relaunch, and nothing observes a function call — see
+        // `Docs/development.md`.
+        .id("\(settings.language.rawValue)-\(settings.moneyIdentity)")
         .onAppear { priceText = RecapPrice.text(settings.recapMonthlyPrice) }
         .onChange(of: settings.readsTokenSpend) { model.start() }
         .onChange(of: settings.recapMonthlyPrice) { priceText = RecapPrice.text(settings.recapMonthlyPrice) }

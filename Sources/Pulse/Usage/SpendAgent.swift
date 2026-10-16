@@ -278,6 +278,10 @@ enum SpendAgent: String, CaseIterable, Identifiable, Sendable {
         case .commandCode: .commandCode
         case .devinDesktop: .devin
         case .copilot: .copilot
+        // The desktop app's own usage, under the MiniMax account it is billed
+        // to (issue #86) — every model it answered with, routed ones too, as
+        // Command Code's are.
+        case .mcode: .minimax
         default: nil
         }
     }

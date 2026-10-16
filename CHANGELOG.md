@@ -10,6 +10,24 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.27
+
+- **Snap to screen edges can be turned off.** Turn it off under Settings → Position and behavior and a drag only moves the panel, flush to any edge, including over the menu bar and the Dock. Thanks to [@GinWU05](https://github.com/qunqin24/Pulse/issues/85) for the suggestion.
+- **Antigravity can be read through the agy CLI.** With the editor closed, Pulse reads the quota through `agy`. Under Read usage from in Antigravity's settings, choose Automatic, CLI, or Desktop app.
+- **MiniMax and MiniMax CN are one provider.** Choose the international or mainland site in MiniMax's settings. Each site keeps its own key, and a MiniMax CN key and ring settings move over at launch.
+- **MiniMax Code is included in Token spend.** With Token spend on, MiniMax's card and settings show this Mac's MiniMax Code session log. Thanks to [@Eileenes](https://github.com/qunqin24/Pulse/issues/86) for the suggestion.
+- **Progress bars can be segmented.** Choose Continuous or Segmented under Settings → Appearance → Progress bars. The card and the menu both follow it.
+- **Estimates can use your currency.** Choose the US dollar, yuan, Hong Kong dollar, New Taiwan dollar, yen, won, or rouble under Settings → General → Currency, at the day's rate or one you type. Balances and charges a service reports stay in its own currency.
+- **About 44 providers show service status.** Each provider's settings show its status page and history, with Refresh. Cursor is read from status.cursor.com. OpenCode's bars follow its own page. Turn on outage alerts under Settings → Notifications → When a service is down.
+- **Connection diagnostics show the servers' replies.** Expand Server replies under Connection diagnostics in a provider's settings to see each request's status and body. Credentials are hidden.
+- **Quit in the Dock icon's menu closes the windows only.** Pulse stays in the menu bar. Command-Q and Quit Pulse in the menu bar icon still quit the app.
+- **Settings looks like System Settings.** The sidebar runs to the top of the window, and the title bar shows the current pane with back and forward.
+- **Text stays readable on clearer Liquid Glass.** Past the default on the Transparency slider, the text turns from white to black.
+- **An expired OpenCode Go subscription says there is no plan.** It is no longer reported as a refused key.
+- **The panel at the notch waits before it opens.** The pointer has to rest on the housing, and a click in the moment after it opens does not refresh a ring.
+- **Synced from upstream qunqin24/Pulse** (41 commits, through their 1.12.0, `572a931`, since 1.4.26). This repository is the update source, and this fork's version is **1.4.27**. Their Sparkle offer for 1.12.0 was not copied. `appcast.xml` is unchanged until this version is tagged. This sync also hides credentials a reply repeats, keeps the two MiniMax sites from sharing a cached reading, and reads a typed exchange rate whole. The READMEs are shorter, and screenshots live in `Docs/images`.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen's cookie store; bilingual release notes; and this repo's Sparkle feed and signing key.
+
 ## 1.4.26
 
 - **Codex’s predicted reset does not stay after the reset has happened.** Once the weekly limit has refilled, or the predicted time has passed, the Codex card no longer shows that countdown as still coming; opening the card or a usage refresh reads Codex Resets again. [#47](https://github.com/harrisliangsu/Pulse/pull/47)

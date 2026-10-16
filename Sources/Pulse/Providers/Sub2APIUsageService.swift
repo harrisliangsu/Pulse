@@ -74,7 +74,7 @@ struct Sub2APIUsageService: Sendable {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 15
 
-        guard let (data, response) = try? await NetworkSession.shared.data(for: request) else {
+        guard let (data, response) = try? await NetworkSession.shared.recordedData(for: request) else {
             return .unavailable(.sub2api, reason: .unreachable)
         }
 
@@ -351,11 +351,7 @@ struct Sub2APIUsageService: Sendable {
     }
 
     static func money(_ wallet: ProviderUsage.CreditAmount) -> String {
-        wallet.amount.formatted(
-            .currency(code: wallet.currency)
-                .precision(.fractionLength(2))
-                .locale(LocalizationSource.locale)
-        )
+        wallet.amount.formatted(Money.reportedStyle(wallet.currency))
     }
 
     /// Built per call: `ISO8601DateFormatter` is not `Sendable`, and this

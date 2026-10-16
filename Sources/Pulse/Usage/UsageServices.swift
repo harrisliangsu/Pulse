@@ -50,7 +50,7 @@ final class LiveUsageServices: UsageServiceFactory {
     }
 
     func storedKey(for provider: Provider) -> String? {
-        APIKeyStore.key(for: provider)
+        APIKeyStore.key(for: provider, slot: settings.keySlot(for: provider))
     }
 
     func fetch(for account: AccountKey, key: String?) -> UsageFetch {
@@ -88,7 +88,7 @@ final class LiveUsageServices: UsageServiceFactory {
             return { await claudeCode.fetch(source: source) }
         case .antigravity:
             let antigravity = self.antigravity
-            return { await antigravity.fetch() }
+            return { await antigravity.fetch(source: source) }
         case .cursor:
             let cursor = self.cursor
             return { await cursor.fetch() }
@@ -108,8 +108,8 @@ final class LiveUsageServices: UsageServiceFactory {
         case .zai, .glmCoding:
             let service = ZaiUsageService(provider: provider, enteredKey: key)
             return { await service.fetch() }
-        case .minimax, .minimaxCN:
-            let service = MiniMaxUsageService(provider: provider, enteredKey: key)
+        case .minimax:
+            let service = MiniMaxUsageService(site: settings.minimaxSite, enteredKey: key)
             return { await service.fetch() }
         case .copilot:
             let service = CopilotUsageService(token: key)
@@ -220,7 +220,7 @@ final class LiveUsageServices: UsageServiceFactory {
         case .kimiCode:
             await KimiCodeUsageService(enteredKey: nil).fetch(account: account, token: credentials.accessToken)
         case .kiro, .antigravity, .cursor, .openCodeGo, .ollamaCloud,
-             .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .volcengine,
+             .zai, .glmCoding, .minimax, .copilot, .volcengine,
              .commandCode, .deepSeek, .devin, .xiaomiMiMo, .sub2api, .newAPI,
              .v2ex, .qoder, .stepFun, .pulseExtension:
             .unavailable(account, reason: .loading)

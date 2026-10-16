@@ -264,7 +264,8 @@ actor AgentLedgers {
                 // An export or capture is the account's movement, not
                 // necessarily this Mac's own transcript; it can still be
                 // priced, but it is not claimed as a local transcript.
-                origin: agent.requiresUsageExport ? .importedRecords : .localTranscripts
+                origin: agent.requiresUsageExport && !read.readsOwnLog
+                    ? .importedRecords : .localTranscripts
             )
             // A source that reports no token counters has nothing to be a
             // *partial* read of; its note is a permanent "no counters" string

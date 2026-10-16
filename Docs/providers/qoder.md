@@ -13,7 +13,7 @@ Qoder's credits, read through the account page's own request.
 
 ## Two sites, one row
 
-`qoder.com` (international) and `qoder.com.cn` (mainland) are separate sign-ins on separate hosts. **One row with a site setting**, not two providers like MiniMax: it is one product sold under one name, and nobody subscribes to both. `AppSettings.qoderSite` (`QoderSite`) decides:
+`qoder.com` (international) and `qoder.com.cn` (mainland) are separate sign-ins on separate hosts. **One row with a site setting**, as MiniMax's two sites now are: it is one product sold under one name, and nobody subscribes to both. Unlike MiniMax's pasted keys, the session is read back from the browser, so changing the site can clear it. `AppSettings.qoderSite` (`QoderSite`) decides:
 
 - which host the browser is asked for cookies (`BrowserCookies.session(forHost:)`: the host, its dot-form and its subdomains — never `qoder.com.cn` on behalf of `qoder.com`);
 - where the request goes.

@@ -596,7 +596,7 @@ struct DevinUsageService: Sendable {
         }
         request.timeoutInterval = 15
 
-        guard let (data, response) = try? await NetworkSession.shared.data(for: request) else {
+        guard let (data, response) = try? await NetworkSession.shared.recordedData(for: request) else {
             return .failed(.unreachable)
         }
 
@@ -950,6 +950,6 @@ struct DevinUsageService: Sendable {
     /// US dollars, which is what the field is denominated in — there is no
     /// currency beside it and Devin bills in one.
     private static func money(_ amount: Double) -> String {
-        amount.formatted(.currency(code: "USD").locale(LocalizationSource.locale))
+        amount.formatted(Money.reportedStyle("USD"))
     }
 }

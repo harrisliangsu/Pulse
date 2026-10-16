@@ -60,7 +60,7 @@ struct GrokUsageService: Sendable {
     }
 
     private func fetch(token: String, for account: AccountKey = AccountKey(.grok)) async -> ProviderUsage {
-        guard let (data, response) = try? await NetworkSession.shared.data(for: request(billingEndpoint, token: token)) else {
+        guard let (data, response) = try? await NetworkSession.shared.recordedData(for: request(billingEndpoint, token: token)) else {
             return .unavailable(account, reason: .unreachable)
         }
 
@@ -120,7 +120,7 @@ struct GrokUsageService: Sendable {
         request.timeoutInterval = 4
 
         guard
-            let (data, response) = try? await NetworkSession.shared.data(for: request),
+            let (data, response) = try? await NetworkSession.shared.recordedData(for: request),
             (response as? HTTPURLResponse)?.statusCode == 200,
             let settings = try? JSONDecoder().decode(Settings.self, from: data)
         else { return nil }

@@ -232,7 +232,7 @@ struct QoderClient: Sendable {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await (session ?? NetworkSession.shared).data(for: request)
+            (data, response) = try await (session ?? NetworkSession.shared).recordedData(for: request)
         } catch {
             throw QoderError.unreachable
         }

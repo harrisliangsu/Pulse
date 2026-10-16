@@ -11,6 +11,8 @@ enum UsageRoute: String, Codable, Sendable {
     case languageServer
     case webSession
     case arkCLI
+    /// Antigravity's `agy` CLI, asked `/usage` in print mode.
+    case antigravityCLI
     /// A reading taken out of a desktop app's own saved state rather than
     /// asked of anybody. Devin's: written when that app starts.
     case appCache
@@ -27,6 +29,7 @@ enum UsageRoute: String, Codable, Sendable {
         case .languageServer: .localized("Local language server")
         case .webSession: .localized("Signed-in web page")
         case .arkCLI: "arkcli"
+        case .antigravityCLI: "agy"
         case .appCache: .localized("The app's saved plan")
         case .extensionProgram: .localized("Extension program")
         }
@@ -45,13 +48,14 @@ enum UsageRoute: String, Codable, Sendable {
             }
         }
         switch written {
-        case .claudeCode, .codex, .volcengine, .kimiCode, .devin: return nil
-        case .antigravity: return .languageServer
+        // Antigravity has the language server and the `agy` CLI. Kimi has a
+        // device-code login and a pasted key. Neither has a single route.
+        case .claudeCode, .codex, .volcengine, .kimiCode, .devin, .antigravity: return nil
         // Browser session rather than a key (Ollama, Xiaomi, Qoder, StepFun).
         case .ollamaCloud, .xiaomiMiMo, .qoder, .stepFun: return .webSession
         case .kiro: return .kiroACP
         case .cursor, .openCodeGo, .zai, .glmCoding, .minimax,
-             .minimaxCN, .copilot, .grok, .grokBot, .commandCode, .deepSeek,
+             .copilot, .grok, .grokBot, .commandCode, .deepSeek,
              .sub2api, .newAPI, .v2ex:
             return .endpoint
         case .pulseExtension: return .extensionProgram

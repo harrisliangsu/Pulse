@@ -283,7 +283,7 @@ enum AgentActivity {
                 }
 
             case .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
-             .zai, .glmCoding, .minimax, .minimaxCN, .copilot, .grok, .grokBot,
+             .zai, .glmCoding, .minimax, .copilot, .grok, .grokBot,
              .volcengine, .commandCode, .deepSeek, .devin, .xiaomiMiMo,
              .sub2api, .newAPI, .v2ex, .qoder, .stepFun, .pulseExtension:
                 // None of these leaves transcripts Pulse reads, so nothing
@@ -478,7 +478,7 @@ enum AgentActivity {
         case .zai, .glmCoding:
             zcodeStorefront(home: home) == provider ? home.appending(path: ".zcode/cli/log") : nil
         case .antigravity, .cursor, .openCodeGo, .kimiCode, .ollamaCloud,
-             .minimax, .minimaxCN, .copilot, .grok, .grokBot,
+             .minimax, .copilot, .grok, .grokBot,
              .volcengine, .commandCode, .deepSeek, .devin, .xiaomiMiMo,
              .sub2api, .newAPI, .v2ex, .qoder, .stepFun, .pulseExtension: nil
         }

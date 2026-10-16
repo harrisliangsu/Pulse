@@ -31,7 +31,11 @@ enum DetailCardLayout {
     /// Spacing between a row's title line, its progress bar, and its
     /// percent line.
     static var rowInternalSpacing: CGFloat { 7 * PanelMetrics.scale }
-    static var progressBarHeight: CGFloat { 6 * PanelMetrics.scale }
+    /// Taller segmented, so its ticks read as ticks (`UsageBarStyle`).
+    static var progressBarHeight: CGFloat {
+        (PanelMetrics.usageBarStyle == .segmented ? UsageBar.segmentedHeight : UsageBar.continuousHeight)
+            * PanelMetrics.scale
+    }
     /// Rendered line height of the header row (icon + title).
     static var headerHeight: CGFloat { 19 * PanelMetrics.scale }
 
@@ -487,8 +491,8 @@ struct UsageDetailCard: View {
     /// The card's line under a limit, for the menu bar's list too.
     static func resetDescription(_ window: UsageWindow) -> String { resetText(window) }
 
-    /// What a limit is worth, on the detailed card: "Estimated value ≈$220 ·
-    /// ≈$101 used". The settings pane's `BudgetEstimate`, from the ledger the
+    /// What a limit is worth, on the detailed card: "Estimated value $220 ·
+    /// $101 used". The settings pane's `BudgetEstimate`, from the ledger the
     /// card already holds — so only where that ledger carries money and its
     /// quarter-hours, which is this Mac's records and never a provider's own
     /// statistics. Nil wherever the estimator withholds it, and for a provider
@@ -1182,8 +1186,9 @@ private struct ActivitySection: View {
                 .foregroundStyle(.primary)
                 .frame(height: DetailCardLayout.figureValueHeight)
             if priced {
-                // "≈" for an estimate; what the provider charged is stated.
-                Text(verbatim: cost > 0 ? (isCharged ? "" : "≈") + AccountUsageCard.money(cost, currency: currency) : " ")
+                // No "≈": the section's footnote says when the money is an
+                // estimate, and when it is what the provider charged.
+                Text(verbatim: cost > 0 ? AccountUsageCard.money(cost, currency: currency, isCharged: isCharged) : " ")
                     .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded).monospacedDigit())
                     .foregroundStyle(.primary.opacity(0.45))
                     .frame(height: DetailCardLayout.figureLabelHeight)
@@ -1623,16 +1628,13 @@ private struct PulseProgressStyle: ProgressViewStyle {
     let accent: Color
 
     func makeBody(configuration: Configuration) -> some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color.primary.opacity(0.17))
-
-                Capsule()
-                    .fill(accent)
-                    .frame(width: proxy.size.width * (configuration.fractionCompleted ?? 0))
-            }
-        }
+        UsageBar(
+            fraction: configuration.fractionCompleted ?? 0,
+            accent: accent,
+            track: Color.primary.opacity(0.17),
+            style: PanelMetrics.usageBarStyle,
+            scale: PanelMetrics.scale
+        )
         .frame(height: DetailCardLayout.progressBarHeight)
     }
 }

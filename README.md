@@ -30,12 +30,12 @@
 </p>
 
 <p align="center">
-  <img src="Docs/demo.gif" height="400" alt="Pulse floating rail docked against the screen edge">
+  <img src="Docs/images/demo.gif" height="400" alt="Pulse floating rail docked against the screen edge">
   &nbsp;&nbsp;
-  <img src="Docs/panel.webp" height="400" alt="Hovering a ring opens a card with every limit and its reset">
+  <img src="Docs/images/panel.webp" height="400" alt="Hovering a ring opens a card with every limit and its reset">
 </p>
 
-- **Seventy-seven services at a glance** — Claude Code, Codex, Cursor, GitHub Copilot, Antigravity, Kiro, Grok, DeepSeek, Kimi Code and many more, each as its own ring.
+- **Seventy-six services at a glance** — Claude Code, Codex, Cursor, GitHub Copilot, Antigravity, Kiro, Grok, DeepSeek, Kimi Code and many more, each as its own ring.
 - **No Pulse account, no Pulse server** — it uses the logins you already have, and nothing is sent back.
 - **Real numbers only** — every usage percentage is the one the service itself reported. The few estimates are marked as such, and where a service reports nothing, Pulse says so instead of guessing.
 - **Native and quiet** — Swift and SwiftUI, Liquid Glass on macOS 26. Dock it left, right, along the top or along the bottom beside the Dock, let it fold to a sliver when idle, or keep it in the menu bar.
@@ -43,236 +43,13 @@
 **Recently added:** usage in the menu bar with a dashboard for each account, starting usage windows after a reset, and animated bot marks. [What's new](https://github.com/harrisliangsu/Pulse/releases/latest).
 
 <p align="center">
-  <img src="Docs/bot-mark.gif" width="300" alt="Pulse animated marks: a bot in each ring reacting to what that account is doing">
+  <img src="Docs/images/bot-mark.gif" width="300" alt="Pulse animated marks: a bot in each ring reacting to what that account is doing">
 </p>
 
 <p align="center">
   <sub>If Pulse has saved you from a surprise rate limit, a ⭐ helps other people find it.</sub>
 </p>
 
----
-
-## Key Features
-
-### At-a-Glance Status Rings
-- **Usage-Aware Colors**: Dynamic color gradients shift from green to amber, red, and deep red when exhausted — or set custom accent colors per account.
-- **Active Turn Indicator**: A subtle revolving dot indicates whether an agent is actively generating responses in real-time (Claude Code, Codex, Kiro, Zhipu and z.ai).
-- **Window Clock Arc**: An optional secondary outer arc can show how much of the current rate-limit window has elapsed or remains.
-- **Countdown Mode**: Toggle between showing spent quota (`75% used`) or remaining balance (`25% left`).
-
-### Hover Details & Smart Forecasting
-- **Complete Limit Breakdown**: Hover over any ring to reveal a detailed card showing every reported quota pool, reset countdowns, and current window status.
-- **Detailed Card (Optional, per account)**: Switch it on for the accounts you watch closely. The card adds the plan, when the figures were read, an estimate of what each limit is worth wherever this Mac's records can price it, and the account's recent usage — today, 7 days and 31 days of tokens, a 31-day chart, the model doing most of the work, the cache hit rate where the records sort every token by kind, and how long the prompt cache has left — for Claude Code from the tier each reply records, for Codex as the at-least-30-minutes OpenAI guarantees on GPT-5.6 and later: the card names the conversation about to lapse, and Settings lists every one — for every service Pulse has a history for: z.ai and Zhipu from their own account statistics, and Claude Code, Codex, Kimi Code, Grok, OpenCode, Cursor, Devin, Antigravity, Command Code and Copilot from this Mac's records with Token spend on.
-- **Burn-Rate Forecast (Optional)**: When you turn it on, projects whether your current pace will outlast the quota window and shows an estimated time-to-exhaustion (ETA) when risk is detected. Off by default.
-- **Pin Primary Window**: Pin whichever limit matters most to the ring, or let Pulse automatically track the one closest to exhaustion.
-
-<p align="center">
-  <img src="Docs/detailed-card.webp" width="620" alt="The same Codex card, compact and detailed">
-</p>
-
-### Native, Fluid & Non-Intrusive
-- **Flexible Edge Docking**: Dock to the left, right, top (above the menu bar) or bottom of your screen (beside the Dock), or float it anywhere, standing upright or lying across.
-- **Multi-Monitor Native**: Drag Pulse to any secondary display; it remembers screen placement and gracefully returns if disconnected. Turn on **Follow the active display** and the single rail moves itself to whichever screen your pointer is on.
-- **Auto-Collapse**: Automatically folds into a razor-thin sliver when idle to eliminate distraction, glowing red only when quota runs critically low.
-- **Opt-In Notifications**: You choose which ones to switch on. Get told when a limit passes 75/80/90/95%, when the provider says it is spent, when a window you were warned about comes back, and when several checks in a row fail so the panel is quietly showing older figures, and — for the services that sell prepaid credit — when the balance falls under a figure you set, and when Codex's, Claude Code's or DeepSeek's own status page reports what the tool runs on as down (only for the ones you have switched on). Each thing is said once: a limit already past the line when you switch this on is mentioned straight away, and again when it resets or gets worse.
-- **Start Usage Windows After a Reset (Optional)**: Claude Code's and Codex's windows only start at your first message after a reset. Switch this on and Pulse sends a single "hi" through the provider's own command-line tool just after each reset, within the hours you choose, so the clock starts then rather than whenever you come back. Off by default, and it is not a feature of Anthropic or OpenAI: switching it on asks you to confirm that it may be treated as getting around usage limits.
-- **Spaces-Friendly**: Keeps to the Space you are working in, leaving full-screen apps to themselves.
-- **Hide from Screenshots (Optional)**: Screenshot tools that support it leave the floating panel out, so their automatic window selection no longer picks it.
-- **macOS Aesthetic**: Classic solid obsidian surface, a light surface for bright screens, or native **Liquid Glass** on macOS 26+.
-- **Animated Marks (Optional)**: Replace a provider's logo with a small bot that reacts to what that account is doing — working, fetching, spent, or quiet. Off by default and switched on per account, with eight personalities, eighteen body shapes and a colour of your own if you want one.
-- **Rail Menu & Shortcuts**: Right-click the floating rail — or the collapsed sliver; Control-click works too — for a menu with Settings and Quit. In **Settings › General › Shortcuts** you can optionally assign global shortcuts to **Open settings** and **Show or hide the panel**; both are unset until you set one.
-- **Menu Bar Usage (Optional)**: Show the fullest ring — or an account you pick — beside the menu bar icon as a figure, a small ring, or its five-hour and weekly limits side by side (`5h/9%  Wk/15%`), red past the warning line. Turn on **Usage panel in the menu** and clicking it opens a dashboard: an overview of every account, and a tab per account with each limit, its reset, credits, estimated spend (with Token spend on) and a link to the provider's own usage page. Turn the floating panel off from the same menu if you only want the menu bar.
-- **Six Interface Languages**: English, Simplified Chinese, Traditional Chinese, Japanese, Korean and Russian, with language-aware large-number units: K/M/B in English and Russian, and 万/亿, 萬/億, 万/億 and 만/억 in the other four respectively.
-
-### Multi-Account & Local Ledger
-- **Multi-Account Support**: Monitor multiple subscriptions for the same provider (Claude Code, Codex, Grok, Grok Bot, Kimi Code) side-by-side with custom labels.
-- **Token Spend (Settings-only)**: Off by default. Enable it on the page to scan local records; switching it off stops the scan. Reads local logs, databases and exports from a catalogue of **54 client sources**, including Gemini CLI, Cline, Roo Code, OpenClaw and GitHub Copilot. Cursor, Trae and other export sources need a prior export or capture. These are distinct from the rail's 77 quota providers; support and live-client validation vary by source. [Sources and coverage](Docs/token-spend-sources.md).
-- **Clear Usage Estimates**: Opens on the last 7 days and remembers your chosen span. Costs use published API prices, not subscription charges. Unknown prices stay unavailable, incomplete counts and coarse timing are labelled, and a source that reports no token counters says so.
-- **Model Details & Charts**: Open a model for input/output/cache counts and estimated costs, daily and hourly charts where the records support them, contributions by agent, and sortable, paged detail tables. Point at a chart to read the date or hour and its token count. Unavailable daily or hourly detail is shown as unavailable, not zero.
-- **Monthly and Yearly Recap**: A set of cards for any month or year, built from the same local records as Token spend and made to be shared — tokens and estimated cost against the month before, every day on a calendar, the hour you work most, the models, agents and projects behind it, your streak, and, if you type in what you pay each month, how many times over the subscription paid for itself. Save, copy or share each card as an image, in any of the six languages; project names can be hidden with one switch. Open it from the Token spend pane; an optional notification on the 1st says last month's is ready.
-- **Seventy-seven Providers**: Claude Code, Codex, Kiro, Antigravity, Cursor, GitHub Copilot, Grok, Grok Bot, OpenCode Go, Kimi Code, Ollama Cloud, z.ai, Zhipu, MiniMax (intl. and mainland), Volcengine, Command Code, DeepSeek, Devin, Xiaomi Coding Plan, sub2api, New API, V2EX, Qoder, and StepFun. Also Abacus AI, Aixy, Alibaba Coding Plan, Alibaba Token Plan, Amp, Atlas Cloud, Augment Code, Bifrost, Chutes, ClawRouter, ClinePass, Codebuff, DeepInfra, DevPass, ElevenLabs, Factory, Gemini, GitKraken AI, Hugging Face, Hyper, IBM Bob, JetBrains AI, Kilo Code, LiteLLM, LLM API Key Proxy, LongCat, Manus, Mistral, Moonshot, Neuralwatt, Notion AI, Nous Portal, OpenAI API, Perplexity, Poe, Qwen Cloud, Raycast AI, Replicate, Sakana AI, Synthetic, T3 Chat, TypeSafe, v0, Venice, Vercel AI Gateway, Warp, Windsurf, xAI API, xKiro, Zed, ZenMux, ZoomMate.
-- **Scriptable**: `Pulse --json` prints the last readings — plan, every limit, reset times, and how old the figures are — for tmux, sketchybar, Raycast, or a shell prompt. It reads the cache, so polling costs nothing.
-- **Developer Integrations**: Export a Raycast extension and ready-to-configure tmux, sketchybar and shell scripts from Settings. Account links open the right pane directly. [Setup guide](Docs/integrations.md).
-- **Extensions**: A small program of your own can report one account's usage — an internal quota endpoint, say — and Pulse draws it as a ring, with no fork to maintain. Nothing runs until you switch it on, and Pulse hands it no credentials. It can also report figures of its own, such as a relay's response time, shown on its card with a trend line. [How to write one](Docs/extensions.md).
-- **Service Status**: Codex's, Claude Code's and DeepSeek's settings show the provider's own status page the way it draws it — each part up or down now, a bar a day for the last 90 days, and the uptime the page reports — read when you open the pane and every five minutes while it stays open.
-- **Connection Diagnostics**: See the actual reading source, cache use, latest check and fallback outcomes. Contextual actions help reconnect, sign in again or fix credentials; copy a diagnostic report without account details or secrets.
-- **Privacy First**: Pulse runs on your Mac under your own provider logins. It makes four kinds of connection and they are all listed here: the providers you already use, their public status pages (status.openai.com, status.claude.com, status.deepseek.com) for Service status and its notification, [models.dev](https://models.dev) for public model prices in the token-spend pane, and GitHub/Sparkle for app updates. Provider requests, status pages, sign-in exchanges and models.dev use the proxy chosen under Settings › Network and refresh; supported helper processes receive the same custom proxy, or none with No Proxy. Sparkle update checks always follow macOS system proxy settings.
-
-<p align="center">
-  <img src="Docs/settings.webp" height="300" alt="Pulse Settings">
-</p>
-
-<p align="center">
-  <img src="Docs/account-claude-code.webp" height="290" alt="An account pane: every reported limit, the estimated value of what was used, and the local history">
-  &nbsp;&nbsp;
-  <img src="Docs/account-codex.webp" height="290" alt="Another account pane, with the plan, credit balance and limit reset credits it reports">
-</p>
-
-<p align="center">
-  <img src="Docs/spend.webp" height="290" alt="Token spend: total, tokens by kind, and the daily pattern">
-  &nbsp;&nbsp;
-  <img src="Docs/spend-history.webp" height="290" alt="Token spend day by day, by month and by agent">
-</p>
-
-<p align="center">
-  <img src="Docs/spend-agent.webp" height="290" alt="One agent's spending on its own">
-  &nbsp;&nbsp;
-  <img src="Docs/spend-model.webp" height="290" alt="One model's spending, priced by token kind">
-</p>
-
----
-
-## Supported Providers & Data Routes
-
-Pulse shows the figures each service reports, and every percentage comes from that reply itself. Routes differ by product (documented client APIs, editor logins, local language servers, pasted keys) — not one official public quota API for every row. Contributor detail: [Docs/providers/README.md](Docs/providers/README.md).
-
-| Icon | Provider | Data Route & Auth Method | Notes |
-|---|---|---|---|
-| <img src="Docs/icons/claude.svg" width="24" height="24" alt=""> | **Claude Code** | Account OAuth usage endpoint; automatic fallbacks to Claude Desktop session & Status Line | Reads existing CLI/Desktop session; auto-falls back seamlessly |
-| <img src="Docs/icons/openai.svg" width="24" height="24" alt=""> | **Codex** | Client usage endpoint; fallback to `codex app-server` | Reads local Codex credentials directly |
-| <img src="Docs/icons/kiro.svg" width="24" height="24" alt=""> | **Kiro** | Native Kiro CLI ACP usage method | Uses Kiro's signed-in CLI session; Pulse never reads or stores Kiro credentials ([details](Docs/providers/kiro.md)) |
-| <img src="Docs/icons/antigravity.svg" width="24" height="24" alt=""> | **Antigravity** | Local Language Server (LSP) | Active while the Antigravity editor is running |
-| <img src="Docs/icons/cursor.svg" width="24" height="24" alt=""> | **Cursor** | Cursor account usage summary API | Shows fast and slow request pools from existing editor login |
-| <img src="Docs/icons/grok.svg" width="24" height="24" alt=""> | **Grok** | Grok Build CLI proxy (`cli-chat-proxy.grok.com`) | Single unified weekly pool shared across all Grok products |
-| <img src="Docs/icons/xai.svg" width="24" height="24" alt=""> | **Grok Bot** | Cursor dashboard API | The xAI quota included with Cursor subscriptions |
-| <img src="Docs/icons/github.svg" width="24" height="24" alt=""> | **GitHub Copilot** | GitHub Device Code authentication | Requests the `read:user` scope alone |
-| <img src="Docs/icons/opencode.svg" width="24" height="24" alt=""> | **OpenCode Go** | API key or existing OpenCode CLI credentials; or the console's signed-in browser session | The console session also brings the account's request log — every machine and app, with what each request cost — to the detailed card |
-| <img src="Docs/icons/kimi.svg" width="24" height="24" alt=""> | **Kimi Code** | Direct API key | Configured via Settings |
-| <img src="Docs/icons/zai.svg" width="24" height="24" alt=""> | **z.ai** | Direct API key | International storefront (`api.z.ai`) |
-| <img src="Docs/icons/zai.svg" width="24" height="24" alt=""> | **Zhipu** | Direct API key or saved GLM tooling credentials | Mainland storefront (`open.bigmodel.cn`) |
-| <img src="Docs/icons/minimax.svg" width="24" height="24" alt=""> | **MiniMax / MiniMax CN** | Direct API key | Supports international (`minimax.io`) & mainland (`minimaxi.com`) |
-| <img src="Docs/icons/ollama.svg" width="24" height="24" alt=""> | **Ollama Cloud** | Browser session cookie | Read locally from browser. See [Docs/ollama-cloud.md](Docs/ollama-cloud.md) |
-| <img src="Docs/icons/volcengine.svg" width="24" height="24" alt=""> | **Volcengine** | `arkcli` login, else a pasted access-key pair (signed Top OpenAPI) | Ark Coding & Agent plans; on automatic it prefers pasted keys over the CLI |
-| <img src="Docs/icons/commandcode.svg" width="24" height="24" alt=""> | **Command Code** | Pasted key, else the login `cmd login` already saved | Credit balance in dollars, with rolling 5-hour and weekly limits; monthly plan row marked **estimated** |
-| <img src="Docs/icons/deepseek.svg" width="24" height="24" alt=""> | **DeepSeek** | Pasted key; documented `GET /user/balance` | Prepaid balance only — no allowance; you pick what the ring measures against |
-| <img src="Docs/icons/devin.svg" width="24" height="24" alt=""> | **Devin** | Nothing to enter — reads your browser session, no keychain prompt | Daily and weekly quota reported by Devin. With no browser session or pasted credential, reads the app's dated saved plan. Endpoint failures use only matching endpoint cache, preserving account and organization boundaries ([Docs/providers/devin.md](Docs/providers/devin.md)) |
-| <img src="Docs/icons/xiaomimimo.svg" width="24" height="24" alt=""> | **Xiaomi Coding Plan** | Nothing to enter — reads your signed-in browser session, or paste a `Cookie:` header | The monthly token allowance from Xiaomi's MiMo console, with the period's end where it reports one. The prepaid balance rides along on the card. An account with no plan says so rather than drawing 0% ([Docs/providers/xiaomi-coding-plan.md](Docs/providers/xiaomi-coding-plan.md)) |
-| <img src="Docs/icons/sub2api.svg" width="24" height="24" alt=""> | **sub2api** | Pasted group key; self-hosted gateway address you enter | A group's own accounting from a [sub2api](https://github.com/Wei-Shaw/sub2api) deployment — money, a quota, a subscription, or a rate-limit window, depending on how the group is set up ([Docs/providers/sub2api.md](Docs/providers/sub2api.md)) |
-| <img src="Docs/icons/newapi.svg" width="24" height="24" alt=""> | **New API** | Pasted `sk-` key; self-hosted gateway address you enter | Balance from a [New API](https://github.com/QuantumNous/new-api) deployment, in whatever currency it reports; no percentage, since the reply's fraction can mean two different things ([Docs/providers/newapi.md](Docs/providers/newapi.md)) |
-| <img src="Docs/icons/v2ex.svg" width="24" height="24" alt=""> | **V2EX** | Pasted personal access token | AI Chat's rolling 5-hour token quota, plus a second ring for a bought top-up pack; a window that hasn't started yet shows no countdown ([Docs/providers/v2ex.md](Docs/providers/v2ex.md)) |
-| <img src="Docs/icons/qoder.svg" width="24" height="24" alt=""> | **Qoder** | Nothing to enter — reads your signed-in browser session for qoder.com or qoder.com.cn, or paste a `Cookie:` header or a personal token (`pt-` / `jt-`) | Credit allowance (plan plus packs) with Qoder's reported reset; a team plan's shared credits show as a second ring, never summed; optionally, plan credits, the top-up pack and dedicated credits each on a row of their own; zero credits says so instead of drawing a ring ([Docs/providers/qoder.md](Docs/providers/qoder.md)) |
-| <img src="Docs/icons/stepfun.svg" width="24" height="24" alt=""> | **StepFun** | Nothing to enter — reads your signed-in browser session for platform.stepfun.com or platform.stepfun.ai, or paste a `Cookie:` header | Step Plan: a Token Plan's monthly Credits and any top-up packs as one ring, with the date the soonest of them lapse; a Coding Plan's 5-hour and weekly windows; no plan says so instead of drawing a ring ([Docs/providers/stepfun.md](Docs/providers/stepfun.md)) |
-### More providers
-
-Ported by reading [CodexBar](https://github.com/steipete/CodexBar)'s providers. **Not yet checked against a live account** — if one doesn't work for you, please [open an issue](https://github.com/harrisliangsu/Pulse/issues). Setup for each: [Docs/setup/](Docs/setup/). Maintainer notes: [Docs/providers/README.md](Docs/providers/README.md#profiled-providers).
-
-| Icon | Provider | Data Route & Auth Method | Shows |
-|---|---|---|---|
-| | **Abacus AI** | Your signed-in browser session (Read), or a pasted `Cookie:` header | Compute points and the billing date |
-| | **Aixy** | Pasted API key | Gateway budgets by period |
-| <img src="Docs/icons/alibabacloud.svg" width="24" height="24" alt=""> | **Alibaba Coding Plan** | Pasted API key | 5-hour, weekly and monthly allowances; the international console first, then mainland |
-| <img src="Docs/icons/alibabacloud.svg" width="24" height="24" alt=""> | **Alibaba Token Plan** | Alibaba's `bl` CLI, with the login it saved | 5-hour, weekly and monthly shares used |
-| <img src="Docs/icons/amp.svg" width="24" height="24" alt=""> | **Amp** | Pasted API key | Free daily allowance, plan allowances and credits |
-| <img src="Docs/icons/atlascloud.svg" width="24" height="24" alt=""> | **Atlas Cloud** | Pasted API key | Balance |
-| | **Augment Code** | Your signed-in browser session (Read), or a pasted `Cookie:` header | Credits used this cycle |
-| | **Bifrost** | Pasted key; self-hosted gateway address you enter | Dollar budgets of the virtual key |
-| <img src="Docs/icons/chutes.svg" width="24" height="24" alt=""> | **Chutes** | Pasted API key | Rolling window and monthly allowance |
-| <img src="Docs/icons/openclaw.svg" width="24" height="24" alt=""> | **ClawRouter** | Pasted API key | Monthly budget |
-| <img src="Docs/icons/cline.svg" width="24" height="24" alt=""> | **ClinePass** | Pasted API key | 5-hour, weekly and monthly limits |
-| | **Codebuff** | Pasted key, or the login its CLI already saved | Credits; the weekly limit with the CLI login |
-| <img src="Docs/icons/deepinfra.svg" width="24" height="24" alt=""> | **DeepInfra** | Pasted API key | Balance; spend against the limit you set there |
-| | **DevPass** | Pasted API key | Weekly premium allowance and plan credits |
-| <img src="Docs/icons/elevenlabs.svg" width="24" height="24" alt=""> | **ElevenLabs** | Pasted API key | Character credits for the billing period |
-| | **Factory** | Pasted API key | 5-hour, weekly and monthly limits (Standard and Premium on older billing); extra-usage balance |
-| <img src="Docs/icons/geminicli.svg" width="24" height="24" alt=""> | **Gemini** | Gemini CLI's saved login, read only and never refreshed | Each model's quota. The login lasts about an hour, so it reads only while Gemini CLI is in use |
-| | **GitKraken AI** | Pasted token | Personal credits and the shared pool |
-| <img src="Docs/icons/huggingface.svg" width="24" height="24" alt=""> | **Hugging Face** | Pasted token, or the one `hf auth login` saved | ZeroGPU quota |
-| | **Hyper** | Pasted API key | Hypercredit balance |
-| <img src="Docs/icons/ibm.svg" width="24" height="24" alt=""> | **IBM Bob** | Pasted API key | Bobcoins used against team budgets |
-| | **JetBrains AI** | The quota file your JetBrains IDE saves; nothing is sent anywhere | AI Assistant quota; updates while an IDE is running |
-| <img src="Docs/icons/kilocode.svg" width="24" height="24" alt=""> | **Kilo Code** | Pasted key, or the login its CLI already saved | Credit balance and Kilo Pass |
-| | **LiteLLM** | Pasted key; self-hosted gateway address you enter | Team and user budgets |
-| | **LLM API Key Proxy** | Pasted key; self-hosted gateway address you enter | Quota groups by upstream |
-| <img src="Docs/icons/longcat.svg" width="24" height="24" alt=""> | **LongCat** | Your signed-in browser session (Read), or a pasted `Cookie:` header | Token pack allowance and fuel packs |
-| <img src="Docs/icons/manus.svg" width="24" height="24" alt=""> | **Manus** | Your signed-in browser session (Read), or a pasted `Cookie:` header | Daily and monthly credits |
-| <img src="Docs/icons/mistral.svg" width="24" height="24" alt=""> | **Mistral** | Your signed-in browser session (Read), or a pasted `Cookie:` header | API and Vibe monthly allowances, and available credit |
-| <img src="Docs/icons/moonshot.svg" width="24" height="24" alt=""> | **Moonshot** | Pasted API key | Kimi Open Platform balance, USD or CNY |
-| | **Neuralwatt** | Pasted API key | kWh subscription, spending allowance and balance |
-| <img src="Docs/icons/notion.svg" width="24" height="24" alt=""> | **Notion AI** | Your signed-in browser session (Read), or a pasted `Cookie:` header | Rolling and billing-period allowance (Business and Enterprise) |
-| <img src="Docs/icons/hermesagent.svg" width="24" height="24" alt=""> | **Nous Portal** | Hermes Agent's saved login, read only | Monthly credit grant and balance |
-| <img src="Docs/icons/openai.svg" width="24" height="24" alt=""> | **OpenAI API** | Pasted API key | Prepaid credit balance, where the older billing route still answers |
-| <img src="Docs/icons/perplexity.svg" width="24" height="24" alt=""> | **Perplexity** | Your signed-in browser session (Read), or a pasted `Cookie:` header | API credit balance |
-| <img src="Docs/icons/poe.svg" width="24" height="24" alt=""> | **Poe** | Pasted API key | Point balance |
-| <img src="Docs/icons/qwen.svg" width="24" height="24" alt=""> | **Qwen Cloud** | Your signed-in browser session (Read), or a pasted `Cookie:` header | 5-hour, weekly and monthly shares, and tier |
-| | **Raycast AI** | Your signed-in browser session (Read), or a pasted `Cookie:` header | AI credits and renewal date |
-| <img src="Docs/icons/replicate.svg" width="24" height="24" alt=""> | **Replicate** | Your signed-in browser session (Read), or a pasted `Cookie:` header | Prepaid credit balance |
-| <img src="Docs/icons/sakana.svg" width="24" height="24" alt=""> | **Sakana AI** | Your signed-in browser session (Read), or a pasted `Cookie:` header | 5-hour and weekly limits |
-| | **Synthetic** | Pasted API key | 5-hour, weekly and search allowances |
-| | **T3 Chat** | Your signed-in browser session (Read), or a pasted `Cookie:` header | 4-hour window and monthly figure |
-| | **TypeSafe** | A pasted `Cookie:` header | Credit balance and plan |
-| <img src="Docs/icons/v0.svg" width="24" height="24" alt=""> | **v0** | Pasted API key | Billing allowance |
-| <img src="Docs/icons/venice.svg" width="24" height="24" alt=""> | **Venice** | Pasted API key | Balance, USD or DIEM |
-| <img src="Docs/icons/vercel.svg" width="24" height="24" alt=""> | **Vercel AI Gateway** | Pasted API key | Balance |
-| | **Warp** | Pasted API key | Plan credits and add-on credits |
-| <img src="Docs/icons/windsurf.svg" width="24" height="24" alt=""> | **Windsurf** | windsurf.com's sign-in, read from a Chromium browser | Daily and weekly quota |
-| <img src="Docs/icons/xai.svg" width="24" height="24" alt=""> | **xAI API** | `TeamID:ManagementKey` pasted as one | A team's prepaid balance, as posted by xAI |
-| | **xKiro** | Pasted API key | 5-hour and weekly windows, daily free tokens and wallet |
-| | **Zed** | Your signed-in browser session (Read), or a pasted `Cookie:` header | Edit predictions and the spending limit |
-| <img src="Docs/icons/zenmux.svg" width="24" height="24" alt=""> | **ZenMux** | Pasted management key | 5-hour and 7-day quotas, and balance |
-| | **ZoomMate** | Your signed-in browser session (Read), or a pasted `Cookie:` header | Credits against the budget cap |
-
-### Token spend sources
-
-Token spend reads what each client leaves on this Mac — logs, databases and exports — once it is switched on in Settings; nothing here is sent anywhere. The paths are the macOS defaults; Linux-style and editor-variant locations are read too. Where Pulse also draws the same product's limits as a ring, the last column names that provider. Evidence and limits for each source: [Docs/token-spend-sources.md](Docs/token-spend-sources.md).
-
-| Icon | Client | Read from | Ring in Pulse |
-|---|---|---|---|
-| <img src="Docs/icons/claude.svg" width="24" height="24" alt=""> | **Claude Code** | `~/.claude/projects/` | Claude Code |
-| <img src="Docs/icons/openai.svg" width="24" height="24" alt=""> | **Codex** | `~/.codex/sessions/`, `~/.codex/archived_sessions/` | Codex |
-| <img src="Docs/icons/opencode.svg" width="24" height="24" alt=""> | **OpenCode** | `~/.local/share/opencode/opencode.db` | OpenCode Go |
-| <img src="Docs/icons/kilocode.svg" width="24" height="24" alt=""> | **Kilo CLI** | `~/.local/share/kilo/kilo.db` | Kilo Code |
-| <img src="Docs/icons/grok.svg" width="24" height="24" alt=""> | **Grok Build** | `~/.grok/sessions/` | Grok |
-| <img src="Docs/icons/kimi.svg" width="24" height="24" alt=""> | **Kimi CLI** | `~/.kimi/sessions/` | Kimi Code |
-| <img src="Docs/icons/devin.svg" width="24" height="24" alt=""> | **Devin** | `~/.local/share/devin/cli/sessions.db` | Devin |
-| <img src="Docs/icons/devin.svg" width="24" height="24" alt=""> | **Devin Desktop** | `~/Library/Application Support/Devin/User/acp-events/` | Devin |
-| <img src="Docs/icons/cursor.svg" width="24" height="24" alt=""> | **Cursor** | `~/.config/tokscale/cursor-cache/` † | Cursor |
-| <img src="Docs/icons/github.svg" width="24" height="24" alt=""> | **GitHub Copilot** | `~/.copilot/otel/`, `~/.copilot/data.db`, VS Code `workspaceStorage/*/chatSessions/` | GitHub Copilot |
-| <img src="Docs/icons/kiro.svg" width="24" height="24" alt=""> | **Kiro** | `~/.kiro/sessions/cli/` | Kiro |
-| <img src="Docs/icons/antigravity.svg" width="24" height="24" alt=""> | **Antigravity CLI** | `~/.gemini/antigravity-cli/conversations/` | Antigravity |
-| <img src="Docs/icons/antigravity.svg" width="24" height="24" alt=""> | **Antigravity IDE** | `~/.gemini/antigravity/conversations/`, `~/.gemini/antigravity-ide/conversations/` | Antigravity |
-| <img src="Docs/icons/antigravity.svg" width="24" height="24" alt=""> | **Antigravity (export)** | `~/.config/tokscale/antigravity-cache/sessions/` † | Antigravity |
-| <img src="Docs/icons/gemini.svg" width="24" height="24" alt=""> | **Gemini CLI** | `~/.gemini/tmp/` | Gemini |
-| <img src="Docs/icons/qwen.svg" width="24" height="24" alt=""> | **Qwen Code** | `~/.qwen/projects/` | — |
-| <img src="Docs/icons/amp.svg" width="24" height="24" alt=""> | **Amp** | `~/.local/share/amp/threads/` | Amp |
-| | **Droid** | `~/.factory/sessions/` | Factory |
-| <img src="Docs/icons/cline.svg" width="24" height="24" alt=""> | **Cline** | VS Code `globalStorage/saoudrizwan.claude-dev/tasks/`, `~/.cline/data/sessions/` | ClinePass |
-| <img src="Docs/icons/roocode.svg" width="24" height="24" alt=""> | **Roo Code** | VS Code `globalStorage/rooveterinaryinc.roo-cline/tasks/` | — |
-| <img src="Docs/icons/kilocode.svg" width="24" height="24" alt=""> | **Kilo Code** | VS Code `globalStorage/kilocode.kilo-code/tasks/` | Kilo Code |
-| <img src="Docs/icons/commandcode.svg" width="24" height="24" alt=""> | **Command Code** | `~/.commandcode/projects/` | Command Code |
-| | **Codebuff** | `~/.config/manicode/` | Codebuff |
-| | **Freebuff** | `~/.config/manicode/` | Codebuff |
-| | **Augment** | `~/.augment/sessions/` | Augment Code |
-| <img src="Docs/icons/junie.svg" width="24" height="24" alt=""> | **Junie** | `~/.junie/sessions/` | JetBrains AI |
-| | **Zed** | `~/Library/Application Support/Zed/threads/threads.db` | Zed |
-| | **Warp** | `~/.config/tokscale/warp-cache/` † | Warp |
-| <img src="Docs/icons/minimax.svg" width="24" height="24" alt=""> | **MiniMax Code** | `~/.config/tokscale/headless/mcode/` † | MiniMax |
-| <img src="Docs/icons/openclaw.svg" width="24" height="24" alt=""> | **OpenClaw** | `~/.openclaw/agents/` | — |
-| <img src="Docs/icons/hermesagent.svg" width="24" height="24" alt=""> | **Hermes** | `~/.hermes/state.db` | — |
-| <img src="Docs/icons/goose.svg" width="24" height="24" alt=""> | **Goose** | `~/Library/Application Support/goose/sessions/sessions.db` | — |
-| <img src="Docs/icons/tencent.svg" width="24" height="24" alt=""> | **CodeBuddy** | `~/.codebuddy/` | — |
-| <img src="Docs/icons/tencent.svg" width="24" height="24" alt=""> | **WorkBuddy** | `~/.workbuddy/`, `~/.workbuddy-ai/` | — |
-| <img src="Docs/icons/cherrystudio.svg" width="24" height="24" alt=""> | **Cherry Studio** | `~/Library/Application Support/CherryStudio/` | — |
-| <img src="Docs/icons/trae.svg" width="24" height="24" alt=""> | **Trae** | `~/.config/tokscale/trae-cache/sessions/` † | — |
-| <img src="Docs/icons/xiaomimimo.svg" width="24" height="24" alt=""> | **MiMo Code** | `~/.local/share/mimocode/` | — |
-| <img src="Docs/icons/deepseek.svg" width="24" height="24" alt=""> | **DeepSeek Harness** | `~/.dsh/sessions/` | — |
-| <img src="Docs/icons/lmstudio.svg" width="24" height="24" alt=""> | **LM Studio** | `~/.lmstudio/server-logs/` | — |
-| <img src="Docs/icons/unsloth.svg" width="24" height="24" alt=""> | **Unsloth** | `~/.unsloth/studio/studio.db` | — |
-| <img src="Docs/icons/pi.svg" width="24" height="24" alt=""> | **Pi** | `~/.pi/agent/sessions/` | — |
-| | **Oh My Pi** | `~/.omp/agent/sessions/` | — |
-| | **OmO Native** | `~/.senpi/agent/sessions/` | — |
-| | **Gajae Code** | `~/.gjc/agent/sessions/` | — |
-| | **Kimchi** | `~/.config/kimchi/harness/sessions/` | — |
-| | **Prime Agent** | `~/.prime/agent/sessions/` | — |
-| <img src="Docs/icons/opencode.svg" width="24" height="24" alt=""> | **OpenCodeReview** | `~/.opencodereview/sessions/` | — |
-| | **ZCode** | `~/.zcode/projects/`, `~/.zcode/cli/db/db.sqlite` | — |
-| | **Crush** | `~/.local/share/crush/projects.json` | — |
-| | **Mux** | `~/.mux/sessions/` | — |
-| | **JCode** | `~/.jcode/sessions/` | — |
-| | **FX** | `~/.fx/sessions/` | — |
-| | **Reasonix** | `~/.reasonix/stats/` | — |
-| | **Hindsight** | `~/.hindsight/usage/` † | — |
-
-† Needs an export or capture first, or a file in `~/Library/Application Support/Pulse/UsageImports/<client>/`.
 ---
 
 ## Installation
@@ -294,13 +71,62 @@ Token spend reads what each client leaves on this Mac — logs, databases and ex
 
 ---
 
+## Key Features
+
+### Rings at a glance
+- **Colours that follow usage** — green through amber to red, or a colour of your own for each account.
+- **Used or left** — `75% used` or `25% left`, with an optional clock arc for how much of the window has passed.
+- **Live activity** — a turning dot while an agent is working, and optional animated bots that react to each account.
+
+### Details when you point at a ring
+- **Every limit and its reset** on one card, in continuous or segmented bars.
+- **Detailed card** — the plan, when it was read, what each limit is worth, and recent usage from this Mac's records.
+- **Burn-rate forecast** — tells you when your pace will run out before the window does.
+- **In the menu bar** — the fullest ring as a figure, a small ring or split limits, with an optional dashboard.
+
+<p align="center">
+  <img src="Docs/images/detailed-card.webp" width="620" alt="The same Codex card, compact and detailed">
+</p>
+
+### Stays out of the way
+- **Any edge** — left, right, top, beside the Dock, or anywhere at all; it folds to a sliver when idle.
+- **Notifications you choose** — a limit crossing a line, spent, reset, failing checks, a low balance, a provider outage.
+- **Six languages** — English, Simplified and Traditional Chinese, Japanese, Korean and Russian.
+- **Optional extras** — global shortcuts, following the active display, hiding from screenshots.
+
+### Spend, status and the rest
+- **Token spend** — what 54 local clients have used, priced at public API rates, by day, model and agent.
+- **Estimates in your currency** — dollars, yuan, Hong Kong or New Taiwan dollars, yen, won or roubles.
+- **Monthly and yearly recap** — shareable cards built from the same records.
+- **Service status** — 44 providers' own status pages, and a notification when one reports an outage.
+- **Connection diagnostics** — where each figure came from, and the servers' own replies.
+- **For power users** — several accounts per provider, extensions for your own sources, `Pulse --json` for scripts.
+
+<p align="center">
+  <img src="Docs/images/spend.webp" height="290" alt="Token spend: total, tokens by kind, and the daily pattern">
+  &nbsp;&nbsp;
+  <img src="Docs/images/spend-history.webp" height="290" alt="Token spend day by day, by month and by agent">
+</p>
+
+**Everything in detail:** [Docs/features.md](Docs/features.md).
+
+**Also in this build:** ring colour schemes (Red alert, Gradient, Quiet); a Codex reset forecast and the latest reset on the card; ribbons when a weekly or monthly limit comes back; Kimi Code device-code sign-in and more than one account; Qoder with a personal token.
+
+---
+
+## Supported Providers & Data Routes
+
+76 services, each read the way the product itself works — its own usage endpoint, the editor's login, a local language server, or a key you paste — and every percentage is the one the service reported. [The full list, and how each is read](Docs/supported-services.md).
+
+---
+
 ## Privacy & Security
 
-Pulse is designed with strict local-first security principles:
-- **No Pulse backend**: Your Mac talks to the providers you already use, under your own logins. It also reads Codex's, Claude Code's and DeepSeek's public status pages for Service status (no login), fetches public model prices from [models.dev](https://models.dev) for the token-spend pane and checks GitHub/Sparkle for app updates. Provider requests, status pages, sign-in exchanges and models.dev use the proxy chosen under Settings › Network and refresh; supported helper processes receive the same custom proxy, or none with No Proxy. Sparkle update checks always follow macOS system proxy settings.
-- **Local Credentials**: Reads credentials already stored locally by your development tools (`~/.claude`, `~/.codex`, Cursor storage, etc.) where that is how the product works; some providers need a key or sign-in you enter in Settings.
-- **Encrypted Local Storage**: Manually entered API keys and session tokens are encrypted and saved strictly in Pulse's local application directory with owner-only permissions.
-- **Local Usage Records**: Pulse reads transcripts, databases and exports to obtain token counts and session metadata such as titles and working directories. These records may contain conversation text; processing stays on your Mac and the records stay with it. Pulse reads those records and nothing else.
+- **No Pulse account, no Pulse server** — your Mac talks to the services you use, under your own logins.
+- **Five kinds of connection, all listed** — those services, their public status pages, [models.dev](https://models.dev) for model prices, [ExchangeRate-API](https://www.exchangerate-api.com) only when you pick a currency other than the dollar, and GitHub/Sparkle for updates.
+- **Your keys stay on your Mac**, encrypted, and the usage records Pulse reads never leave it.
+
+[In detail](Docs/features.md#privacy-and-security).
 
 ---
 
