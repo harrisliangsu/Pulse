@@ -177,12 +177,39 @@ struct VolcengineUsageService: Sendable {
         _ arguments: [String],
         deadline: TimeInterval = deadline
     ) async -> Result<Data, Refusal> {
-        switch await BoundedProcess.run(
+        classify(await BoundedProcess.run(
             binary, arguments,
-            environment: BoundedProcess.environment(leading: binary, over: BoundedProcess.inheritedEnvironment),
+            environment: environment(for: binary),
             deadline: deadline,
             outputCeiling: outputCeiling
-        ) {
+        ))
+    }
+
+    /// `run`, on the caller's thread. The tests that bound *how long* a kill
+    /// takes use this. `run` waits for a utility-QoS thread before the
+    /// deadline even starts, and on a loaded CI runner that wait alone has
+    /// exceeded the time the child was supposed to be given — the pool, not
+    /// a process left alive. The ceiling those tests use is the deadline plus
+    /// `BoundedProcess.escalationBudget`.
+    static func runSynchronously(
+        _ binary: URL,
+        _ arguments: [String],
+        deadline: TimeInterval
+    ) -> Result<Data, Refusal> {
+        classify(BoundedProcess.runSynchronously(
+            binary, arguments,
+            environment: environment(for: binary),
+            deadline: deadline,
+            outputCeiling: outputCeiling
+        ))
+    }
+
+    private static func environment(for binary: URL) -> [String: String] {
+        BoundedProcess.environment(leading: binary, over: BoundedProcess.inheritedEnvironment)
+    }
+
+    private static func classify(_ result: Result<Data, BoundedProcess.Failure>) -> Result<Data, Refusal> {
+        switch result {
         case .success(let data): .success(data)
         case .failure(.couldNotStart): .failure(Refusal(reason: .volcengineCLIMissing))
         case .failure(.timedOut): .failure(Refusal(reason: .unreachable))
