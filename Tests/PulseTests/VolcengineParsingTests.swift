@@ -266,7 +266,7 @@ struct VolcengineProcessTests {
 
     @Test("A child that never finishes is killed at the deadline")
     func hangingChildIsTerminated() throws {
-        let (result, elapsed) = try timed(["-c", "sleep \(Self.childSleepSeconds)"])
+        let (result, elapsed) = try Self.timed(["-c", "sleep \(Self.childSleepSeconds)"])
 
         #expect(throws: VolcengineUsageService.Refusal.self) { try result.get() }
         // Killed, not waited out. Without this the refresh loop stops.
@@ -279,7 +279,7 @@ struct VolcengineProcessTests {
         // `waitUntilExit()`, which has no timeout — so this child sailed past
         // the deadline and parked the call permanently. `terminate()` is a
         // request; a CLI with a stuck graceful-shutdown path ignores it.
-        let (result, elapsed) = try timed(["-c", "trap '' TERM; sleep \(Self.childSleepSeconds)"])
+        let (result, elapsed) = try Self.timed(["-c", "trap '' TERM; sleep \(Self.childSleepSeconds)"])
 
         #expect(throws: VolcengineUsageService.Refusal.self) { try result.get() }
         #expect(elapsed < .seconds(Self.ceiling))
@@ -290,7 +290,7 @@ struct VolcengineProcessTests {
         // The readers see EOF at once, so the group completes inside the
         // deadline — and the old code then fell through to an unbounded wait
         // for a process that had no intention of exiting.
-        let (result, elapsed) = try timed(["-c", "exec 1>&- 2>&-; sleep \(Self.childSleepSeconds)"])
+        let (result, elapsed) = try Self.timed(["-c", "exec 1>&- 2>&-; sleep \(Self.childSleepSeconds)"])
 
         #expect(throws: VolcengineUsageService.Refusal.self) { try result.get() }
         #expect(elapsed < .seconds(Self.ceiling))
@@ -303,7 +303,7 @@ struct VolcengineProcessTests {
         let command = ignoresTERM
             ? "trap '' TERM; exec sleep \(Self.childSleepSeconds)"
             : "exec sleep \(Self.childSleepSeconds)"
-        let (result, elapsed) = try timed([
+        let (result, elapsed) = try Self.timed([
             "-c", "(\(command)) & printf '%s' \"$!\" > \"$1\"; exit 0", "pulse-test", file.path,
         ])
         #expect(elapsed < .seconds(Self.ceiling))
