@@ -61,6 +61,34 @@ enum BoundedProcess {
         case exited(status: Int32, standardError: String)
     }
 
+    /// How long a process group gets to honour SIGTERM before SIGKILL.
+    /// `terminate()` is a request; this is the grace before it stops being one.
+    static let termGrace: TimeInterval = 2
+    /// How long `terminationHandler` gets to fire, after a signal and after
+    /// the pipes have already closed on a child that is still running.
+    static let terminationGrace: TimeInterval = 2
+    /// How long the readers get to notice the pipes close once the child is gone.
+    static let pipeGrace: TimeInterval = 1
+
+    /// Extra time a call may spend once a thread is inside `blocking`, on
+    /// top of the caller's deadline. The longer of the two ways back:
+    ///
+    /// - Pipes still open: after the deadline, `stop()` (`termGrace` +
+    ///   `terminationGrace`) and then `pipeGrace` for the readers.
+    /// - Pipes already closed: the deadline returns at once, then
+    ///   `terminationGrace` to notice the leader has not exited, then
+    ///   `stop()` again. That whole wait is longer than the first path's
+    ///   remainder, so it is what this returns.
+    ///
+    /// Time spent waiting for a utility-QoS thread is not included. `run`
+    /// queues there; `runSynchronously` does not. The subprocess timing
+    /// tests assert `deadline + escalationBudget`.
+    static var escalationBudget: TimeInterval {
+        let pipesStillOpen = termGrace + terminationGrace + pipeGrace
+        let pipesAlreadyClosed = terminationGrace + termGrace + terminationGrace
+        return max(pipesStillOpen, pipesAlreadyClosed)
+    }
+
     static func run(
         _ binary: URL,
         _ arguments: [String],
@@ -71,7 +99,7 @@ enum BoundedProcess {
     ) async -> Result<Data, Failure> {
         await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .utility).async {
-                continuation.resume(returning: blocking(
+                continuation.resume(returning: runSynchronously(
                     binary, arguments,
                     environment: environment,
                     currentDirectory: currentDirectory,
@@ -80,6 +108,27 @@ enum BoundedProcess {
                 ))
             }
         }
+    }
+
+    /// `run`, on the caller's thread. The timing tests use this so the
+    /// measurement is the deadline plus `escalationBudget`, not how long the
+    /// utility pool took to hand over a thread. Production stays on `run`:
+    /// blocking work does not belong on the cooperative pool.
+    static func runSynchronously(
+        _ binary: URL,
+        _ arguments: [String],
+        environment: [String: String]?,
+        currentDirectory: URL? = nil,
+        deadline: TimeInterval,
+        outputCeiling: Int
+    ) -> Result<Data, Failure> {
+        blocking(
+            binary, arguments,
+            environment: environment,
+            currentDirectory: currentDirectory,
+            deadline: deadline,
+            outputCeiling: outputCeiling
+        )
     }
 
     private static func blocking(
@@ -169,26 +218,26 @@ enum BoundedProcess {
         func stop() {
             if let processGroup {
                 kill(-processGroup, SIGTERM)
-                let until = DispatchTime.now() + 2
+                let until = DispatchTime.now() + termGrace
                 // The leader exiting is not enough: a descendant can retain
                 // the pipes and ignore TERM. Give the whole group its grace.
                 while kill(-processGroup, 0) == 0, DispatchTime.now() < until {
                     Thread.sleep(forTimeInterval: 0.02)
                 }
                 if kill(-processGroup, 0) == 0 { kill(-processGroup, SIGKILL) }
-                _ = exited.wait(timeout: .now() + 2)
+                _ = exited.wait(timeout: .now() + terminationGrace)
                 return
             }
             process.terminate()
-            guard exited.wait(timeout: .now() + 2) == .timedOut else { return }
+            guard exited.wait(timeout: .now() + terminationGrace) == .timedOut else { return }
             kill(process.processIdentifier, SIGKILL)
-            _ = exited.wait(timeout: .now() + 2)
+            _ = exited.wait(timeout: .now() + terminationGrace)
         }
 
         if readers.wait(timeout: .now() + deadline) == .timedOut {
             stop()
             // A moment for the readers to see the pipes close, and no more.
-            _ = readers.wait(timeout: .now() + 1)
+            _ = readers.wait(timeout: .now() + pipeGrace)
             releasePipes()
             return .failure(.timedOut)
         }
@@ -196,7 +245,7 @@ enum BoundedProcess {
         // The pipes are closed, which is not the same as the process being
         // gone — it can hold both open through a child of its own, or simply
         // close them and carry on.
-        if exited.wait(timeout: .now() + 2) == .timedOut {
+        if exited.wait(timeout: .now() + terminationGrace) == .timedOut {
             stop()
             releasePipes()
             return .failure(.timedOut)
