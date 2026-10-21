@@ -203,26 +203,35 @@ struct RecapWindowView: View {
         VStack(alignment: .leading, spacing: 22) {
             section(String.localized("Period")) {
                 Picker("", selection: Binding(
-                    get: { model.isYear },
-                    set: { model.selectKind(year: $0) }
+                    get: { model.kind },
+                    set: { model.selectKind($0) }
                 )) {
-                    Text(localized: "Month").tag(false)
-                    Text(localized: "Year").tag(true)
+                    Text(localized: "Day").tag(Recap.Period.Kind.day)
+                    Text(localized: "Week").tag(Recap.Period.Kind.week)
+                    Text(localized: "Month").tag(Recap.Period.Kind.month)
+                    Text(localized: "Year").tag(Recap.Period.Kind.year)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .accessibilityLabel(String.localized("Period"))
 
-                Picker("", selection: Binding(
-                    get: { model.period },
-                    set: { model.select($0) }
-                )) {
-                    ForEach(model.offered, id: \.self) { period in
-                        Text(period.title).tag(period)
+                // The list, and a step either way beside it: a year of days
+                // is a long menu to scroll for the one before.
+                HStack(spacing: 4) {
+                    Picker("", selection: Binding(
+                        get: { model.period },
+                        set: { model.select($0) }
+                    )) {
+                        ForEach(model.offered, id: \.self) { period in
+                            Text(period.title).tag(period)
+                        }
                     }
+                    .labelsHidden()
+                    .accessibilityLabel(String.localized("Period"))
+
+                    periodStepButton("chevron.left", label: String.localized("Earlier"), direction: -1)
+                    periodStepButton("chevron.right", label: String.localized("Later"), direction: 1)
                 }
-                .labelsHidden()
-                .accessibilityLabel(String.localized("Period"))
             }
 
             section(String.localized("Monthly price")) {
@@ -300,6 +309,17 @@ struct RecapWindowView: View {
     }
 
     private var hasDeck: Bool { model.deck.map { !$0.cards.isEmpty } ?? false }
+
+    private func periodStepButton(_ symbol: String, label: String, direction: Int) -> some View {
+        Button { model.stepPeriod(direction) } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 11, weight: .semibold))
+                .frame(width: 14, height: 14)
+        }
+        .disabled(model.neighbour(direction) == nil)
+        .help(label)
+        .accessibilityLabel(label)
+    }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {

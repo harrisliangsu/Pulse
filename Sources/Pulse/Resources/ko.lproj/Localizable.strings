@@ -252,6 +252,13 @@
 "Usage history" = "사용 기록";
 "Today" = "오늘";
 "All time" = "전체 누적";
+"This month" = "이번 달";
+"Last month" = "지난달";
+"This year" = "올해";
+"Custom range" = "기간 지정";
+"Dates" = "날짜";
+"First day" = "시작일";
+"Last day" = "종료일";
 "Limit reset credits" = "한도 초기화 쿠폰";
 "Next expiry" = "다음 만료";
 "1 available" = "1장 사용 가능";
@@ -759,6 +766,15 @@
 "Plan credits" = "요금제 크레딧";
 "Dedicated credits" = "전용 크레딧";
 "Show each part of the credits" = "크레딧을 항목별로 표시";
+"Show credit amounts" = "크레딧 수량 표시";
+"Each row on the card also shows the credits, such as 5,843 / 6,000. The rail keeps its percentages." = "카드의 각 줄에 크레딧 수량도 표시합니다(예: 5,843 / 6,000). 레일에는 계속 비율을 표시합니다.";
+"No session" = "세션 없음";
+"Read the session from your browser above to see the account's usage history." = "위에서 브라우저의 세션을 읽어 오면 계정의 사용 기록을 볼 수 있습니다.";
+"The whole account, editor and CLI alike. Used is before discounts and free allowances; charged is what was deducted." = "에디터와 CLI를 포함한 계정 전체의 사용량입니다. 사용은 할인과 무료 한도를 적용하기 전의 크레딧, 차감은 실제로 빠진 크레딧입니다.";
+"Credits used per day" = "하루 사용 크레딧";
+"From Qoder's usage records, in credits." = "Qoder 사용 기록 기준, 단위는 크레딧.";
+"Charged %@" = "차감 %@";
+"%@ credits used, %@ charged" = "%@ 크레딧 사용, %@ 차감";
 "Plan credits, a top-up pack and dedicated credits are spent separately. The total can look ample while one of them is nearly gone." = "요금제 크레딧, 충전 팩, 전용 크레딧은 각각 따로 차감됩니다. 합계에는 여유가 있어 보여도 그중 하나는 거의 바닥났을 수 있습니다.";
 "%@: %@ credits expire" = "그중 %2$@ 크레딧 %1$@ 만료";
 "All expire %@" = "%@ 전부 만료";
@@ -993,6 +1009,7 @@
 "7 days" = "7일";
 "31 days" = "31일";
 "Costs are estimates at API prices." = "금액은 API 가격 기준 추정치입니다.";
+"API-price estimates. * Partly unpriced." = "API 가격 기준 추정치. *는 가격 미정 토큰 제외.";
 "Whole account" = "계정 전체";
 "Couldn't read the history." = "사용 기록을 읽지 못했습니다.";
 "From %@, for the whole account." = "%@에서 받은 계정 전체 수치입니다.";
@@ -1174,10 +1191,8 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "월간 리포트";
 "Yearly Recap" = "연간 리포트";
-"Monthly and Yearly Recap" = "월간·연간 리포트";
-"View %@ recap" = "%@ 리포트 보기";
-"View %@ yearly recap" = "%@ 연간 리포트 보기";
-"Shareable cards for a month or a year, from this Mac's records." = "이 Mac의 기록으로 한 달 또는 한 해의 공유용 카드를 만듭니다.";
+"Usage recaps" = "사용량 리포트";
+"Shareable cards for a day, a week, a month or a year, from this Mac's records." = "이 Mac의 기록으로 하루, 한 주, 한 달 또는 한 해의 공유용 카드를 만듭니다.";
 "When a recap is ready" = "리포트가 준비되었을 때";
 "Last month's recap, at the start of the month. Needs Token spend reading." = "매월 초에 지난달 리포트가 준비되었음을 알립니다. ‘로컬 사용량 기록 읽기’가 켜져 있어야 합니다.";
 "Your %@ recap is ready" = "%@ 리포트가 준비되었습니다";
@@ -1293,3 +1308,31 @@
 "No request was made." = "요청을 보내지 않았습니다.";
 "The page answered, but not with anything Pulse reads for this provider." = "상태 페이지가 응답했지만, Pulse가 이 서비스에 대해 읽을 수 있는 내용이 없었습니다.";
 "The page answered HTTP %@." = "상태 페이지 응답: HTTP %@.";
+
+// Recap: day and week
+"Daily Recap" = "일간 리포트";
+"Weekly Recap" = "주간 리포트";
+"Day" = "일간";
+"Week" = "주간";
+"Earlier" = "이전";
+"Later" = "다음";
+"On %@, you and AI worked through" = "%@, AI와 함께 처리한 양";
+"Over %@, you and AI worked through" = "%@ 한 주 동안 AI와 함께 처리한 양";
+"On %@," = "%@에는";
+"Over %@," = "%@ 한 주 동안";
+"Check back when the day is over" = "오늘이 끝나면 다시 확인해 보세요";
+"See you tomorrow" = "내일 또 만나겠습니다";
+"Check back when the week is over" = "이번 주가 끝나면 다시 확인해 보세요";
+"See you next week" = "다음 주에 또 만나겠습니다";
+"vs the day before" = "전날 대비";
+"vs the same days last week" = "지난주 같은 기간 대비";
+"vs the week before" = "전주 대비";
+"per day vs the week before" = "전주 대비 하루 평균";
+"That was your day." = "이렇게 하루를 보냈습니다.";
+"So far, this is your day." = "지금까지 이렇게 하루를 보내고 있습니다.";
+"That was your week." = "이렇게 한 주를 보냈습니다.";
+"So far, this is your week." = "지금까지 이렇게 한 주를 보내고 있습니다.";
+"Tokens · so far today" = "토큰 · 지금까지";
+"Top tool" = "주력 도구";
+"Tokens · token share" = "토큰 · 토큰 비중";
+"The plan price is the monthly price prorated by the days of this period." = "요금제 가격은 월 요금을 이 기간의 일수로 나눠 계산했습니다.";

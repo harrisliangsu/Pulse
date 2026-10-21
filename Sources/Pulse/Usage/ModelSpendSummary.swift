@@ -138,6 +138,25 @@ struct ModelSpendSummary: Equatable, Sendable {
     ) -> ModelSpendSummary {
         let today = calendar.startOfDay(for: now)
         let cutoff = span.flatMap { calendar.date(byAdding: .day, value: -($0 - 1), to: today) }
+        return of(ledgers, named: name, from: cutoff, until: nil, now: now, calendar: calendar)
+    }
+
+    /// The same, over the calendar days from `cutoff` up to, **not
+    /// including**, `upper` — local midnights, either open — as
+    /// `SpendSummary.of(_:from:until:)` counts them, so a model opened from a
+    /// row of "last month" is the same month.
+    static func of(
+        _ ledgers: [SpendAgent: UsageLedger],
+        named name: String,
+        from cutoff: Date?,
+        until upper: Date?,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> ModelSpendSummary {
+        let today = calendar.startOfDay(for: now)
+        func inside(_ date: Date) -> Bool {
+            (cutoff.map { date >= $0 } ?? true) && (upper.map { date < $0 } ?? true)
+        }
 
         var dayTokens: [Date: Int] = [:]
         var dayTally: [Date: TokenTally] = [:]
@@ -177,7 +196,7 @@ struct ModelSpendSummary: Equatable, Sendable {
 
             for day in ledger.days {
                 guard !Task.isCancelled else { return ModelSpendSummary(name: name) }
-                if let cutoff, day.date < cutoff { continue }
+                if !inside(day.date) { continue }
                 for (rawID, tokens) in day.models
                 where tokens > 0 && (ledger.modelNames[rawID] ?? rawID) == name {
                     found = true
@@ -242,7 +261,7 @@ struct ModelSpendSummary: Equatable, Sendable {
             // below fails, which is the point.
             for slot in ledger.slots {
                 guard !Task.isCancelled else { return ModelSpendSummary(name: name) }
-                if let cutoff, slot.start < cutoff { continue }
+                if !inside(slot.start) { continue }
                 for (rawID, modelTally) in slot.models
                 where (ledger.modelNames[rawID] ?? rawID) == name {
                     // A slot whose model tally is broken contributes no hours:
@@ -310,8 +329,10 @@ struct ModelSpendSummary: Equatable, Sendable {
         // Every day in the window, quiet ones included: a drill-down should be
         // the same calendar as the row it was opened from.
         let first = cutoff ?? dayTokens.keys.min() ?? today
-        let last = max(today, dayTokens.keys.max() ?? today)
-        var cursor = min(first, last)
+        let last = upper.flatMap { calendar.date(byAdding: .day, value: -1, to: $0) }
+            ?? max(today, dayTokens.keys.max() ?? today)
+        // As `SpendSummary`'s: a bounded span starts where it was asked to.
+        var cursor = upper == nil ? min(first, last) : first
         while cursor <= last {
             guard !Task.isCancelled else { return ModelSpendSummary(name: name) }
             let tokens = dayTokens[cursor] ?? 0

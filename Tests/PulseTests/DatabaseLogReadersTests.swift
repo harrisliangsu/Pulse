@@ -641,6 +641,40 @@ struct DatabaseLogReadersTests {
         #expect(record.isPartial)
     }
 
+    @Test("Antigravity's Pro routing id is resolved by its label, not by the file's other model (#90)")
+    func antigravityProRoutingLabel() throws {
+        let home = try Self.temporary("antigravity-pro")
+        defer { try? FileManager.default.removeItem(at: home) }
+        let database = home.appending(path: ".gemini/antigravity-cli/conversations/conv-p.db")
+
+        let trajectory = Self.fieldLength(2, Self.timestampBytes(seconds: 1_789_372_800))
+        func generation(model: String, label: String?, response: String) -> [UInt8] {
+            let usage = Self.fieldVarint(2, 100) + Self.fieldString(11, response)
+            var chat = Self.fieldString(19, model) + Self.fieldLength(4, usage)
+            if let label { chat += Self.fieldString(21, label) }
+            return Self.fieldLength(1, chat)
+        }
+        let flash = generation(model: "gemini-3.6-flash", label: "Gemini 3.6 Flash (High)", response: "resp-f")
+        let pro = generation(model: "gemini-pro-default", label: "Gemini 3.1 Pro (High)", response: "resp-p")
+
+        try Self.sqlite(at: database, [
+            "CREATE TABLE trajectory_metadata_blob (data BLOB)",
+            "CREATE TABLE gen_metadata (idx INTEGER, data BLOB)",
+            "CREATE TABLE steps (metadata BLOB, step_type INTEGER)",
+            "INSERT INTO trajectory_metadata_blob VALUES (\(Self.hex(trajectory)))",
+            "INSERT INTO gen_metadata VALUES (0, \(Self.hex(flash)))",
+            "INSERT INTO gen_metadata VALUES (1, \(Self.hex(pro)))",
+        ])
+
+        let roots = DatabaseLogReaders.inputs(client: "antigravity-cli", home: home, environment: [:])
+        let records = DatabaseLogReaders.records(client: "antigravity-cli", roots: roots)
+        #expect(records.first { $0.deduplicationID == "antigravity:conv-p:resp-f" }?.model == "gemini-3.6-flash")
+        let model = try #require(records.first { $0.deduplicationID == "antigravity:conv-p:resp-p" }?.model)
+        #expect(model == "gemini-3.1-pro-preview-high")
+        // The effort on the end is dropped to reach the published price.
+        #expect(ModelPrices.aliases(for: model).contains("gemini-3.1-pro-preview"))
+    }
+
     @Test("Antigravity ignores field numbers with no established meaning")
     func antigravityUnknownFields() throws {
         let home = try Self.temporary("antigravity-unknown")

@@ -252,6 +252,13 @@
 "Usage history" = "用量记录";
 "Today" = "今天";
 "All time" = "累计";
+"This month" = "本月";
+"Last month" = "上月";
+"This year" = "今年";
+"Custom range" = "自定义范围";
+"Dates" = "日期";
+"First day" = "开始日期";
+"Last day" = "结束日期";
 "Limit reset credits" = "额度重置券";
 "Next expiry" = "最近一张到期";
 "1 available" = "可用 1 张";
@@ -757,6 +764,15 @@
 "Plan credits" = "套餐积分";
 "Dedicated credits" = "专属积分";
 "Show each part of the credits" = "分项显示积分";
+"Show credit amounts" = "显示积分数值";
+"Each row on the card also shows the credits, such as 5,843 / 6,000. The rail keeps its percentages." = "卡片上的每一行同时显示积分数，例如 5,843 / 6,000。胶囊上仍显示百分比。";
+"No session" = "没有登录信息";
+"Read the session from your browser above to see the account's usage history." = "在上方从浏览器读取登录信息后，就能看到账号的用量记录。";
+"The whole account, editor and CLI alike. Used is before discounts and free allowances; charged is what was deducted." = "整个账号的用量，编辑器和命令行都包括在内。大号数字是打折和免费额度抵扣之前的积分，「消耗」是实际扣掉的积分。";
+"Credits used per day" = "每天的折前积分";
+"From Qoder's usage records, in credits." = "来自 Qoder 的用量记录，单位是积分。";
+"Charged %@" = "消耗 %@";
+"%@ credits used, %@ charged" = "折前 %@ 积分，消耗 %@";
 "Plan credits, a top-up pack and dedicated credits are spent separately. The total can look ample while one of them is nearly gone." = "套餐积分、加油包和专属积分各自扣减。合计看起来尚有余量时，其中一项可能已所剩无几。";
 "%@: %@ credits expire" = "其中 %2$@ 积分 %1$@ 到期";
 "All expire %@" = "%@全部到期";
@@ -991,6 +1007,7 @@
 "7 days" = "7 天";
 "31 days" = "31 天";
 "Costs are estimates at API prices." = "金额按 API 价格估算。";
+"API-price estimates. * Partly unpriced." = "按 API 价格估算。* 不含未计价 token。";
 "Whole account" = "整个账号";
 "Couldn't read the history." = "未能读取用量记录。";
 "From %@, for the whole account." = "来自 %@，覆盖整个账号。";
@@ -1172,10 +1189,8 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "月报";
 "Yearly Recap" = "年报";
-"Monthly and Yearly Recap" = "月报与年报";
-"View %@ recap" = "查看 %@ 的月报";
-"View %@ yearly recap" = "查看 %@ 年报";
-"Shareable cards for a month or a year, from this Mac's records." = "用这台 Mac 的本机记录，生成可以分享的月度和年度卡片。";
+"Usage recaps" = "用量报告";
+"Shareable cards for a day, a week, a month or a year, from this Mac's records." = "用这台 Mac 的本机记录，生成可以分享的日、周、月、年卡片。";
 "When a recap is ready" = "月报生成时";
 "Last month's recap, at the start of the month. Needs Token spend reading." = "每月月初提醒上个月的月报已生成。需要先开启「读取本机用量记录」。";
 "Your %@ recap is ready" = "%@ 的月报已生成";
@@ -1186,8 +1201,8 @@
 "No records for %@" = "%@ 没有用量记录";
 "Nothing in this Mac's usage records falls in this period." = "这台 Mac 的用量记录里，没有这段时间的内容。";
 "The first read of a long history can take a minute or two." = "记录很多时，第一次读取可能要一两分钟。";
-"Month" = "月度";
-"Year" = "年度";
+"Month" = "月";
+"Year" = "年";
 "Monthly price" = "每月订阅价格";
 "Only used for the payback card. Leave it empty to leave that card out." = "仅用于「订阅回本」卡片。留空则不生成该卡片。";
 "Privacy" = "隐私";
@@ -1291,3 +1306,31 @@
 "No request was made." = "没有发出请求。";
 "The page answered, but not with anything Pulse reads for this provider." = "状态页有回应，但其中没有 Pulse 能为这个服务商读取的内容。";
 "The page answered HTTP %@." = "状态页返回了 HTTP %@。";
+
+// Recap: day and week
+"Daily Recap" = "日报";
+"Weekly Recap" = "周报";
+"Day" = "日";
+"Week" = "周";
+"Earlier" = "更早";
+"Later" = "更晚";
+"On %@, you and AI worked through" = "%@，你和 AI 一起处理了";
+"Over %@, you and AI worked through" = "%@这一周，你和 AI 一起处理了";
+"On %@," = "%@，";
+"Over %@," = "%@这一周，";
+"Check back when the day is over" = "今天结束后再来看看";
+"See you tomorrow" = "明天见";
+"Check back when the week is over" = "这周结束后再来看看";
+"See you next week" = "下周见";
+"vs the day before" = "比前一天";
+"vs the same days last week" = "比上周同期";
+"vs the week before" = "比前一周";
+"per day vs the week before" = "日均比前一周";
+"That was your day." = "这就是你的这一天。";
+"So far, this is your day." = "到目前为止，\n这是你的这一天。";
+"That was your week." = "这就是你的这一周。";
+"So far, this is your week." = "到目前为止，\n这是你的这一周。";
+"Tokens · so far today" = "Token · 截至此刻";
+"Top tool" = "主力工具";
+"Tokens · token share" = "Token 数 · 占比";
+"The plan price is the monthly price prorated by the days of this period." = "订阅价格按这段时间的天数从月费折算。";

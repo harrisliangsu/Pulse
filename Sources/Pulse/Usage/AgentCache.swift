@@ -18,6 +18,8 @@ enum AgentCache {
     /// OpenCode's older rows their reasoning twice, Codebuff and Copilot
     /// Desktop their cached prefix twice, VS Code Copilot's cache-holding
     /// prompt was fresh input, and Gemini's headless thoughts were dropped.
+    /// 11: Grok Build counted its cached read and its reasoning twice (#91),
+    /// and Antigravity's Pro rows went unpriced under a routing id (#90).
     ///
     /// **A bump also tells `AgentArchive` the readers changed.** Its marks
     /// were taken under the old ones, so after a bump they stand only for
@@ -25,7 +27,7 @@ enum AgentCache {
     /// archive itself: it is a file of its own, and this cache is what the
     /// first marks are taken from — a stable read a store has deleted from
     /// since.
-    static let version = 10
+    static let version = 11
 
     /// Whether the stores' real inputs, and the money behind their cost, are
     /// the same as when the ledger was kept.

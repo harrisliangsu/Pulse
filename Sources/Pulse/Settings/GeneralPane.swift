@@ -135,7 +135,7 @@ struct GeneralPane: View {
                             Text(localized: "Split").tag(MenuBarStyle.split)
                         }
                         .labelsHidden()
-                        .pickerStyle(.segmented)
+                        .pickerStyle(.menu)
                         .fixedSize()
                     }
                 }

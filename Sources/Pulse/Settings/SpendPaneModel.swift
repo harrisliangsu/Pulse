@@ -79,9 +79,11 @@ final class SpendPaneModel {
         guard case .spend = navigation.pane, settings.readsTokenSpend, navigation.isWindowVisible,
               let snapshot = spendRead.snapshotID else { return nil }
         let calendar = Calendar.current
+        let now = Date()
+        let bounds = settings.spendSpan.bounds(custom: settings.spendCustomDays, now: now, calendar: calendar)
         return SpendSummaryCache.Request(
-            window: .init(snapshot: snapshot, days: settings.spendSpan.days,
-                          today: calendar.startOfDay(for: Date()), calendar: calendar,
+            window: .init(snapshot: snapshot, from: bounds.from, until: bounds.until,
+                          today: calendar.startOfDay(for: now), calendar: calendar,
                           language: settings.language.rawValue),
             agent: spendFocus, model: selectedModel
         )

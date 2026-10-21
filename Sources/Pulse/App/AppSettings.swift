@@ -727,8 +727,21 @@ final class AppSettings {
     /// each part with an allowance gets its own row after the total, and the
     /// ring's automatic choice follows whichever is fullest. Changes what the
     /// service returns, so it goes through `onChange`.
+    ///
+    /// **Restored through `init`, never by assignment** (#89): turning it on
+    /// unpins a ring pinned to the total, and an assignment at launch, from
+    /// the `false` default to the stored `true`, read as a person turning it
+    /// on and dropped that pin on every launch.
     var qoderShowsParts = false {
         didSet { qoderShowsPartsChanged(from: oldValue) }
+    }
+
+    /// Whether Qoder's rows on the detailed card say how many credits as well
+    /// as what share (issue #88): "5,843 / 6,000" beside the row's name, counted
+    /// the way the percentage is. Off by default. Display only, so it refetches
+    /// nothing; restored through `init` like the rest.
+    var qoderShowsAmounts = false {
+        didSet { qoderShowsAmountsChanged(from: oldValue) }
     }
 
     /// Which StepFun site the saved session belongs to: `platform.stepfun.com`
@@ -827,6 +840,13 @@ final class AppSettings {
     /// redraws whoever read it, the same as `warningThreshold`.
     var spendSpan: SpendSpan {
         didSet { spendSpanChanged(from: oldValue) }
+    }
+
+    /// The first and last day the span `custom` counts, both included. The
+    /// last seven days until the reader picks their own, and their pick is
+    /// kept like the span's, so switching back to "Custom range" finds it.
+    var spendCustomDays: ClosedRange<Date> {
+        didSet { spendCustomDaysChanged(from: oldValue) }
     }
 
     /// Which view of the Token spend pane's year-long "Token activity" chart is
@@ -1032,6 +1052,8 @@ final class AppSettings {
         deepSeekBudget: Double? = nil,
         deepSeekCurrency: String? = nil,
         qoderSite: QoderSite = Default.qoderSite,
+        qoderShowsParts: Bool = false,
+        qoderShowsAmounts: Bool = false,
         stepFunSite: StepFunSite = Default.stepFunSite,
         minimaxSite: MiniMaxSite = Default.minimaxSite,
         serverAddresses: [String: String] = [:],
@@ -1072,6 +1094,7 @@ final class AppSettings {
         animatesRingActivity: Bool = Default.animatesRingActivity,
         splitAccounts: Set<String> = [],
         spendSpan: SpendSpan = .default,
+        spendCustomDays: ClosedRange<Date>? = nil,
         spendActivityView: ActivityView = .default,
         readsTokenSpend: Bool = Default.readsTokenSpend,
         alertThreshold: AlertThreshold = .default,
@@ -1093,6 +1116,8 @@ final class AppSettings {
         self.deepSeekBudget = deepSeekBudget
         self.deepSeekCurrency = deepSeekCurrency
         self.qoderSite = qoderSite
+        self.qoderShowsParts = qoderShowsParts
+        self.qoderShowsAmounts = qoderShowsAmounts
         self.stepFunSite = stepFunSite
         self.minimaxSite = minimaxSite
         self.serverAddresses = serverAddresses
@@ -1132,6 +1157,7 @@ final class AppSettings {
         self.animatesRingActivity = animatesRingActivity
         self.splitAccounts = splitAccounts
         self.spendSpan = spendSpan
+        self.spendCustomDays = spendCustomDays ?? Self.defaultSpendCustomDays()
         self.spendActivityView = spendActivityView
         self.readsTokenSpend = readsTokenSpend
         self.alertThreshold = alertThreshold
@@ -1201,6 +1227,8 @@ final class AppSettings {
             deepSeekBudget: defaults.object(forKey: Key.deepSeekBudget) as? Double,
             deepSeekCurrency: defaults.string(forKey: Key.deepSeekCurrency),
             qoderSite: defaults.settingsChoice(Key.qoderSite) ?? Default.qoderSite,
+            qoderShowsParts: defaults.bool(forKey: Key.qoderShowsParts),
+            qoderShowsAmounts: defaults.bool(forKey: Key.qoderShowsAmounts),
             stepFunSite: defaults.settingsChoice(Key.stepFunSite) ?? Default.stepFunSite,
             minimaxSite: defaults.settingsChoice(Key.minimaxSite) ?? Default.minimaxSite,
             serverAddresses: defaults.dictionary(forKey: Key.serverAddresses) as? [String: String] ?? [:],
@@ -1248,6 +1276,7 @@ final class AppSettings {
             ),
             splitAccounts: Set(defaults.stringArray(forKey: Key.splitAccounts) ?? []),
             spendSpan: Self.storedSpendSpan(in: defaults),
+            spendCustomDays: Self.storedSpendCustomDays(in: defaults),
             spendActivityView: Self.storedSpendActivityView(in: defaults),
             readsTokenSpend: Self.storedReadsTokenSpend(in: defaults),
             alertThreshold: defaults.settingsIntChoice(Key.alertThreshold) ?? .default,

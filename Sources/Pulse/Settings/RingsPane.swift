@@ -145,7 +145,7 @@ struct RingsPane: View {
                         }
                     }
                     .labelsHidden()
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.menu)
                     .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
                     .disabled(!settings.isPanelVisible || !settings.showsWindowClock)
                 }
@@ -165,6 +165,7 @@ struct RingsPane: View {
                         }
                     }
                     .labelsHidden()
+                    .pickerStyle(.menu)
                     .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
                     .disabled(!settings.isPanelVisible)
                 }
@@ -187,6 +188,7 @@ struct RingsPane: View {
                             }
                         }
                         .labelsHidden()
+                        .pickerStyle(.menu)
                         .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
                         .disabled(!settings.isPanelVisible)
                     }

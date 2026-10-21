@@ -34,10 +34,23 @@ struct RecapScoreAgent: Equatable, Sendable {
 extension RecapDeck {
     /// "NO. 2026·10" for a month, "NO. 2026" for a year: the period as an id,
     /// not a translation.
+    /// A day is "NO. 2026·10·18", a week its first and last day,
+    /// "NO. 2026·10·12–18" ("NO. 2026·09·28–10·04" across a month).
     var scoreStamp: String {
         switch recap.period {
-        case .month(let year, let month): String(format: "NO. %d·%02d", year, month)
-        case .year(let year): "NO. \(year)"
+        case .day(let year, let month, let day):
+            return String(format: "NO. %d·%02d·%02d", year, month, day)
+        case .week(let year, let month, let day):
+            let last = recap.calendar.dateComponents([.month, .day], from: periodLastDay)
+            let lastMonth = last.month ?? month
+            let tail = lastMonth == month
+                ? String(format: "%02d", last.day ?? day)
+                : String(format: "%02d·%02d", lastMonth, last.day ?? day)
+            return String(format: "NO. %d·%02d·%02d–", year, month, day) + tail
+        case .month(let year, let month):
+            return String(format: "NO. %d·%02d", year, month)
+        case .year(let year):
+            return "NO. \(year)"
         }
     }
 
@@ -62,6 +75,17 @@ extension RecapDeck {
     var scoreBars: [RecapScoreBar] {
         let bars: [RecapScoreBar]
         switch recap.period {
+        case .day:
+            // One bar is the total; the hours are on the card already.
+            return []
+        case .week:
+            let maximum = recap.days.map(\.tokens).max() ?? 0
+            let busiest = recap.busiestDay?.date
+            let had = recap.days.map { day -> RecapScoreBar in
+                guard day.tokens > 0, maximum > 0 else { return RecapScoreBar(slot: .quiet, fraction: 0, isBusiest: false) }
+                return RecapScoreBar(slot: .active, fraction: Double(day.tokens) / Double(maximum), isBusiest: day.date == busiest)
+            }
+            bars = had + Array(repeating: RecapScoreBar(slot: .future, fraction: 0, isBusiest: false), count: max(0, 7 - had.count))
         case .month:
             let calendar = recap.calendar
             let count = calendar.range(of: .day, in: .month, for: recap.start)?.count ?? recap.days.count
@@ -104,6 +128,13 @@ extension RecapDeck {
         let bars = scoreBars
         guard !bars.isEmpty else { return [] }
         switch recap.period {
+        case .day:
+            return []
+        case .week:
+            // Each day by its weekday, in the week's own order.
+            return bars.indices.compactMap { index in
+                recap.calendar.date(byAdding: .day, value: index, to: recap.start).map { (index, RecapFormat.weekdayName(of: $0)) }
+            }
         case .month:
             let indices = Array(Set([0, 9, 19, bars.count - 1]).filter { $0 < bars.count }).sorted()
             return indices.map { ($0, "\($0 + 1)") }
@@ -116,7 +147,9 @@ extension RecapDeck {
     /// busiest slot.
     var scoreBusiestNote: String? {
         switch recap.period {
-        case .month:
+        case .day:
+            return nil
+        case .week, .month:
             guard let day = recap.busiestDay, day.tokens > 0 else { return nil }
             return .localized("Busiest \(RecapFormat.day(day.date)) · \(RecapFormat.tokens(day.tokens).text)")
         case .year:

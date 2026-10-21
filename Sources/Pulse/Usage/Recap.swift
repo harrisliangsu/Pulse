@@ -1,8 +1,8 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
-/// One month's or one year's recap: what the Token spend readers saw on this
-/// Mac over a calendar period, gathered for the shareable recap cards.
+/// One day's, week's, month's or year's recap: what the Token spend readers saw
+/// on this Mac over a calendar period, gathered for the shareable recap cards.
 ///
 /// **Facts only, no copy.** Every field is a number, a date, a name the tools
 /// themselves use (a model id's display name, an agent, a project directory)
@@ -18,8 +18,28 @@ import Foundation
 /// types into the recap (`AppSettings`), and is worked out where both are.
 struct Recap: Sendable, Equatable {
     enum Period: Hashable, Sendable {
+        /// One calendar day.
+        case day(year: Int, month: Int, day: Int)
+        /// Seven days from the one named, which is the first day of a week in
+        /// the reader's own week (`RecapPeriods.firstWeekday`). The week is
+        /// named by its first day, not by a week number, so it means the same
+        /// span whatever day the week is later set to start on.
+        case week(year: Int, month: Int, day: Int)
         case month(year: Int, month: Int)
         case year(Int)
+
+        enum Kind: CaseIterable, Hashable, Sendable {
+            case day, week, month, year
+        }
+
+        var kind: Kind {
+            switch self {
+            case .day: .day
+            case .week: .week
+            case .month: .month
+            case .year: .year
+            }
+        }
     }
 
     /// A rule-based label from where in the day the work fell. Each case is a
@@ -222,14 +242,16 @@ struct Recap: Sendable, Equatable {
     }
 
     /// The first day of each month the period covers — twelve for a year, one
-    /// for a month — found from `start` by whole-month offsets in the calendar
-    /// the recap was built with, never rebuilt from the year's number (which a
-    /// calendar of another era would read as a different year).
+    /// for a month, none for a day or a week — found from `start` by
+    /// whole-month offsets in the calendar the recap was built with, never
+    /// rebuilt from the year's number (which a calendar of another era would
+    /// read as a different year).
     var monthStarts: [Date] {
         let count: Int
         switch period {
         case .year: count = 12
         case .month: count = 1
+        case .day, .week: count = 0
         }
         return (0..<count).compactMap { calendar.date(byAdding: .month, value: $0, to: start) }
     }

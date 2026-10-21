@@ -95,10 +95,10 @@ struct RecapWindowTests {
     func switchingKind() {
         let now = Self.at(2026, 10, 5)
         let earliest = Self.at(2025, 3, 1)
-        #expect(RecapPeriods.switched(Self.month(2025, 6), earliest: earliest, now: now, calendar: Self.calendar) == .year(2025))
-        #expect(RecapPeriods.switched(.year(2025), earliest: earliest, now: now, calendar: Self.calendar) == Self.month(2025, 12))
+        #expect(RecapPeriods.switched(Self.month(2025, 6), to: .year, earliest: earliest, now: now, calendar: Self.calendar) == .year(2025))
+        #expect(RecapPeriods.switched(.year(2025), to: .month, earliest: earliest, now: now, calendar: Self.calendar) == Self.month(2025, 12))
         // The running year ends on the running month.
-        #expect(RecapPeriods.switched(.year(2026), earliest: earliest, now: now, calendar: Self.calendar) == Self.month(2026, 10))
+        #expect(RecapPeriods.switched(.year(2026), to: .month, earliest: earliest, now: now, calendar: Self.calendar) == Self.month(2026, 10))
     }
 
     @Test("A period's key round-trips")
@@ -404,7 +404,7 @@ struct RecapWindowTests {
         // Asked for a month before the earliest record: still listed, first.
         #expect(model.offered.first == .month(year: 2024, month: 2))
         #expect(model.offered.contains(.month(year: 2026, month: 9)))
-        #expect(!model.isYear)
+        #expect(model.kind == .month)
     }
 
     // MARK: - The keys

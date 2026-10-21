@@ -12,7 +12,7 @@ Pulse shows the figures each service reports, and every percentage comes from th
 | <img src="icons/openai.svg" width="24" height="24" alt=""> | **Codex** | Client usage endpoint; fallback to `codex app-server` | Reads local Codex credentials directly |
 | <img src="icons/kiro.svg" width="24" height="24" alt=""> | **Kiro** | Native Kiro CLI ACP usage method | Uses Kiro's signed-in CLI session; Pulse never reads or stores Kiro credentials ([details](providers/kiro.md)) |
 | <img src="icons/antigravity.svg" width="24" height="24" alt=""> | **Antigravity** | Local Language Server (LSP), or the `agy` CLI | The editor's language server while it runs, otherwise Google's `agy` CLI; Automatic, CLI or Desktop app in Settings |
-| <img src="icons/cursor.svg" width="24" height="24" alt=""> | **Cursor** | Cursor account usage summary API | Shows fast and slow request pools from existing editor login |
+| <img src="icons/cursor.svg" width="24" height="24" alt=""> | **Cursor** | Cursor account usage summary and dashboard API | Shows the Cursor Models and Other Models pools, or the weekly limit on a weekly plan, from the existing editor login |
 | <img src="icons/grok.svg" width="24" height="24" alt=""> | **Grok** | Grok Build CLI proxy (`cli-chat-proxy.grok.com`) | Single unified weekly pool shared across all Grok products |
 | <img src="icons/xai.svg" width="24" height="24" alt=""> | **Grok Bot** | Cursor dashboard API | The xAI quota included with Cursor subscriptions |
 | <img src="icons/github.svg" width="24" height="24" alt=""> | **GitHub Copilot** | GitHub Device Code authentication | Requests the `read:user` scope alone |

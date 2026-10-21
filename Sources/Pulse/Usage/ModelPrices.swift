@@ -317,8 +317,10 @@ actor ModelPrices {
         }
 
         // Devin's CLI writes the version with dashes and an effort on the end:
-        // `gpt-5-6-sol-medium` is OpenAI's `gpt-5.6-sol`.
-        for effort in ["-medium", "-high", "-low", "-minimal"] where model.hasSuffix(effort) {
+        // `gpt-5-6-sol-medium` is OpenAI's `gpt-5.6-sol`. Antigravity's
+        // lowest Flash effort is `-extra-low`, which `-low` alone would leave
+        // as `gemini-3.5-flash-extra`, a model nobody prices (#90).
+        for effort in ["-medium", "-high", "-extra-low", "-low", "-minimal"] where model.hasSuffix(effort) {
             let base = String(model.dropLast(effort.count))
             candidates.append(base)
             candidates.append(Self.dotted(base))

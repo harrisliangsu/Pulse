@@ -99,7 +99,9 @@ struct RecapPosterView: View {
     }
 
     private var summaryLine: some View {
-        var parts = [RecapEmphasis.plain(deck.activeDaysLine), deck.sessionsText(recap.sessions)]
+        // A day is its own one active day: only the sessions are said.
+        var parts = deck.kind == .day ? [] : [RecapEmphasis.plain(deck.activeDaysLine)]
+        parts.append(deck.sessionsText(recap.sessions))
         if let perDay = deck.tokensPerDay, perDay > 0 {
             parts.append(String.localized("\(RecapFormat.tokens(perDay).text) a day on average"))
         }
@@ -114,7 +116,8 @@ struct RecapPosterView: View {
     private var rows: [AnyView] {
         var rows: [AnyView] = []
         if recap.cost != nil { rows.append(AnyView(moneyRow)) }
-        rows.append(AnyView(shapeRow))
+        // A day's shape is its hours alone; with none recorded it has no row.
+        if deck.kind != .day || hasHours { rows.append(AnyView(shapeRow)) }
         if !recap.models.isEmpty { rows.append(AnyView(modelsCard.fixedSize(horizontal: false, vertical: true))) }
         let tiles = tileCards
         if !tiles.isEmpty { rows.append(AnyView(HStack(spacing: 20) { ForEach(tiles.indices, id: \.self) { tiles[$0] } }.frame(height: 236))) }
@@ -191,19 +194,67 @@ struct RecapPosterView: View {
 
     // Calendar (or months) and rhythm.
 
+    private var hasHours: Bool { recap.hours != nil && recap.peakHour != nil }
+
     private var shapeRow: some View {
-        let hasHours = recap.hours != nil && recap.peakHour != nil
+        let hasHours = self.hasHours
         // Alone in the row, the calendar takes the width and grows to fill it.
-        let wide = !deck.isYear && !hasHours
+        let wide = deck.kind == .month && !hasHours
         return HStack(spacing: 20) {
-            if deck.isYear {
-                monthsCard.frame(maxWidth: .infinity)
-            } else {
-                calendarCard(wide: wide).frame(maxWidth: .infinity)
+            switch deck.kind {
+            case .year: monthsCard.frame(maxWidth: .infinity)
+            case .month: calendarCard(wide: wide).frame(maxWidth: .infinity)
+            case .week: weekCard(wide: !hasHours).frame(maxWidth: .infinity)
+            case .day: EmptyView()
             }
             if hasHours { rhythmCard.frame(maxWidth: .infinity) }
         }
         .frame(height: wide ? 520 : 330)
+    }
+
+    /// A week's seven days in a row, in the week's own order, each under its
+    /// weekday and over its date: the calendar card at a week's scale.
+    private func weekCard(wide: Bool) -> some View {
+        let calendar = recap.calendar
+        let dates = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: recap.start) }
+        let byDate = Dictionary(recap.days.map { (calendar.startOfDay(for: $0.date), $0) }, uniquingKeysWith: { first, _ in first })
+        let maximum = recap.days.map(\.tokens).max() ?? 0
+        let busiest = recap.busiestDay?.date
+        let side: CGFloat = wide ? 104 : 52
+        let gap: CGFloat = wide ? 18 : 6
+        return RecapBox(padding: EdgeInsets(top: 24, leading: 26, bottom: 24, trailing: 26)) {
+            VStack(alignment: .leading, spacing: 12) {
+                cardTitle(.localized("Every day"), note: .localized("Darker days used more"))
+                Spacer(minLength: 0)
+                HStack(spacing: gap) {
+                    ForEach(dates.indices, id: \.self) { index in
+                        let date = calendar.startOfDay(for: dates[index])
+                        VStack(spacing: 10) {
+                            Text(verbatim: RecapFormat.weekdayHeading(of: date))
+                                .font(.recap(wide ? 18 : 13))
+                                .foregroundStyle(RecapColor.secondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
+                            if let day = byDate[date] {
+                                dayCell(day, maximum: maximum, busiest: busiest, side: side)
+                            } else {
+                                // Still to come in a running week: not a quiet day.
+                                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                    .strokeBorder(RecapColor.rule, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                                    .frame(width: side, height: side)
+                            }
+                            Text(verbatim: "\(calendar.component(.day, from: date))")
+                                .font(.recap(wide ? 18 : 13, .regular, mono: true))
+                                .foregroundStyle(RecapColor.tertiary)
+                                .lineLimit(1)
+                        }
+                        .frame(width: side)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                Spacer(minLength: 0)
+            }
+        }
     }
 
     private func calendarCard(wide: Bool) -> some View {
@@ -464,7 +515,8 @@ struct RecapPosterView: View {
 
     private var lowCards: [AnyView] {
         var cards: [AnyView] = []
-        if let day = recap.busiestDay { cards.append(AnyView(busiestCard(day))) }
+        // A day recap's busiest day is the day itself.
+        if deck.kind != .day, let day = recap.busiestDay { cards.append(AnyView(busiestCard(day))) }
         if !recap.projects.isEmpty { cards.append(AnyView(projectsCard)) }
         return cards
     }

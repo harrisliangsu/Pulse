@@ -84,7 +84,7 @@ enum AntigravityCLIReader {
             var labels: [String: Set<String>] = [:]
             var models: Set<String> = []
             for generation in generations {
-                guard let model = generation.model, model != routingLabel else { continue }
+                guard let model = generation.model, !routingLabels.contains(model) else { continue }
                 models.insert(model)
                 if let label = generation.label { labels[label, default: []].insert(model) }
             }
@@ -134,7 +134,11 @@ enum AntigravityCLIReader {
         } ?? []
     }
 
-    private static let routingLabel = "gemini-default"
+    /// Ids that name a routing tier rather than a model: `gemini-default`
+    /// (Flash) and `gemini-pro-default` (Pro, seen with the label "Gemini 3.1
+    /// Pro (High)"). Neither has a price, and the label says which model ran
+    /// (#90).
+    private static let routingLabels: Set<String> = ["gemini-default", "gemini-pro-default"]
 
     private struct Anchor {
         var createdAt: Date?
@@ -261,8 +265,12 @@ enum AntigravityCLIReader {
     }
 
     /// The model identity, preferring the machine id, then a sibling row's id
-    /// recovered through the display label, then the file's single model, then
-    /// a verified label table, then the routing label itself.
+    /// recovered through the display label, then a verified label table, then
+    /// the file's single model, then the routing label itself.
+    ///
+    /// **The label table before the file's single model** (#90): a Pro row in
+    /// a file whose only named model is a Flash one would otherwise be priced
+    /// as that Flash.
     ///
     /// **No vendor default is invented.** A file that names no model at all
     /// falls back to `unknown`, an unpriced name, rather than to a concrete
@@ -272,13 +280,13 @@ enum AntigravityCLIReader {
         labels: [String: Set<String>],
         sole: String?
     ) -> String {
-        if let model = generation.model, model != routingLabel { return model }
+        if let model = generation.model, !routingLabels.contains(model) { return model }
         if let label = generation.label, let models = labels[label], models.count == 1,
            let only = models.first {
             return only
         }
-        if let sole { return sole }
         if let label = generation.label, let mapped = labelTable[label] { return mapped }
+        if let sole { return sole }
         return generation.model ?? "unknown"
     }
 
@@ -288,6 +296,7 @@ enum AntigravityCLIReader {
         "Gemini 3.5 Flash (Low)": "gemini-3.5-flash-extra-low",
         "Gemini 3.5 Flash (Medium)": "gemini-3.5-flash-medium",
         "Gemini 3.5 Flash (High)": "gemini-3.5-flash-high",
+        "Gemini 3.1 Pro (High)": "gemini-3.1-pro-preview-high",
     ]
 }
 

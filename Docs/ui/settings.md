@@ -2,7 +2,7 @@
 
 Chrome and why it is AppKit-owned: [../architecture.md](../architecture.md). Localization rules: [../development.md](../development.md).
 
-`SettingsView` / `SettingsRow`: a `NavigationSplitView` source list, panes built from `SettingsGroup` + `SettingsRow` (title and optional subtitle on the left, control on the right; `controlBelow: true` puts the control under the label). A control too wide to leave its label room uses `ViewThatFits`: Placement's six-segment **Position** picker sits beside the label only when both fit (otherwise the label wrapped a character a line), else under it, and in the narrowest window its segments shrink rather than overflow the card. `SettingsPane` includes `.account(AccountKey)`, so every account — each provider's first, plus any added login — has a sidebar row.
+`SettingsView` / `SettingsRow`: a `NavigationSplitView` source list, panes built from `SettingsGroup` + `SettingsRow` (title and optional subtitle on the left, control on the right; `controlBelow: true` puts the control under the label). **A choice in a settings row is a pop-up menu** (`.pickerStyle(.menu)`), as in System Settings, never a segmented control: one control everywhere, and a menu fits beside its label however many options it has (Position's six segments had to move under the label to fit). Segmented controls are kept for switching what a view shows — Token activity's view, the recap's day / week / month / year. `SettingsPane` includes `.account(AccountKey)`, so every account — each provider's first, plus any added login — has a sidebar row.
 
 ## Where the code lives
 
@@ -60,10 +60,10 @@ The former single General pane is split by subject (`SettingsPane`). Panel and A
 
 | Sidebar section | Pane | Holds |
 |---|---|---|
-| Panel | **Appearance** | Size, Spacing, Round ends, Progress bars (Continuous / Segmented), Appearance (dark / light / auto / glass) and Transparency while glass is on, Ring activity animation |
+| Panel | **Appearance** | Size, Spacing, Round ends, Progress bars (Continuous / Segmented), Appearance (dark / light / auto / glass, a menu) and Transparency while glass is on, Ring activity animation |
 | Panel | **Rings and figures** | *Figures*: percentages at the side / across (*Percentages across*: any rail lying across — docked to the top or bottom, or free), figures beside the rings (free across only, off by default; needs percentages across), figure above the ring, show what's left, forecast. *Rings*: second limit, time until reset, time ring direction, ring colour scheme (Red alert / Gradient / Quiet), turn red at (under Red alert and Quiet), alert colour when docked |
-| Panel | **Position and behavior** | Show floating panel, hide in full screen, hide from screenshots, hide until pointed at, position (Left, Top, Bottom, Free across, Free upright, Right — a segmented control sized to its labels, since that many segments truncate under `controlWidth`), snap to screen edges, follow the active display; **Order** |
-| Panel | Token spend | unchanged |
+| Panel | **Position and behavior** | Show floating panel, hide in full screen, hide from screenshots, hide until pointed at, position (Left, Top, Bottom, Free across, Free upright, Right — a menu), snap to screen edges, follow the active display; **Order** |
+| Panel | Token spend | Below |
 | Application | **General** | *Application*: open at login, show Dock icon, hide menu bar icon, show usage in the menu bar (+ menu bar shows, menu bar style), usage panel in the menu, currency. *Shortcuts*. *Language* |
 | Application | **Notifications** | Warn at, when a limit comes back, when a reading stops arriving, when a service is down, when a recap is ready; Reset reminders (predicted and regular); Celebrations, including the optional five-hour / hourly ribbon |
 | Application | **Network and refresh** | Check every; proxy ([../networking.md](../networking.md)) |
@@ -84,7 +84,7 @@ The former single General pane is split by subject (`SettingsPane`). Panel and A
 
 ### Rings and figures
 
-- **Time ring direction** follows **Time until reset** and is disabled while the clock is off: a two-way segmented picker, elapsed (the default, so existing installations do not reverse) or remaining (starts full, empties toward reset). It changes only the neutral outer arc, independently of **Show what's left**, which controls the coloured ring and its figure. [rings-and-surface.md](rings-and-surface.md#window-clock-arc)
+- **Time ring direction** follows **Time until reset** and is disabled while the clock is off: a two-way menu, elapsed (the default, so existing installations do not reverse) or remaining (starts full, empties toward reset). It changes only the neutral outer arc, independently of **Show what's left**, which controls the coloured ring and its figure. [rings-and-surface.md](rings-and-surface.md#window-clock-arc)
 - **Ring colour scheme** (`AppSettings.ringColourScheme`, Red alert / Gradient / Quiet, default Red alert) owns every usage colour on the panel. **Turn red at** is nested under Red alert and Quiet (`AppSettings.warningThreshold`, 60–90%): green to red under Red alert, green to muted grey under Quiet. Gradient never draws red, including when spent. Quiet keeps green below the threshold. [rings-and-surface.md](rings-and-surface.md)
 - **Alert colour when docked** (`AppSettings.dockShowsAlertColor`, on by default) closes the Rings group. It gates only `FloatingUsagePanelContent.alertTint` — the collapsed sliver's colour, or at a physical notch the thin edge below the housing; the rings are unaffected. [rings-and-surface.md](rings-and-surface.md#colour-and-spent)
 
@@ -131,7 +131,7 @@ The usage-interval group is named **Refresh**, not Updates. The manual proxy hos
 
 The pane starts with **Read local usage records**, off by default on fresh installs and upgrades. While off it shows only that control and its scan explanation. Enabling it shows the span/results UI and starts a read; progress names the current source and its index. Returning from another pane shows the last completed result at once without checking files; **Rescan** updates it. Leaving cancels an unfinished read, retried on return. Turning reading off or closing Settings (whichever pane is selected) releases the snapshot and derived summaries. Account-history cards are independent. Under the headline total, a **Token activity** section shows the last twelve months as a daily grid, weekly bars or a running total (segmented control at its top right, kept in `AppSettings.spendActivityView`), whatever the span says; it is not drawn with no record in the year ([../token-spend.md](../token-spend.md#token-activity)). Reader checkpoints, cache behaviour and memory measurements: [../token-spend.md](../token-spend.md).
 
-Once reading is on, the first group gains a **Monthly and Yearly Recap** row with two buttons: **View September recap** (the month the recap window would open on, `RecapPeriods.defaultMonth`) and **View 2026 recap** (the year by the same rule, `RecapPeriods.defaultYear`), each opening the recap window on that period. The window's own controls (period, monthly price, hide project names, export) are in [../recap.md](../recap.md#the-window), next to the card they change.
+Once reading is on, the first group gains a **Usage recaps** row (zh-Hans 用量报告) with one **Open** button, which opens the recap window on the period it would open on by itself (`RecapPeriods.defaultMonth`). One button rather than one per period: the window switches between day, week, month and year itself, and a button for each repeated that control. The window's own controls (period, monthly price, hide project names, export) are in [../recap.md](../recap.md#the-window), next to the card they change.
 
 ### Developer integrations
 
@@ -146,6 +146,8 @@ In the sidebar's last, untitled section. It copies the actual executable's `--js
 **The sidebar cannot be hidden** (`NavigationSplitView(columnVisibility: .constant(.all))`, `.toolbar(removing: .sidebarToggle)`). With SwiftUI's toggle, collapsing it and drawing it back at a width that could not hold sidebar and pane side by side overflowed both ways — the list past the left edge, the pane past the right — and the title bar showed an overflow "»". The sidebar is how the window is navigated, as in System Settings.
 
 **Sidebar column: min 220, ideal 240, max 320**, sized to "Alibaba Coding Plan", the longest (brand) name (121.4pt of text at 13pt; "Xiaomi Coding Plan" 117.3), with the scroller always showing; at 200 it read "Alibaba Coding Pl…". `ideal` was scaled from a fourteen-character name that fit, not measured, so check a longer name in the running app. `min` matters most: AppKit saves the divider position, so `ideal` is read once per install while `min` clamps everyone.
+
+**Sidebar icons are the text's colour** (`SidebarRowLabelStyle` in `SettingsSidebar.swift`): black, white in dark mode. A source list tints its icons with the accent colour, and two dozen blue marks down the list read as links rather than as places. The row lays out its own icon and title rather than recolouring the sidebar's: a `.foregroundStyle` on the icon did not override the tint, and `.listItemTint(.fixed(.primary))` held only for the rows on screen when the window opened — rows scrolled into view later were blue again (both checked in the running app).
 
 **Default window: 920 × 660**, set on the `NSWindow`'s `contentRect`; the view's `minWidth` / `minHeight` (720 × 460) are the drag-down limit. The former 760 × 500 scrolled in both columns on opening. The size is not remembered: the window is rebuilt and `center()`ed on each launch.
 
@@ -181,6 +183,8 @@ Per-account choices about *one ring* live here rather than on the Panel panes ([
 - **Detailed card** on every account (`AppSettings.detailedCards`, account ids; off by default) — per account, because it is worth its height only on an account somebody watches closely. The subtitle says what the card adds and which history it will carry (`AccountPanelGroup.detailedCardSubtitle`): none, the account's month from the provider (Z.ai, Zhipu), or this Mac's recent activity with Token spend on. The card: [panel-geometry.md](panel-geometry.md#detailed-card).
 - **Reset credits on the card**, Codex's first account only: off by default; on, its hover card says how many limit reset credits Codex reports, or "Not available" ([../providers/codex.md](../providers/codex.md#limit-reset-credits)).
 - **Show each part of the credits**, Qoder only (`AppSettings.qoderShowsParts`, off by default): the plan's credits, a top-up pack and dedicated credits each get a row after the total, so the ring's automatic choice can follow the part closest to spent ([../providers/qoder.md](../providers/qoder.md#the-parts-issue-76)).
+- **Usage history**, Qoder only (`QoderCreditsGroup`): the account's credits used and charged today, over 7 and 31 days, and the month as bars, from Qoder's own usage records, read when the pane opens and on Refresh ([../providers/qoder.md](../providers/qoder.md#credit-history-issue-88)). The same figures are on Qoder's detailed card.
+- **Show credit amounts**, Qoder only (`AppSettings.qoderShowsAmounts`, off by default): each row on the card also shows its credits, "5,843 / 6,000", the same way round as its percentage; the rail keeps its percentages ([../providers/qoder.md](../providers/qoder.md#the-credits-themselves-issue-88)).
 
 ### Provider-specific groups
 

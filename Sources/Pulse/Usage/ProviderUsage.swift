@@ -242,6 +242,21 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
 
     var nextExpiry: Expiry?
 
+    /// The allowance in its own unit, as the provider states it, where it
+    /// states one: Qoder's credits (issue #88). Two parts at the same
+    /// percentage can be 6,000 credits and 2,700, and only these say which.
+    /// Drawn on the detailed card behind a setting; never the ring, and never
+    /// a percentage of its own — `usedFraction` stays the one the row shows.
+    struct Amounts: Equatable, Codable, Sendable {
+        let used: Double
+        /// Only as stated: an unstated remainder is not worked out from the
+        /// other two, so a row counted as "left" then shows no amount.
+        let remaining: Double?
+        let limit: Double
+    }
+
+    var amounts: Amounts?
+
     /// A name the reporter gave this limit, used in place of the one built
     /// from `kind`.
     ///
@@ -263,6 +278,7 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         estimate: Estimate? = nil,
         isExhausted: Bool = false,
         nextExpiry: Expiry? = nil,
+        amounts: Amounts? = nil,
         label: String? = nil
     ) {
         self.id = id
@@ -275,6 +291,7 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         self.estimate = estimate
         self.isExhausted = isExhausted
         self.nextExpiry = nextExpiry
+        self.amounts = amounts
         self.label = label
     }
 
@@ -299,6 +316,7 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         reportsLength = try container.decodeIfPresent(Bool.self, forKey: .reportsLength) ?? true
         isExhausted = try container.decodeIfPresent(Bool.self, forKey: .isExhausted) ?? false
         nextExpiry = try container.decodeIfPresent(Expiry.self, forKey: .nextExpiry)
+        amounts = try container.decodeIfPresent(Amounts.self, forKey: .amounts)
         label = try container.decodeIfPresent(String.self, forKey: .label)
 
         if let estimate = try container.decodeIfPresent(Estimate.self, forKey: .estimate) {
@@ -325,12 +343,13 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         try container.encodeIfPresent(estimate, forKey: .estimate)
         try container.encode(isExhausted, forKey: .isExhausted)
         try container.encodeIfPresent(nextExpiry, forKey: .nextExpiry)
+        try container.encodeIfPresent(amounts, forKey: .amounts)
         try container.encodeIfPresent(label, forKey: .label)
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, kind, scope, usedFraction, windowSeconds, resetsAt
-        case reportsLength, isExhausted, estimate, nextExpiry, label
+        case reportsLength, isExhausted, estimate, nextExpiry, amounts, label
         /// Written by 1.0.9 and earlier. Read, never written.
         case isEstimated
     }

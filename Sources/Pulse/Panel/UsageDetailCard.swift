@@ -182,6 +182,9 @@ struct UsageDetailCard: View {
     var showsRemaining: Bool = false
     /// Say whether each limit will last its window.
     var showsForecast: Bool = false
+    /// Put the allowance in its own unit beside each row's name, where the
+    /// provider states one (`UsageWindow.amounts`; Qoder's credits, #88).
+    var showsAmounts: Bool = false
     /// Codex's limit reset credits, when its switch is on and it has been
     /// asked. Nil draws no row at all.
     var resetCredits: CodexResetCredits?
@@ -192,6 +195,9 @@ struct UsageDetailCard: View {
     /// Nil draws no section: Token spend is off, or this account keeps no
     /// records here.
     var spend: Spend?
+    /// Qoder's last 31 days in credits, from the account's records, for the
+    /// detailed card. Nil draws nothing — not asked yet, or not read whole.
+    var qoderCredits: QoderCreditDays?
     /// When each live session's prompt cache lapses, where the logs say. The
     /// card names the soonest; Settings lists them all.
     var promptCache: PromptCacheReading?
@@ -312,7 +318,8 @@ struct UsageDetailCard: View {
                     // stated, and `BurnRate` refuses the windows that lack one
                     // rather than being told in advance which they are.
                     burn: showsForecast ? BurnRate.reading(for: window) : nil,
-                    value: valueText(window)
+                    value: valueText(window),
+                    amount: showsAmounts ? Self.amountText(window, remaining: showsRemaining) : nil
                 )
                 .transition(Self.rowTransition)
             }
@@ -386,6 +393,12 @@ struct UsageDetailCard: View {
 
             if isDetailed, let spend {
                 ActivitySection(spend: spend, provider: usage.provider, promptCache: promptCache)
+                    .transition(Self.rowTransition)
+            }
+            // Qoder keeps no history on this Mac; its account's records stand
+            // in the same place, in credits (issue #88).
+            if isDetailed, let qoderCredits {
+                QoderCreditSection(credits: qoderCredits)
                     .transition(Self.rowTransition)
             }
         }
@@ -581,6 +594,24 @@ struct UsageDetailCard: View {
             return String.localized("From \(date): \(expiryAmount(total)) credits expire in turn")
         }
         return String.localized("\(date): \(expiryAmount(expiry.amount)) credits expire")
+    }
+
+    /// "5,843 / 6,000": what is left of the allowance, or what is gone, out of
+    /// all of it — the same way round as the percentage under it, which says
+    /// "Left" or "Used". Nil where the provider stated no remainder and the row
+    /// counts what is left: the two others are not subtracted for it.
+    nonisolated static func amountText(_ window: UsageWindow, remaining: Bool) -> String? {
+        guard let amounts = window.amounts, amounts.limit > 0,
+              let figure = remaining ? amounts.remaining : amounts.used
+        else { return nil }
+        return "\(creditAmount(max(figure, 0))) / \(creditAmount(amounts.limit))"
+    }
+
+    /// Whole credits in full up to a million, a tenth where there is one.
+    nonisolated static func creditAmount(_ amount: Double) -> String {
+        amount >= 1_000_000
+            ? TokenCount.short(Int(amount))
+            : amount.formatted(.number.precision(.fractionLength(0...1)).locale(LocalizationSource.locale))
     }
 
     /// StepFun counts in Credits of which a plan holds billions: "1,599,913,834"
@@ -1064,6 +1095,78 @@ extension UsageDetailCard {
     }
 }
 
+/// Qoder's place for the activity section (issue #88): today, 7 days and 31
+/// days in credits — what was used, and under it what was deducted — and the
+/// month day by day. The account's own records, so the whole account's work,
+/// editor and CLI alike. Drawn in `ActivitySection`'s rows at its heights,
+/// so it fits the budget every detailed card already keeps for one.
+private struct QoderCreditSection: View {
+    let credits: QoderCreditDays
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DetailCardLayout.activitySpacing) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.12))
+                .frame(height: 1)
+
+            Text(localized: "Whole account")
+                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.5))
+                .frame(height: DetailCardLayout.figureLabelHeight)
+
+            HStack(alignment: .top, spacing: 8) {
+                figure(String.localized("Today"), credits.total(overLast: 1))
+                figure(String.localized("7 days"), credits.total(overLast: 7))
+                figure(String.localized("31 days"), credits.total(overLast: QoderCreditDays.span))
+            }
+            .frame(height: DetailCardLayout.figuresHeight, alignment: .top)
+
+            DaysChart(
+                days: credits.days.map {
+                    // Hundredths, so a day of 0.4 credits still has a bar.
+                    LedgerDay(date: $0.date, tokens: Int(($0.used * 100).rounded()), cost: 0,
+                              unpricedTokens: 0, models: [:])
+                },
+                slots: QoderCreditDays.span,
+                label: String.localized("Credits used per day")
+            )
+            .frame(height: DetailCardLayout.chartHeight)
+
+            Text(localized: "From Qoder's usage records, in credits.")
+                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.4))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(height: DetailCardLayout.footnoteHeight)
+        }
+    }
+
+    /// The credits used, large, and what was deducted under it, dim: the
+    /// same two lines `ActivitySection` gives tokens and their money.
+    private func figure(_ label: String, _ total: (used: Double, charged: Double)) -> some View {
+        VStack(alignment: .leading, spacing: 2 * PanelMetrics.scale) {
+            Text(verbatim: label)
+                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
+                .foregroundStyle(.primary.opacity(0.45))
+                .frame(height: DetailCardLayout.figureLabelHeight)
+            Text(verbatim: UsageDetailCard.creditAmount(total.used))
+                .font(.system(size: DetailCardLayout.figureFontSize, weight: .semibold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.primary)
+                .frame(height: DetailCardLayout.figureValueHeight)
+            Text(String.localized("Charged \(UsageDetailCard.creditAmount(total.charged))"))
+                .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded).monospacedDigit())
+                .foregroundStyle(.primary.opacity(0.45))
+                .frame(height: DetailCardLayout.figureLabelHeight)
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(String.localized("\(UsageDetailCard.creditAmount(total.used)) credits used, \(UsageDetailCard.creditAmount(total.charged)) charged"))
+    }
+}
+
 /// The detailed card's last section: the account's recent usage, from this
 /// Mac's records at the Token spend pane's prices, or — for Z.ai and Zhipu —
 /// from the statistics the provider publishes for the whole account, or — for
@@ -1129,7 +1232,8 @@ private struct ActivitySection: View {
             case .signedOut:
                 message(String.localized("The console session has expired. Read it again in Settings."))
             case .ledger(let ledger):
-                figures(ledger)
+                let month = ledger.total(overLast: Self.span)
+                figures(ledger, month: month)
                 DaysChart(days: ledger.recent(Self.span), slots: Self.span)
                     .frame(height: DetailCardLayout.chartHeight)
                 topModel(ledger)
@@ -1139,7 +1243,11 @@ private struct ActivitySection: View {
                     ? String.localized("Costs as \(provider.displayName) charged them, for the whole account.")
                     : isAccountWide
                         ? String.localized("From \(provider.displayName), for the whole account.")
-                        : String.localized("Costs are estimates at API prices."))
+                        // Only beside a `*`: with no money line there is
+                        // none to explain.
+                        : Self.hasMoneyLine(month, isAccountWide: isAccountWide, isCharged: isCharged) && month.unpriced > 0
+                            ? String.localized("API-price estimates. * Partly unpriced.")
+                            : String.localized("Costs are estimates at API prices."))
                     .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
                     .foregroundStyle(.primary.opacity(0.4))
                     .lineLimit(1)
@@ -1156,18 +1264,23 @@ private struct ActivitySection: View {
             .frame(height: DetailCardLayout.rowTextLineHeight)
     }
 
-    private func figures(_ ledger: UsageLedger) -> some View {
+    /// No money line at all where there is no money anywhere — a provider's
+    /// own statistics, or nothing priced — rather than a blank band under the
+    /// figures. One priced column keeps the line on all three, level.
+    private static func hasMoneyLine(_ month: (tokens: Int, cost: Double, unpriced: Int),
+                                     isAccountWide: Bool, isCharged: Bool) -> Bool {
+        (isCharged || !isAccountWide) && month.cost > 0
+    }
+
+    private func figures(_ ledger: UsageLedger, month: (tokens: Int, cost: Double, unpriced: Int)) -> some View {
         let today = ledger.today
         let week = ledger.total(overLast: 7)
-        let month = ledger.total(overLast: Self.span)
-        // No money line at all where there is no money anywhere — a provider's
-        // own statistics, or nothing priced — rather than a blank band under
-        // the figures. One priced column keeps the line on all three, level.
-        let priced = (isCharged || !isAccountWide) && month.cost > 0
+        let priced = Self.hasMoneyLine(month, isAccountWide: isAccountWide, isCharged: isCharged)
         return HStack(alignment: .top, spacing: 8) {
-            figure(String.localized("Today"), tokens: today?.tokens ?? 0, cost: today?.cost ?? 0, priced: priced)
-            figure(String.localized("7 days"), tokens: week.tokens, cost: week.cost, priced: priced)
-            figure(String.localized("31 days"), tokens: month.tokens, cost: month.cost, priced: priced)
+            figure(String.localized("Today"), tokens: today?.tokens ?? 0, cost: today?.cost ?? 0,
+                   unpriced: today?.unpricedTokens ?? 0, priced: priced)
+            figure(String.localized("7 days"), tokens: week.tokens, cost: week.cost, unpriced: week.unpriced, priced: priced)
+            figure(String.localized("31 days"), tokens: month.tokens, cost: month.cost, unpriced: month.unpriced, priced: priced)
         }
         .frame(height: priced ? DetailCardLayout.figuresHeight : DetailCardLayout.unpricedFiguresHeight, alignment: .top)
     }
@@ -1175,7 +1288,12 @@ private struct ActivitySection: View {
     /// **No money line for work nobody priced.** A day spent entirely on a
     /// model with no published price costs something; "$0.00" would say it
     /// cost nothing.
-    private func figure(_ label: String, tokens: Int, cost: Double, priced: Bool) -> some View {
+    ///
+    /// **A `*` where only part of it was priced** (#90), as the Token spend
+    /// pane marks it: a model with no published price is left out of the
+    /// money, and an unmarked "$0.04" under 740M tokens read as the cost of
+    /// all of them. The footnote then says what the `*` means.
+    private func figure(_ label: String, tokens: Int, cost: Double, unpriced: Int, priced: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2 * PanelMetrics.scale) {
             Text(verbatim: label)
                 .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded))
@@ -1188,7 +1306,9 @@ private struct ActivitySection: View {
             if priced {
                 // No "≈": the section's footnote says when the money is an
                 // estimate, and when it is what the provider charged.
-                Text(verbatim: cost > 0 ? AccountUsageCard.money(cost, currency: currency, isCharged: isCharged) : " ")
+                Text(verbatim: cost > 0
+                    ? AccountUsageCard.money(cost, currency: currency, isCharged: isCharged) + (unpriced > 0 ? "*" : "")
+                    : " ")
                     .font(.system(size: DetailCardLayout.footnoteFontSize, weight: .regular, design: .rounded).monospacedDigit())
                     .foregroundStyle(.primary.opacity(0.45))
                     .frame(height: DetailCardLayout.figureLabelHeight)
@@ -1336,6 +1456,8 @@ private struct PromptCacheRow: View {
 private struct DaysChart: View {
     let days: [LedgerDay]
     let slots: Int
+    /// What the bars count, for VoiceOver.
+    var label = String.localized("Tokens per day")
 
     var body: some View {
         GeometryReader { proxy in
@@ -1362,7 +1484,7 @@ private struct DaysChart: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String.localized("Tokens per day"))
+        .accessibilityLabel(label)
     }
 }
 
@@ -1500,6 +1622,10 @@ private struct ProgressMetricRow: View {
     var burn: BurnRate.Reading?
     /// The detailed card's estimate of what the window is worth. Nil draws no line.
     var value: String?
+    /// The allowance in its own unit, "5,843 / 6,000", beside the name. Nil
+    /// draws nothing; the line is the name's either way, so the row's height
+    /// does not change.
+    var amount: String?
 
     /// "88% Used", or "12% Left" when the figure is counted the other way.
     private var figureLabel: String {
@@ -1516,11 +1642,25 @@ private struct ProgressMetricRow: View {
             // Claude and GPT" next to "Resets 9月6日 18:14" does not fit in a
             // 250pt card, and it was the *name* that got cut — the half that
             // says which limit this is.
-            Text(title)
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(title)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .layoutPriority(1)
+
+                if let amount {
+                    Spacer(minLength: 0)
+                    // Dim, as the reset line is: a figure about the row, under
+                    // the one the row is about.
+                    Text(verbatim: amount)
+                        .foregroundStyle(.primary.opacity(0.45))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+            }
+            .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
 
             ProgressView(value: progress)
                 .progressViewStyle(PulseProgressStyle(accent: accent))
@@ -1580,9 +1720,10 @@ private struct ProgressMetricRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
         .accessibilityValue(
-            showsRemaining
+            (showsRemaining
                 ? String.localized("\(percentageText) left. \(resetDescription)")
-                : String.localized("\(percentageText) used. \(resetDescription)")
+                : String.localized("\(percentageText) used. \(resetDescription)"))
+                + (amount.map { " \($0)" } ?? "")
         )
     }
 }

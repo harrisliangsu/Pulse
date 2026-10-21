@@ -86,7 +86,7 @@ Second call: `GetUserStatus`. Only `planName` is decoded. The same reply holds n
 
 Of the 306 methods the language server exposes, not one has “usage” or “credit” in its name; `GetUserAnalyticsSummary` answers `{}`; `~/.antigravity` holds only binaries and extensions; the editor’s `state.vscdb` keeps conversation titles and two sentinel values under `modelCredits`, no token counts.
 
-So history, money estimate, and activity cannot be built — they need per-model token counts that do not exist to be read.
+So history, money estimate, and activity cannot be built from the language server — they need per-model token counts it does not give. They come instead from the conversation stores under `~/.gemini`, read by Token spend ([../token-spend-sources.md](../token-spend-sources.md)).
 
 `~/.gemini` was **not** on that list and should have been: it holds `antigravity/`, `antigravity-ide/` and a `jetski-standalone-oauth-token` of `{auth_method, token}`. That is the Google OAuth route CodexBar calls experimental, and its own notes say the OAuth payload can only prove model availability — an all-100% placeholder rather than real quota. Worth knowing before anyone spends a day on it. It carries no token counts either, so it changes nothing above.
 

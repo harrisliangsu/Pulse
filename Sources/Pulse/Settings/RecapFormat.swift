@@ -178,6 +178,15 @@ enum RecapFormat {
         return [1, 2, 3, 4, 5, 6, 0].map { symbols[$0] }
     }
 
+    /// The heading of the weekday a date falls on, as `weekdayHeadings` sets
+    /// it: "一", "月", "월", "Mon". For a week that need not start on Monday.
+    static func weekdayHeading(of date: Date, locale: Locale = LocalizationSource.locale) -> String {
+        let calendar = calendar(locale: locale)
+        let compact = ["zh", "ja", "ko"].contains(locale.language.languageCode?.identifier ?? "")
+        let symbols = compact ? calendar.veryShortStandaloneWeekdaySymbols : calendar.shortStandaloneWeekdaySymbols
+        return symbols[calendar.component(.weekday, from: date) - 1]
+    }
+
     /// The weekdays' short names, Monday first: "Mon", "周一", "月", "월".
     static func weekdayNames(locale: Locale = LocalizationSource.locale) -> [String] {
         let symbols = calendar(locale: locale).shortStandaloneWeekdaySymbols
@@ -230,5 +239,23 @@ enum RecapFormat {
     /// "Sep 17", "9月17日".
     static func day(_ date: Date, locale: Locale = LocalizationSource.locale) -> String {
         formatted(date, template: "MMMd", locale: locale)
+    }
+
+    /// "Sun, Oct 18, 2026", "2026年10月18日 周日": a day as the picker and the
+    /// window name it.
+    static func dayTitle(_ date: Date, locale: Locale = LocalizationSource.locale) -> String {
+        formatted(date, template: "yMMMdEEE", locale: locale)
+    }
+
+    /// "Oct 12 – 18", "10月12日至18日", "Sep 28 – Oct 4": a week by its first
+    /// and last day, in the language's own way of joining them; with the year
+    /// ("Oct 12 – 18, 2026") where it stands alone, as in the picker.
+    static func weekRange(_ first: Date, _ last: Date, withYear: Bool = false, locale: Locale = LocalizationSource.locale) -> String {
+        let formatter = DateIntervalFormatter()
+        formatter.locale = locale
+        formatter.calendar = calendar(locale: locale)
+        formatter.timeZone = Recap.calendar.timeZone
+        formatter.dateTemplate = withYear ? "yMMMd" : "MMMd"
+        return formatter.string(from: first, to: last)
     }
 }

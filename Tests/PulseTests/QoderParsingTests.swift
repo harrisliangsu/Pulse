@@ -82,6 +82,28 @@ struct QoderParsingTests {
         #expect(windows[0].resetsAt == Self.resetDate)
         #expect(!windows[0].reportsLength)
         #expect(!windows[0].isExhausted)
+        // The credits themselves, as Qoder states them (#88).
+        #expect(windows[0].amounts == .init(used: 125, remaining: 375, limit: 500))
+    }
+
+    @Test("The card's credit amounts count the way the percentage does (#88)")
+    func creditAmountText() {
+        var window = UsageWindow(id: "qoder.credits", kind: .credits, scope: nil, usedFraction: 0.02,
+                                 windowSeconds: 30 * 86_400, resetsAt: nil, reportsLength: false)
+        #expect(UsageDetailCard.amountText(window, remaining: true) == nil)
+
+        window.amounts = .init(used: 157, remaining: 5_843, limit: 6_000)
+        let left = UsageDetailCard.amountText(window, remaining: true)
+        let used = UsageDetailCard.amountText(window, remaining: false)
+        #expect(left?.hasSuffix(" / " + 6_000.formatted(.number.locale(LocalizationSource.locale))) == true)
+        #expect(left?.hasPrefix(5_843.formatted(.number.locale(LocalizationSource.locale))) == true)
+        #expect(used?.hasPrefix("157 / ") == true)
+
+        // No remainder stated: nothing to say about what is left, and it is
+        // not worked out from the other two.
+        window.amounts = .init(used: 157, remaining: nil, limit: 6_000)
+        #expect(UsageDetailCard.amountText(window, remaining: true) == nil)
+        #expect(UsageDetailCard.amountText(window, remaining: false) != nil)
     }
 
     /// The earlier build's field names, and a reset stated in milliseconds.

@@ -136,10 +136,12 @@ struct FloatingUsagePanelContent: View {
                             edge: placement.edge,
                             showsRemaining: settings.showsRemaining,
                             showsForecast: settings.showsForecast,
+                            showsAmounts: selected.account.provider == .qoder && settings.qoderShowsAmounts,
                             resetCredits: selected.account == AccountKey(.codex) ? store.codexResetCredits : nil,
                             isDetailed: settings.showsDetailedCard(for: selected.account),
                             spend: showsSpend(for: selected.account)
                                 ? cardLedgers.spend(for: selected.account.provider) : nil,
+                            qoderCredits: selected.provider == .qoder ? cardLedgers.qoderCredits : nil,
                             promptCache: showsSpend(for: selected.account)
                                 ? cardLedgers.promptCache[selected.account.provider] : nil,
                             usedElsewhere: Set(selected.windows.filter {
@@ -226,6 +228,13 @@ struct FloatingUsagePanelContent: View {
                    let source = account.provider.cardHistory {
                     cardLedgers.read(account.provider, from: source)
                     if source.readsThisMac { cardLedgers.readPromptCache(account.provider) }
+                }
+                // Qoder's month, from its records: asked as its detailed card
+                // opens, never on the refresh timer (issue #88).
+                if let account = selectedUsage?.account, account.provider == .qoder,
+                   settings.showsDetailedCard(for: account),
+                   let cookie = APIKeyStore.key(for: .qoder) {
+                    cardLedgers.readQoderCredits(cookie: cookie, site: settings.qoderSite)
                 }
             }
             .onChange(of: isNotchHeld) { _, held in

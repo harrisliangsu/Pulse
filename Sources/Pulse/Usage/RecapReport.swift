@@ -1,7 +1,8 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
-/// `Pulse --recap 2026-09` / `--recap 2026`: one month's or one year's `Recap`,
+/// `Pulse --recap 2026-09` / `--recap 2026` (or a day, `2026-10-18`, or a week,
+/// `week-2026-10-12`): one period's `Recap`,
 /// as readable JSON on stdout — a way to see the real numbers behind the recap
 /// cards without a window.
 ///
@@ -21,14 +22,24 @@ import Foundation
 enum RecapReport {
     static let modeArgument = "--recap"
 
-    /// "2026-09" is a month, "2026" a year, and nothing at all is this month.
+    /// "2026-10-18" is a day, "week-2026-10-12" the seven days from that date,
+    /// "2026-09" a month, "2026" a year, and nothing at all is this month. A
+    /// date that is not on the calendar (February 30) is refused.
     static func period(from text: String?, now: Date = Date(), calendar: Calendar = Recap.calendar) -> Recap.Period? {
         guard let text else {
             let parts = calendar.dateComponents([.year, .month], from: now)
             return parts.year.flatMap { year in parts.month.map { .month(year: year, month: $0) } }
         }
-        let pieces = text.split(separator: "-", omittingEmptySubsequences: false)
+        let isWeek = text.hasPrefix("week-")
+        let pieces = text.dropFirst(isWeek ? 5 : 0).split(separator: "-", omittingEmptySubsequences: false)
+        if isWeek, pieces.count != 3 { return nil }
         switch pieces.count {
+        case 3:
+            guard pieces[0].count == 4, let year = Int(pieces[0]),
+                  pieces[1].count == 2, let month = Int(pieces[1]),
+                  pieces[2].count == 2, let day = Int(pieces[2]),
+                  Recap.Period.civilDate(year: year, month: month, day: day, calendar: calendar) != nil else { return nil }
+            return isWeek ? .week(year: year, month: month, day: day) : .day(year: year, month: month, day: day)
         case 1:
             guard pieces[0].count == 4, let year = Int(pieces[0]) else { return nil }
             return .year(year)
@@ -44,7 +55,7 @@ enum RecapReport {
     /// Validates the arguments; the exit code of a refusal, or nil to go on.
     static func refusal(arguments: [String]) -> Int32? {
         guard period(from: value(in: arguments)) != nil else {
-            fail("usage: Pulse --recap [YYYY-MM | YYYY]")
+            fail("usage: Pulse --recap [YYYY-MM-DD | week-YYYY-MM-DD | YYYY-MM | YYYY]")
             return 2
         }
         guard AppSettings.storedReadsTokenSpend(in: .standard) else {
@@ -178,10 +189,7 @@ enum RecapReport {
         let projects: [Project]
 
         init(_ recap: Recap, calendar: Calendar) {
-            switch recap.period {
-            case .month(let year, let month): period = String(format: "%04d-%02d", year, month)
-            case .year(let year): period = String(format: "%04d", year)
-            }
+            period = recap.period.key
             start = RecapReport.dateString(recap.start, calendar: calendar)
             end = RecapReport.dateString(recap.end, calendar: calendar)
             inProgress = recap.isInProgress

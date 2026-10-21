@@ -35,17 +35,16 @@ struct TokenSpendPane: View {
                 if settings.readsTokenSpend {
                     SettingsRowDivider()
                     SettingsRow(
-                        String.localized("Monthly and Yearly Recap"),
-                        subtitle: String.localized("Shareable cards for a month or a year, from this Mac's records.")
+                        String.localized("Usage recaps"),
+                        subtitle: String.localized("Shareable cards for a day, a week, a month or a year, from this Mac's records.")
                     ) {
-                        // Both are visible here, so the yearly recap is
-                        // not something found only inside the window.
-                        HStack(spacing: 8) {
-                            Button(recapButtonTitle) { openRecap(recapPeriod) }
-                            Button(recapYearButtonTitle) { openRecap(recapYearPeriod) }
-                        }
-                        .lineLimit(1)
-                        .fixedSize()
+                        // One way in. The window switches between day, week,
+                        // month and year itself; a button for each period
+                        // here was four buttons saying what its own control
+                        // already says.
+                        Button(String.localized("Open")) { openRecap(recapPeriod) }
+                            .lineLimit(1)
+                            .fixedSize()
                     }
                 }
             }
@@ -61,6 +60,10 @@ struct TokenSpendPane: View {
                     span: Binding(
                         get: { settings.spendSpan },
                         set: { settings.spendSpan = $0 }
+                    ),
+                    customDays: Binding(
+                        get: { settings.spendCustomDays },
+                        set: { settings.spendCustomDays = $0 }
                     ),
                     activity: model.spendActivity,
                     activityView: Binding(
@@ -88,28 +91,10 @@ struct TokenSpendPane: View {
         }
     }
 
-    /// The month the recap button opens, which is the one the window would
+    /// The period the recap button opens, which is the one the window would
     /// open on by itself (`RecapPeriods.defaultMonth`).
     private var recapPeriod: Recap.Period {
         RecapPeriods.defaultMonth(earliest: RecapPeriods.earliest(in: model.spendLedgers))
     }
 
-    /// The year the second button opens, by the same rule: January 1–7 opens
-    /// on the year that just ended, any other day on this one, in progress
-    /// (`RecapPeriods.defaultYear`).
-    private var recapYearPeriod: Recap.Period {
-        RecapPeriods.defaultYear(earliest: RecapPeriods.earliest(in: model.spendLedgers))
-    }
-
-    /// "View September recap".
-    private var recapButtonTitle: String {
-        guard case .month(_, let number) = recapPeriod else { return String.localized("Monthly Recap") }
-        return String.localized("View \(RecapFormat.monthName(number)) recap")
-    }
-
-    /// "View 2026 recap": the year as a plain string, never grouped ("2,026").
-    private var recapYearButtonTitle: String {
-        guard case .year(let year) = recapYearPeriod else { return String.localized("Yearly Recap") }
-        return String.localized("View \("\(year)") yearly recap")
-    }
 }

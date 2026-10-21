@@ -7,7 +7,7 @@ struct RecapOpenerView: View {
     let deck: RecapDeck
 
     private var recap: Recap { deck.recap }
-    private var isYear: Bool { deck.isYear }
+    private var isDay: Bool { deck.kind == .day }
 
     var body: some View {
         RecapStoryPage(page: deck.page(of: .opener), footnotes: deck.notes) {
@@ -27,6 +27,42 @@ struct RecapOpenerView: View {
     @ViewBuilder
     private var big: some View {
         switch recap.period {
+        case .day(let year, let month, let day):
+            // The day of the month as the month's number is drawn, the
+            // weekday and the month beside the lime square.
+            HStack(alignment: .bottom, spacing: 24) {
+                bigFigure(String(format: "%02d", day), size: 340)
+                VStack(alignment: .leading, spacing: 10) {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(RecapColor.lime)
+                        .frame(width: 60, height: 60)
+                    Text(verbatim: RecapFormat.weekdayName(of: recap.start))
+                        .font(.recap(20, .regular, mono: true))
+                        .foregroundStyle(Color(recap: 0x55554F))
+                    Text(verbatim: String(format: "%d·%02d", year, month))
+                        .font(.recap(20, .regular, mono: true))
+                        .foregroundStyle(Color(recap: 0x55554F))
+                }
+                .padding(.bottom, 4)
+                Spacer(minLength: 0)
+            }
+        case .week(let year, let month, let day):
+            // First and last day of the week; the month each falls in is in
+            // the running head and the stamp.
+            let last = recap.calendar.component(.day, from: deck.periodLastDay)
+            HStack(alignment: .bottom, spacing: 24) {
+                bigFigure(String(format: "%02d–%02d", day, last), size: 230)
+                VStack(alignment: .leading, spacing: 10) {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(RecapColor.lime)
+                        .frame(width: 60, height: 60)
+                    Text(verbatim: String(format: "%d·%02d", year, month))
+                        .font(.recap(20, .regular, mono: true))
+                        .foregroundStyle(Color(recap: 0x55554F))
+                }
+                .padding(.bottom, 4)
+                Spacer(minLength: 0)
+            }
         case .month(let year, let month):
             HStack(alignment: .bottom, spacing: 24) {
                 Text(tight: String(format: "%02d", month), tracking: -340 * 0.07)
@@ -63,9 +99,18 @@ struct RecapOpenerView: View {
         }
     }
 
+    private func bigFigure(_ text: String, size: CGFloat) -> some View {
+        Text(tight: text, tracking: -size * 0.07)
+            .font(.recap(size, .bold))
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.top, -size * RecapFigureText.ascenderRoom)
+            .padding(.bottom, -size * RecapFigureText.descenderRoom)
+    }
+
     private var headline: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(String.localized("In \(deck.periodName),"))
+            Text(deck.openerLine)
             // The count is the lineup below it, so the line says how many
             // rather than a negative ("didn't code alone") that read oddly in
             // Chinese. One tool gets its own sentence: no plural to agree.
@@ -137,7 +182,8 @@ struct RecapOpenerView: View {
                         .recapFit(0.6)
                     RecapFigureText(figure: RecapFormat.percentFigure(agent.share), numberSize: 110, unitSize: 50,
                                     color: RecapColor.lime, unitGap: 4)
-                    Text(String.localized("Used \(RecapWords.days(agent.activeDays)) · top tool"))
+                    // In one day "used 1 day" says nothing.
+                    Text(isDay ? String.localized("Top tool") : String.localized("Used \(RecapWords.days(agent.activeDays)) · top tool"))
                         .font(.recap(20))
                         .foregroundStyle(RecapColor.paper.opacity(0.6))
                         .recapFit(0.6)
@@ -181,7 +227,7 @@ struct RecapOpenerView: View {
                         numberSize: 58, unitSize: 24, numberWeight: .heavy, unitWeight: .bold, unitGap: 6
                     )
                     .lineLimit(1)
-                    Text(verbatim: RecapWords.activeDays(recap.activeDays))
+                    Text(verbatim: isDay ? RecapWords.sessions(recap.sessions) : RecapWords.activeDays(recap.activeDays))
                         .font(.recap(18))
                         .foregroundStyle(RecapTileTone.lime.caption)
                         .recapFit(0.6)
@@ -195,9 +241,12 @@ struct RecapOpenerView: View {
     private var roster: some View {
         let insights = RecapInsights(recap)
         let agents = Array(recap.agents.prefix(5))
-        let note: String = isYear
-            ? .localized("Which months · days used · token share")
-            : .localized("Which days · days used · token share")
+        // A day has no strip and no count of days: each tool's tokens instead.
+        let note: String = switch deck.kind {
+        case .year: .localized("Which months · days used · token share")
+        case .day: .localized("Tokens · token share")
+        case .week, .month: .localized("Which days · days used · token share")
+        }
         return VStack(spacing: 0) {
             RecapSectionHead(title: .localized("Worked beside you"), note: note)
                 .padding(.bottom, 12)
@@ -213,12 +262,13 @@ struct RecapOpenerView: View {
                             .recapFit(0.5)
                         // A strip needs the dates; an agent without them has
                         // none to draw, and is left without one.
-                        if !agent.activeDates.isEmpty {
-                            RecapAgentStrip(marks: insights.marks(of: agent))
+                        let marks = insights.marks(of: agent)
+                        if !agent.activeDates.isEmpty, !marks.isEmpty {
+                            RecapAgentStrip(marks: marks)
                         }
                     }
                     Spacer(minLength: 0)
-                    Text(verbatim: RecapWords.days(agent.activeDays))
+                    Text(verbatim: isDay ? RecapFormat.tokens(agent.tokens).text : RecapWords.days(agent.activeDays))
                         .font(.recap(20))
                         .foregroundStyle(Color(recap: 0x55554F))
                         .recapFit(0.7)

@@ -7,7 +7,7 @@ import Testing
 ///
 /// Nothing here checks a pixel. A card either fits its language or it does not,
 /// and the only judge of that is reading it, so this renders every card of
-/// both decks in every language from the sample recaps and lays each
+/// every deck (day, week, month, year) in every language from the sample recaps and lays each
 /// language out on one contact sheet.
 ///
 ///     PULSE_RECAP_PREVIEW=/tmp/recap swift test --filter RecapRenderTests
@@ -33,7 +33,8 @@ struct RecapRenderTests {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
             var rows: [[CGImage]] = []
-            for (name, deck) in [("month", RecapSamples.monthDeck), ("year", RecapSamples.yearDeck)] {
+            for (name, deck) in [("day", RecapSamples.dayDeck), ("week", RecapSamples.weekDeck),
+                                 ("month", RecapSamples.monthDeck), ("year", RecapSamples.yearDeck)] {
                 var row: [CGImage] = []
                 for (index, card) in deck.cards.enumerated() {
                     let image = try #require(RecapRenderer.image(of: card, in: deck), "\(name) \(card) \(folder)")
@@ -70,6 +71,13 @@ struct RecapRenderTests {
                 ("two-agents", RecapDeck(recap: RecapSamples.month(agentCount: 2), monthlyPrice: 200, hidesProjects: false)),
                 ("three-agents", RecapDeck(recap: RecapSamples.month(agentCount: 3), monthlyPrice: 200, hidesProjects: false)),
                 ("six-weeks", RecapDeck(recap: RecapSamples.month(monthNumber: 8), monthlyPrice: 200, hidesProjects: false)),
+                // Today so far, a week three days in, a week from Sunday, and
+                // a day and a week with no hours or no price.
+                ("day-in-progress", RecapDeck(recap: RecapSamples.day(isInProgress: true), monthlyPrice: 200, hidesProjects: false)),
+                ("day-bare", RecapDeck(recap: RecapSamples.day(priced: false, hasHours: false), monthlyPrice: nil, hidesProjects: true)),
+                ("week-in-progress", RecapDeck(recap: RecapSamples.week(through: 3), monthlyPrice: 200, hidesProjects: false)),
+                ("week-sunday", RecapDeck(recap: RecapSamples.week(sundayFirst: true), monthlyPrice: 200, hidesProjects: false)),
+                ("week-no-hours", RecapDeck(recap: RecapSamples.week(hasHours: false), monthlyPrice: nil, hidesProjects: false)),
             ]
             for (name, deck) in cases {
                 for card in deck.cards {

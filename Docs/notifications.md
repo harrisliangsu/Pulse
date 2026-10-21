@@ -80,6 +80,7 @@ Requested 2026-10-04, after the status rows on the Codex, Claude Code and DeepSe
 - **The first three days only.** The 1st, or the 2nd and 3rd for a Mac shut or asleep on the 1st. Switching on inside those days announces at once (the limits' "already past the line" rule); outside them it waits for next month.
 - **Default sound**, as [above](#what-can-be-said).
 - **Clicking opens the recap window on that month**, not Settings: `NotificationTapHandler` reads the month from the identifier `recap-ready-<yyyy>-<mm>`.
+- **Months only.** Day and week recaps ([recap.md](recap.md#the-window)) say nothing: a daily notice would come every morning about something the reader can open at any time, and a weekly one is the same at a lower rate.
 - **Not a usage alert.** `wantsUsageAlerts` excludes it (no `alerts.json` entry); `wantsAlerts`, which decides whether permission is worth asking for, includes it. `AppSettings.onRecapAlertChange` asks for permission, not the view.
 
 ## Rules that are not obvious
