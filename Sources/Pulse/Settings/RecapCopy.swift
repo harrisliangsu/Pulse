@@ -22,33 +22,45 @@ extension Recap.Persona {
 
 extension RecapDeck {
     /// "September" for a month recap, "2026年" for a year's — the language's
-    /// own way of saying which year, so one sentence serves both.
+    /// own way of saying which year, so one sentence serves both. A day is its
+    /// date ("Oct 18"), a week its first and last ("Oct 12 – 18"); the
+    /// sentences that name them are their own keys (`workedThroughLine`), since
+    /// "In Oct 18" is not how a language says it.
     var periodName: String {
         switch recap.period {
+        case .day: RecapFormat.day(recap.start)
+        case .week: RecapFormat.weekRange(recap.start, periodLastDay)
         case .month(_, let month): RecapFormat.monthName(month)
         case .year(let year): RecapFormat.yearName(year)
         }
     }
 
-    /// The label in the running head: "SEPTEMBER 2026", "2026".
+    /// The label in the running head: "SUN, OCT 18, 2026", "OCT 12 – 18, 2026",
+    /// "SEPTEMBER 2026", "2026".
     var periodLabel: String {
         switch recap.period {
+        case .day: RecapFormat.dayTitle(recap.start).uppercased()
+        case .week: RecapFormat.weekRange(recap.start, periodLastDay, withYear: true).uppercased()
         case .month: RecapFormat.monthYear(recap.start).uppercased()
         case .year(let year): "\(year)"
         }
     }
 
-    /// The month or year before this one, as the delta's "vs" names it.
+    /// The month or year before this one, as the delta's "vs" names it. A day
+    /// or a week is compared in sentences of its own (`change`).
     var previousName: String {
         switch recap.period {
+        case .day, .week: ""
         case .month(_, let month): RecapFormat.monthName(month == 1 ? 12 : month - 1)
         case .year(let year): RecapFormat.yearName(year - 1)
         }
     }
 
-    /// The month or year after, for the closing line.
+    /// The month or year after, for the closing line (a day's and a week's
+    /// closing lines are their own, `closingLine`).
     var nextName: String {
         switch recap.period {
+        case .day, .week: ""
         case .month(_, let month): RecapFormat.monthName(month == 12 ? 1 : month + 1)
         case .year(let year): RecapFormat.yearName(year + 1)
         }
@@ -56,7 +68,31 @@ extension RecapDeck {
 
     /// "In September, you and AI worked through" — the line above the total.
     var workedThroughLine: String {
-        .localized("In \(periodName), you and AI worked through")
+        switch kind {
+        case .day: .localized("On \(periodName), you and AI worked through")
+        case .week: .localized("Over \(periodName), you and AI worked through")
+        case .month, .year: .localized("In \(periodName), you and AI worked through")
+        }
+    }
+
+    /// "In September," — the opener's first line.
+    var openerLine: String {
+        switch kind {
+        case .day: .localized("On \(periodName),")
+        case .week: .localized("Over \(periodName),")
+        case .month, .year: .localized("In \(periodName),")
+        }
+    }
+
+    /// The scorecard's sign-off: "See you in November", or "Check back when
+    /// October is over" while it runs.
+    var closingLine: String {
+        switch kind {
+        case .day: recap.isInProgress ? .localized("Check back when the day is over") : .localized("See you tomorrow")
+        case .week: recap.isInProgress ? .localized("Check back when the week is over") : .localized("See you next week")
+        case .month, .year:
+            recap.isInProgress ? .localized("Check back when \(periodName) is over") : .localized("See you in \(nextName)")
+        }
     }
 
     /// "Active 27 of 30 days", with the days in bold.
@@ -78,21 +114,45 @@ extension RecapDeck {
     /// compared as daily averages. A running period is set against the same
     /// stretch of the one before ("same period"); a finished one against the
     /// whole of it, and says it is per day. Nil without a previous figure.
+    ///
+    /// **A day still running has no change.** Its comparison would be part of
+    /// today against the whole of yesterday — the ledgers count by day, not by
+    /// the hour of a day, so "the same period yesterday" cannot be cut — and
+    /// every morning would read as a fall. A finished day is set against the
+    /// day before; a week against the week before, or its same days while it
+    /// runs, per day only where the two differ in days (records beginning
+    /// inside the week before).
     var change: (arrow: String, percent: String, versus: String)? {
         guard let previous = recap.previousTokens, previous > 0, recap.elapsedDays > 0 else { return nil }
-        let days = Double(max(recap.previousDays ?? recap.elapsedDays, 1))
+        if kind == .day, recap.isInProgress { return nil }
+        let previousDays = max(recap.previousDays ?? recap.elapsedDays, 1)
+        let days = Double(previousDays)
         let ratio = (Double(recap.tokens) / Double(recap.elapsedDays)) / (Double(previous) / days)
         let delta = Int(((ratio - 1) * 100).rounded())
         let arrow = delta > 0 ? "↑" : (delta < 0 ? "↓" : "→")
-        let versus: String = recap.isInProgress
-            ? .localized("vs same period in \(previousName)")
-            : .localized("per day vs \(previousName)")
+        let versus: String
+        switch kind {
+        case .day:
+            versus = .localized("vs the day before")
+        case .week:
+            if recap.isInProgress {
+                versus = .localized("vs the same days last week")
+            } else {
+                versus = previousDays == recap.elapsedDays ? .localized("vs the week before") : .localized("per day vs the week before")
+            }
+        case .month, .year:
+            versus = recap.isInProgress
+                ? .localized("vs same period in \(previousName)")
+                : .localized("per day vs \(previousName)")
+        }
         return (arrow, "\(abs(delta))%", versus)
     }
 
-    /// The tokens a day, over the days of the period Pulse could see.
+    /// The tokens a day, over the days of the period Pulse could see. Nil for
+    /// a day recap, where it is the total.
     var tokensPerDay: Int? {
-        recap.observedDays > 0 ? recap.tokens / recap.observedDays : nil
+        guard kind != .day else { return nil }
+        return recap.observedDays > 0 ? recap.tokens / recap.observedDays : nil
     }
 
     /// Cost per day, or per month for a year, to draw under the poster's total
@@ -121,8 +181,9 @@ extension RecapDeck {
     /// while the period is running and today or yesterday ended a run, else the
     /// longest the period had. A past period is never "still going". Nil when
     /// no day had work.
+    /// None for a day recap: a run inside one day is that day.
     var streak: (days: Int, isCurrent: Bool)? {
-        guard recap.longestStreak > 0 else { return nil }
+        guard kind != .day, recap.longestStreak > 0 else { return nil }
         if recap.isInProgress, recap.currentStreak > 0 { return (recap.currentStreak, true) }
         return (recap.longestStreak, false)
     }

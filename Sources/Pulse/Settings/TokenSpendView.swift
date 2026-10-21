@@ -49,6 +49,8 @@ struct TokenSpendView: View {
     /// diagnostics never reach the view.
     let hasReadLimitations: Bool
     @Binding var span: SpendSpan
+    /// The first and last day `SpendSpan.custom` counts.
+    @Binding var customDays: ClosedRange<Date>
     /// The last twelve months to today, over the agent on screen where there is
     /// one. Independent of `span`: the "Token activity" chart is the long view.
     var activity = TokenActivity()
@@ -93,9 +95,13 @@ struct TokenSpendView: View {
                 ) {
                     HStack(spacing: 8) {
                         Picker("", selection: $span) {
-                            ForEach(SpendSpan.allCases) { span in
-                                Text(span.title).tag(span)
-                            }
+                            // Rolling, then calendar, then the open-ended and
+                            // the reader's own: three kinds of question.
+                            ForEach([SpendSpan.today, .week, .month, .quarter]) { Text($0.title).tag($0) }
+                            Divider()
+                            ForEach([SpendSpan.thisMonth, .lastMonth, .thisYear]) { Text($0.title).tag($0) }
+                            Divider()
+                            ForEach([SpendSpan.all, .custom]) { Text($0.title).tag($0) }
                         }
                         .labelsHidden()
                         // The picker's own title is empty and the row's label is
@@ -105,6 +111,13 @@ struct TokenSpendView: View {
 
                         Button(String.localized("Rescan")) { refresh() }
                             .disabled(isLoading)
+                    }
+                }
+
+                if span == .custom {
+                    SettingsRowDivider()
+                    SettingsRow(String.localized("Dates")) {
+                        customDatePickers
                     }
                 }
             }
@@ -143,8 +156,8 @@ struct TokenSpendView: View {
                     activitySection
                     kinds(focused)
                     streaks(focused)
-                    if span != .today { hourly(focused) }
-                    if span != .today { daily(focused) }
+                    if !isOneDay { hourly(focused) }
+                    if !isOneDay { daily(focused) }
                     if focused.months.count > 1 { monthly(focused) }
                     if !focused.models.isEmpty { models(focused).id("models") }
                     if !focused.projects.isEmpty { projects(focused) }
@@ -158,8 +171,8 @@ struct TokenSpendView: View {
                 activitySection
                 kinds(summary)
                 streaks(summary)
-                if span != .today { hourly(summary) }
-                if span != .today { daily(summary) }
+                if !isOneDay { hourly(summary) }
+                if !isOneDay { daily(summary) }
                 if summary.months.count > 1 { monthly(summary) }
                 agents
                 // Even one model is an entry point now: tapping it opens that
@@ -335,7 +348,7 @@ struct TokenSpendView: View {
                 // **A day is not one bar.** Over any other span the bars are
                 // days; over today there is only one of those, and the shape
                 // worth seeing is the hours it was spread across.
-                if span == .today {
+                if isOneDay {
                     if hoursComplete {
                         HourProfile(hours: summary.hours)
                             .frame(height: 78)
@@ -352,7 +365,7 @@ struct TokenSpendView: View {
                 }
 
                 HStack(spacing: 16) {
-                    if span == .today {
+                    if isOneDay {
                         // Both captions read the hour series, so both are
                         // withheld when it does not cover the day rather than
                         // report a partial figure as the whole.
@@ -441,6 +454,41 @@ struct TokenSpendView: View {
     }
 
     // MARK: - Day by day
+
+    /// Whether the span on screen is one calendar day, drawn by the hour.
+    private var isOneDay: Bool { span.isOneDay(custom: customDays) }
+
+    /// The first and last day, both counted, neither after today, and the
+    /// first never after the last: each picker's range is held by the other.
+    private var customDatePickers: some View {
+        let today = Calendar.current.startOfDay(for: Date())
+        return HStack(spacing: 6) {
+            DatePicker("", selection: Binding(
+                get: { customDays.lowerBound },
+                set: {
+                    let first = Calendar.current.startOfDay(for: $0)
+                    customDays = first...max(customDays.upperBound, first)
+                }
+            ), in: ...today, displayedComponents: .date)
+            .labelsHidden()
+            .datePickerStyle(.field)
+            .accessibilityLabel(String.localized("First day"))
+
+            Text(verbatim: "–")
+                .foregroundStyle(.secondary)
+
+            DatePicker("", selection: Binding(
+                get: { customDays.upperBound },
+                set: {
+                    let last = Calendar.current.startOfDay(for: $0)
+                    customDays = min(customDays.lowerBound, last)...last
+                }
+            ), in: ...today, displayedComponents: .date)
+            .labelsHidden()
+            .datePickerStyle(.field)
+            .accessibilityLabel(String.localized("Last day"))
+        }
+    }
 
     /// Every day in the span, with the split and the money beside it.
     ///
@@ -953,7 +1001,14 @@ enum SpendSpan: String, CaseIterable, Identifiable, Sendable {
     case week
     case month
     case quarter
+    // Calendar periods beside the rolling ones: "last month" as a bill reads
+    // it is not the last 30 days.
+    case thisMonth
+    case lastMonth
+    case thisYear
     case all
+    /// The reader's own first and last day, kept in `AppSettings.spendCustomDays`.
+    case custom
 
     /// The span the pane opens on: the last week, the shortest window that
     /// shows a work rhythm rather than a single day. The reader's own pick is
@@ -962,7 +1017,8 @@ enum SpendSpan: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    /// Nil counts everything the transcripts go back to.
+    /// The rolling spans' length in days; nil for the calendar periods, the
+    /// reader's own dates and everything.
     var days: Int? {
         switch self {
         // One day, which is the day in progress rather than the last
@@ -971,7 +1027,45 @@ enum SpendSpan: String, CaseIterable, Identifiable, Sendable {
         case .week: 7
         case .month: 30
         case .quarter: 90
-        case .all: nil
+        case .thisMonth, .lastMonth, .thisYear, .all, .custom: nil
+        }
+    }
+
+    /// The local midnight counting starts at and the one it stops before;
+    /// nil for an open edge (from the first record, or through today).
+    /// `custom` is the reader's first and last day, both counted.
+    func bounds(custom: ClosedRange<Date>, now: Date = Date(),
+                calendar: Calendar = .current) -> (from: Date?, until: Date?) {
+        let today = calendar.startOfDay(for: now)
+        func start(of component: Calendar.Component) -> Date? {
+            calendar.dateInterval(of: component, for: today)?.start
+        }
+        switch self {
+        case .today, .week, .month, .quarter:
+            return (days.flatMap { calendar.date(byAdding: .day, value: -($0 - 1), to: today) }, nil)
+        case .thisMonth:
+            return (start(of: .month), nil)
+        case .lastMonth:
+            let thisMonth = start(of: .month)
+            return (thisMonth.flatMap { calendar.date(byAdding: .month, value: -1, to: $0) }, thisMonth)
+        case .thisYear:
+            return (start(of: .year), nil)
+        case .all:
+            return (nil, nil)
+        case .custom:
+            let first = calendar.startOfDay(for: custom.lowerBound)
+            let last = calendar.startOfDay(for: custom.upperBound)
+            return (first, calendar.date(byAdding: .day, value: 1, to: last))
+        }
+    }
+
+    /// Whether the span is a single calendar day, which the pane draws by the
+    /// hour rather than as one bar.
+    func isOneDay(custom: ClosedRange<Date>, calendar: Calendar = .current) -> Bool {
+        switch self {
+        case .today: true
+        case .custom: calendar.isDate(custom.lowerBound, inSameDayAs: custom.upperBound)
+        default: false
         }
     }
 
@@ -983,7 +1077,11 @@ enum SpendSpan: String, CaseIterable, Identifiable, Sendable {
         case .week: .localized("Last \("7") days")
         case .month: .localized("Last \("30") days")
         case .quarter: .localized("Last \("90") days")
+        case .thisMonth: .localized("This month")
+        case .lastMonth: .localized("Last month")
+        case .thisYear: .localized("This year")
         case .all: .localized("All time")
+        case .custom: .localized("Custom range")
         }
     }
 }

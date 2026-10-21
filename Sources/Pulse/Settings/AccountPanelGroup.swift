@@ -75,6 +75,22 @@ struct AccountPanelGroup: View {
                     .labelsHidden()
                     .toggleStyle(.switch)
                 }
+
+                SettingsRowDivider()
+
+                // On the card only: the rail keeps its percentages.
+                SettingsRow(
+                    String.localized("Show credit amounts"),
+                    subtitle: String.localized("Each row on the card also shows the credits, such as 5,843 / 6,000. The rail keeps its percentages.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.qoderShowsAmounts },
+                        set: { settings.qoderShowsAmounts = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
+
             }
 
             SettingsRowDivider()
@@ -155,7 +171,7 @@ struct AccountPanelGroup: View {
                         Text(localized: "Custom").tag(true)
                     }
                     .labelsHidden()
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.menu)
                     .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
                 }
 
@@ -224,7 +240,7 @@ struct AccountPanelGroup: View {
                     Text(localized: "Custom").tag(true)
                 }
                 .labelsHidden()
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
                 .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
             }
 

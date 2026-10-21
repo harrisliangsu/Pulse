@@ -6,6 +6,23 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.28
+
+- **Cursor 的每周套餐显示每周用量上限。** 在 Premium 等按周计算额度的套餐上，Cursor 的圆环显示本周用量和重置时间，不再显示两个一直是 0% 的月度用量池。感谢 [@HesionBlack](https://github.com/qunqin24/Pulse/issues/87) 报告。
+- **固定在 Qoder 合计上的圆环，重启后仍然固定在那里。** 打开「分项显示积分」后再启动，不会把钉在「积分额度」上的圆环改回自动。感谢 [@momusticks](https://github.com/qunqin24/Pulse/issues/89) 报告。
+- **Grok 的缓存和推理 token 只计一次。** 缓存命中率、token 总数和估算金额与 Grok Build 自己的记录一致。感谢 [@Edfghdrtxxx](https://github.com/qunqin24/Pulse/issues/91) 报告。
+- **Antigravity 补上了 Pro 和 Flash (Low) 的价格。** Gemini 3.1 Pro 和 Gemini 3.5 Flash (Low) 按公开价格估算；仍有模型没有公开价格时，* 只出现在写了金额的那一行旁边。感谢 [@1206-skittle](https://github.com/qunqin24/Pulse/issues/90) 报告。
+- **设置里的选项改成弹出菜单。** 位置、外观、圆环颜色等一行里的选择都用菜单。侧栏图标与文字同色，浅色为黑色，深色为白色。
+- **俄文的 Token 活动名称缩短了。** 切换按钮不再被截断。感谢 [@winstik13](https://github.com/qunqin24/Pulse/pull/92) 贡献。
+- **Qoder 的卡片可以显示积分数。** 在 Qoder 设置的「面板」中打开「显示积分数值」后，每一行同时显示积分，例如 5,843 / 6,000。感谢 [@momusticks](https://github.com/qunqin24/Pulse/issues/88) 提议。
+- **Qoder 的积分记录来自账号本身。** 详细卡片和 Qoder 设置页显示整个账号今天、7 天和 31 天消耗的积分，以及按天的柱状图；最近七天按账号记录计算。感谢 [@momusticks](https://github.com/qunqin24/Pulse/issues/88) 提议。
+- **Token 消耗可以按日历区间统计。** 在「设置 → Token 消耗」的统计方式中可以选择本月、上月、今年，或自己指定开始和结束日期。
+- **用量报告增加日报和周报。** 在「设置 → Token 消耗 → 用量报告」中打开，窗口顶部可以切换日、周、月、年。日、周、月、年收在同一行，用一个「打开」按钮。
+- **中文界面把扣掉的积分写成「消耗」。** 打折前的较大数字写作「折前」，两处不再共用一个词。
+- **同步上游 qunqin24/Pulse**（24 个提交，直到其 1.12.2 之后的 Qoder 中文用词，`b035a7a`，自 1.4.27 起）。本仓库是更新来源，版本为 **1.4.28**。没有抄入上游 1.12.1 和 1.12.2 的 Sparkle 推送。`appcast.xml` 保持不动，等这个版本打 tag 后再由发布流程写入。这次同步还会从子进程一侧为超时测试计时，避免负载高时把已经结束的进程记成超时。
+- **这次同步里为本仓库补上的衔接：** Qoder 的个人令牌仍以 Bearer 读取额度，积分记录也带上同一凭证。外观仍是深色、浅色、跟随 Mac、液态玻璃这一个选择。更新检查仍指向本仓库。
+- **保留本仓库特有能力：** Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 `~/.qoder` 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.4.27
 
 - **可以关闭吸附到屏幕边缘。** 在「设置 → 位置与行为」中关闭后，拖动只移动面板，可以贴到任意边缘，包括菜单栏和程序坞上面。感谢 [@GinWU05](https://github.com/qunqin24/Pulse/issues/85) 提议。

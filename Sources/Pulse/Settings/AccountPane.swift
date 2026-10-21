@@ -100,6 +100,12 @@ struct AccountPane: View {
                 DeepSeekConsoleGroup(store: store, settings: settings) { history.consoleRevision += 1 }
             }
 
+            // Qoder keeps no history on this Mac; the account's own records
+            // are its history, in credits (issue #88).
+            if provider == .qoder, account.isPrimary, settings.isEnabled(account) {
+                QoderCreditsGroup(settings: settings)
+            }
+
             if provider.providesHistory, account.isPrimary {
                 // Live, so ahead of the history: which conversations still
                 // hold a cache, and for how long — where the logs let it be

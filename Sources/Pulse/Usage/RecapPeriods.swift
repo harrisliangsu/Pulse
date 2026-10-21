@@ -2,10 +2,14 @@
 import Foundation
 
 extension Recap.Period {
-    /// "2026-09" for a month, "2026" for a year: the form `--recap` takes, and
-    /// what is remembered about which month was announced.
+    /// "2026-10-18" for a day, "week-2026-10-12" for the week starting then,
+    /// "2026-09" for a month, "2026" for a year: the form `--recap` takes, the
+    /// period in an exported file's name, and what is remembered about which
+    /// month was announced.
     var key: String {
         switch self {
+        case .day(let year, let month, let day): String(format: "%04d-%02d-%02d", year, month, day)
+        case .week(let year, let month, let day): String(format: "week-%04d-%02d-%02d", year, month, day)
         case .month(let year, let month): String(format: "%04d-%02d", year, month)
         case .year(let year): String(format: "%04d", year)
         }
@@ -21,10 +25,23 @@ extension Recap.Period {
         return false
     }
 
+    /// The year the period starts in: a week from December 28 is that year's.
     var year: Int {
         switch self {
-        case .month(let year, _), .year(let year): year
+        case .day(let year, _, _), .week(let year, _, _), .month(let year, _), .year(let year): year
         }
+    }
+
+    /// The day or week whose first day is `date` in `calendar`.
+    static func day(of date: Date, calendar: Calendar) -> Recap.Period? {
+        let parts = calendar.dateComponents([.year, .month, .day], from: date)
+        guard let year = parts.year, let month = parts.month, let day = parts.day else { return nil }
+        return .day(year: year, month: month, day: day)
+    }
+
+    static func week(startingOn date: Date, calendar: Calendar) -> Recap.Period? {
+        guard case .day(let year, let month, let day) = day(of: date, calendar: calendar) else { return nil }
+        return .week(year: year, month: month, day: day)
     }
 }
 
@@ -41,6 +58,11 @@ extension Recap.Period {
 /// the card would say so. From the 8th the running month has enough in it to
 /// be the thing they mean. Where the default would fall before the earliest
 /// record it moves up to it; until that record is known the rule stands alone.
+///
+/// **Days and weeks** follow the same rule at their scale: every day, and every
+/// week, from the earliest record's to today's; opened on yesterday until 05:00
+/// and today after it, and on last week during a week's first day. Weeks start
+/// on the reader's own first weekday (`firstWeekday`).
 enum RecapPeriods {
     /// The first days of a month (or year) in which the one just finished is
     /// what "the recap" means.
@@ -90,18 +112,153 @@ enum RecapPeriods {
         return .year(max(wanted, floor))
     }
 
-    /// The period of the other kind that goes with this one: the year a month
-    /// belongs to, and the last month of a year that is offered.
-    static func switched(
-        _ period: Recap.Period, earliest: Date?, now: Date = Date(), calendar: Calendar = Recap.calendar
-    ) -> Recap.Period {
-        switch period {
-        case .month(let year, _):
-            return .year(year)
-        case .year(let year):
-            let offered = months(earliest: earliest, now: now, calendar: calendar)
-            return offered.first { $0.year == year } ?? defaultMonth(earliest: earliest, now: now, calendar: calendar)
+    // MARK: Days and weeks
+
+    /// The day the reader's week starts on, 1 = Sunday … 7 = Saturday: what
+    /// their region, or the first day of the week chosen in System Settings,
+    /// says. Only the weekday is taken from `Calendar.current`; the days are
+    /// still counted in `Recap.calendar`, so an era of another calendar cannot
+    /// rename the year.
+    static var firstWeekday: Int { Calendar.current.firstWeekday }
+
+    /// The local midnight that begins the week `date` falls in, weeks starting
+    /// on `firstWeekday`. Counted back in days from the day's own start, not
+    /// with `dateInterval(of: .weekOfYear)`, whose answer also depends on the
+    /// calendar's rule for the first week of a year.
+    static func weekStart(of date: Date, firstWeekday: Int = firstWeekday, calendar: Calendar = Recap.calendar) -> Date {
+        let day = calendar.startOfDay(for: date)
+        let first = (1...7).contains(firstWeekday) ? firstWeekday : 1
+        let back = (calendar.component(.weekday, from: day) - first + 7) % 7
+        return calendar.date(byAdding: .day, value: -back, to: day).map { calendar.startOfDay(for: $0) } ?? day
+    }
+
+    /// The period of a kind that `date` falls in.
+    static func period(
+        _ kind: Recap.Period.Kind, containing date: Date,
+        firstWeekday: Int = firstWeekday, calendar: Calendar = Recap.calendar
+    ) -> Recap.Period? {
+        switch kind {
+        case .day:
+            return Recap.Period.day(of: calendar.startOfDay(for: date), calendar: calendar)
+        case .week:
+            return Recap.Period.week(startingOn: weekStart(of: date, firstWeekday: firstWeekday, calendar: calendar), calendar: calendar)
+        case .month:
+            let parts = calendar.dateComponents([.year, .month], from: date)
+            guard let year = parts.year, let month = parts.month else { return nil }
+            return .month(year: year, month: month)
+        case .year:
+            return .year(calendar.component(.year, from: date))
         }
+    }
+
+    /// Local midnights from `last` back to `first`, `step` days apart, newest
+    /// first. Midnight to midnight by days, so a clock change does not drift
+    /// the list off its days.
+    private static func midnights(from last: Date, back first: Date, step: Int, calendar: Calendar) -> [Date] {
+        var result: [Date] = []
+        var cursor = last
+        while cursor >= first {
+            result.append(cursor)
+            guard let earlier = calendar.date(byAdding: .day, value: -step, to: cursor).map({ calendar.startOfDay(for: $0) }),
+                  earlier < cursor else { break }
+            cursor = earlier
+        }
+        return result
+    }
+
+    /// Days with records possible, newest first: today back to the earliest
+    /// record's day.
+    static func days(earliest: Date?, now: Date = Date(), calendar: Calendar = Recap.calendar) -> [Recap.Period] {
+        let today = calendar.startOfDay(for: now)
+        let first = earliest.map { min(calendar.startOfDay(for: $0), today) } ?? today
+        return midnights(from: today, back: first, step: 1, calendar: calendar)
+            .compactMap { Recap.Period.day(of: $0, calendar: calendar) }
+    }
+
+    /// Weeks with records possible, newest first: this week back to the one
+    /// the earliest record falls in.
+    static func weeks(
+        earliest: Date?, now: Date = Date(), firstWeekday: Int = firstWeekday, calendar: Calendar = Recap.calendar
+    ) -> [Recap.Period] {
+        let current = weekStart(of: now, firstWeekday: firstWeekday, calendar: calendar)
+        let first = earliest.map { min(weekStart(of: $0, firstWeekday: firstWeekday, calendar: calendar), current) } ?? current
+        return midnights(from: current, back: first, step: 7, calendar: calendar)
+            .compactMap { Recap.Period.week(startingOn: $0, calendar: calendar) }
+    }
+
+    /// The day to open on: today, except before 05:00 (`Recap.nightEndsAtHour`),
+    /// when the work being asked about is the day that just ended — the rule
+    /// that gives a stretch begun after midnight to the evening before.
+    static func defaultDay(earliest: Date?, now: Date = Date(), calendar: Calendar = Recap.calendar) -> Recap.Period {
+        let today = calendar.startOfDay(for: now)
+        var wanted = today
+        if calendar.component(.hour, from: now) < Recap.nightEndsAtHour,
+           let yesterday = calendar.date(byAdding: .day, value: -1, to: today) {
+            wanted = calendar.startOfDay(for: yesterday)
+        }
+        if let earliest { wanted = max(wanted, min(calendar.startOfDay(for: earliest), today)) }
+        return Recap.Period.day(of: wanted, calendar: calendar) ?? .day(year: 2026, month: 1, day: 1)
+    }
+
+    /// The week to open on: the one that just ended on the first day of a
+    /// week, this one from its second day — a week's first day is to it what
+    /// a month's first seven days are to a month.
+    static func defaultWeek(
+        earliest: Date?, now: Date = Date(), firstWeekday: Int = firstWeekday, calendar: Calendar = Recap.calendar
+    ) -> Recap.Period {
+        let current = weekStart(of: now, firstWeekday: firstWeekday, calendar: calendar)
+        var wanted = current
+        if calendar.isDate(now, inSameDayAs: current),
+           let before = calendar.date(byAdding: .day, value: -7, to: current) {
+            wanted = calendar.startOfDay(for: before)
+        }
+        if let earliest {
+            wanted = max(wanted, min(weekStart(of: earliest, firstWeekday: firstWeekday, calendar: calendar), current))
+        }
+        return Recap.Period.week(startingOn: wanted, calendar: calendar) ?? .week(year: 2026, month: 1, day: 1)
+    }
+
+    // MARK: Any kind
+
+    /// The periods of a kind the window offers, newest first.
+    static func offered(
+        _ kind: Recap.Period.Kind, earliest: Date?, now: Date = Date(),
+        firstWeekday: Int = firstWeekday, calendar: Calendar = Recap.calendar
+    ) -> [Recap.Period] {
+        switch kind {
+        case .day: days(earliest: earliest, now: now, calendar: calendar)
+        case .week: weeks(earliest: earliest, now: now, firstWeekday: firstWeekday, calendar: calendar)
+        case .month: months(earliest: earliest, now: now, calendar: calendar)
+        case .year: years(earliest: earliest, now: now, calendar: calendar)
+        }
+    }
+
+    /// The period of a kind the window opens on.
+    static func defaultPeriod(
+        _ kind: Recap.Period.Kind, earliest: Date?, now: Date = Date(),
+        firstWeekday: Int = firstWeekday, calendar: Calendar = Recap.calendar
+    ) -> Recap.Period {
+        switch kind {
+        case .day: defaultDay(earliest: earliest, now: now, calendar: calendar)
+        case .week: defaultWeek(earliest: earliest, now: now, firstWeekday: firstWeekday, calendar: calendar)
+        case .month: defaultMonth(earliest: earliest, now: now, calendar: calendar)
+        case .year: defaultYear(earliest: earliest, now: now, calendar: calendar)
+        }
+    }
+
+    /// The period of another kind that goes with this one: the one holding
+    /// this period's last day, or today while this period runs. So a month
+    /// becomes its year and a year its last month so far, as before, a day
+    /// becomes its week, and a week its last day so far.
+    static func switched(
+        _ period: Recap.Period, to kind: Recap.Period.Kind, earliest: Date?, now: Date = Date(),
+        firstWeekday: Int = firstWeekday, calendar: Calendar = Recap.calendar
+    ) -> Recap.Period {
+        guard period.kind != kind, let bounds = period.bounds(calendar: calendar) else { return period }
+        let last = calendar.date(byAdding: .day, value: -1, to: bounds.end).map { calendar.startOfDay(for: $0) } ?? bounds.start
+        let anchor = max(bounds.start, min(last, calendar.startOfDay(for: now)))
+        return self.period(kind, containing: anchor, firstWeekday: firstWeekday, calendar: calendar)
+            ?? defaultPeriod(kind, earliest: earliest, now: now, firstWeekday: firstWeekday, calendar: calendar)
     }
 
     /// No recap is offered before this: a bogus timestamp in some store (an

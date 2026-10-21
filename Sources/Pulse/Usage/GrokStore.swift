@@ -76,11 +76,18 @@ enum GrokStore {
                         ?? ["grok": usage]
 
                     for (model, counts) in perModel {
+                        // `inputTokens` already holds the cached read and
+                        // `outputTokens` the reasoning: `totalTokens` is
+                        // their sum alone, a read never exceeds the input,
+                        // and Grok Build's own cost meter prices them that
+                        // way (#91). Adding them again doubled the totals
+                        // and held the hit rate under 50%.
+                        let cacheRead = int(counts["cachedReadTokens"])
                         let tally = TokenTally(
-                            input: int(counts["inputTokens"]),
+                            input: max(int(counts["inputTokens"]) - cacheRead, 0),
                             cacheWrite: int(counts["cacheCreationTokens"]),
-                            cacheRead: int(counts["cachedReadTokens"]),
-                            output: int(counts["outputTokens"]) + int(counts["reasoningTokens"])
+                            cacheRead: cacheRead,
+                            output: int(counts["outputTokens"])
                         )
                         guard tally.total > 0 else { continue }
 

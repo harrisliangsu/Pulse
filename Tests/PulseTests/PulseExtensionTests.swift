@@ -462,17 +462,25 @@ struct ExtensionRunTests {
 
     @Test("A program that never answers is stopped at its time limit")
     func timeout() async throws {
-        let (service, sandbox) = try service("#!/bin/sh\nsleep 30\n", timeout: 1)
+        let watch = ProcessDeathWatch()
+        let (service, sandbox) = try service(
+            "#!/bin/sh\necho $$ > '\(watch.pidFile.path)'\nexec sleep 300\n", timeout: 1
+        )
         defer { sandbox.remove() }
 
-        let started = Date()
+        let started = ContinuousClock.now
         let usage = await service.fetch()
+        let returned = started.duration(to: .now)
         #expect(usage.state == .unavailable(.extensionTimedOut))
-        // The time limit plus the stop's own grace — about six seconds at
-        // most — and nowhere near the thirty the program asked for. The bound
-        // is that, not the six: the run waits for a utility-QoS thread, and on
-        // a loaded CI runner that wait alone took the 1.10.0 release run to 16s.
-        #expect(Date().timeIntervalSince(started) < 25)
+        // Killed within the time limit plus the stop's own grace — about six
+        // seconds at most, ten with margin — timed from the program's side.
+        // The return is bounded only far below the five minutes the program
+        // asked for: the caller resumes on a cooperative thread, and on a
+        // loaded CI runner waiting for one took 16–20s with the program long
+        // dead. See `ProcessDeathWatch`.
+        let killed = try #require(await watch.death, "the program outlived the run")
+        #expect(started.duration(to: killed) < .seconds(10))
+        #expect(returned < .seconds(120))
     }
 
     @Test("A program deleted since the scan is reported missing")

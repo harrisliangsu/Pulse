@@ -10,11 +10,10 @@ struct PlacementPane: View {
     /// The row a reorder drag is currently over, so it can say so.
     @State private var dropTarget: AccountKey?
 
-    private func positionRow(controlBelow: Bool, fitsLabels: Bool = true) -> some View {
+    private var positionRow: some View {
         SettingsRow(
             String.localized("Position"),
-            subtitle: String.localized("Drag it anywhere; near an edge it snaps on."),
-            controlBelow: controlBelow
+            subtitle: String.localized("Drag it anywhere; near an edge it snaps on.")
         ) {
             Picker("", selection: Binding(
                 get: { placement.dock },
@@ -28,10 +27,8 @@ struct PlacementPane: View {
                 Text(localized: "Right").tag(PanelDock.edge(.right))
             }
             .labelsHidden()
-            .pickerStyle(.segmented)
-            // Six segments do not fit the usual ceiling without truncating
-            // both free ones, so this one is as wide as its labels.
-            .fixedSize(horizontal: fitsLabels, vertical: true)
+            .pickerStyle(.menu)
+            .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
         }
     }
 
@@ -97,17 +94,7 @@ struct PlacementPane: View {
 
                 SettingsRowDivider()
 
-                // Six segments as wide as their labels leave the label a
-                // sliver beside them in the usual window ("位置" wrapped a
-                // character a line): side by side only when both fit, else
-                // the picker goes under the label, and only in the narrowest
-                // window, where even that overflows the card, do its segments
-                // give up width and truncate.
-                ViewThatFits(in: .horizontal) {
-                    positionRow(controlBelow: false)
-                    positionRow(controlBelow: true)
-                    positionRow(controlBelow: true, fitsLabels: false)
-                }
+                positionRow
 
                 SettingsRowDivider()
 

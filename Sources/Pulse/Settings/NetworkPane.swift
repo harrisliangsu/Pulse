@@ -80,7 +80,7 @@ struct NetworkPane: View {
                             }
                         }
                         .labelsHidden()
-                        .pickerStyle(.segmented)
+                        .pickerStyle(.menu)
                         .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
                     }
 

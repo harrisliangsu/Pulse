@@ -179,6 +179,62 @@ enum RecapSamples {
         )
     }
 
+    // MARK: - Day and week
+
+    /// A run of September 2026's sample days as its own recap: one day, or a
+    /// week from `first` (the 14th is a Monday, the 13th a Sunday). `through`
+    /// is a week still running, with only that many of its days so far.
+    private static func span(
+        _ period: Recap.Period, first: Int, length: Int, through: Int? = nil, isInProgress: Bool? = nil,
+        priced: Bool = true, hasHours: Bool = true, agentCount: Int = 5
+    ) -> Recap {
+        let running = isInProgress ?? (through != nil)
+        let september = month()
+        let had = min(through ?? length, length)
+        let days = (0..<had).map { september.days[first - 1 + $0] }
+        let total = days.reduce(0) { $0 + $1.tokens }
+        let cost = priced ? days.compactMap(\.cost).reduce(0, +) : nil
+        let streaks = Recap.streaks(of: days, isInProgress: running)
+        let agents = agentShares(total: total, days: days, scale: 1).prefix(agentCount)
+        return Recap(
+            period: period,
+            start: date(2026, 9, first), end: date(2026, 9, first + had), isInProgress: running,
+            tokens: total, cost: cost, unpricedTokens: 0, previousTokens: Int(Double(total) / 1.21),
+            activeDays: days.filter { $0.tokens > 0 }.count, elapsedDays: had,
+            sessions: length == 1 ? 17 : 14 * had,
+            days: days, months: [],
+            hours: hasHours ? hours(total: total) : nil,
+            peakHour: hasHours ? 23 : nil, lateShare: hasHours ? 0.62 : nil,
+            latestMinute: hasHours ? 108 : nil, lateNights: hasHours ? (length == 1 ? 1 : 3) : 0,
+            persona: hasHours ? .nightOwl : nil,
+            models: sampleModels.map { model in
+                Recap.ModelShare(name: model.0, tokens: Int(model.1 * Double(total)), share: model.1,
+                                 cost: cost.map { model.2 / 1342 * $0 })
+            },
+            agents: Array(agents),
+            projects: sampleProjects.map {
+                Recap.ProjectShare(name: $0.0, tokens: Int($0.1 * Double(total)), share: $0.1, sessions: max(1, $0.2 * had / 30))
+            },
+            cacheHitRate: 0.9, cacheSavings: priced ? (cost ?? 0) * 0.3 : nil,
+            currentStreak: streaks.current, longestStreak: streaks.longest, busiestDay: days.max { $0.tokens < $1.tokens },
+            currency: "USD", isPartial: false
+        )
+    }
+
+    /// September 17, 2026, a Thursday, finished; `isInProgress` draws it as today.
+    static func day(isInProgress: Bool = false, priced: Bool = true, hasHours: Bool = true) -> Recap {
+        span(.day(year: 2026, month: 9, day: 17), first: 17, length: 1, isInProgress: isInProgress,
+             priced: priced, hasHours: hasHours)
+    }
+
+    /// September 14–20, 2026, Monday to Sunday; `sundayFirst` is the week of
+    /// the 13th to the 19th, as a week starting on Sunday has it.
+    static func week(sundayFirst: Bool = false, through: Int? = nil, priced: Bool = true, hasHours: Bool = true) -> Recap {
+        let first = sundayFirst ? 13 : 14
+        return span(.week(year: 2026, month: 9, day: first), first: first, length: 7, through: through,
+                    priced: priced, hasHours: hasHours)
+    }
+
     /// A month in which nothing was recorded.
     static var empty: Recap {
         Recap(
@@ -195,5 +251,7 @@ enum RecapSamples {
 
     static var monthDeck: RecapDeck { RecapDeck(recap: month(), monthlyPrice: 200, hidesProjects: false) }
     static var yearDeck: RecapDeck { RecapDeck(recap: year(), monthlyPrice: 200, hidesProjects: false) }
+    static var dayDeck: RecapDeck { RecapDeck(recap: day(), monthlyPrice: 200, hidesProjects: false) }
+    static var weekDeck: RecapDeck { RecapDeck(recap: week(), monthlyPrice: 200, hidesProjects: false) }
 }
 #endif

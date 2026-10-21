@@ -95,9 +95,9 @@
 - **Optional extras** — global shortcuts, following the active display, hiding from screenshots.
 
 ### Spend, status and the rest
-- **Token spend** — what 54 local clients have used, priced at public API rates, by day, model and agent.
+- **Token spend** — what 54 local clients have used, priced at public API rates, by day, model and agent, over any span you choose.
 - **Estimates in your currency** — dollars, yuan, Hong Kong or New Taiwan dollars, yen, won or roubles.
-- **Monthly and yearly recap** — shareable cards built from the same records.
+- **Usage recaps** — shareable cards for a day, a week, a month or a year, built from the same records.
 - **Service status** — 44 providers' own status pages, and a notification when one reports an outage.
 - **Connection diagnostics** — where each figure came from, and the servers' own replies.
 - **For power users** — several accounts per provider, extensions for your own sources, `Pulse --json` for scripts.

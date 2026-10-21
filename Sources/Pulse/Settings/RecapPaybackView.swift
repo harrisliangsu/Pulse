@@ -183,7 +183,9 @@ struct RecapPaybackView: View {
     @ViewBuilder
     private var tiles: some View {
         let saved = deck.cacheSavings
-        let day = insights.costliestDay
+        // A day recap's dearest day, and its average per day, are the day.
+        let isDay = deck.kind == .day
+        let day = isDay ? nil : insights.costliestDay
         let perMillion = insights.costPerMillion
         if saved != nil || day != nil || perMillion != nil {
             HStack(spacing: 14) {
@@ -204,7 +206,7 @@ struct RecapPaybackView: View {
                 if let perMillion {
                     tile(
                         tone: .white, label: .localized("Per million tokens"), value: money(perMillion),
-                        note: insights.costPerActiveDay.map { String.localized("Average per active day: \(money($0))") }
+                        note: isDay ? nil : insights.costPerActiveDay.map { String.localized("Average per active day: \(money($0))") }
                     )
                 }
             }
@@ -353,14 +355,20 @@ struct RecapPaybackView: View {
         }
     }
 
-    /// Day numbers (1, 10, 20 and the last) or the quarter's first months,
-    /// under the bar they belong to.
+    /// Day numbers (1, 10, 20 and the last), each day's weekday in a week, or
+    /// the quarter's first months, under the bar they belong to.
     private func axisLabels(count: Int) -> some View {
-        let labels: [(index: Int, text: String)] = deck.isYear
-            ? [0, 3, 6, 9].map { ($0, RecapFormat.shortMonthName($0 + 1)) }
-            : ([0, 9, 19, count - 1].filter { $0 < count }.reduce(into: [Int]()) { list, index in
+        let labels: [(index: Int, text: String)]
+        switch deck.kind {
+        case .year:
+            labels = [0, 3, 6, 9].map { ($0, RecapFormat.shortMonthName($0 + 1)) }
+        case .week:
+            labels = recap.days.indices.map { ($0, RecapFormat.weekdayName(of: recap.days[$0].date)) }
+        case .day, .month:
+            labels = ([0, 9, 19, count - 1].filter { $0 < count }.reduce(into: [Int]()) { list, index in
                 if !list.contains(index), list.last.map({ index - $0 >= 5 }) ?? true { list.append(index) }
             }).map { ($0, "\($0 + 1)") }
+        }
         return GeometryReader { proxy in
             let cell = proxy.size.width / CGFloat(max(count, 1))
             ForEach(labels, id: \.index) { label in
@@ -383,6 +391,9 @@ struct RecapPaybackView: View {
             // A period still running: both figures stop today.
             if deck.payback?.isToDate == true {
                 Text(localized: "Figures are to date, and the plan price is prorated by the days so far.")
+            } else if deck.kind == .day || deck.kind == .week {
+                // A finished day or week is still a share of a monthly price.
+                Text(localized: "The plan price is the monthly price prorated by the days of this period.")
             }
             if let begin = deck.recap.recordsBegin {
                 Text(String.localized("The plan price is counted from \(RecapFormat.day(begin)), when records on this Mac begin."))

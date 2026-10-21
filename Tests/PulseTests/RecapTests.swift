@@ -832,7 +832,7 @@ struct RecapTests {
 
     // MARK: - The command
 
-    @Test("--recap reads a month, a year, or nothing for this month")
+    @Test("--recap reads a day, a week, a month, a year, or nothing for this month")
     func probeArguments() {
         let now = Self.at(2026, 10, 5)
         #expect(RecapReport.period(from: "2026-09", now: now, calendar: Self.calendar) == .month(year: 2026, month: 9))
@@ -841,7 +841,10 @@ struct RecapTests {
         #expect(RecapReport.period(from: "2026-13", now: now, calendar: Self.calendar) == nil)
         #expect(RecapReport.period(from: "2026-9", now: now, calendar: Self.calendar) == nil)
         #expect(RecapReport.period(from: "26", now: now, calendar: Self.calendar) == nil)
-        #expect(RecapReport.period(from: "2026-09-01", now: now, calendar: Self.calendar) == nil)
+        #expect(RecapReport.period(from: "2026-09-01", now: now, calendar: Self.calendar) == .day(year: 2026, month: 9, day: 1))
+        #expect(RecapReport.period(from: "week-2026-09-28", now: now, calendar: Self.calendar) == .week(year: 2026, month: 9, day: 28))
+        #expect(RecapReport.period(from: "2026-09-31", now: now, calendar: Self.calendar) == nil)
+        #expect(RecapReport.period(from: "week-2026-09", now: now, calendar: Self.calendar) == nil)
         #expect(RecapReport.period(from: "september", now: now, calendar: Self.calendar) == nil)
     }
 

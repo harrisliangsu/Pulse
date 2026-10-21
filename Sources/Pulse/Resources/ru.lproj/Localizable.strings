@@ -245,6 +245,13 @@
 "Usage history" = "История расхода";
 "Today" = "Сегодня";
 "All time" = "За всё время";
+"This month" = "Этот месяц";
+"Last month" = "Прошлый месяц";
+"This year" = "Этот год";
+"Custom range" = "Свой период";
+"Dates" = "Даты";
+"First day" = "Первый день";
+"Last day" = "Последний день";
 "Limit reset credits" = "Кредиты на сброс лимита";
 "Next expiry" = "Ближайший истекает";
 "1 available" = "Доступен 1";
@@ -687,6 +694,15 @@
 "Plan credits" = "Кредиты тарифа";
 "Dedicated credits" = "Целевые кредиты";
 "Show each part of the credits" = "Показывать кредиты по частям";
+"Show credit amounts" = "Показывать число кредитов";
+"Each row on the card also shows the credits, such as 5,843 / 6,000. The rail keeps its percentages." = "В каждой строке карточки также указано число кредитов, например 5 843 / 6 000. На ленте остаются проценты.";
+"No session" = "Нет сеанса";
+"Read the session from your browser above to see the account's usage history." = "Считайте сеанс из браузера выше, чтобы увидеть историю использования аккаунта.";
+"The whole account, editor and CLI alike. Used is before discounts and free allowances; charged is what was deducted." = "Весь аккаунт — и редактор, и CLI. «Израсходовано» — до скидок и бесплатных лимитов, «Списано» — то, что вычтено.";
+"Credits used per day" = "Кредиты по дням";
+"From Qoder's usage records, in credits." = "По записям Qoder, в кредитах.";
+"Charged %@" = "Списано %@";
+"%@ credits used, %@ charged" = "Израсходовано %@ кредитов, списано %@";
 "Plan credits, a top-up pack and dedicated credits are spent separately. The total can look ample while one of them is nearly gone." = "Кредиты тарифа, пакет пополнения и целевые кредиты расходуются отдельно. Общий остаток может выглядеть большим, хотя одна из частей почти исчерпана.";
 "%@: %@ credits expire" = "Из них к %1$@ сгорит %2$@";
 "All expire %@" = "Всё сгорит к %@";
@@ -921,6 +937,7 @@
 "7 days" = "7 дней";
 "31 days" = "31 день";
 "Costs are estimates at API prices." = "Суммы — оценка по ценам API.";
+"API-price estimates. * Partly unpriced." = "Оценка по ценам API. * Часть без цены.";
 "Whole account" = "Весь аккаунт";
 "Couldn't read the history." = "Не удалось прочитать историю.";
 "From %@, for the whole account." = "Данные %@ по всему аккаунту.";
@@ -1102,10 +1119,8 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "Итоги месяца";
 "Yearly Recap" = "Итоги года";
-"Monthly and Yearly Recap" = "Итоги месяца и года";
-"View %@ recap" = "Итоги за %@";
-"View %@ yearly recap" = "Итоги за %@ год";
-"Shareable cards for a month or a year, from this Mac's records." = "Карточки за месяц или год по записям этого Mac — ими можно поделиться.";
+"Usage recaps" = "Итоги использования";
+"Shareable cards for a day, a week, a month or a year, from this Mac's records." = "Карточки за день, неделю, месяц или год по записям этого Mac — ими можно поделиться.";
 "When a recap is ready" = "Когда итоги готовы";
 "Last month's recap, at the start of the month. Needs Token spend reading." = "Итоги прошлого месяца — в начале месяца. Нужно включить «Читать локальные записи о расходе».";
 "Your %@ recap is ready" = "Итоги за %@ готовы";
@@ -1130,9 +1145,9 @@
 "Saved" = "Сохранено";
 "Save here" = "Сохранить сюда";
 "Token activity" = "Активность по токенам";
-"Daily" = "По дням";
-"Weekly" = "По неделям";
-"Cumulative" = "Накопительно";
+"Daily" = "Дни";
+"Weekly" = "Недели";
+"Cumulative" = "Итого";
 "%@ tokens in the last 12 months" = "Токенов за последние 12 месяцев: %@";
 "%@ over the last 12 months, %@ active days" = "За последние 12 месяцев: %@, активных дней: %@";
 "Less" = "Меньше";
@@ -1285,3 +1300,31 @@
 "No request was made." = "Запрос не отправлялся.";
 "The page answered, but not with anything Pulse reads for this provider." = "Страница ответила, но в ответе нет того, что Pulse читает для этого сервиса.";
 "The page answered HTTP %@." = "Страница ответила HTTP %@.";
+
+// Recap: day and week
+"Daily Recap" = "Итоги дня";
+"Weekly Recap" = "Итоги недели";
+"Day" = "День";
+"Week" = "Неделя";
+"Earlier" = "Раньше";
+"Later" = "Позже";
+"On %@, you and AI worked through" = "%@ вы с ИИ обработали";
+"Over %@, you and AI worked through" = "За %@ вы с ИИ обработали";
+"On %@," = "%@";
+"Over %@," = "За %@";
+"Check back when the day is over" = "Загляните снова, когда закончится день";
+"See you tomorrow" = "До завтра";
+"Check back when the week is over" = "Загляните снова, когда закончится неделя";
+"See you next week" = "До встречи на следующей неделе";
+"vs the day before" = "к предыдущему дню";
+"vs the same days last week" = "к тем же дням прошлой недели";
+"vs the week before" = "к предыдущей неделе";
+"per day vs the week before" = "к среднему в день за предыдущую неделю";
+"That was your day." = "Таким был ваш день.";
+"So far, this is your day." = "Таким пока выглядит ваш день.";
+"That was your week." = "Такой была ваша неделя.";
+"So far, this is your week." = "Такой пока выглядит ваша неделя.";
+"Tokens · so far today" = "Токены · на данный момент";
+"Top tool" = "Основной инструмент";
+"Tokens · token share" = "Токены · доля токенов";
+"The plan price is the monthly price prorated by the days of this period." = "Цена тарифа пересчитана из месячной пропорционально дням этого периода.";

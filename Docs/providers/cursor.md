@@ -8,7 +8,7 @@ Extra accounts are **not** supported, and that is not an oversight. The same Cur
 
 ## Credential
 
-`GET https://cursor.com/api/usage-summary` — undocumented, like the CLI routes, and can change without notice.
+`GET https://cursor.com/api/usage-summary`, then `POST https://cursor.com/api/dashboard/get-plan-info` and, on a weekly plan, `POST https://cursor.com/api/dashboard/get-current-period-usage` (body `{}`, `Origin: https://cursor.com`, as for [Grok Bot](grok-bot.md#current-route)) — all undocumented, like the CLI routes, and can change without notice.
 
 **The cookie is not stored anywhere — it is built.** The website authenticates with `WorkosCursorSessionToken` rather than a bearer header. The obvious way to get one is to read the browser’s cookie jar. There is no need: the editor keeps its OAuth token in VS Code’s global-state SQLite (`~/Library/Application Support/Cursor/User/globalStorage/state.vscdb`, `ItemTable` key `cursorAuth/accessToken`). The account id is the tail of that token’s `sub` claim after `|`; the cookie value is **that id and the token joined by `::`**, percent-encoded.
 
@@ -38,6 +38,19 @@ The rail's automatic ring follows **Cursor Models**, not whichever pool is fulle
 **`plan.used` / `plan.limit` is a different denominator and must not sit beside them** — plan cash value ($20 on Pro) against pools worth hundreds, so a third bar reads as a contradiction. It is used for the extra-spend limit, as the fallback when an account reports no pools at all, and as `creditBalance` (`plan.remaining` is a real balance, not an allowance — which is why this provider reports one and Antigravity does not). A team account’s `pooled` / `onDemand` stand in for the individual pair.
 
 Billing-cycle length is 28 to 31 days, stored as a flat 30 with `reportsLength: false`.
+
+## Weekly plans
+
+**On a plan whose included usage is weekly, one weekly window replaces the two pools** (#87). Premium is one such plan. There the usage summary reports both pools at 0% while Cursor's page shows the week partly spent under "Weekly usage limit"; the summary cannot see that limit.
+
+What the editor draws instead (Cursor 3.25, `workbench.desktop.main.js`), and what Pulse reads, through the dashboard's REST form of each RPC:
+
+- `get-plan-info` → `planInfo.includedUsagePeriod` is `INCLUDED_USAGE_PERIOD_WEEKLY` (number `2` is also read), and `planInfo.includedUsageResetsAt` is the reset, **milliseconds as a string**.
+- `get-current-period-usage` → `planUsage.totalPercentUsed` is the week, a percentage like the pools'. On a weekly plan this reply's `billingCycleStart`/`End` are exactly seven days apart.
+
+The period is Cursor's own word, so the seven days are a stated length (`reportsLength: true`). Extra spend from the summary stays; the plan's `remaining` stays as the balance. **Evidence:** a Premium account on 2026-10-16 answered with the shapes above (fixtures `cursor-plan-info-weekly.json`, `cursor-period-usage-weekly.json`), and Pulse read 35.5%, the figure the editor rounds to 36%.
+
+A `get-plan-info` call that fails leaves the summary's pools as they were. Once the plan says weekly, a `get-current-period-usage` call that fails is a failed read, and a reply without the figure draws no week rather than one at 0%.
 
 ## Service status
 

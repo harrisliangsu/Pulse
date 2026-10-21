@@ -258,14 +258,17 @@ struct RecapInsights: Sendable {
         return best
     }
 
-    /// Money by day (a month) or by month (a year), one entry per day or
-    /// month: a quiet one a real zero, and **nil for one with no figure** — a
-    /// month still to come or before the first record, or work with no price
-    /// at all, which is not a zero. Nil altogether when nothing had a price.
+    /// Money by day (a week or a month) or by month (a year), one entry per
+    /// day or month: a quiet one a real zero, and **nil for one with no
+    /// figure** — a month still to come or before the first record, or work
+    /// with no price at all, which is not a zero. Nil altogether when nothing
+    /// had a price, and for a day, which is one bar.
     var costBars: [Double?]? {
         let bars: [Double?]
         switch recap.period {
-        case .month:
+        case .day:
+            return nil
+        case .week, .month:
             bars = recap.days.map { $0.tokens > 0 ? $0.cost : 0 }
         case .year:
             guard recap.months.count == 12 else { return nil }
@@ -312,7 +315,7 @@ struct RecapInsights: Sendable {
         case quietWeekend
         /// Nobody did, on a weekday (or in a month).
         case quiet
-        /// A month of a running year that has not begun.
+        /// A month of a running year, or a day of a running week, that has not begun.
         case toCome
     }
 
@@ -336,9 +339,13 @@ struct RecapInsights: Sendable {
         }
     }
 
-    /// The marks the opener draws: days for a month, months for a year.
+    /// The marks the opener draws: days for a week or a month, months for a
+    /// year, none for a day (one cell says nothing the row does not). A
+    /// running week's days to come are drawn as such, so it reads as a week.
     func marks(of agent: Recap.AgentShare) -> [Mark] {
         switch recap.period {
+        case .day: []
+        case .week: dayMarks(of: agent) + Array(repeating: .toCome, count: max(0, 7 - recap.days.count))
         case .month: dayMarks(of: agent)
         case .year: monthMarks(of: agent)
         }

@@ -47,16 +47,21 @@ final class RecapWindowController {
     /// Re-reads the title, which has to follow the language and the kind of
     /// period while the window is open.
     func refreshTitle() {
-        window?.title = model.isYear ? .localized("Yearly Recap") : .localized("Monthly Recap")
+        window?.title = switch model.kind {
+        case .day: .localized("Daily Recap")
+        case .week: .localized("Weekly Recap")
+        case .month: .localized("Monthly Recap")
+        case .year: .localized("Yearly Recap")
+        }
     }
 
-    /// The title follows the Month / Year choice. Re-armed on every change,
-    /// because `withObservationTracking` fires once.
+    /// The title follows the Day / Week / Month / Year choice. Re-armed on
+    /// every change, because `withObservationTracking` fires once.
     private func trackTitle() {
         titleGeneration += 1
         let generation = titleGeneration
         withObservationTracking {
-            _ = model.isYear
+            _ = model.kind
         } onChange: { [weak self] in
             Task { @MainActor in
                 guard let self, self.titleGeneration == generation, self.window?.isVisible == true else { return }
@@ -123,7 +128,7 @@ final class RecapWindow: NSWindow {
     }
 
     /// Whether the first responder leaves ← and → to the window. Not a control
-    /// that uses them itself — the Month / Year segments, a popup, a slider, a
+    /// that uses them itself — the Day / Week / Month / Year segments, a popup, a slider, a
     /// stepper, a text view — and not any other control but a plain button
     /// (arrows mean nothing to one); the window itself, its content and the
     /// views drawn in it do.

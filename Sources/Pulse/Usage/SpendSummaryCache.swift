@@ -6,10 +6,31 @@ import Foundation
 actor SpendSummaryCache {
     struct Window: Hashable, Sendable {
         let snapshot: UUID
-        let days: Int?
+        /// The first local midnight counted, or nil for everything on record.
+        let from: Date?
+        /// The local midnight counting stops before, or nil for through today.
+        let until: Date?
         let today: Date
         let calendar: Calendar
         let language: String
+
+        init(snapshot: UUID, from: Date?, until: Date?, today: Date, calendar: Calendar, language: String) {
+            self.snapshot = snapshot
+            self.from = from
+            self.until = until
+            self.today = today
+            self.calendar = calendar
+            self.language = language
+        }
+
+        /// The last `days` calendar days through `today`, as
+        /// `SpendSummary.of(_:overLast:)` counts them; nil is everything.
+        init(snapshot: UUID, days: Int?, today: Date, calendar: Calendar, language: String) {
+            let start = calendar.startOfDay(for: today)
+            self.init(snapshot: snapshot,
+                      from: days.flatMap { calendar.date(byAdding: .day, value: -($0 - 1), to: start) },
+                      until: nil, today: today, calendar: calendar, language: language)
+        }
     }
 
     struct Request: Hashable, Sendable {
@@ -61,7 +82,7 @@ actor SpendSummaryCache {
         try Task.checkCancellation()
         let next = request.window
         if window != next {
-            let summary = SpendSummary.of(ledgers, overLast: next.days, now: next.today, calendar: next.calendar)
+            let summary = SpendSummary.of(ledgers, starting: next.from, before: next.until, now: next.today, calendar: next.calendar)
             try Task.checkCancellation()
             overview = summary
             agent = nil
@@ -70,12 +91,12 @@ actor SpendSummaryCache {
         }
         let scoped = request.agent.map { selected in ledgers.filter { $0.key == selected } } ?? ledgers
         if let selected = request.agent, agent?.key != selected {
-            let summary = SpendSummary.of(scoped, overLast: next.days, now: next.today, calendar: next.calendar)
+            let summary = SpendSummary.of(scoped, starting: next.from, before: next.until, now: next.today, calendar: next.calendar)
             try Task.checkCancellation()
             agent = (selected, summary)
         }
         if let name = request.model, model?.name != name || model?.agent != request.agent {
-            let summary = ModelSpendSummary.of(scoped, named: name, overLast: next.days, now: next.today, calendar: next.calendar)
+            let summary = ModelSpendSummary.of(scoped, named: name, from: next.from, until: next.until, now: next.today, calendar: next.calendar)
             try Task.checkCancellation()
             model = (request.agent, name, summary)
         }

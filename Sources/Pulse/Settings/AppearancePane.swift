@@ -26,7 +26,7 @@ struct AppearancePane: View {
                         }
                     }
                     .labelsHidden()
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.menu)
                     .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
                     .disabled(!settings.isPanelVisible)
                 }
@@ -46,7 +46,7 @@ struct AppearancePane: View {
                         }
                     }
                     .labelsHidden()
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.menu)
                     .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
                     .disabled(!settings.isPanelVisible)
                 }
@@ -83,7 +83,7 @@ struct AppearancePane: View {
                         }
                     }
                     .labelsHidden()
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.menu)
                     .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
                 }
 
@@ -102,8 +102,8 @@ struct AppearancePane: View {
                         }
                     }
                     .labelsHidden()
-                    .pickerStyle(.segmented)
-                    .frame(width: 220, alignment: .trailing)
+                    .pickerStyle(.menu)
+                    .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
                     .disabled(!settings.isPanelVisible)
                 }
 

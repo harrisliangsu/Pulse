@@ -152,10 +152,32 @@ struct SettingsSidebar: View {
                 Image(systemName: pane.symbol)
             }
         }
+        .labelStyle(SidebarRowLabelStyle())
         .tag(pane)
     }
 
     private func title(_ pane: SettingsPane) -> String {
         pane.title(in: settings)
+    }
+}
+
+/// A sidebar row whose icon is the text's colour (black, white in dark
+/// mode), not the accent colour a source list tints its icons with: two
+/// dozen blue marks down the list read as links rather than as places.
+///
+/// Laid out here rather than recoloured. A `foregroundStyle` on the icon does
+/// not reach past the sidebar's own label style, and `listItemTint` held only
+/// for the rows on screen when the window opened — rows scrolled into view
+/// later were blue again.
+private struct SidebarRowLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        // Measured against the system's row: icon centred 12pt in, title
+        // 30pt in, so the text starts where it did before.
+        HStack(spacing: 6) {
+            configuration.icon
+                .foregroundStyle(.primary)
+                .frame(width: 24)
+            configuration.title
+        }
     }
 }

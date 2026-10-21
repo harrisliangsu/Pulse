@@ -3,10 +3,22 @@ import Foundation
 
 extension Recap.Period {
     /// The calendar days the period covers: its first local midnight and the
-    /// midnight that ends it (exclusive). Nil for a month outside 1...12, which
-    /// names no span.
+    /// midnight that ends it (exclusive). Nil for a month outside 1...12, or a
+    /// day that is not on the calendar (February 30), which names no span.
+    ///
+    /// **Days are counted, not hours.** A day ends at the next day's start and
+    /// a week seven days on (`byAdding: .day`), so the day the clocks change
+    /// is 23 or 25 hours long and a week across it is still seven days. Where
+    /// a zone changes its clocks at midnight the day starts at the first
+    /// instant it has (01:00), which `startOfDay` finds.
     func bounds(calendar: Calendar) -> (start: Date, end: Date)? {
         switch self {
+        case .day(let year, let month, let day), .week(let year, let month, let day):
+            guard let date = Self.civilDate(year: year, month: month, day: day, calendar: calendar) else { return nil }
+            let start = calendar.startOfDay(for: date)
+            let length = kind == .week ? 7 : 1
+            guard let end = calendar.date(byAdding: .day, value: length, to: start) else { return nil }
+            return (start, calendar.startOfDay(for: end))
         case .month(let year, let month):
             guard (1...12).contains(month),
                   let start = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
@@ -19,15 +31,43 @@ extension Recap.Period {
         }
     }
 
-    /// The period before this one: the month before (December of the year
-    /// before, from January), or the year before.
+    /// The period before this one: the day before, the seven days before, the
+    /// month before (December of the year before, from January), or the year
+    /// before.
     var previous: Recap.Period {
         switch self {
+        case .day(let year, let month, let day):
+            Self.shifted(year: year, month: month, day: day, by: -1).map { .day(year: $0.year, month: $0.month, day: $0.day) } ?? self
+        case .week(let year, let month, let day):
+            Self.shifted(year: year, month: month, day: day, by: -7).map { .week(year: $0.year, month: $0.month, day: $0.day) } ?? self
         case .month(let year, let month):
             month > 1 ? .month(year: year, month: month - 1) : .month(year: year - 1, month: 12)
         case .year(let year):
             .year(year - 1)
         }
+    }
+
+    /// The midday of a calendar date, or nil when the date is not on the
+    /// calendar: `DateComponents` would roll February 30 over to March 2.
+    /// Midday, so a zone that skips midnight still has the instant.
+    static func civilDate(year: Int, month: Int, day: Int, calendar: Calendar) -> Date? {
+        guard (1...12).contains(month), day >= 1,
+              let date = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12)) else { return nil }
+        let parts = calendar.dateComponents([.year, .month, .day], from: date)
+        guard parts.year == year, parts.month == month, parts.day == day else { return nil }
+        return date
+    }
+
+    /// A calendar date moved by whole days, worked out on dates alone (in
+    /// UTC, where every day is 24 hours), so no zone's clock change can move it.
+    static func shifted(year: Int, month: Int, day: Int, by days: Int) -> (year: Int, month: Int, day: Int)? {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC") ?? .gmt
+        guard let date = civilDate(year: year, month: month, day: day, calendar: utc),
+              let moved = utc.date(byAdding: .day, value: days, to: date) else { return nil }
+        let parts = utc.dateComponents([.year, .month, .day], from: moved)
+        guard let y = parts.year, let m = parts.month, let d = parts.day else { return nil }
+        return (y, m, d)
     }
 }
 
@@ -105,7 +145,7 @@ extension Recap {
         return result
     }
 
-    /// A calendar month's or year's recap from the Token spend ledgers — the
+    /// A calendar day's, week's, month's or year's recap from the Token spend ledgers — the
     /// same input `SpendSummary.of` takes.
     ///
     /// **Everything is added up by `SpendSummary`** over `[start, end)`

@@ -252,6 +252,13 @@
 "Usage history" = "用量紀錄";
 "Today" = "今天";
 "All time" = "累計";
+"This month" = "本月";
+"Last month" = "上月";
+"This year" = "今年";
+"Custom range" = "自訂範圍";
+"Dates" = "日期";
+"First day" = "開始日期";
+"Last day" = "結束日期";
 "Limit reset credits" = "額度重設券";
 "Next expiry" = "最近一張到期";
 "1 available" = "可用 1 張";
@@ -759,6 +766,15 @@
 "Plan credits" = "方案點數";
 "Dedicated credits" = "專屬點數";
 "Show each part of the credits" = "分項顯示點數";
+"Show credit amounts" = "顯示點數數值";
+"Each row on the card also shows the credits, such as 5,843 / 6,000. The rail keeps its percentages." = "卡片上的每一列同時顯示點數，例如 5,843 / 6,000。膠囊上仍顯示百分比。";
+"No session" = "沒有登入資訊";
+"Read the session from your browser above to see the account's usage history." = "在上方從瀏覽器讀取登入資訊後，就能看到帳號的用量記錄。";
+"The whole account, editor and CLI alike. Used is before discounts and free allowances; charged is what was deducted." = "整個帳號的用量，編輯器和命令列都包括在內。大號數字是折扣和免費額度抵扣之前的點數，「消耗」是實際扣掉的點數。";
+"Credits used per day" = "每天的折前點數";
+"From Qoder's usage records, in credits." = "來自 Qoder 的用量記錄，單位是點數。";
+"Charged %@" = "消耗 %@";
+"%@ credits used, %@ charged" = "折前 %@ 點數，消耗 %@";
 "Plan credits, a top-up pack and dedicated credits are spent separately. The total can look ample while one of them is nearly gone." = "方案點數、加購包與專屬點數各自扣減。合計看起來尚有餘裕時，其中一項可能已所剩無幾。";
 "%@: %@ credits expire" = "其中 %2$@ 點數 %1$@ 到期";
 "All expire %@" = "%@全部到期";
@@ -993,6 +1009,7 @@
 "7 days" = "7 天";
 "31 days" = "31 天";
 "Costs are estimates at API prices." = "金額依 API 價格估算。";
+"API-price estimates. * Partly unpriced." = "依 API 價格估算。* 不含未計價的 token。";
 "Whole account" = "整個帳號";
 "Couldn't read the history." = "無法讀取用量紀錄。";
 "From %@, for the whole account." = "來自 %@，涵蓋整個帳號。";
@@ -1174,10 +1191,8 @@
 // Recap window, entry points and notification
 "Monthly Recap" = "月報";
 "Yearly Recap" = "年報";
-"Monthly and Yearly Recap" = "月報與年報";
-"View %@ recap" = "查看 %@ 的月報";
-"View %@ yearly recap" = "查看 %@ 年報";
-"Shareable cards for a month or a year, from this Mac's records." = "用這台 Mac 的本機記錄，製作可以分享的月度和年度卡片。";
+"Usage recaps" = "用量報告";
+"Shareable cards for a day, a week, a month or a year, from this Mac's records." = "用這台 Mac 的本機記錄，製作可以分享的日、週、月、年卡片。";
 "When a recap is ready" = "月報完成時";
 "Last month's recap, at the start of the month. Needs Token spend reading." = "每月月初提醒上個月的月報已完成。需要先開啟「讀取本機用量記錄」。";
 "Your %@ recap is ready" = "%@ 的月報已完成";
@@ -1188,8 +1203,8 @@
 "No records for %@" = "%@ 沒有用量記錄";
 "Nothing in this Mac's usage records falls in this period." = "這台 Mac 的用量記錄裡，沒有這段時間的內容。";
 "The first read of a long history can take a minute or two." = "記錄很多時，第一次讀取可能要一兩分鐘。";
-"Month" = "月度";
-"Year" = "年度";
+"Month" = "月";
+"Year" = "年";
 "Monthly price" = "每月訂閱價格";
 "Only used for the payback card. Leave it empty to leave that card out." = "僅用於「訂閱回本」卡片。留空則不製作該卡片。";
 "Privacy" = "隱私";
@@ -1293,3 +1308,31 @@
 "No request was made." = "沒有發出請求。";
 "The page answered, but not with anything Pulse reads for this provider." = "狀態頁有回應，但其中沒有 Pulse 能為這個服務商讀取的內容。";
 "The page answered HTTP %@." = "狀態頁回傳了 HTTP %@。";
+
+// Recap: day and week
+"Daily Recap" = "日報";
+"Weekly Recap" = "週報";
+"Day" = "日";
+"Week" = "週";
+"Earlier" = "更早";
+"Later" = "更晚";
+"On %@, you and AI worked through" = "%@，你和 AI 一起處理了";
+"Over %@, you and AI worked through" = "%@這一週，你和 AI 一起處理了";
+"On %@," = "%@，";
+"Over %@," = "%@這一週，";
+"Check back when the day is over" = "今天結束後再來看看";
+"See you tomorrow" = "明天見";
+"Check back when the week is over" = "這週結束後再來看看";
+"See you next week" = "下週見";
+"vs the day before" = "比前一天";
+"vs the same days last week" = "比上週同期";
+"vs the week before" = "比前一週";
+"per day vs the week before" = "日均比前一週";
+"That was your day." = "這就是你的這一天。";
+"So far, this is your day." = "到目前為止，\n這是你的這一天。";
+"That was your week." = "這就是你的這一週。";
+"So far, this is your week." = "到目前為止，\n這是你的這一週。";
+"Tokens · so far today" = "Token · 截至此刻";
+"Top tool" = "主力工具";
+"Tokens · token share" = "Token 數 · 佔比";
+"The plan price is the monthly price prorated by the days of this period." = "訂閱價格按這段時間的天數從月費折算。";

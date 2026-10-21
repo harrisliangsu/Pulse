@@ -1,8 +1,8 @@
 # Recap cards
 
-Shareable 1080 × 1920 cards for a month or a year of Token spend: a one-page poster and a short deck. The facts are `Recap` (`Usage/Recap.swift`); this page owns how they are drawn and the window that shows and exports them. Views are `Settings/Recap*.swift`: the recap belongs to the settings side, not the panel.
+Shareable 1080 × 1920 cards for a day, a week, a month or a year of Token spend: a one-page poster and a short deck. The facts are `Recap` (`Usage/Recap.swift`); this page owns how they are drawn and the window that shows and exports them. Views are `Settings/Recap*.swift`: the recap belongs to the settings side, not the panel.
 
-Named **月报** / 年报 in Chinese and `Monthly Recap` / `Yearly Recap` in English; Japanese, Korean and Russian (**Итоги месяца** / **Итоги года**) have their own words, written rather than converted.
+Named **日报** / 周报 / **月报** / 年报 in Chinese and `Daily Recap` / `Weekly Recap` / `Monthly Recap` / `Yearly Recap` in English; Japanese (1 日のまとめ, 週間まとめ), Korean (일간 / 주간 리포트) and Russian (**Итоги дня** / **Итоги недели** / **Итоги месяца** / **Итоги года**) have their own words, written rather than converted.
 
 ## The cards
 
@@ -19,6 +19,27 @@ Named **月报** / 年报 in Chinese and `Monthly Recap` / `Yearly Recap` in Eng
 
 The poster is not numbered; the others carry "01 / 05", counted over the cards the deck really has. The year calendar is twelve month grids; a 53-week strip was unreadable at 1080 wide.
 
+### Days and weeks
+
+A day and a week get the month's cards where they still mean something at that scale, and leave out what needs more days than they hold. Decided per card (`RecapDeck.cards`, and `deck.kind` in each view):
+
+| Card | Day | Week | Why |
+|---|---|---|---|
+| Poster | the hero, sessions (no "active 1 of 1 day", no daily average), money and payback, the rhythm card alone in its row, models, agents and cache tiles, projects. **No** calendar, streak tile or busiest-day card | the hero, active days, daily average, money with its line, **a week strip** (seven cells in the week's own order, weekday above, date below, days to come dashed) beside the rhythm card, the streak tile, busiest day, projects | A day's busiest day and streak are the day itself |
+| Opener | the day of the month big, weekday and `2026·09` by the lime square; the lead tile says "Top tool"; the summary tile counts sessions; the roster shows each tool's tokens, no strip | `14–20` big; each tool's strip is the week's seven days (days to come dashed) | A one-cell strip and "used 1 day" say nothing |
+| Calendar | — | — | A day is one cell; a week is one row, its weeks one, its streak at most seven. The poster's week strip and the scorecard's bars draw it |
+| Timetable | everything but the weekdays | the weekdays are **the week's own seven days**, in its order, each day's tokens rather than an average of one, "Busiest: Thu" | One day is one weekday |
+| Payback | without "most expensive day", the average per active day and money by day | money by day has seven bars labelled by weekday | |
+| Scorecard | "That was your day." (one sentence, see below), no active-days cell, no "per active day" note, no bar strip (the hours are in the busiest-hour cell); "Tokens · so far today" while running | "That was your week.", seven pips, seven bars labelled by weekday | |
+
+**The headlines are whole sentences.** "That was your Oct 18." is not how a day is talked about, and in Russian the two lines would have to agree in gender ("Такой была ваша неделя"), so a day's and a week's scorecard headline is one key each; CJK translations carry their own line break. The sign-off is "See you tomorrow" / "See you next week", or "Check back when the day (week) is over" while running.
+
+**The change chip.** A finished day is set against the day before; **a day still running has no chip**: the ledgers count by day, not by the hour of a day, so "the same period yesterday" cannot be cut, and every morning would read as a fall. A running week is set against the same days of the week before ("vs the same days last week"); a finished one against the whole week before, and says "per day" only where the two differ in days (records beginning inside the week before).
+
+**Payback for a day or a week** is prorated by day whether or not it is over: each day it has seen is its own month's share of the price (`RecapDeck.paidMonths`), so an October day is 1/31 and the week of September 28 is 3/30 + 4/31. The footnote says "The plan price is the monthly price prorated by the days of this period." (or the to-date line while running). Leaving the card out was the other choice; a share of a monthly price is still what the reader paid for those days, and dividing one day's work by a whole month's price would say nothing.
+
+**Streaks**: none for a day (`RecapDeck.streak`); a week's is counted inside the week, like a month's.
+
 ## Nil means left out
 
 `RecapDeck` (`RecapDeck.swift`) returns the cards in order. **A card whose data is nil is not drawn, and a nil figure is never drawn as zero:**
@@ -30,7 +51,7 @@ The poster is not numbered; the others carry "01 / 05", counted over the cards t
 
 **The change chip** (poster, calendar, scorecard) reads "vs same period in August": `Recap.previousTokens` covers the same number of days of the period before. Left out without it.
 
-**Payback** is `cost / (price × months)` (`RecapPayback`), one month for a month, twelve for a year. **A running period is prorated by days**: `months = (1 or 12) × elapsed days ÷ days in the month (or year)` — the 5th of a 31-day month is 5/31; March 1 of a 365-day year is 12 × 60/365 — and the card says "Figures are to date, and the plan price is prorated by the days so far." Below 1 it is shown as is; a positive multiple rounding to 0.0 reads "<0.1".
+**Payback** is `cost / (price × months)` (`RecapPayback`), one month for a month, twelve for a year, a share by day for a day or a week ([above](#days-and-weeks)). **A running period is prorated by days**: `months = (1 or 12) × elapsed days ÷ days in the month (or year)` — the 5th of a 31-day month is 5/31; March 1 of a 365-day year is 12 × 60/365 — and the card says "Figures are to date, and the plan price is prorated by the days so far." Below 1 it is shown as is; a positive multiple rounding to 0.0 reads "<0.1".
 
 **Partly unpriced money.** `Recap.unpricedTokens` counts tokens with no published price. Above zero, `cost` is a floor, and the poster footer, payback footnote and scorecard say "Some work had no published price, so the money is a floor." Unpriced work does **not** remove the payback card (once it did above 1%, hiding it with no explanation for any heavy month with one unpublished model); the multiple is then a floor too. `cost` stays nil when nothing was priced.
 
@@ -80,6 +101,8 @@ Hero numbers are set tight and trimmed to their digits (`RecapFigureText.trimmed
 
 Recaps are built, offered and named in `Recap.calendar` (Gregorian, weeks from Monday, system time zone), **not** `Calendar.current`: a Buddhist or Japanese system calendar numbers the year 2569 or Reiwa 8, so "2026" would cover another span than it names. `Recap.build`, `RecapPeriods`, `RecapNoticeRule` and `--recap` default to it; `RecapFormat.calendar(locale:)` is it with a locale. A `Recap` carries its calendar, and the year calendar derives its months from `start` by month offsets (`Recap.monthStarts`), not from the year number. Busiest-day highlights (poster, month calendar) mark only `recap.busiestDay`, the earliest of a tie.
 
+**A week recap starts on the reader's own first weekday** (`RecapPeriods.firstWeekday`: `Calendar.current.firstWeekday`, which follows the region or the first day chosen in System Settings), the one thing taken from `Calendar.current`; its days are still counted in `Recap.calendar`. `RecapPeriods.weekStart` counts back in days from the day's own start rather than asking `dateInterval(of: .weekOfYear)`, whose answer also depends on the first-week rule. A week is named by its first day (`.week(year:month:day:)`), not by a week number, so it means the same seven days if the first weekday is later changed. **Days are counted, not hours**: a day ends at the next day's start and a week seven days on (`Recap.Period.bounds`), so the day the clocks change is 23 or 25 hours and a week across it is still seven days; where a zone changes its clocks at midnight (Chile) the day starts at its first instant, 01:00. A date not on the calendar (February 30) names no period. Weekday-against-weekend and Monday-first weekday headings elsewhere are unchanged.
+
 ## Language
 
 Copy goes through `String.localized` ([development.md](development.md)), plus four rules:
@@ -97,9 +120,9 @@ Persona names are written per language (`Recap.Persona.title`), not translated f
 PULSE_RECAP_PREVIEW=/tmp/recap swift test --filter RecapRenderTests
 ```
 
-Writes every card of the sample month and year in every language to `/tmp/recap/<language>/<deck>-<n>-<card>.png`, a `sheet.png` per language, and `/tmp/recap/edge/` for recaps missing a field (no price, unpriced, bare, in progress, a year in progress, no hours, no cache, a floor, mostly unpriced) plus `edge/one-agent`, `two-agents`, `three-agents` and `six-weeks` (August 2026). `in-progress`, `floor` and `mostly-unpriced` also render in `edge-zh-Hans`, `edge-ja` and `edge-ko`. Samples are `RecapSamples` (`#if DEBUG`), shared with `RecapRenderer.swift`'s `#Preview` blocks. No pixels are pinned; fit is judged by reading.
+Writes every card of the sample day (September 17, 2026), week (September 14–20), month and year in every language to `/tmp/recap/<language>/<deck>-<n>-<card>.png`, a `sheet.png` per language, and `/tmp/recap/edge/` for recaps missing a field (no price, unpriced, bare, in progress, a year in progress, no hours, no cache, a floor, mostly unpriced) plus `edge/one-agent`, `two-agents`, `three-agents` and `six-weeks` (August 2026), and `day-in-progress`, `day-bare`, `week-in-progress` (three days in), `week-sunday` (a week from Sunday) and `week-no-hours`. `in-progress`, `floor` and `mostly-unpriced` also render in `edge-zh-Hans`, `edge-ja` and `edge-ko`. Samples are `RecapSamples` (`#if DEBUG`), shared with `RecapRenderer.swift`'s `#Preview` blocks. No pixels are pinned; fit is judged by reading.
 
-Pinned: `RecapInsightsTests` ([above](#the-four-redesigned-cards)); `RecapVendorMarkTests` (mark table); `RecapTests` (past and running streaks, `unpricedTokens`, a Buddhist-calendar build); `RecapDeckTests` (payback with unpriced share and proration, cost line, savings floor, streak wording, which cards a recap gets); `RecapScoreDataTests` (stamp, quiet / future / busiest slots, session average, tool grouping); `RecapFormatTests` (per-locale number split, dates and hours, the ruler); `RecapWindowTests` (price grammar, `RecapPeriods.earliest`, the read-generation race, `takesArrows`). Details: [testing.md](testing.md).
+Pinned: `RecapInsightsTests` ([above](#the-four-redesigned-cards)); `RecapVendorMarkTests` (mark table); `RecapTests` (past and running streaks, `unpricedTokens`, a Buddhist-calendar build); `RecapDeckTests` (payback with unpriced share and proration, cost line, savings floor, streak wording, which cards a recap gets); `RecapScoreDataTests` (stamp, quiet / future / busiest slots, session average, tool grouping); `RecapFormatTests` (per-locale number split, dates and hours, the ruler); `RecapWindowTests` (price grammar, `RecapPeriods.earliest`, the read-generation race, `takesArrows`); `RecapDayWeekTests` (day and week bounds across clock changes, a skipped midnight, the year's end and a leap day; the first weekday; offered and default days and weeks; switching kind; keys; payback by day; which cards a day and a week get). Details: [testing.md](testing.md).
 
 ## The window
 
@@ -107,18 +130,20 @@ Pinned: `RecapInsightsTests` ([above](#the-four-redesigned-cards)); `RecapVendor
 
 **Entry points** (neither menu has one; the rail's and menu bar's menus stay to the panel, Settings and Quit):
 
-- the Token spend pane's **Monthly and Yearly Recap** row: **View September recap** (`TokenSpendPane.recapPeriod`, the window's default rule) and **View 2026 recap** (`RecapPeriods.defaultYear`; the year is a plain string, never "2,026");
+- the Token spend pane's **Usage recaps** row: one **Open** button, on the month `RecapPeriods.defaultMonth` picks (`TokenSpendPane.recapPeriod`, the window's default rule); the window's own switch reaches day, week and year;
 - a clicked "recap is ready" notification, on its month ([notifications.md](notifications.md#the-monthly-recap)).
+
+Days and weeks have no entry point of their own: they are reached from the window's Day / Week segments. **Nor do they notify.** A daily "your recap is ready" would be a notification every morning about something the reader can open at any time, and a weekly one is the same at a lower rate; the monthly notice exists because a month's end is an occasion. `RecapNoticeRule` stays monthly only.
 
 **Layout.** Left: one card at a time, drawn live and scaled to fit (`RecapCardView` at 1080 × 1920, `scaleEffect`), previous / next beside it, dots and "1 / 5" under it. Right: period, price, privacy switch, four buttons. The window follows system light or dark; only the cards are paper.
 
-**Keys are the window's own.** `RecapWindow.sendEvent` takes a bare ← or → while the window is key, **no text field is being edited**, and the first responder does not use arrows itself — Month / Year segments, popup, slider, stepper, text view (`RecapWindow.takesArrows`). No global monitor and no `NSEvent.addLocalMonitorForEvents`. It also ends field editing on a click outside the field (`NSWindow.endFieldEditing(ifOutside:)`, shared with Settings).
+**Keys are the window's own.** `RecapWindow.sendEvent` takes a bare ← or → while the window is key, **no text field is being edited**, and the first responder does not use arrows itself — Day / Week / Month / Year segments, popup, slider, stepper, text view (`RecapWindow.takesArrows`). No global monitor and no `NSEvent.addLocalMonitorForEvents`. It also ends field editing on a click outside the field (`NSWindow.endFieldEditing(ifOutside:)`, shared with Settings).
 
 ### Which period
 
-- **Offered:** every month and year from the earliest record to now, newest first (`RecapPeriods.months` / `years`). The earliest comes from ledgers the Token spend pane may show (`Origin.supportsTokenSpend`, not providers' own statistics), clamped to 2020-01-01 (`RecapPeriods.floor`) so a bogus timestamp cannot add hundreds of empty months. Until the read finishes only the default is offered.
-- **Opened on** (`RecapPeriods.defaultMonth` / `defaultYear`): the month that **just ended during days 1–7** (October 1–7 opens September), **the running month from the 8th**; years likewise with January 1–7. Moved up to the earliest record if before it; until the read knows that, the rule stands alone, so the Token spend button may say September and later October. A requested period (notification, button) beats the default.
-- **Month / Year** is a segmented control; switching keeps the year (a month becomes its year, a year its last offered month). The window title follows.
+- **Offered:** every day, week, month and year from the earliest record to now, newest first (`RecapPeriods.offered`: `days` / `weeks` / `months` / `years`). The earliest comes from ledgers the Token spend pane may show (`Origin.supportsTokenSpend`, not providers' own statistics), clamped to 2020-01-01 (`RecapPeriods.floor`) so a bogus timestamp cannot add hundreds of empty months. Until the read finishes only the default is offered. The list is a popup with **‹ ›** beside it (`RecapWindowModel.stepPeriod`, "Earlier" / "Later"), since a year of days is a long menu; ← and → stay the deck's.
+- **Opened on** (`RecapPeriods.defaultPeriod`): the month that **just ended during days 1–7** (October 1–7 opens September), **the running month from the 8th**; years likewise with January 1–7; **yesterday until 05:00** (`Recap.nightEndsAtHour`, the rule that gives work after midnight to the evening before) and today after it; **last week on a week's first day**, this week from its second. Moved up to the earliest record if before it; until the read knows that, the rule stands alone, so the Token spend button may say September and later October. A requested period (notification, button) beats the default. The window still opens on the month.
+- **Day / Week / Month / Year** is a segmented control. Switching keeps **the period's last day, or today while it runs** (`RecapPeriods.switched(_:to:)`), and opens the period of the new kind holding it: a month becomes its year, a year its last month so far, a day its week, a week its last day so far, a past month the week holding its last day. The window title follows (日报 / 周报 / 月报 / 年报). Titles: "Sun, Oct 18, 2026" for a day, "Oct 12 – 18, 2026" for a week (`DateIntervalFormatter`, so each language joins the two its own way).
 
 ### The price and the privacy switch
 
@@ -150,7 +175,7 @@ Every export re-renders at full size with `RecapRenderer`, never a screenshot of
 | Button | Does |
 |---|---|
 | **Save image** | The card on screen → `NSSavePanel` (window sheet), `pulse-recap-2026-09-02-opener.png` |
-| **Save all** | `NSOpenPanel` for a folder, then every card including the poster as `pulse-recap-<period>-<nn>-<card>.png` in deck order. **Overwrites** same-named files; nothing else in the folder is touched |
+| **Save all** | `NSOpenPanel` for a folder, then every card including the poster as `pulse-recap-<period>-<nn>-<card>.png` in deck order (`<period>` is `Recap.Period.key`: `2026-10-18`, `week-2026-10-12`, `2026-09`, `2026`). **Overwrites** same-named files; nothing else in the folder is touched |
 | **Copy image** | PNG (and TIFF, for apps that read only that) on `NSPasteboard.general`; "Copied" |
 | **Share image** | One PNG in its own temporary folder `…/Pulse Recap/<UUID>/` (a later share never removes an earlier one the receiving app may still read), handed to `NSSharingServicePicker` anchored to the button. The whole `Pulse Recap` folder is deleted when the window closes (`RecapExport.removeShareFolder`) |
 

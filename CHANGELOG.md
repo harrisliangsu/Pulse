@@ -10,6 +10,23 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.4.28
+
+- **Cursor shows the weekly usage limit on weekly plans.** On Premium and other plans with weekly included usage, Cursor's ring shows the week's usage and reset in place of the two monthly pools that always read 0%. Thanks to [@HesionBlack](https://github.com/qunqin24/Pulse/issues/87) for the report.
+- **A ring pinned to Qoder's total stays pinned across launches.** Turning on the credit breakdown and starting Pulse again no longer returns a ring pinned to Credit allowance to automatic. Thanks to [@momusticks](https://github.com/qunqin24/Pulse/issues/89) for the report.
+- **Grok's cached and reasoning tokens are counted once.** The cache hit rate, token totals and estimated cost match Grok Build's own records. Thanks to [@Edfghdrtxxx](https://github.com/qunqin24/Pulse/issues/91) for the report.
+- **Antigravity prices its Pro rows and Flash (Low).** Gemini 3.1 Pro and Gemini 3.5 Flash (Low) use their published rates, and the * appears only beside a money line when a model still has no published price. Thanks to [@1206-skittle](https://github.com/qunqin24/Pulse/issues/90) for the report.
+- **Choices in settings rows are menus, and sidebar icons use the text's colour.** Position, appearance, ring colour and the other row choices are pop-up menus. The icons are black in light mode and white in dark mode.
+- **The Russian Token activity labels are shorter.** The switcher no longer cuts them off. Thanks to [@winstik13](https://github.com/qunqin24/Pulse/pull/92) for the contribution.
+- **Qoder's card can show credit amounts.** Turn on Show credit amounts under Panel in Qoder's settings and each row shows its credits, such as 5,843 / 6,000. Thanks to [@momusticks](https://github.com/qunqin24/Pulse/issues/88) for the suggestion.
+- **Qoder's credit history comes from the account's records.** The detailed card and Qoder's settings show the whole account's credits used and charged today, over 7 and 31 days, and day by day; the last seven days are taken from those records. Thanks to [@momusticks](https://github.com/qunqin24/Pulse/issues/88) for the suggestion.
+- **Token spend can follow a calendar period.** Under Settings → Token spend, counting adds this month, last month, this year, and a custom range with its own first and last day.
+- **Usage recaps add a day and a week.** Open them under Settings → Token spend → Usage recaps, and switch day, week, month and year at the top of the window. The four periods share one row and one Open button.
+- **In Chinese, Qoder's deducted credits are named 消耗.** The larger figure, before discounts, is named 折前, so the two no longer share a word.
+- **Synced from upstream qunqin24/Pulse** (24 commits, through the Qoder Chinese wording after their 1.12.2, `b035a7a`, since 1.4.27). This repository is the update source, and this fork's version is **1.4.28**. Their Sparkle offers for 1.12.1 and 1.12.2 were not copied. `appcast.xml` is unchanged until this version is tagged. This sync also times a killed subprocess from the child's side, so a busy runner does not record a finished process as still running.
+- **Kept in this sync for this repository:** A Qoder personal token is still sent as a bearer token, for the quota and for credit history. Appearance stays one control: dark, light, match the Mac, or glass. Update checks still point at this repository.
+- **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen's cookie store; bilingual release notes; and this repo's Sparkle feed and signing key.
+
 ## 1.4.27
 
 - **Snap to screen edges can be turned off.** Turn it off under Settings → Position and behavior and a drag only moves the panel, flush to any edge, including over the menu bar and the Dock. Thanks to [@GinWU05](https://github.com/qunqin24/Pulse/issues/85) for the suggestion.

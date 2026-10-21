@@ -194,6 +194,39 @@ struct RecapTimetableView: View {
 
     @ViewBuilder
     private func weekdays(_ insights: RecapInsights) -> some View {
+        switch deck.kind {
+        // One day is one weekday: nothing to set beside it.
+        case .day: EmptyView()
+        case .week: weekDays
+        case .month, .year: weekdayAverages(insights)
+        }
+    }
+
+    /// A week's own seven days, in its order (it need not start on Monday):
+    /// each day's tokens, not an average of one. A day still to come has none.
+    @ViewBuilder
+    private var weekDays: some View {
+        let calendar = recap.calendar
+        let byDate = Dictionary(recap.days.map { (calendar.startOfDay(for: $0.date), $0.tokens) }, uniquingKeysWith: { first, _ in first })
+        let dates = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: recap.start).map { calendar.startOfDay(for: $0) } }
+        let top = byDate.values.max() ?? 0
+        if top > 0, let best = recap.busiestDay {
+            VStack(spacing: 14) {
+                RecapHairline(strong: true).padding(.bottom, 8)
+                RecapSectionHead(title: .localized("Seven days of the week"),
+                                 note: .localized("Busiest: \(RecapFormat.weekdayName(of: best.date))"))
+                HStack(spacing: 14) {
+                    ForEach(dates.indices, id: \.self) { index in
+                        weekdayColumn(name: RecapFormat.weekdayName(of: dates[index]), tokens: byDate[dates[index]],
+                                      top: top, isBest: dates[index] == best.date)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func weekdayAverages(_ insights: RecapInsights) -> some View {
         let tokens = insights.weekdayAverages
         let top = tokens.compactMap { $0 }.max() ?? 0
         if top > 0, let best = insights.busiestWeekday {

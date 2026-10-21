@@ -348,6 +348,19 @@ struct SpendSummary: Equatable, Sendable {
         summarize(ledgers, from: start, until: end, today: calendar.startOfDay(for: now), calendar: calendar)
     }
 
+    /// Either edge open: from the first record when `start` is nil, through
+    /// today when `end` is. What the Token spend pane's span picker asks for,
+    /// a preset or the reader's own dates.
+    static func of(
+        _ ledgers: [SpendAgent: UsageLedger],
+        starting start: Date?,
+        before end: Date?,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> SpendSummary {
+        summarize(ledgers, from: start, until: end, today: calendar.startOfDay(for: now), calendar: calendar)
+    }
+
     private static func summarize(
         _ ledgers: [SpendAgent: UsageLedger],
         from cutoff: Date?,

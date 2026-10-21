@@ -56,8 +56,17 @@ struct RecapScorecardView: View {
 
     // MARK: - Headline
 
-    private var headline: some View {
-        VStack(alignment: .leading, spacing: 0) {
+    @ViewBuilder
+    private var headlineText: some View {
+        switch deck.kind {
+        // "That was your Oct 18." is not how a day is talked about, and the
+        // two lines need not agree in gender across languages ("Такой была
+        // ваша неделя"): a day's and a week's headline is one sentence each.
+        case .day:
+            Text(recap.isInProgress ? String.localized("So far, this is your day.") : String.localized("That was your day."))
+        case .week:
+            Text(recap.isInProgress ? String.localized("So far, this is your week.") : String.localized("That was your week."))
+        case .month, .year:
             // While the period runs it is not over yet: "That was your
             // October" on October 9 says a month that has hardly begun is done.
             Text(recap.isInProgress ? String.localized("So far, this is") : String.localized("That was"))
@@ -65,6 +74,12 @@ struct RecapScorecardView: View {
                 text: .localized("your \(RecapEmphasis.mark(deck.periodName))."),
                 size: 84, weight: .black, emphasisWeight: .black
             )
+        }
+    }
+
+    private var headline: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            headlineText
         }
         .font(.recap(84, .black))
         .tracking(-0.84)
@@ -99,6 +114,7 @@ struct RecapScorecardView: View {
     private func heroRow(size: CGFloat) -> some View {
         let label: String = {
             guard recap.isInProgress, let day = deck.lastDay else { return .localized("Tokens") }
+            if deck.kind == .day { return .localized("Tokens · so far today") }
             return .localized("Tokens · to \(RecapFormat.day(day))")
         }()
         return HStack(alignment: .bottom, spacing: 16) {
@@ -170,10 +186,14 @@ struct RecapScorecardView: View {
             cells.append(Cell(id: cells.count, figure: figure, label: label, wordUnit: word, widget: widget))
         }
         let slots = deck.scoreBars.map(\.slot)
-        add(.init(number: "\(recap.activeDays)", unit: RecapWords.daysUnit(recap.activeDays)), .localized("Active days"), word: true,
-            widget: slots.isEmpty ? nil : .pips(slots))
+        // A day recap is its one active day.
+        if deck.kind != .day {
+            add(.init(number: "\(recap.activeDays)", unit: RecapWords.daysUnit(recap.activeDays)), .localized("Active days"), word: true,
+                widget: slots.isEmpty ? nil : .pips(slots))
+        }
         var note: Widget?
-        if let perDay = deck.sessionsPerActiveDay {
+        // A day's average per active day is its own count.
+        if deck.kind != .day, let perDay = deck.sessionsPerActiveDay {
             note = .note(.localized("\("\(perDay)") per active day"))
         }
         add(.init(number: recap.sessions.formatted(.number.locale(LocalizationSource.locale)), unit: ""), .localized("Sessions"), widget: note)
@@ -257,6 +277,9 @@ struct RecapScorecardView: View {
     private var strip: some View {
         let bars = deck.scoreBars
         let isYear = deck.isYear
+        // Twelve months or seven days are few enough to space out and label
+        // under the middle of each bar.
+        let few = isYear || deck.kind == .week
         let title: String = isYear ? .localized("Month by month") : .localized("Every day of \(deck.periodName)")
         return VStack(alignment: .leading, spacing: 14) {
             RecapRule()
@@ -275,7 +298,7 @@ struct RecapScorecardView: View {
                 }
             }
             .padding(.top, 8)
-            RecapBarStrip(bars: bars, axis: deck.scoreAxis, gap: isYear ? 12 : 5, height: 116, centeredEnds: isYear)
+            RecapBarStrip(bars: bars, axis: deck.scoreAxis, gap: few ? 12 : 5, height: 116, centeredEnds: few)
         }
         .padding(.bottom, 22)
     }
@@ -411,9 +434,7 @@ struct RecapScorecardView: View {
                     .minimumScaleFactor(0.7)
             }
             Spacer(minLength: 16)
-            Text(recap.isInProgress
-                 ? String.localized("Check back when \(deck.periodName) is over")
-                 : String.localized("See you in \(deck.nextName)"))
+            Text(deck.closingLine)
                 .font(.recap(20))
                 .foregroundStyle(RecapColor.tertiary)
                 .multilineTextAlignment(.trailing)
@@ -434,9 +455,11 @@ private struct RecapPips: View {
     var body: some View {
         // A month is 11 across (31 days in three rows); a year's twelve are two
         // rows of six, bigger so they read.
+        // A week's seven are one row, as big as they fit.
         let isYear = slots.count == 12
-        let columns = isYear ? 6 : 11
-        let pip = (isYear ? 14.0 : 9.0) * scale
+        let isWeek = slots.count <= 7
+        let columns = isWeek ? 7 : (isYear ? 6 : 11)
+        let pip = (isWeek ? 16.0 : (isYear ? 14.0 : 9.0)) * scale
         let gap = 6.0 * scale
         let rows = stride(from: 0, to: slots.count, by: columns).map { Array(slots[$0..<min($0 + columns, slots.count)]) }
         return VStack(alignment: .leading, spacing: gap) {

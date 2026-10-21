@@ -10,6 +10,7 @@ import Foundation
 
 extension AppSettings.Key {
     static let spendSpan = "settings.spendSpan"
+    static let spendCustomDays = "settings.spendCustomDays"
     static let spendActivityView = "settings.spendActivityView"
     static let readsTokenSpend = "settings.readsTokenSpend"
 }
@@ -22,6 +23,16 @@ extension AppSettings {
     func spendSpanChanged(from old: SpendSpan) {
         guard spendSpan != old else { return }
         Self.storeSpendSpan(spendSpan, in: defaults)
+        // The first time the custom range is chosen it starts at the last
+        // seven days as of now, not as of whenever the settings were built.
+        if spendSpan == .custom, Self.storedSpendCustomDays(in: defaults) == nil {
+            spendCustomDays = Self.defaultSpendCustomDays()
+        }
+    }
+
+    func spendCustomDaysChanged(from old: ClosedRange<Date>) {
+        guard spendCustomDays != old else { return }
+        Self.storeSpendCustomDays(spendCustomDays, in: defaults)
     }
 
     func spendActivityViewChanged(from old: ActivityView) {
@@ -49,6 +60,27 @@ extension AppSettings {
 
     static func storeSpendSpan(_ span: SpendSpan, in defaults: UserDefaults) {
         defaults.set(span.rawValue, forKey: Key.spendSpan)
+    }
+
+    /// The last seven days through today, the custom range's starting point.
+    static func defaultSpendCustomDays(now: Date = Date(), calendar: Calendar = .current) -> ClosedRange<Date> {
+        let today = calendar.startOfDay(for: now)
+        return (calendar.date(byAdding: .day, value: -6, to: today) ?? today)...today
+    }
+
+    /// The reader's own first and last day, stored as two times since 1970.
+    /// Anything else — missing, the wrong shape, a last day before the first
+    /// — is the default rather than a range that cannot be drawn.
+    static func storedSpendCustomDays(in defaults: UserDefaults) -> ClosedRange<Date>? {
+        guard let stored = defaults.array(forKey: Key.spendCustomDays) as? [Double], stored.count == 2,
+              stored.allSatisfy(\.isFinite), stored[0] <= stored[1]
+        else { return nil }
+        return Date(timeIntervalSince1970: stored[0])...Date(timeIntervalSince1970: stored[1])
+    }
+
+    static func storeSpendCustomDays(_ days: ClosedRange<Date>, in defaults: UserDefaults) {
+        defaults.set([days.lowerBound.timeIntervalSince1970, days.upperBound.timeIntervalSince1970],
+                     forKey: Key.spendCustomDays)
     }
 
     /// The key the chosen span lives under. Internal so a test can store a

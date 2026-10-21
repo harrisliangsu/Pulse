@@ -132,8 +132,8 @@ struct AgentStoreTests {
             #"{"timestamp":1789372800,"params":{"update":{"sessionUpdate":"user_message_chunk","content":"Fix the ring"}}}"#,
             """
             {"timestamp":1789372800,"params":{"update":{"sessionUpdate":"turn_completed","usage":{\
-            "inputTokens":999,"outputTokens":999,"modelUsage":{"priced":{"inputTokens":100,"outputTokens":10,\
-            "reasoningTokens":5,"cachedReadTokens":300,"cacheCreationTokens":20}}}}}}
+            "inputTokens":999,"outputTokens":999,"modelUsage":{"priced":{"inputTokens":33379,"outputTokens":91,\
+            "reasoningTokens":42,"cachedReadTokens":22272,"cacheCreationTokens":0,"totalTokens":33470}}}}}}
             """,
         ]
         try lines.joined(separator: "\n").write(
@@ -143,8 +143,11 @@ struct AgentStoreTests {
         let ledger = GrokStore.ledger(at: root, prices: Self.prices)
         let day = try #require(ledger.days.first { $0.tokens > 0 })
         // `modelUsage` wins over the flat totals beside it — reading both would
-        // count the turn twice.
-        #expect(day.tally == TokenTally(input: 100, cacheWrite: 20, cacheRead: 300, output: 15))
+        // count the turn twice. Its input already holds the cached read and
+        // its output the reasoning, so the tally adds up to Grok Build's own
+        // `totalTokens` (#91).
+        #expect(day.tally == TokenTally(input: 11107, cacheWrite: 0, cacheRead: 22272, output: 91))
+        #expect(day.tally.total == 33470)
 
         let session = try #require(ledger.sessions.first)
         #expect(session.project?.name == "Pulse")

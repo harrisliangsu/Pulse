@@ -44,6 +44,7 @@ struct AppSettingsPersistenceTests {
             ("settings.followsActiveDisplay", \.followsActiveDisplay, true),
             ("settings.snapsToEdges", \.snapsToEdges, false),
             ("settings.showsCodexResetCredits", \.showsCodexResetCredits, true),
+            ("settings.qoderShowsAmounts", \.qoderShowsAmounts, true),
             ("settings.usesGlass", \.usesGlass, true),
             ("settings.autoCollapse", \.autoCollapse, false),
             ("settings.topRailShowsPercentages", \.topRailShowsPercentages, true),
@@ -408,6 +409,25 @@ struct AppSettingsPersistenceTests {
         #expect(back.alertsOnRecap == false)
         #expect(back.primerHours == .default)
         #expect(!back.wantsAlerts)
+    }
+
+    @Test("A ring pinned to Qoder's total survives a relaunch with the parts on (#89)")
+    func qoderTotalPinSurvivesRelaunch() {
+        let (defaults, cleanup) = Self.isolatedDefaults()
+        defer { cleanup() }
+        defaults.set(true, forKey: "settings.qoderShowsParts")
+        defaults.set(["qoder": "qoder.credits"], forKey: "settings.pinnedWindows")
+
+        let back = AppSettings.restoredSettings(from: defaults, detected: [], scan: ExtensionCatalog.Scan())
+
+        #expect(back.qoderShowsParts)
+        #expect(back.pinnedWindows["qoder"] == "qoder.credits")
+        #expect((defaults.dictionary(forKey: "settings.pinnedWindows") as? [String: String])?["qoder"] == "qoder.credits")
+
+        // Turning the parts on by hand still frees the total's pin (#76).
+        back.qoderShowsParts = false
+        back.qoderShowsParts = true
+        #expect(back.pinnedWindows["qoder"] == nil)
     }
 
     @Test("The enabled set refuses to go empty")

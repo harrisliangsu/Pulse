@@ -36,7 +36,7 @@ struct QoderSiteRow: View {
                 }
             }
             .labelsHidden()
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
             .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
         }
     }
@@ -70,7 +70,7 @@ struct MiniMaxSiteRow: View {
                 }
             }
             .labelsHidden()
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
             .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
         }
     }
@@ -102,7 +102,7 @@ struct StepFunSiteRow: View {
                 }
             }
             .labelsHidden()
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
             .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
         }
     }
@@ -166,11 +166,11 @@ struct BalanceBasisRow: View {
                 }
             }
             .labelsHidden()
-            .pickerStyle(.segmented)
-            // Its own width, not `controlWidth`: three segments need more than
-            // that, and a frame narrower than the control does not shrink it —
-            // it overflows leftwards over the subtitle. Sized to itself, the
-            // row makes room and the subtitle wraps instead.
+            .pickerStyle(.menu)
+            // Its own width, not `controlWidth`: a frame narrower than the
+            // control does not shrink it — it overflows leftwards over the
+            // subtitle. Sized to itself, the row makes room and the subtitle
+            // wraps instead.
             .fixedSize()
         }
     }

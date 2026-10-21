@@ -12,7 +12,7 @@ import Observation
 /// the window is open.
 ///
 /// **One read, many periods.** The ledgers cover every period, so switching
-/// month or year only rebuilds a `Recap` (off the main actor, cached for the
+/// day, week, month or year only rebuilds a `Recap` (off the main actor, cached for the
 /// life of the window). The read is the long part — about forty seconds on a
 /// large history, first time — and it is cancelled when the window closes.
 @MainActor
@@ -94,16 +94,36 @@ final class RecapWindowModel {
 
     // MARK: - Periods
 
-    var offeredMonths: [Recap.Period] { RecapPeriods.months(earliest: earliest, now: now()) }
-    var offeredYears: [Recap.Period] { RecapPeriods.years(earliest: earliest, now: now()) }
-
-    var isYear: Bool { period.isYear }
+    var kind: Recap.Period.Kind { period.kind }
 
     /// The periods of the kind on screen, plus the selected one where it is
     /// not among them (a period asked for before the read said where records begin).
     var offered: [Recap.Period] {
-        let list = isYear ? offeredYears : offeredMonths
+        let list = RecapPeriods.offered(kind, earliest: earliest, now: now())
         return list.contains(period) ? list : [period] + list
+    }
+
+    /// The period one step earlier (-1) or later (1) among those offered, or
+    /// nil at either end. By date, newest first: `offered` puts an asked-for
+    /// period outside the list at its top, which is not where it falls, so
+    /// it is put back where its date is. **No sort**: the list is already
+    /// newest first, the view asks this for both step buttons on every
+    /// redraw, and a day list can run to thousands.
+    func neighbour(_ direction: Int) -> Recap.Period? {
+        var list = RecapPeriods.offered(kind, earliest: earliest, now: now())
+        if !list.contains(period) {
+            let calendar = Recap.calendar
+            let start = period.bounds(calendar: calendar)?.start ?? .distantPast
+            let index = list.firstIndex { ($0.bounds(calendar: calendar)?.start ?? .distantPast) < start } ?? list.endIndex
+            list.insert(period, at: index)
+        }
+        guard let index = list.firstIndex(of: period) else { return nil }
+        let target = index - direction
+        return list.indices.contains(target) ? list[target] : nil
+    }
+
+    func stepPeriod(_ direction: Int) {
+        if let next = neighbour(direction) { select(next) }
     }
 
     func select(_ next: Recap.Period) {
@@ -118,9 +138,9 @@ final class RecapWindowModel {
         rebuild()
     }
 
-    func selectKind(year: Bool) {
-        guard year != isYear else { return }
-        select(RecapPeriods.switched(period, earliest: earliest, now: now()))
+    func selectKind(_ next: Recap.Period.Kind) {
+        guard next != kind else { return }
+        select(RecapPeriods.switched(period, to: next, earliest: earliest, now: now()))
     }
 
     // MARK: - Window lifecycle
@@ -314,12 +334,20 @@ final class RecapWindowModel {
 extension Recap.Period {
     /// "September 2026", "2026年9月", or the year: what the pickers, the empty
     /// state and the window title call the period, in the language's own order.
+    /// A day is "Sun, Oct 18, 2026", a week "Oct 12 – 18, 2026".
     var title: String {
+        let calendar = Recap.calendar
         switch self {
+        case .day:
+            return bounds(calendar: calendar).map { RecapFormat.dayTitle($0.start) } ?? key
+        case .week:
+            guard let span = bounds(calendar: calendar),
+                  let last = calendar.date(byAdding: .day, value: -1, to: span.end) else { return key }
+            return RecapFormat.weekRange(span.start, last, withYear: true)
         case .month:
-            bounds(calendar: Recap.calendar).map { RecapFormat.monthYear($0.start) } ?? key
+            return bounds(calendar: calendar).map { RecapFormat.monthYear($0.start) } ?? key
         case .year(let year):
-            RecapFormat.yearName(year)
+            return RecapFormat.yearName(year)
         }
     }
 }

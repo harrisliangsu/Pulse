@@ -31,6 +31,7 @@ struct RecapPayback: Equatable, Sendable {
     /// Months of subscription the period covers: 1 for a month recap, 12 for a
     /// year, and for a period still running that share of them the days so far
     /// make (`RecapDeck.paidMonths`) — so 5 days into a 31-day month is 5/31.
+    /// A day is its month's share (1/31 in October), a week the sum of its days'.
     let months: Double
     /// Whether the period is still running: both figures are to date.
     let isToDate: Bool
@@ -75,6 +76,15 @@ struct RecapDeck: Sendable {
         return false
     }
 
+    var kind: Recap.Period.Kind { recap.period.kind }
+
+    /// The period's own last day (not the last it has had so far): the
+    /// seventh of a week, for naming the week.
+    var periodLastDay: Date {
+        let end = recap.period.bounds(calendar: recap.calendar)?.end ?? recap.end
+        return recap.calendar.date(byAdding: .day, value: -1, to: end).map { recap.calendar.startOfDay(for: $0) } ?? recap.start
+    }
+
     /// The numbered cards: everything but the poster.
     var stories: [RecapCard] { cards.filter { $0 != .poster } }
 
@@ -98,6 +108,11 @@ struct RecapDeck: Sendable {
         if !recap.agents.isEmpty { cards.append(.opener) }
 
         switch recap.period {
+        case .day, .week:
+            // No calendar card: a day is one cell, and a week is one row, its
+            // streak at most seven days and its weeks one — the poster's week
+            // strip and the scorecard's bars already draw it.
+            break
         case .month:
             if recap.days.contains(where: { $0.tokens > 0 }) { cards.append(.calendar) }
         case .year:
@@ -142,7 +157,22 @@ struct RecapDeck: Sendable {
     /// card says so: Pulse cannot know the plan was paid for months it saw no
     /// work in, and charging January for a year whose records begin in May
     /// shrank the multiple by a third.
+    ///
+    /// **A day or a week is prorated by day too**, each day it has seen as its
+    /// own month's share — 1/31 for an October day, so a week across the end
+    /// of September is 3/30 + 4/31 — whether or not it is over: a subscription
+    /// is priced by the month, and the multiple of one day against a whole
+    /// month's price would say nothing.
     static func paidMonths(_ recap: Recap) -> Double {
+        switch recap.period.kind {
+        case .day, .week:
+            return recap.days.filter { !recap.isBeforeRecords($0.date) }.reduce(0.0) { sum, day in
+                let length = recap.calendar.range(of: .day, in: .month, for: day.date)?.count ?? 30
+                return sum + 1 / Double(max(length, 1))
+            }
+        case .month, .year:
+            break
+        }
         let whole: Double = recap.period.isYear ? 12 : 1
         guard recap.isInProgress || recap.recordsBegin != nil,
               let full = recap.period.bounds(calendar: recap.calendar),
