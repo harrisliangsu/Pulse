@@ -190,7 +190,7 @@ struct VolcengineUsageService: Sendable {
     /// deadline even starts, and on a loaded CI runner that wait alone has
     /// exceeded the time the child was supposed to be given — the pool, not
     /// a process left alive. The ceiling those tests use is the deadline plus
-    /// `BoundedProcess.escalationBudget`.
+    /// `BoundedProcess.escalationBudget`, plus a few seconds to create the process.
     static func runSynchronously(
         _ binary: URL,
         _ arguments: [String],

@@ -214,15 +214,42 @@ struct ExtensionUsageService: Sendable {
             return .unavailable(account, reason: .extensionMissing)
         }
 
-        let result = await BoundedProcess.run(
+        return Self.usage(from: await BoundedProcess.run(
             pulseExtension.executable,
             [],
             environment: Self.environment(for: pulseExtension),
             currentDirectory: pulseExtension.directory,
             deadline: pulseExtension.timeout,
             outputCeiling: Self.outputCeiling
-        )
+        ), for: account)
+    }
 
+    /// `fetch`, on the caller's thread. The test that bounds how long a stop
+    /// takes uses this. `fetch` waits for a utility-QoS thread before the time
+    /// limit starts, and on a loaded CI runner that wait alone has exceeded
+    /// the limit — the queue, not a program left running. The ceiling that
+    /// test uses is the time limit plus `BoundedProcess.escalationBudget`,
+    /// plus a few seconds to create the process. Production stays on `fetch`.
+    func fetchSynchronously() -> ProviderUsage {
+        let account = pulseExtension.account
+        guard FileManager.default.isExecutableFile(atPath: pulseExtension.executable.path) else {
+            return .unavailable(account, reason: .extensionMissing)
+        }
+
+        return Self.usage(from: BoundedProcess.runSynchronously(
+            pulseExtension.executable,
+            [],
+            environment: Self.environment(for: pulseExtension),
+            currentDirectory: pulseExtension.directory,
+            deadline: pulseExtension.timeout,
+            outputCeiling: Self.outputCeiling
+        ), for: account)
+    }
+
+    private static func usage(
+        from result: Result<Data, BoundedProcess.Failure>,
+        for account: AccountKey
+    ) -> ProviderUsage {
         switch result {
         case .success(let data):
             return ExtensionReport.reading(from: data, for: account)

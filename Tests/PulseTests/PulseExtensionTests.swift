@@ -462,25 +462,26 @@ struct ExtensionRunTests {
 
     @Test("A program that never answers is stopped at its time limit")
     func timeout() async throws {
+        let timeout: TimeInterval = 1
+        let ceiling = OwnThreadTiming.ceiling(deadline: timeout)
         let watch = ProcessDeathWatch()
         let (service, sandbox) = try service(
-            "#!/bin/sh\necho $$ > '\(watch.pidFile.path)'\nexec sleep 300\n", timeout: 1
+            "#!/bin/sh\necho $$ > '\(watch.pidFile.path)'\nexec sleep 300\n", timeout: timeout
         )
         defer { sandbox.remove() }
 
-        let started = ContinuousClock.now
-        let usage = await service.fetch()
-        let returned = started.duration(to: .now)
-        #expect(usage.state == .unavailable(.extensionTimedOut))
-        // Killed within the time limit plus the stop's own grace — about six
-        // seconds at most, ten with margin — timed from the program's side.
-        // The return is bounded only far below the five minutes the program
-        // asked for: the caller resumes on a cooperative thread, and on a
-        // loaded CI runner waiting for one took 16–20s with the program long
-        // dead. See `ProcessDeathWatch`.
+        // The limit plus the stop's own budget, on the thread that stops the
+        // program. `fetch` waits for a utility-QoS thread before that limit
+        // starts, and a clock started before the wait measured 12.9 seconds
+        // on the 1.4.28 Build for a kill that had already happened. The
+        // program asks for five minutes, which is past `ceiling`.
+        let run = try #require(await OwnThreadTiming.measure {
+            service.fetchSynchronously()
+        }, "the runner did not return")
+        #expect(run.value.state == .unavailable(.extensionTimedOut))
+        #expect(run.elapsed < .seconds(ceiling))
         let killed = try #require(await watch.death, "the program outlived the run")
-        #expect(started.duration(to: killed) < .seconds(10))
-        #expect(returned < .seconds(120))
+        #expect(run.started.duration(to: killed) < .seconds(ceiling))
     }
 
     @Test("A program deleted since the scan is reported missing")
