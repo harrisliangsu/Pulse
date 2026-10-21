@@ -82,7 +82,8 @@ enum BoundedProcess {
     ///
     /// Time spent waiting for a utility-QoS thread is not included. `run`
     /// queues there; `runSynchronously` does not. The subprocess timing
-    /// tests assert `deadline + escalationBudget`.
+    /// tests call `runSynchronously` on a thread of their own and assert
+    /// `deadline + escalationBudget`, plus a few seconds to create the process.
     static var escalationBudget: TimeInterval {
         let pipesStillOpen = termGrace + terminationGrace + pipeGrace
         let pipesAlreadyClosed = terminationGrace + termGrace + terminationGrace

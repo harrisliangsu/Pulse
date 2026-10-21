@@ -18,6 +18,14 @@ import Darwin
 /// 0)` on a dedicated thread that no test can starve. The script writes its
 /// own pid to `pidFile`; anything still alive at `giveUpAfter` is killed so a
 /// failing test does not leak it.
+///
+/// **The clock it is compared with has to start just as late.** This instant
+/// is not, by itself, how long the program was given. A clock started before
+/// `run` or `fetch` still includes the wait for a utility-QoS thread, and
+/// that wait is not the time limit — the 1.4.28 Build measured 12.9 seconds
+/// that way, with the program already dead and the call back under a second
+/// later. `OwnThreadTiming` starts its clock on the thread that runs the
+/// synchronous runner, and the tests subtract that.
 final class ProcessDeathWatch: @unchecked Sendable {
     let pidFile: URL
     private let lock = NSLock()
@@ -71,5 +79,86 @@ final class ProcessDeathWatch: @unchecked Sendable {
             return waiter
         }
         waiting?.resume(returning: instant)
+    }
+}
+
+/// How long a synchronous runner took, measured on a thread of its own.
+///
+/// `run` and `fetch` queue on a utility-QoS queue before the deadline starts,
+/// and the caller only resumes when a cooperative thread is free. Either wait
+/// has exceeded the kill's own budget on a loaded CI runner. The clock
+/// here starts inside the thread that does the work. Waiting for that thread,
+/// or for this function to resume, is not part of `elapsed`.
+struct OwnThreadTiming<Value>: @unchecked Sendable {
+    let value: Value
+    /// Taken on the runner thread, before it did the work.
+    let started: ContinuousClock.Instant
+    /// How long that thread spent doing the work.
+    let elapsed: Duration
+
+    /// How long creating the process may take on a busy runner, before its
+    /// deadline starts. Not slack for the kill. That budget is
+    /// `BoundedProcess.escalationBudget`.
+    static let creationAllowance: TimeInterval = 5
+
+    /// Longer than `ProcessDeathWatch`'s thirty-second backstop. A runner that
+    /// never stops its child comes back after that backstop and fails the
+    /// ceiling; this fires only when the call never comes back at all.
+    static let hangLimit: TimeInterval = 45
+
+    /// The deadline, then every wait the runner still has, then process creation.
+    static func ceiling(deadline: TimeInterval) -> TimeInterval {
+        deadline + BoundedProcess.escalationBudget + creationAllowance
+    }
+
+    /// Runs `body` on a new user-initiated thread. Returns nil when `body` is
+    /// still going after `limit`. The wait for that sits on a dispatch queue,
+    /// not the cooperative pool — blocking the pool is the stall this exists
+    /// to keep out of the measurement.
+    static func measure(
+        givingUpAfter limit: TimeInterval = hangLimit,
+        _ body: @escaping () -> Value
+    ) async -> Self? {
+        let work = OwnThreadWork(body)
+        let thread = Thread { work.run() }
+        thread.qualityOfService = .userInitiated
+        thread.start()
+
+        let finished: Bool = await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let done = work.finished.wait(timeout: .now() + limit) == .success
+                continuation.resume(returning: done)
+            }
+        }
+        guard finished, let outcome = work.take() else { return nil }
+        return Self(value: outcome.value, started: outcome.started, elapsed: outcome.elapsed)
+    }
+}
+
+/// Written on the runner thread, read after `finished` has been signalled.
+private final class OwnThreadWork<Value>: @unchecked Sendable {
+    private let body: () -> Value
+    private let lock = NSLock()
+    private var outcome: (value: Value, started: ContinuousClock.Instant, elapsed: Duration)?
+    let finished = DispatchSemaphore(value: 0)
+
+    init(_ body: @escaping () -> Value) {
+        self.body = body
+    }
+
+    func run() {
+        let started = ContinuousClock.now
+        let value = body()
+        let elapsed = started.duration(to: .now)
+        lock.lock()
+        outcome = (value, started, elapsed)
+        lock.unlock()
+        finished.signal()
+    }
+
+    func take() -> (value: Value, started: ContinuousClock.Instant, elapsed: Duration)? {
+        lock.lock()
+        defer { lock.unlock() }
+        return outcome
     }
 }

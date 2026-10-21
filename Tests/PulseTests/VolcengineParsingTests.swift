@@ -217,44 +217,41 @@ struct VolcengineProcessTests {
         #expect(data.count <= 512 * 1024 + 65_536)
     }
 
-    /// Two clocks, because they measure different things. **Killed within**
-    /// is timed from the child's side by `ProcessDeathWatch`: the one-second
-    /// deadline, up to two seconds waiting for an exit after the pipes close,
-    /// the two-second SIGTERM grace, and five seconds of margin. It is ~3s on
-    /// an idle machine. **Returns within** is the call as the caller sees it,
-    /// which also waits for a free cooperative thread — 19 seconds of that on
-    /// a loaded CI runner failed the old `< 20` with the child long dead — so
-    /// it only has to prove the call did not wait out a child that would
-    /// otherwise live five minutes.
-    private static let killedWithin: Duration = .seconds(10)
-    private static let returnsWithin: Duration = .seconds(120)
+    /// One second, then every wait `stop()` still has
+    /// (`BoundedProcess.escalationBudget`), then a few seconds to create the
+    /// process. Measured on the thread that runs `runSynchronously`, so the
+    /// utility queue and the cooperative pool are outside it. The child
+    /// sleeps `childLifetime`, which is past this.
+    private static let deadline: TimeInterval = 1
+    private static var ceiling: TimeInterval { OwnThreadTiming.ceiling(deadline: deadline) }
     private static let childLifetime = 300
 
     /// Runs `script` under `/bin/sh` with a one-second deadline. The script
     /// gets the pid file as `$1` and must write the pid to watch into it.
-    private func runWatched(_ script: String) async -> (
+    private func runWatched(_ script: String) async throws -> (
         result: Result<Data, VolcengineUsageService.Refusal>,
-        returned: Duration,
+        elapsed: Duration,
         killed: Duration?
     ) {
         let watch = ProcessDeathWatch()
-        let started = ContinuousClock.now
-        let result = await VolcengineUsageService.run(
-            Self.shell, ["-c", script, "pulse-test", watch.pidFile.path], deadline: 1
-        )
-        let returned = started.duration(to: .now)
-        return (result, returned, await watch.death.map { started.duration(to: $0) })
+        let pidPath = watch.pidFile.path
+        let run = try #require(await OwnThreadTiming.measure {
+            VolcengineUsageService.runSynchronously(
+                Self.shell, ["-c", script, "pulse-test", pidPath], deadline: Self.deadline
+            )
+        }, "the runner did not return")
+        return (run.value, run.elapsed, await watch.death.map { run.started.duration(to: $0) })
     }
 
     @Test("A child that never finishes is killed at the deadline")
     func hangingChildIsTerminated() async throws {
-        let run = await runWatched("echo $$ > \"$1\"; exec sleep \(Self.childLifetime)")
+        let run = try await runWatched("echo $$ > \"$1\"; exec sleep \(Self.childLifetime)")
 
         #expect(throws: VolcengineUsageService.Refusal.self) { try run.result.get() }
         // Killed, not waited out. Without this the refresh loop stops.
         let killed = try #require(run.killed, "the child outlived the call")
-        #expect(killed < Self.killedWithin)
-        #expect(run.returned < Self.returnsWithin)
+        #expect(killed < .seconds(Self.ceiling))
+        #expect(run.elapsed < .seconds(Self.ceiling))
     }
 
     @Test("A child that ignores SIGTERM is killed, not waited on for ever")
@@ -263,12 +260,12 @@ struct VolcengineProcessTests {
         // `waitUntilExit()`, which has no timeout — so this child sailed past
         // the deadline and parked the call permanently. `terminate()` is a
         // request; a CLI with a stuck graceful-shutdown path ignores it.
-        let run = await runWatched("trap '' TERM; echo $$ > \"$1\"; exec sleep \(Self.childLifetime)")
+        let run = try await runWatched("trap '' TERM; echo $$ > \"$1\"; exec sleep \(Self.childLifetime)")
 
         #expect(throws: VolcengineUsageService.Refusal.self) { try run.result.get() }
         let killed = try #require(run.killed, "the child outlived the call")
-        #expect(killed < Self.killedWithin)
-        #expect(run.returned < Self.returnsWithin)
+        #expect(killed < .seconds(Self.ceiling))
+        #expect(run.elapsed < .seconds(Self.ceiling))
     }
 
     @Test("A child that closes its pipes and keeps running is not waited on either")
@@ -276,12 +273,12 @@ struct VolcengineProcessTests {
         // The readers see EOF at once, so the group completes inside the
         // deadline — and the old code then fell through to an unbounded wait
         // for a process that had no intention of exiting.
-        let run = await runWatched("echo $$ > \"$1\"; exec 1>&- 2>&-; exec sleep \(Self.childLifetime)")
+        let run = try await runWatched("echo $$ > \"$1\"; exec 1>&- 2>&-; exec sleep \(Self.childLifetime)")
 
         #expect(throws: VolcengineUsageService.Refusal.self) { try run.result.get() }
         let killed = try #require(run.killed, "the child outlived the call")
-        #expect(killed < Self.killedWithin)
-        #expect(run.returned < Self.returnsWithin)
+        #expect(killed < .seconds(Self.ceiling))
+        #expect(run.elapsed < .seconds(Self.ceiling))
     }
 
     @Test("A grandchild is terminated even after its parent exits", arguments: [false, true])
@@ -289,12 +286,12 @@ struct VolcengineProcessTests {
         let command = ignoresTERM
             ? "trap '' TERM; exec sleep \(Self.childLifetime)"
             : "exec sleep \(Self.childLifetime)"
-        let run = await runWatched("(\(command)) & printf '%s' \"$!\" > \"$1\"; exit 0")
+        let run = try await runWatched("(\(command)) & printf '%s' \"$!\" > \"$1\"; exit 0")
 
         #expect(run.result == .failure(.init(reason: .unreachable)))
         let killed = try #require(run.killed, "the runner returned but its descendant survived")
-        #expect(killed < Self.killedWithin)
-        #expect(run.returned < Self.returnsWithin)
+        #expect(killed < .seconds(Self.ceiling))
+        #expect(run.elapsed < .seconds(Self.ceiling))
     }
 
     @Test("A missing binary is reported, not thrown")
