@@ -14,6 +14,7 @@ struct ModelPriceAliasTests {
         "gpt-5.6-sol": ModelPrice(input: 4, output: 4, cacheRead: nil, cacheWrite: nil, name: "GPT-5.6 Sol"),
         "MiniMax-M3": ModelPrice(input: 5, output: 5, cacheRead: nil, cacheWrite: nil, name: "MiniMax-M3"),
         "gemini-3.5-flash": ModelPrice(input: 6, output: 6, cacheRead: nil, cacheWrite: nil, name: "Gemini 3.5 Flash"),
+        "gemini-3.8-flash": ModelPrice(input: 7, output: 7, cacheRead: nil, cacheWrite: nil, name: "Gemini 3.8 Flash"),
     ]
 
     private static func name(_ id: String) -> String? {
@@ -32,6 +33,16 @@ struct ModelPriceAliasTests {
     func extraLowEffortIsDropped() {
         #expect(Self.name("gemini-3.5-flash-extra-low") == "Gemini 3.5 Flash")
         #expect(Self.name("gemini-3.5-flash-medium") == "Gemini 3.5 Flash")
+    }
+
+    @Test("Antigravity's `-n`, `-control` and `-xpe` Flash is priced as the Flash (#90)")
+    func nSuffixIsDropped() {
+        #expect(Self.name("gemini-3.8-flash-n") == "Gemini 3.8 Flash")
+        #expect(Self.name("gemini-3.8-flash-control") == "Gemini 3.8 Flash")
+        #expect(Self.name("gemini-3.8-flash-xpe") == "Gemini 3.8 Flash")
+        // Only on a Gemini id, and only when the base is priced.
+        #expect(Self.name("kimi-k3-n") == nil)
+        #expect(Self.name("gemini-9-flash-n") == nil)
     }
 
     @Test("A context window on the end is the same model with more room")

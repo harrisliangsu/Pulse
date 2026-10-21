@@ -6,6 +6,12 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.4.29
+
+- **Antigravity 补上了 Gemini 3.8 Flash 变体的价格。** 记录里以 `-n`、`-control`、`-xpe` 结尾的型号按 `gemini-3.8-flash` 的公开价格估算。感谢 [@1206-skittle](https://github.com/qunqin24/Pulse/issues/90) 报告。
+- **同步上游 qunqin24/Pulse**（4 个提交，直到其 1.12.3，`8410d08`，自 1.4.28 起）。本仓库是更新来源，版本为 **1.4.29**。没有抄入上游 1.12.3 的 Sparkle 推送。`appcast.xml` 保持不动，等这个版本打 tag 后再由发布流程写入。这次同步还会把命令输出截在上限处，只留下上限以内的字节。
+- **保留本仓库特有能力：** Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 `~/.qoder` 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。
+
 ## 1.4.28
 
 - **Cursor 的每周套餐显示每周用量上限。** 在 Premium 等按周计算额度的套餐上，Cursor 的圆环显示本周用量和重置时间，不再显示两个一直是 0% 的月度用量池。感谢 [@HesionBlack](https://github.com/qunqin24/Pulse/issues/87) 报告。
