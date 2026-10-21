@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.29</title>
+            <pubDate>Wed, 21 Oct 2026 10:27:23 -0000</pubDate>
+            <sparkle:version>1.4.29</sparkle:version>
+            <sparkle:shortVersionString>1.4.29</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.29</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.29</h2><ul><li><strong>Antigravity prices its Gemini 3.8 Flash variants.</strong> Names ending in <code>-n</code>, <code>-control</code> and <code>-xpe</code> use the published rate for <code>gemini-3.8-flash</code>, where those rows had no public price. Thanks to <a href="https://github.com/qunqin24/Pulse/issues/90">@1206-skittle</a> for the report.</li><li><strong>Synced from upstream qunqin24/Pulse</strong> (4 commits, through their 1.12.3, <code>8410d08</code>, since 1.4.28). This repository is the update source, and this fork&#x27;s version is <strong>1.4.29</strong>. Their Sparkle offer for 1.12.3 was not copied. <code>appcast.xml</code> is unchanged until this version is tagged. This sync also cuts a provider command&#x27;s output at its limit, keeping only the bytes that fit.</li><li><strong>Fork-only pieces kept:</strong> Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and <code>~/.qoder</code>); Zen&#x27;s cookie store; bilingual release notes; and this repo&#x27;s Sparkle feed and signing key.</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.29">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.29/Pulse-1.4.29.zip"
+                       length="16889670"
+                       type="application/octet-stream"
+                       sparkle:edSignature="j7S0q/V1N1H4Os9sSn3xDTCHxA1CJpFQJekUTe3GrAqs0Tp5Vcaqt4N38Wohj+wYjaXGQGxbkXp8jOjAFq3uAQ==" />
+        </item>
+        <item>
             <title>1.4.28</title>
             <pubDate>Wed, 21 Oct 2026 01:51:08 -0000</pubDate>
             <sparkle:version>1.4.28</sparkle:version>

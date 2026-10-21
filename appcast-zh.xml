@@ -6,6 +6,24 @@
         <description>Updates for Pulse.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.4.29</title>
+            <pubDate>Wed, 21 Oct 2026 10:27:23 -0000</pubDate>
+            <sparkle:version>1.4.29</sparkle:version>
+            <sparkle:shortVersionString>1.4.29</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.29</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Pulse 1.4.29</h2><ul><li><strong>Antigravity 补上了 Gemini 3.8 Flash 变体的价格。</strong> 记录里以 <code>-n</code>、<code>-control</code>、<code>-xpe</code> 结尾的型号按 <code>gemini-3.8-flash</code> 的公开价格估算。感谢 <a href="https://github.com/qunqin24/Pulse/issues/90">@1206-skittle</a> 报告。</li><li><strong>同步上游 qunqin24/Pulse</strong>（4 个提交，直到其 1.12.3，<code>8410d08</code>，自 1.4.28 起）。本仓库是更新来源，版本为 <strong>1.4.29</strong>。没有抄入上游 1.12.3 的 Sparkle 推送。<code>appcast.xml</code> 保持不动，等这个版本打 tag 后再由发布流程写入。这次同步还会把命令输出截在上限处，只留下上限以内的字节。</li><li><strong>保留本仓库特有能力：</strong> Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 <code>~/.qoder</code> 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。</li></ul><p><a href="https://github.com/harrisliangsu/Pulse/releases/tag/v1.4.29">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/Pulse/releases/download/v1.4.29/Pulse-1.4.29.zip"
+                       length="16889670"
+                       type="application/octet-stream"
+                       sparkle:edSignature="j7S0q/V1N1H4Os9sSn3xDTCHxA1CJpFQJekUTe3GrAqs0Tp5Vcaqt4N38Wohj+wYjaXGQGxbkXp8jOjAFq3uAQ==" />
+        </item>
+        <item>
             <title>1.4.28</title>
             <pubDate>Wed, 21 Oct 2026 01:51:08 -0000</pubDate>
             <sparkle:version>1.4.28</sparkle:version>
