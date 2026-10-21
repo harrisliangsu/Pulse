@@ -1,6 +1,7 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 import Darwin
+@testable import Pulse
 
 /// When a spawned process actually died, timed from a thread of its own.
 ///
@@ -86,16 +87,10 @@ final class ProcessDeathWatch: @unchecked Sendable {
 ///
 /// `run` and `fetch` queue on a utility-QoS queue before the deadline starts,
 /// and the caller only resumes when a cooperative thread is free. Either wait
-/// has exceeded the kill's own budget on a loaded CI runner. The clock
-/// here starts inside the thread that does the work. Waiting for that thread,
-/// or for this function to resume, is not part of `elapsed`.
-struct OwnThreadTiming<Value>: @unchecked Sendable {
-    let value: Value
-    /// Taken on the runner thread, before it did the work.
-    let started: ContinuousClock.Instant
-    /// How long that thread spent doing the work.
-    let elapsed: Duration
-
+/// has exceeded the kill's own budget on a loaded CI runner. The clock in
+/// `measure` starts inside the thread that does the work. Waiting for that
+/// thread, or for `measure` to resume, is not part of `elapsed`.
+enum OwnThreadTiming {
     /// How long creating the process may take on a busy runner, before its
     /// deadline starts. Not slack for the kill. That budget is
     /// `BoundedProcess.escalationBudget`.
@@ -115,10 +110,10 @@ struct OwnThreadTiming<Value>: @unchecked Sendable {
     /// still going after `limit`. The wait for that sits on a dispatch queue,
     /// not the cooperative pool — blocking the pool is the stall this exists
     /// to keep out of the measurement.
-    static func measure(
+    static func measure<Value>(
         givingUpAfter limit: TimeInterval = hangLimit,
         _ body: @escaping () -> Value
-    ) async -> Self? {
+    ) async -> OwnThreadSample<Value>? {
         let work = OwnThreadWork(body)
         let thread = Thread { work.run() }
         thread.qualityOfService = .userInitiated
@@ -131,8 +126,17 @@ struct OwnThreadTiming<Value>: @unchecked Sendable {
             }
         }
         guard finished, let outcome = work.take() else { return nil }
-        return Self(value: outcome.value, started: outcome.started, elapsed: outcome.elapsed)
+        return OwnThreadSample(value: outcome.value, started: outcome.started, elapsed: outcome.elapsed)
     }
+}
+
+/// The result of `OwnThreadTiming.measure`, taken on the runner thread.
+struct OwnThreadSample<Value>: @unchecked Sendable {
+    let value: Value
+    /// Taken on the runner thread, before it did the work.
+    let started: ContinuousClock.Instant
+    /// How long that thread spent doing the work.
+    let elapsed: Duration
 }
 
 /// Written on the runner thread, read after `finished` has been signalled.
