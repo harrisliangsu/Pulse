@@ -327,6 +327,16 @@ actor ModelPrices {
         }
         candidates.append(Self.dotted(model))
 
+        // Antigravity writes `gemini-3.8-flash-n`, `-control` and `-xpe` beside
+        // `gemini-3.8-flash` for the same Flash, and Google publishes one rate
+        // for it (#90). `-n` was seen in a real store; the other two are as
+        // reported on the issue. Only on a Gemini id, and only these three.
+        if model.hasPrefix("gemini-") {
+            for tag in ["-n", "-control", "-xpe"] where model.hasSuffix(tag) {
+                candidates.append(String(model.dropLast(tag.count)))
+            }
+        }
+
         // A context window on the end is the same model with more room:
         // `k3-256k` is `kimi-k3`, and it is billed at `k3`'s rates.
         if let tag = model.range(of: "-[0-9]+[kKmM]$", options: .regularExpression) {

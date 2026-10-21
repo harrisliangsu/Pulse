@@ -275,11 +275,13 @@ private final class Collected: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         // Past the ceiling the bytes are dropped, never the reading — see
-        // `BoundedProcess.blocking`.
+        // `BoundedProcess.blocking`. The chunk that crosses it is cut to what
+        // is left, so the ceiling is exact rather than exceeded by up to one
+        // read.
         if toStandardOutput {
-            if standardOutput.count < ceiling { standardOutput.append(chunk) }
-        } else if standardError.count < ceiling {
-            standardError.append(chunk)
+            standardOutput.append(chunk.prefix(max(0, ceiling - standardOutput.count)))
+        } else {
+            standardError.append(chunk.prefix(max(0, ceiling - standardError.count)))
         }
     }
 
