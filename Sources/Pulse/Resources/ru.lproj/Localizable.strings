@@ -1329,3 +1329,37 @@
 "Top tool" = "Основной инструмент";
 "Tokens · token share" = "Токены · доля токенов";
 "The plan price is the monthly price prorated by the days of this period." = "Цена тарифа пересчитана из месячной пропорционально дням этого периода.";
+
+/* Exhaustion forecast */
+"about %@d" = "примерно через %@ дн.";
+"about %@d %@h" = "примерно через %@ дн. %@ ч";
+"%@d" = "%@ дн.";
+"%@d %@h" = "%@ дн. %@ ч";
+"1 hour" = "1 ч";
+"%@ · may run out in %@" = "%@ · может закончиться %@";
+"%@ · may run out before the reset" = "%@ · может закончиться до сброса";
+"At the current pace, about %@ before the next reset." = "При текущем темпе запас кончится примерно за %@ до следующего сброса.";
+"May run out in %@." = "Может закончиться %@.";
+"Forecast: 5-hour" = "5 ч";
+"Forecast: weekly" = "Неделя";
+"Forecast: daily" = "День";
+"Forecast: monthly" = "Месяц";
+"Exhaustion forecast" = "Прогноз исчерпания";
+"All shown accounts" = "Все показанные аккаунты";
+"Selected accounts" = "Выбранные аккаунты";
+"On the card" = "На карточке";
+"A line under each limit that has a length and a reset." = "Строка под лимитом, у которого есть длительность и время сброса.";
+"Countdown within" = "Обратный отсчёт в пределах";
+"Hours. Show the time only this close to running out." = "В часах. Точное время только когда до исчерпания не больше этого срока.";
+"May run out before reset" = "Может закончиться до сброса";
+"A quieter line when it is further out than the countdown." = "Дальше порога отсчёта — только короткая строка.";
+"Tie it to the reset" = "Вместе со сбросом";
+"When it will not last until the reset, say roughly when." = "Если до сброса не хватит, указать примерный срок.";
+"Time remaining" = "Оставшееся время";
+"One notice per account, limit and stage." = "Одно уведомление на аккаунт, лимит и ступень.";
+"Stages" = "Ступени";
+"Each one warns once, at its own remaining time." = "Каждая ступень предупреждает один раз, на своём остатке.";
+"Add a stage" = "Добавить ступень";
+"Notify before the reset" = "Уведомить до сброса";
+"When the pace will not last until the reset." = "Когда текущего темпа не хватит до сброса.";
+"Every account on the panel, or only the ones you pick." = "Все аккаунты на панели или только выбранные.";

@@ -59,6 +59,13 @@ struct UsageAlert: Sendable, Equatable {
         /// reason when there is one; nil when the fetch simply failed and the
         /// cache answered in its place.
         case unreadable(ProviderUsage.Unavailability?)
+        /// Time left until the pace runs the limit out, inside one stage.
+        /// `stage` is that stage's memory key, so two stages are two notices
+        /// and editing the hours is a new one.
+        case exhaustion(stage: String, remaining: TimeInterval)
+        /// The pace runs out before the reset. Separate from the stages, and
+        /// off unless the reader asks.
+        case exhaustionBeforeReset(remaining: TimeInterval)
     }
 
     let account: AccountKey
@@ -79,6 +86,8 @@ struct UsageAlert: Sendable, Equatable {
         case .celebration: "celebration-\(Int(window?.resetsAt?.timeIntervalSince1970 ?? 0))"
         case .lowBalance: "low-balance"
         case .unreadable: "unreadable"
+        case .exhaustion(let stage, _): "exhaustion-\(stage)"
+        case .exhaustionBeforeReset: "exhaustion-before-reset"
         }
         return "\(account.id)|\(limit)|\(what)"
     }
@@ -107,16 +116,32 @@ struct AlertMemory: Codable, Sendable, Equatable {
         /// nothing had reset. A drop while the stated reset time holds still
         /// has to show up twice; a clock that merely slides is not a refill.
         var pendingReset = false
+        /// Stage memory keys already spoken for this window. Cleared when the
+        /// window turns over, and not when the estimate bounces back over the
+        /// line: that bounce is how a weekly pace re-announces itself all afternoon.
+        var exhaustionStages: [String] = []
+        /// The before-reset notice has been said for this window.
+        var exhaustionBeforeReset = false
 
         enum CodingKeys: String, CodingKey {
             case announced, fraction, resetsAt, pendingReset
+            case exhaustionStages, exhaustionBeforeReset
         }
 
-        init(announced: Int = 0, fraction: Double = 0, resetsAt: Date? = nil, pendingReset: Bool = false) {
+        init(
+            announced: Int = 0,
+            fraction: Double = 0,
+            resetsAt: Date? = nil,
+            pendingReset: Bool = false,
+            exhaustionStages: [String] = [],
+            exhaustionBeforeReset: Bool = false
+        ) {
             self.announced = announced
             self.fraction = fraction
             self.resetsAt = resetsAt
             self.pendingReset = pendingReset
+            self.exhaustionStages = exhaustionStages
+            self.exhaustionBeforeReset = exhaustionBeforeReset
         }
 
         init(from decoder: Decoder) throws {
@@ -125,6 +150,18 @@ struct AlertMemory: Codable, Sendable, Equatable {
             fraction = try container.decodeIfPresent(Double.self, forKey: .fraction) ?? 0
             resetsAt = try container.decodeIfPresent(Date.self, forKey: .resetsAt)
             pendingReset = try container.decodeIfPresent(Bool.self, forKey: .pendingReset) ?? false
+            exhaustionStages = try container.decodeIfPresent([String].self, forKey: .exhaustionStages) ?? []
+            exhaustionBeforeReset = try container.decodeIfPresent(Bool.self, forKey: .exhaustionBeforeReset) ?? false
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(announced, forKey: .announced)
+            try container.encode(fraction, forKey: .fraction)
+            try container.encodeIfPresent(resetsAt, forKey: .resetsAt)
+            try container.encode(pendingReset, forKey: .pendingReset)
+            try container.encode(exhaustionStages, forKey: .exhaustionStages)
+            try container.encode(exhaustionBeforeReset, forKey: .exhaustionBeforeReset)
         }
     }
 
@@ -204,6 +241,11 @@ struct AlertMemory: Codable, Sendable, Equatable {
         /// The balance to warn below, or nil for no warning on this account.
         lowBalance: Double?,
         staleMeansFailure: Bool,
+        /// Time-to-empty stages, and the separate before-reset notice.
+        /// Both stay quiet when the account is outside the forecast list.
+        announcesExhaustion: Bool = false,
+        exhaustionStages: [ExhaustionStage] = [],
+        announcesBeforeReset: Bool = false,
         now: Date
     ) -> [UsageAlert] {
         var record = accounts[account.id] ?? Account()
@@ -303,7 +345,7 @@ struct AlertMemory: Codable, Sendable, Equatable {
         // Ribbons still need this loop when the threshold is Off: they fire
         // on the same unambiguous evidence, without a prior warning.
         guard case .live = rawState, case .live = reading.state,
-              threshold != .off || celebratesReset,
+              threshold != .off || celebratesReset || announcesExhaustion,
               let observedAt = reading.observedAt,
               now.timeIntervalSince(observedAt) <= UsageCache.maximumAge else {
             accounts[account.id] = record
@@ -396,6 +438,11 @@ struct AlertMemory: Codable, Sendable, Equatable {
                     memory.pendingReset = false
                     memory.fraction = window.usedFraction
                     memory.resetsAt = window.resetsAt
+                    // A new window may cross a stage again. Clearing on a dip
+                    // would not: the estimate wobbles, and the notice would
+                    // come back every time it did.
+                    memory.exhaustionStages = []
+                    memory.exhaustionBeforeReset = false
                 } else if emptied {
                     // Hold the *pre-drop* baseline so a rebound is compared
                     // against the high figure, not against the glitch.
@@ -423,11 +470,66 @@ struct AlertMemory: Codable, Sendable, Equatable {
                 )
             }
 
+            if announcesExhaustion {
+                noteExhaustion(
+                    of: window,
+                    into: &memory,
+                    produced: &produced,
+                    account: account,
+                    stages: exhaustionStages,
+                    announcesBeforeReset: announcesBeforeReset,
+                    now: now
+                )
+            }
+
             record.windows[window.id] = memory
         }
 
         accounts[account.id] = record
         return produced
+    }
+
+    /// One notice per stage the pace has already reached, and one for the
+    /// before-reset sentence. A stage already recorded stays recorded until
+    /// the window turns over: the estimate crossing back over the line is
+    /// not a new question.
+    private static func noteExhaustion(
+        of window: UsageWindow,
+        into memory: inout Window,
+        produced: inout [UsageAlert],
+        account: AccountKey,
+        stages: [ExhaustionStage],
+        announcesBeforeReset: Bool,
+        now: Date
+    ) {
+        // Spent is the percentage track's word, when that track is on. A
+        // time of zero here would be a second notice about a limit that is
+        // already gone.
+        guard !window.isExhausted, window.usedFraction < 1 else { return }
+        guard let reading = BurnRate.reading(for: window, now: now),
+              reading.exhaustsBeforeReset,
+              let seconds = reading.timeToExhaustion
+        else { return }
+
+        for stage in stages.sorted(by: { $0.remaining > $1.remaining }) {
+            let key = stage.memoryKey
+            guard seconds <= stage.remaining, !memory.exhaustionStages.contains(key) else { continue }
+            memory.exhaustionStages.append(key)
+            produced.append(UsageAlert(
+                account: account,
+                kind: .exhaustion(stage: key, remaining: seconds),
+                window: window
+            ))
+        }
+
+        if announcesBeforeReset, !memory.exhaustionBeforeReset {
+            memory.exhaustionBeforeReset = true
+            produced.append(UsageAlert(
+                account: account,
+                kind: .exhaustionBeforeReset(remaining: seconds),
+                window: window
+            ))
+        }
     }
 
     /// The highest step this window has reached: the chosen threshold, 100, or
@@ -762,6 +864,12 @@ final class UsageAlerts {
             staleMeansFailure: Self.staleMeansFailure(
                 route: settings.source(for: account), raw: raw, for: account
             ),
+            announcesExhaustion: settings.forecastsExhaustion(for: account)
+                && settings.wantsExhaustionAlerts,
+            exhaustionStages: settings.forecastsExhaustion(for: account) && settings.exhaustionAlerts
+                ? settings.exhaustionStages : [],
+            announcesBeforeReset: settings.forecastsExhaustion(for: account)
+                && settings.exhaustionNotifyBeforeReset,
             // The one clock reading in here, taken at the edge and passed in,
             // so the rules themselves stay decidable from their arguments.
             now: Date()
@@ -1011,6 +1119,14 @@ final class UsageAlerts {
 
         case .reset, .celebration:
             return .localized("This limit has reset.")
+
+        case .exhaustion(_, let remaining):
+            let when = BurnRate.approximate(remaining)
+            return .localized("May run out in \(when).")
+
+        case .exhaustionBeforeReset(let remaining):
+            let when = BurnRate.span(remaining)
+            return .localized("At the current pace, about \(when) before the next reset.")
         }
     }
 

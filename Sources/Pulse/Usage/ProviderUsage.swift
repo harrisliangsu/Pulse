@@ -445,6 +445,26 @@ struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
         return estimate.map { "\(scoped) · \($0.title)" } ?? scoped
     }
 
+    /// The short name the exhaustion line leads with: "5-hour", "Weekly".
+    ///
+    /// The row above already says "5-hour limit". This is the same window,
+    /// short enough to sit in front of a time. A limit scoped to one model
+    /// keeps that scope, because two 5-hour rows are otherwise the same line.
+    /// Anything without one of these four names uses `name` rather than a
+    /// shortened guess.
+    var forecastName: String {
+        let base: String
+        switch kind {
+        case .fiveHour: base = .localized("Forecast: 5-hour")
+        case .weekly: base = .localized("Forecast: weekly")
+        case .daily: base = .localized("Forecast: daily")
+        case .monthly: base = .localized("Forecast: monthly")
+        default: return name
+        }
+        guard let scope, !scope.isEmpty else { return base }
+        return "\(base) · \(scope)"
+    }
+
     /// Rounded to the nearest whole number, **except that anything used at
     /// all never reads as 0%**.
     ///

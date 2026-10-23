@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.4
+
+- **The card says when a limit may run out.** Settings → Notifications → Exhaustion forecast. Within six hours it names the window and a rough time, for example “Weekly · may run out in about 4 hours”; further out it can say the pace may not last until the reset. Notifications start with one warning at 24 hours left, and more stages can be added. Codex’s 5-hour and weekly windows are included when the reply states a length and a reset.
+
 ## 1.5.3
 
 - **An installed update shows up in Finder as Blinky.** The next time a copy still named `Pulse.app` opens, including the relaunch after an in-app update, it renames itself to `Blinky.app` when that folder has no `Blinky.app` yet, and Open at login is registered again for the new file when it was already on (Settings → General). [#58](https://github.com/harrisliangsu/blinky-mac/pull/58)

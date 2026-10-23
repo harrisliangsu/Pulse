@@ -125,6 +125,8 @@ struct NotificationsPane: View {
                 }
             }
 
+            exhaustionGroup
+
             SettingsGroup(String.localized("Reset reminders")) {
                 SettingsRow(
                     String.localized("Predicted reset"),
@@ -234,6 +236,211 @@ struct NotificationsPane: View {
                 }
             }
         }
+        .task {
+            // The time-to-empty notice starts on, so the grant has to be asked
+            // when this pane opens. A switch that is already on never goes
+            // from off to on, and a prompt at launch is refused for good.
+            // An answer already given is not asked again.
+            guard UsageAlerts.isSupported,
+                  settings.wantsExhaustionAlerts,
+                  alerts.authorization == .notDetermined
+            else { return }
+            if await alerts.requestAuthorizationIfNeeded() {
+                store.reconsiderAlerts()
+            }
+        }
+    }
+
+    /// The card line and the remaining-time notices, in one group. Percent
+    /// thresholds stay in the group above; this is the other question.
+    @ViewBuilder
+    private var exhaustionGroup: some View {
+        SettingsGroup(String.localized("Exhaustion forecast")) {
+            exhaustionAccountRows
+            exhaustionCardRows
+            exhaustionNoticeRows
+        }
+    }
+
+    /// Whose windows are forecast, on the card and in the notices together.
+    @ViewBuilder
+    private var exhaustionAccountRows: some View {
+        SettingsRow(
+            String.localized("Accounts"),
+            subtitle: String.localized("Every account on the panel, or only the ones you pick.")
+        ) {
+                Picker("", selection: Binding(
+                    get: { settings.exhaustionAllAccounts },
+                    set: { settings.setExhaustionAllAccounts($0) }
+                )) {
+                    Text(localized: "All shown accounts").tag(true)
+                    Text(localized: "Selected accounts").tag(false)
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+            }
+
+            if !settings.exhaustionAllAccounts {
+                ForEach(settings.shownAccounts, id: \.id) { account in
+                    SettingsRowDivider()
+                    SettingsRow(settings.label(for: account)) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.forecastsExhaustion(for: account) },
+                            set: { settings.setForecastsExhaustion($0, for: account) }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
+                }
+            }
+    }
+
+    /// The line on the card. These stay usable without a notification grant.
+    @ViewBuilder
+    private var exhaustionCardRows: some View {
+        SettingsRowDivider()
+
+        SettingsRow(
+            String.localized("On the card"),
+            subtitle: String.localized("A line under each limit that has a length and a reset.")
+        ) {
+                Toggle("", isOn: Binding(
+                    get: { settings.showsForecast },
+                    set: { settings.showsForecast = $0 }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .disabled(!settings.isPanelVisible)
+            }
+
+            SettingsRowDivider()
+
+            SettingsRow(
+                String.localized("Countdown within"),
+                subtitle: String.localized("Hours. Show the time only this close to running out.")
+            ) {
+                Stepper(
+                    value: Binding(
+                        get: { settings.exhaustionCardHours },
+                        set: { settings.exhaustionCardHours = $0 }
+                    ),
+                    in: ExhaustionStage.minimumHours...ExhaustionStage.maximumHours
+                ) {
+                    EmptyView()
+                }
+                .labelsHidden()
+                .disabled(!settings.isPanelVisible || !settings.showsForecast)
+            }
+
+            SettingsRowDivider()
+
+            SettingsRow(
+                String.localized("May run out before reset"),
+                subtitle: String.localized("A quieter line when it is further out than the countdown.")
+            ) {
+                Toggle("", isOn: Binding(
+                    get: { settings.exhaustionSoftHint },
+                    set: { settings.exhaustionSoftHint = $0 }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .disabled(!settings.isPanelVisible || !settings.showsForecast)
+            }
+
+            SettingsRowDivider()
+
+            SettingsRow(
+                String.localized("Tie it to the reset"),
+                subtitle: String.localized("When it will not last until the reset, say roughly when.")
+            ) {
+                Toggle("", isOn: Binding(
+                    get: { settings.exhaustionBeforeReset },
+                    set: { settings.exhaustionBeforeReset = $0 }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .disabled(!settings.isPanelVisible || !settings.showsForecast)
+            }
+    }
+
+    /// Remaining-time notices. Greyed out where there is no app bundle to post from.
+    @ViewBuilder
+    private var exhaustionNoticeRows: some View {
+        SettingsRowDivider()
+
+        SettingsRow(
+            String.localized("Time remaining"),
+            subtitle: exhaustionAlertsSubtitle
+        ) {
+                Toggle("", isOn: Binding(
+                    get: { settings.exhaustionAlerts },
+                    set: { enabled in
+                        settings.exhaustionAlerts = enabled
+                        commitExhaustionAlerts()
+                    }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .disabled(!UsageAlerts.isSupported)
+            }
+
+            SettingsRowDivider()
+
+            SettingsRow(
+                String.localized("Stages"),
+                subtitle: String.localized("Each one warns once, at its own remaining time.")
+            ) {
+                Button(String.localized("Add a stage")) {
+                    settings.addExhaustionStage()
+                    commitExhaustionAlerts()
+                }
+                .disabled(!UsageAlerts.isSupported || !settings.exhaustionAlerts)
+            }
+
+            ForEach(settings.exhaustionStages) { stage in
+                SettingsRowDivider()
+                SettingsRow(String.localized("\("\(stage.hours)") hours")) {
+                    HStack(spacing: 10) {
+                        Stepper(
+                            value: Binding(
+                                get: { stage.hours },
+                                set: { hours in
+                                    settings.setExhaustionStageHours(id: stage.id, hours: hours)
+                                    commitExhaustionAlerts()
+                                }
+                            ),
+                            in: ExhaustionStage.minimumHours...ExhaustionStage.maximumHours
+                        ) {
+                            EmptyView()
+                        }
+                        .labelsHidden()
+                        Button(String.localized("Remove")) {
+                            settings.removeExhaustionStage(id: stage.id)
+                            commitExhaustionAlerts()
+                        }
+                    }
+                    .disabled(!UsageAlerts.isSupported || !settings.exhaustionAlerts)
+                }
+            }
+
+            SettingsRowDivider()
+
+            SettingsRow(
+                String.localized("Notify before the reset"),
+                subtitle: String.localized("When the pace will not last until the reset.")
+            ) {
+                Toggle("", isOn: Binding(
+                    get: { settings.exhaustionNotifyBeforeReset },
+                    set: { enabled in
+                        settings.exhaustionNotifyBeforeReset = enabled
+                        commitExhaustionAlerts()
+                    }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .disabled(!UsageAlerts.isSupported)
+            }
     }
 
     /// Advance reminders are notifications, so they share the grant the other
@@ -247,6 +454,26 @@ struct NotificationsPane: View {
             return .localized("Turned off for Blinky in System Settings › Notifications.")
         }
         return .localized("Before an explicit time from Codex Resets; a forecast with no time stays quiet.")
+    }
+
+    /// The same grant as the other notices. A stage already passed is said
+    /// once, on the readings Pulse already holds.
+    private func commitExhaustionAlerts() {
+        Task {
+            if await alerts.requestAuthorizationIfNeeded() {
+                store.reconsiderAlerts()
+            }
+        }
+    }
+
+    private var exhaustionAlertsSubtitle: String {
+        guard UsageAlerts.isSupported else {
+            return .localized("Notifications need the bundled app.")
+        }
+        if settings.wantsExhaustionAlerts, alerts.authorization == .denied {
+            return .localized("Turned off for Blinky in System Settings › Notifications.")
+        }
+        return .localized("One notice per account, limit and stage.")
     }
 
     private func commitAdvanceReminders() {

@@ -423,7 +423,7 @@ enum PanelMetrics {
     nonisolated(unsafe) private static var storedLabelAboveRing = false
     /// `AppSettings.freeAcrossFiguresBeside`, for `DockLayout.labelsBeside`.
     nonisolated(unsafe) private static var storedFreeAcrossBeside = false
-    nonisolated(unsafe) private static var storedForecast = false
+    nonisolated(unsafe) private static var storedForecast = true
 
     /// Whether the rail's ends are half circles rather than softened corners.
     ///

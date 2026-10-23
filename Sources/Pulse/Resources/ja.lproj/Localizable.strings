@@ -1337,3 +1337,37 @@
 "Top tool" = "メインのツール";
 "Tokens · token share" = "トークン数 · トークンの割合";
 "The plan price is the monthly price prorated by the days of this period." = "プランの料金は、月額をこの期間の日数で日割りにしています。";
+
+/* Exhaustion forecast */
+"about %@d" = "約%@日";
+"about %@d %@h" = "約%@日%@時間";
+"%@d" = "%@日";
+"%@d %@h" = "%@日%@時間";
+"1 hour" = "1 時間";
+"%@ · may run out in %@" = "%@ · %@で尽きる見込み";
+"%@ · may run out before the reset" = "%@ · リセット前に尽きる可能性があります";
+"At the current pace, about %@ before the next reset." = "現在のペースでは、次のリセットの約 %@ 前に尽きます。";
+"May run out in %@." = "%@で尽きる見込みです。";
+"Forecast: 5-hour" = "5時間";
+"Forecast: weekly" = "毎週";
+"Forecast: daily" = "毎日";
+"Forecast: monthly" = "毎月";
+"Exhaustion forecast" = "使い切り予測";
+"All shown accounts" = "表示中のすべてのアカウント";
+"Selected accounts" = "選んだアカウント";
+"On the card" = "カードに表示";
+"A line under each limit that has a length and a reset." = "長さとリセット時刻がある上限の下に一行出します。";
+"Countdown within" = "残り時間を出す範囲";
+"Hours. Show the time only this close to running out." = "単位は時間です。使い切りまでこの時間以内のときだけ、時刻を書きます。";
+"May run out before reset" = "リセット前に尽きる可能性";
+"A quieter line when it is further out than the countdown." = "残り時間の表示より先のときは、短い一文だけ出します。";
+"Tie it to the reset" = "リセットと合わせて表示";
+"When it will not last until the reset, say roughly when." = "リセットまで保たないとき、おおよその時刻を書きます。";
+"Time remaining" = "残り時間";
+"One notice per account, limit and stage." = "アカウント、上限、段階ごとに一度だけ通知します。";
+"Stages" = "段階";
+"Each one warns once, at its own remaining time." = "段階ごとに、その残り時間で一度だけ知らせます。";
+"Add a stage" = "段階を追加";
+"Notify before the reset" = "リセット前に通知";
+"When the pace will not last until the reset." = "このペースではリセットまで保たないときに通知します。";
+"Every account on the panel, or only the ones you pick." = "パネルに出ているすべてのアカウントか、選んだアカウントだけです。";

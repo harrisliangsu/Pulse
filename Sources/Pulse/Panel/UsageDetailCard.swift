@@ -182,6 +182,12 @@ struct UsageDetailCard: View {
     var showsRemaining: Bool = false
     /// Say whether each limit will last its window.
     var showsForecast: Bool = false
+    /// How close the countdown has to be before it states a time.
+    var exhaustionHorizon: TimeInterval = 6 * 3600
+    /// The quieter line past that horizon, when the pace still loses to the reset.
+    var exhaustionSoftHint: Bool = true
+    /// The sentence that names the time before the next reset.
+    var exhaustionBeforeReset: Bool = true
     /// Put the allowance in its own unit beside each row's name, where the
     /// provider states one (`UsageWindow.amounts`; Qoder's credits, #88).
     var showsAmounts: Bool = false
@@ -298,6 +304,19 @@ struct UsageDetailCard: View {
         }
     }
 
+    /// The exhaustion line for one window, or nil when the forecast is off
+    /// or the window does not carry a length and a reset.
+    private func forecastLine(for window: UsageWindow) -> BurnRate.CardLine? {
+        guard showsForecast, let reading = BurnRate.reading(for: window) else { return nil }
+        return BurnRate.cardLine(
+            for: window,
+            reading: reading,
+            horizon: exhaustionHorizon,
+            softHint: exhaustionSoftHint,
+            beforeReset: exhaustionBeforeReset
+        )
+    }
+
     private var content: some View {
         VStack(alignment: .leading, spacing: DetailCardLayout.contentSpacing) {
             header
@@ -317,7 +336,8 @@ struct UsageDetailCard: View {
                     // percentage, a reset and a length the provider actually
                     // stated, and `BurnRate` refuses the windows that lack one
                     // rather than being told in advance which they are.
-                    burn: showsForecast ? BurnRate.reading(for: window) : nil,
+                    // Codex's 5-hour and weekly windows state both.
+                    forecast: forecastLine(for: window),
                     value: valueText(window),
                     amount: showsAmounts ? Self.amountText(window, remaining: showsRemaining) : nil
                 )
@@ -1618,8 +1638,8 @@ private struct ProgressMetricRow: View {
     /// Which way the figure beside the bar is counted, so the word next to it
     /// can agree with it.
     let showsRemaining: Bool
-    /// What the rate says about this window, or nil when nothing may be said.
-    var burn: BurnRate.Reading?
+    /// The exhaustion line, already worded, or nil when this row stays quiet.
+    var forecast: BurnRate.CardLine?
     /// The detailed card's estimate of what the window is worth. Nil draws no line.
     var value: String?
     /// The allowance in its own unit, "5,843 / 6,000", beside the name. Nil
@@ -1724,6 +1744,7 @@ private struct ProgressMetricRow: View {
                 ? String.localized("\(percentageText) left. \(resetDescription)")
                 : String.localized("\(percentageText) used. \(resetDescription)"))
                 + (amount.map { " \($0)" } ?? "")
+                + (forecast.map { " \($0.text)" } ?? "")
         )
     }
 }
@@ -1740,27 +1761,23 @@ extension ProgressMetricRow {
     /// offered when it lands before the reset.
     @ViewBuilder
     var burnLine: some View {
-        if let burn, !isSpent {
-            Group {
-                if let seconds = burn.timeToExhaustion {
-                    Text(localized: "Runs out in \(BurnRate.approximate(seconds))")
-                        .foregroundStyle(Color.pulseWarning.opacity(0.9))
-                } else if burn.exhaustsBeforeReset {
-                    // **The verdict without the time.** Beyond the horizon the
-                    // hours are not worth stating, but the answer still is —
-                    // and this was silent here once, which showed the good news
-                    // and hid the bad. A weekly window's exhaustion is nearly
-                    // always further out than two hours, so that was most of
-                    // the warnings there are.
-                    Text(localized: "Won't last the window")
-                        .foregroundStyle(Color.pulseWarning.opacity(0.9))
-                } else {
-                    Text(localized: "Expected to last the window")
-                        .foregroundStyle(.primary.opacity(0.45))
-                }
-            }
-            .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
-            .lineLimit(1)
+        if let forecast, !isSpent {
+            Text(verbatim: forecast.text)
+                .foregroundStyle(forecastColor)
+                .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+    }
+
+    /// The countdown is the loud one. The reset sentence is the same news a
+    /// little further out. The hint is only the verdict. Lasting is not news.
+    private var forecastColor: Color {
+        switch forecast?.tone {
+        case .countdown: Color.pulseWarning.opacity(0.9)
+        case .beforeReset: Color.pulseWarning.opacity(0.75)
+        case .hint: Color.pulseWarning.opacity(0.55)
+        case .lasts, nil: Color.primary.opacity(0.45)
         }
     }
 }

@@ -55,7 +55,12 @@ struct AppSettingsPersistenceTests {
             ("settings.showsWindowClock", \.showsWindowClock, true),
             ("settings.showsRemaining", \.showsRemaining, true),
             ("settings.dockShowsAlertColor", \.dockShowsAlertColor, false),
-            ("settings.showsForecast", \.showsForecast, true),
+            ("settings.showsForecast", \.showsForecast, false),
+            ("settings.exhaustionAllAccounts", \.exhaustionAllAccounts, false),
+            ("settings.exhaustionSoftHint", \.exhaustionSoftHint, false),
+            ("settings.exhaustionBeforeReset", \.exhaustionBeforeReset, false),
+            ("settings.exhaustionAlerts", \.exhaustionAlerts, false),
+            ("settings.exhaustionNotifyBeforeReset", \.exhaustionNotifyBeforeReset, true),
             ("settings.showsSecondRing", \.showsSecondRing, true),
             ("settings.animatesRingActivity", \.animatesRingActivity, false),
             ("settings.readsTokenSpend", \.readsTokenSpend, true),
@@ -260,7 +265,15 @@ struct AppSettingsPersistenceTests {
         first.showsRemaining = true
         first.warningThreshold = .ninety
         first.dockShowsAlertColor = false
-        first.showsForecast = true
+        first.showsForecast = false
+        first.exhaustionAllAccounts = false
+        first.exhaustionAccounts = ["codex"]
+        first.exhaustionCardHours = 12
+        first.exhaustionSoftHint = false
+        first.exhaustionBeforeReset = false
+        first.exhaustionAlerts = false
+        first.exhaustionStages = [ExhaustionStage(id: "custom", hours: 12)]
+        first.exhaustionNotifyBeforeReset = true
         first.showsSecondRing = true
         first.animatesRingActivity = false
         first.splitAccounts = ["antigravity"]
@@ -349,7 +362,15 @@ struct AppSettingsPersistenceTests {
         #expect(back.showsRemaining)
         #expect(back.warningThreshold == .ninety)
         #expect(back.dockShowsAlertColor == false)
-        #expect(back.showsForecast)
+        #expect(back.showsForecast == false)
+        #expect(back.exhaustionAllAccounts == false)
+        #expect(back.exhaustionAccounts == ["codex"])
+        #expect(back.exhaustionCardHours == 12)
+        #expect(back.exhaustionSoftHint == false)
+        #expect(back.exhaustionBeforeReset == false)
+        #expect(back.exhaustionAlerts == false)
+        #expect(back.exhaustionStages == [ExhaustionStage(id: "custom", hours: 12)])
+        #expect(back.exhaustionNotifyBeforeReset)
         #expect(back.showsSecondRing)
         #expect(back.animatesRingActivity == false)
         #expect(back.splitAccounts == ["antigravity"])
@@ -398,7 +419,15 @@ struct AppSettingsPersistenceTests {
         #expect(back.glassTransparency == fresh.glassTransparency)
         #expect(back.topRailShowsPercentages == false)
         #expect(back.sideRailShowsPercentages)
-        #expect(back.showsForecast == false)
+        #expect(back.showsForecast)
+        #expect(back.exhaustionAllAccounts)
+        #expect(back.exhaustionCardHours == 6)
+        #expect(back.exhaustionSoftHint)
+        #expect(back.exhaustionBeforeReset)
+        #expect(back.exhaustionAlerts)
+        #expect(back.exhaustionStages == ExhaustionStage.defaultStages)
+        #expect(back.exhaustionNotifyBeforeReset == false)
+        #expect(back.wantsExhaustionAlerts)
         #expect(back.dockShowsAlertColor)
         #expect(back.animatesRingActivity)
         #expect(back.readsTokenSpend == false)
@@ -408,7 +437,34 @@ struct AppSettingsPersistenceTests {
         #expect(back.alertsOnOutage == false)
         #expect(back.alertsOnRecap == false)
         #expect(back.primerHours == .default)
-        #expect(!back.wantsAlerts)
+        #expect(back.wantsAlerts)
+    }
+
+    @Test("A stored forecast choice and an empty stage list are kept")
+    func storedExhaustionChoicesAreKept() {
+        let (defaults, cleanup) = Self.isolatedDefaults()
+        defer { cleanup() }
+        defaults.set(false, forKey: "settings.showsForecast")
+        defaults.set(Data("[]".utf8), forKey: "settings.exhaustionStages")
+
+        let back = AppSettings.restoredSettings(from: defaults, detected: [], scan: ExtensionCatalog.Scan())
+
+        #expect(back.showsForecast == false)
+        #expect(back.exhaustionStages.isEmpty)
+        #expect(back.wantsExhaustionAlerts == false)
+    }
+
+    @Test("Two exhaustion stages cannot share an hour")
+    func exhaustionStagesKeepDistinctHours() {
+        let (defaults, cleanup) = Self.isolatedDefaults()
+        defer { cleanup() }
+        let settings = AppSettings(defaults: defaults)
+
+        settings.addExhaustionStage()
+        let added = settings.exhaustionStages.last
+        #expect(added?.hours == 6)
+        settings.setExhaustionStageHours(id: added?.id ?? "", hours: 24)
+        #expect(settings.exhaustionStages.map(\.hours) == [24, 6])
     }
 
     @Test("A ring pinned to Qoder's total survives a relaunch with the parts on (#89)")

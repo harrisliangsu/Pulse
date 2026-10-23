@@ -1,13 +1,15 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import Foundation
 
-// The alert rules. **Every one of them is off by default** and stays that way:
-// Pulse says nothing unprompted until the reader asks it to. `UsageAlerts`
-// observes the rules itself, so they do not go through `onChange` — which would
-// refetch every provider for a rule that reads what is already on screen. (The
-// one that does, the low-balance table, says why.) `onRecapAlertChange` exists
-// so that switching the recap notice on in the first days of a month announces
-// then.
+// The alert rules. **Off by default**, apart from the time-to-empty forecast:
+// that one starts on, with a single stage at 24 hours, because a pace that
+// runs out tomorrow is the thing the card is already willing to say and the
+// notice exists to say it while you are looking elsewhere. The percentage
+// threshold stays off. `UsageAlerts` observes the rules itself, so they do
+// not go through `onChange` — which would refetch every provider for a rule
+// that reads what is already on screen. (The one that does, the low-balance
+// table, says why.) `onRecapAlertChange` exists so that switching the recap
+// notice on in the first days of a month announces then.
 //
 // `UsageAlerts.isSupported` fences every entry point that talks to
 // `UNUserNotificationCenter`; nothing in this file does.
@@ -25,6 +27,14 @@ extension AppSettings.Key {
     static let predictedResetLead = "settings.predictedResetLead"
     static let remindsBeforeRegularReset = "settings.remindsBeforeRegularReset"
     static let regularResetLead = "settings.regularResetLead"
+    static let exhaustionAllAccounts = "settings.exhaustionAllAccounts"
+    static let exhaustionAccounts = "settings.exhaustionAccounts"
+    static let exhaustionCardHours = "settings.exhaustionCardHours"
+    static let exhaustionSoftHint = "settings.exhaustionSoftHint"
+    static let exhaustionBeforeReset = "settings.exhaustionBeforeReset"
+    static let exhaustionAlerts = "settings.exhaustionAlerts"
+    static let exhaustionStages = "settings.exhaustionStages"
+    static let exhaustionNotifyBeforeReset = "settings.exhaustionNotifyBeforeReset"
 }
 
 extension AppSettings.Default {
@@ -97,6 +107,117 @@ extension AppSettings {
         defaults.set(regularResetLead.rawValue, forKey: Key.regularResetLead)
     }
 
+    func exhaustionAllAccountsChanged(from old: Bool) {
+        guard exhaustionAllAccounts != old else { return }
+        defaults.set(exhaustionAllAccounts, forKey: Key.exhaustionAllAccounts)
+    }
+
+    func exhaustionAccountsChanged(from old: Set<String>) {
+        guard exhaustionAccounts != old else { return }
+        defaults.set(exhaustionAccounts.sorted(), forKey: Key.exhaustionAccounts)
+    }
+
+    func exhaustionCardHoursChanged(from old: Int) {
+        let clamped = ExhaustionStage.clamped(exhaustionCardHours)
+        if clamped != exhaustionCardHours {
+            exhaustionCardHours = clamped
+            return
+        }
+        guard exhaustionCardHours != old else { return }
+        defaults.set(exhaustionCardHours, forKey: Key.exhaustionCardHours)
+    }
+
+    func exhaustionSoftHintChanged(from old: Bool) {
+        guard exhaustionSoftHint != old else { return }
+        defaults.set(exhaustionSoftHint, forKey: Key.exhaustionSoftHint)
+    }
+
+    func exhaustionBeforeResetChanged(from old: Bool) {
+        guard exhaustionBeforeReset != old else { return }
+        defaults.set(exhaustionBeforeReset, forKey: Key.exhaustionBeforeReset)
+    }
+
+    func exhaustionAlertsChanged(from old: Bool) {
+        guard exhaustionAlerts != old else { return }
+        defaults.set(exhaustionAlerts, forKey: Key.exhaustionAlerts)
+    }
+
+    func exhaustionStagesChanged(from old: [ExhaustionStage]) {
+        let clamped = exhaustionStages.map { stage in
+            var copy = stage
+            copy.hours = ExhaustionStage.clamped(stage.hours)
+            return copy
+        }
+        if clamped != exhaustionStages {
+            exhaustionStages = clamped
+            return
+        }
+        guard exhaustionStages != old else { return }
+        if let data = try? JSONEncoder().encode(exhaustionStages) {
+            defaults.set(data, forKey: Key.exhaustionStages)
+        }
+    }
+
+    func exhaustionNotifyBeforeResetChanged(from old: Bool) {
+        guard exhaustionNotifyBeforeReset != old else { return }
+        defaults.set(exhaustionNotifyBeforeReset, forKey: Key.exhaustionNotifyBeforeReset)
+    }
+
+    /// Whether this account's windows are forecast at all.
+    func forecastsExhaustion(for account: AccountKey) -> Bool {
+        if exhaustionAllAccounts { return true }
+        return exhaustionAccounts.contains(account.id)
+    }
+
+    /// Switching to a list starts from whoever is on the rail, so the first
+    /// thing that happens is not every forecast going quiet.
+    func setExhaustionAllAccounts(_ all: Bool) {
+        if !all, exhaustionAccounts.isEmpty {
+            exhaustionAccounts = Set(shownAccounts.map(\.id))
+        }
+        exhaustionAllAccounts = all
+    }
+
+    func setForecastsExhaustion(_ included: Bool, for account: AccountKey) {
+        var next = exhaustionAccounts
+        if included {
+            next.insert(account.id)
+        } else {
+            next.remove(account.id)
+        }
+        exhaustionAccounts = next
+    }
+
+    func setExhaustionStageHours(id: String, hours: Int) {
+        guard let index = exhaustionStages.firstIndex(where: { $0.id == id }) else { return }
+        let clamped = ExhaustionStage.clamped(hours)
+        // Two stages on one hour are the same notice twice. Leaving the
+        // stepper where it was is quieter than posting both.
+        guard !exhaustionStages.contains(where: { $0.id != id && $0.hours == clamped }) else { return }
+        exhaustionStages[index].hours = clamped
+    }
+
+    /// The next free hour, starting at six. Two stages on the same hour would
+    /// be the same notice twice.
+    func addExhaustionStage() {
+        var hours = 6
+        let taken = Set(exhaustionStages.map(\.hours))
+        while taken.contains(hours), hours < ExhaustionStage.maximumHours {
+            hours += 1
+        }
+        guard !taken.contains(hours) else { return }
+        exhaustionStages.append(ExhaustionStage(id: UUID().uuidString, hours: hours))
+    }
+
+    func removeExhaustionStage(id: String) {
+        exhaustionStages.removeAll { $0.id == id }
+    }
+
+    /// How far out the card will state a time.
+    var exhaustionCardHorizon: TimeInterval {
+        TimeInterval(exhaustionCardHours) * 3600
+    }
+
     /// The balance this account should be warned below, or nil for no warning.
     func lowBalanceAlert(for account: AccountKey) -> Double? {
         lowBalanceAlerts[account.id]
@@ -113,8 +234,14 @@ extension AppSettings {
 
     /// Whether any rule about readings is on. What `UsageAlerts.observe`
     /// works for; the outage check reads status pages, not readings.
+    /// The time-to-empty notices, as distinct from the percentage threshold.
+    var wantsExhaustionAlerts: Bool {
+        (exhaustionAlerts && !exhaustionStages.isEmpty) || exhaustionNotifyBeforeReset
+    }
+
     var wantsUsageAlerts: Bool {
         alertThreshold != .off || alertsOnReset || alertsOnFailure || !lowBalanceAlerts.isEmpty
+            || wantsExhaustionAlerts
     }
 
     /// Whether anything at all would be posted. What decides if permission is
@@ -147,5 +274,22 @@ extension AppSettings {
         remindsBeforeRegularReset = defaults.bool(forKey: Key.remindsBeforeRegularReset)
         regularResetLead = (defaults.object(forKey: Key.regularResetLead) as? Int)
             .flatMap(ResetLead.init(rawValue:)) ?? .default
+        exhaustionAllAccounts = defaults.settingsFlag(
+            Key.exhaustionAllAccounts, default: true
+        )
+        exhaustionAccounts = Set(defaults.stringArray(forKey: Key.exhaustionAccounts) ?? [])
+        if let hours = defaults.object(forKey: Key.exhaustionCardHours) as? Int {
+            exhaustionCardHours = ExhaustionStage.clamped(hours)
+        }
+        exhaustionSoftHint = defaults.settingsFlag(Key.exhaustionSoftHint, default: true)
+        exhaustionBeforeReset = defaults.settingsFlag(Key.exhaustionBeforeReset, default: true)
+        exhaustionAlerts = defaults.settingsFlag(Key.exhaustionAlerts, default: true)
+        exhaustionNotifyBeforeReset = defaults.settingsFlag(
+            Key.exhaustionNotifyBeforeReset, default: false
+        )
+        if let data = defaults.data(forKey: Key.exhaustionStages),
+           let stored = try? JSONDecoder().decode([ExhaustionStage].self, from: data) {
+            exhaustionStages = stored
+        }
     }
 }

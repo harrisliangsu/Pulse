@@ -1335,3 +1335,37 @@
 "Top tool" = "Top tool";
 "Tokens · token share" = "Tokens · token share";
 "The plan price is the monthly price prorated by the days of this period." = "The plan price is the monthly price prorated by the days of this period.";
+
+/* Exhaustion forecast */
+"about %@d" = "%@d";
+"about %@d %@h" = "%@d %@h";
+"%@d" = "%@d";
+"%@d %@h" = "%@d %@h";
+"1 hour" = "1 hour";
+"%@ · may run out in %@" = "%@ · may run out in %@";
+"%@ · may run out before the reset" = "%@ · may run out before the reset";
+"At the current pace, about %@ before the next reset." = "At the current pace, about %@ before the next reset.";
+"May run out in %@." = "May run out in %@.";
+"Forecast: 5-hour" = "5-hour";
+"Forecast: weekly" = "Weekly";
+"Forecast: daily" = "Daily";
+"Forecast: monthly" = "Monthly";
+"Exhaustion forecast" = "Exhaustion forecast";
+"All shown accounts" = "All shown accounts";
+"Selected accounts" = "Selected accounts";
+"On the card" = "On the card";
+"A line under each limit that has a length and a reset." = "A line under each limit that has a length and a reset.";
+"Countdown within" = "Countdown within";
+"Hours. Show the time only this close to running out." = "Hours. Show the time only this close to running out.";
+"May run out before reset" = "May run out before reset";
+"A quieter line when it is further out than the countdown." = "A quieter line when it is further out than the countdown.";
+"Tie it to the reset" = "Tie it to the reset";
+"When it will not last until the reset, say roughly when." = "When it will not last until the reset, say roughly when.";
+"Time remaining" = "Time remaining";
+"One notice per account, limit and stage." = "One notice per account, limit and stage.";
+"Stages" = "Stages";
+"Each one warns once, at its own remaining time." = "Each one warns once, at its own remaining time.";
+"Add a stage" = "Add a stage";
+"Notify before the reset" = "Notify before the reset";
+"When the pace will not last until the reset." = "When the pace will not last until the reset.";
+"Every account on the panel, or only the ones you pick." = "Every account on the panel, or only the ones you pick.";

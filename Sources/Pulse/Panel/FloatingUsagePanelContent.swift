@@ -135,7 +135,11 @@ struct FloatingUsagePanelContent: View {
                             title: selectedTitle ?? "",
                             edge: placement.edge,
                             showsRemaining: settings.showsRemaining,
-                            showsForecast: settings.showsForecast,
+                            showsForecast: settings.showsForecast
+                                && settings.forecastsExhaustion(for: selected.account),
+                            exhaustionHorizon: settings.exhaustionCardHorizon,
+                            exhaustionSoftHint: settings.exhaustionSoftHint,
+                            exhaustionBeforeReset: settings.exhaustionBeforeReset,
                             showsAmounts: selected.account.provider == .qoder && settings.qoderShowsAmounts,
                             resetCredits: selected.account == AccountKey(.codex) ? store.codexResetCredits : nil,
                             isDetailed: settings.showsDetailedCard(for: selected.account),
