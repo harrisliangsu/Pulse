@@ -13,6 +13,13 @@ enum SpendGlance {
     /// The mini chart's length. The year-long Token activity chart stays in Settings.
     static let activityDays = 14
 
+    /// The chart button on the usage card. Reading has to be on, and something
+    /// has to be able to open the window. Otherwise there is no button, and
+    /// the controller refuses to open one.
+    static func showsEntry(reading: Bool, canOpen: Bool) -> Bool {
+        reading && canOpen
+    }
+
     /// What the headline may say about money. The same three answers as the
     /// Settings total: no figure when every token is unpriced, a marked
     /// partial when some are, and a real zero when a published rate is zero.
@@ -65,15 +72,17 @@ enum SpendGlance {
     static func spanTitle(
         _ span: SpendSpan,
         custom: ClosedRange<Date>,
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        locale: Locale = LocalizationSource.locale,
+        bundle: Bundle = LocalizationSource.bundle
     ) -> String {
-        guard span == .custom else { return span.title }
-        let style = Date.FormatStyle().month(.abbreviated).day().year().locale(LocalizationSource.locale)
+        guard span == .custom else { return span.title(in: bundle) }
+        let style = Date.FormatStyle().month(.abbreviated).day().year().locale(locale)
         let first = calendar.startOfDay(for: custom.lowerBound)
         let last = calendar.startOfDay(for: custom.upperBound)
         let start = first.formatted(style)
         if calendar.isDate(first, inSameDayAs: last) { return start }
-        return .localized("\(start) - \(last.formatted(style))")
+        return String(localized: "\(start) - \(last.formatted(style))", bundle: bundle)
     }
 }
 
@@ -330,36 +339,50 @@ struct SpendGlancePicture: Equatable, Sendable {
         observedAt: Date?,
         hasReadLimitations: Bool,
         now: Date = Date(),
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        locale: Locale = LocalizationSource.locale,
+        bundle: Bundle = LocalizationSource.bundle
     ) -> Self {
+        let units = LocalizationSource.myriadUnits(for: locale)
         var picture = Self()
-        picture.span = SpendGlance.spanTitle(span, custom: custom, calendar: calendar)
-        picture.tokens = String.localized("\(TokenCount.short(summary.tokens)) tokens")
+        picture.span = SpendGlance.spanTitle(
+            span, custom: custom, calendar: calendar, locale: locale, bundle: bundle
+        )
+        picture.tokens = String(
+            localized: "\(TokenCount.short(summary.tokens, units: units)) tokens",
+            bundle: bundle
+        )
         switch SpendGlance.Estimate.of(summary) {
         case .none:
-            if summary.tokens == 0 { picture.tokens = String.localized("Nothing in this span") }
+            if summary.tokens == 0 {
+                picture.tokens = String(localized: "Nothing in this span", bundle: bundle)
+            }
         case .unavailable:
-            picture.costNote = String.localized("Estimate unavailable")
+            picture.costNote = String(localized: "Estimate unavailable", bundle: bundle)
         case .amount(let amount, let partial):
-            picture.cost = SpendFormat.money(amount)
-            if partial { picture.costNote = String.localized("Partial estimate") }
+            picture.cost = SpendFormat.money(amount, locale: locale)
+            if partial { picture.costNote = String(localized: "Partial estimate", bundle: bundle) }
         }
         let rows = SpendGlance.topAgents(summary)
         if !rows.isEmpty {
-            picture.agentsTitle = String.localized("By agent")
+            picture.agentsTitle = String(localized: "By agent", bundle: bundle)
             picture.agents = rows.map { row in
                 Agent(
                     name: row.name,
-                    tokens: TokenCount.short(row.tokens),
+                    tokens: TokenCount.short(row.tokens, units: units),
                     cost: row.cost.map { cost in
-                        row.unpricedTokens > 0 ? "\(SpendFormat.money(cost))*" : SpendFormat.money(cost)
+                        let money = SpendFormat.money(cost, locale: locale)
+                        return row.unpricedTokens > 0 ? "\(money)*" : money
                     },
                     share: row.share
                 )
             }
         }
         if !activity.isEmpty {
-            picture.activityTitle = String.localized("Last \("\(SpendGlance.activityDays)") days")
+            picture.activityTitle = String(
+                localized: "Last \("\(SpendGlance.activityDays)") days",
+                bundle: bundle
+            )
             let busiest = activity.days.compactMap(\.tokens).max() ?? 0
             picture.bars = activity.days.map { day in
                 Bar(
@@ -369,13 +392,15 @@ struct SpendGlancePicture: Equatable, Sendable {
             }
         }
         if let observedAt {
-            picture.footnotes.append(UsageDetailCard.updatedText(observedAt, now: now))
+            picture.footnotes.append(UsageDetailCard.updatedText(
+                observedAt, now: now, locale: locale, bundle: bundle
+            ))
         }
         if summary.hasPartialCounts || activity.hasPartialCounts {
-            picture.footnotes.append(String.localized("Counts may be incomplete."))
+            picture.footnotes.append(String(localized: "Counts may be incomplete.", bundle: bundle))
         }
         if hasReadLimitations {
-            picture.footnotes.append(String.localized("Some compressed records could not be read."))
+            picture.footnotes.append(String(localized: "Some compressed records could not be read.", bundle: bundle))
         }
         return picture
     }

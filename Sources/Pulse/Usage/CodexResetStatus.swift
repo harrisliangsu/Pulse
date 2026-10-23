@@ -210,19 +210,19 @@ enum CodexResetPresentation {
         return formatter.string(from: announcedAt)
     }
 
-    static func typeLabel(resetType: String) -> String {
+    static func typeLabel(resetType: String, bundle: Bundle = LocalizationSource.bundle) -> String {
         switch resetType {
-        case "regular": String.localized("Regular reset")
-        case "banked": String.localized("Banked reset credit")
+        case "regular": String(localized: "Regular reset", bundle: bundle)
+        case "banked": String(localized: "Banked reset credit", bundle: bundle)
         default: resetType
         }
     }
 
     /// `{type} · {local absolute}`, or just the clock when the API named no type.
-    static func detail(resetType: String, absolute: String) -> String {
-        let label = typeLabel(resetType: resetType)
+    static func detail(resetType: String, absolute: String, bundle: Bundle = LocalizationSource.bundle) -> String {
+        let label = typeLabel(resetType: resetType, bundle: bundle)
         guard !label.isEmpty else { return absolute }
-        return String.localized("\(label) · \(absolute)")
+        return String(localized: "\(label) · \(absolute)", bundle: bundle)
     }
 
     /// What hovering the type says.
@@ -231,9 +231,9 @@ enum CodexResetPresentation {
     /// usage does not refill immediately. Every other type, including
     /// `regular` and a kind the API adds later, shows `latest_reset.text`
     /// verbatim. Blank text is no tooltip — the card does not invent one.
-    static func help(resetType: String, announcement: String?) -> String? {
+    static func help(resetType: String, announcement: String?, bundle: Bundle = LocalizationSource.bundle) -> String? {
         if resetType == "banked" {
-            return String.localized("A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit.")
+            return String(localized: "A reset credit you apply yourself when you need it. It does not restore usage right away. In the Codex app, open your profile from the sidebar, go to Usage, and apply an available reset credit.", bundle: bundle)
         }
         guard let announcement else { return nil }
         let body = announcement.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -241,22 +241,22 @@ enum CodexResetPresentation {
     }
 
     /// What VoiceOver reads for the row: relative time, then type and clock.
-    static func spoken(relative: String, detail: String) -> String {
-        String.localized("\(relative), \(detail)")
+    static func spoken(relative: String, detail: String, bundle: Bundle = LocalizationSource.bundle) -> String {
+        String(localized: "\(relative), \(detail)", bundle: bundle)
     }
 
     /// Compact confidence for the title row. The level, and the chance when
     /// the API sent one. A missing chance is the level alone — the live
     /// watch often has none, and a blank percent would be a number Pulse made.
-    static func confidence(_ watch: CodexResetStatus.Watch) -> String {
+    static func confidence(_ watch: CodexResetStatus.Watch, bundle: Bundle = LocalizationSource.bundle) -> String {
         let level = switch watch.level {
-        case "elevated": String.localized("Elevated")
-        case "strong": String.localized("Strong")
+        case "elevated": String(localized: "Elevated", bundle: bundle)
+        case "strong": String(localized: "Strong", bundle: bundle)
         default: watch.level
         }
         guard let chance = watch.chancePercent else { return level }
         let figure = "\(chance)%"
-        return String.localized("\(level) · \(figure) chance")
+        return String(localized: "\(level) · \(figure) chance", bundle: bundle)
     }
 
     /// Local date, weekday and time. The bound's date is which day, so it
@@ -279,18 +279,18 @@ enum CodexResetPresentation {
 
     /// Countdown to a forecast window that is still ahead. `relative` is
     /// already a phrase ("in 21 hours", "21小时后").
-    static func mayReset(relative: String) -> String {
-        String.localized("May reset \(relative)")
+    static func mayReset(relative: String, bundle: Bundle = LocalizationSource.bundle) -> String {
+        String(localized: "May reset \(relative)", bundle: bundle)
     }
 
     /// Countdown to an announced instant. Definite: not "may".
-    static func resets(relative: String) -> String {
-        String.localized("Resets \(relative)")
+    static func resets(relative: String, bundle: Bundle = LocalizationSource.bundle) -> String {
+        String(localized: "Resets \(relative)", bundle: bundle)
     }
 
     /// The window end, as a bound rather than the instant of a reset.
-    static func expectedBefore(_ stamp: String) -> String {
-        String.localized("Expected before \(stamp)")
+    static func expectedBefore(_ stamp: String, bundle: Bundle = LocalizationSource.bundle) -> String {
+        String(localized: "Expected before \(stamp)", bundle: bundle)
     }
 
     /// What the help mark says. The watch's own note when it has one; the
@@ -343,9 +343,10 @@ struct CodexResetCardLines: Equatable, Sendable {
         _ status: CodexResetStatus?,
         now: Date = Date(),
         locale: Locale = LocalizationSource.locale,
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        bundle: Bundle = LocalizationSource.bundle
     ) -> CodexResetCardLines {
-        let prediction = Self.prediction(status, now: now, locale: locale, calendar: calendar)
+        let prediction = Self.prediction(status, now: now, locale: locale, calendar: calendar, bundle: bundle)
         guard let announcement = status?.latest else {
             return CodexResetCardLines(prediction: prediction, latest: nil)
         }
@@ -355,10 +356,12 @@ struct CodexResetCardLines: Equatable, Sendable {
         let absolute = CodexResetPresentation.absolute(
             announcedAt: announcement.announcedAt, locale: locale, calendar: calendar
         )
-        let typeLabel = CodexResetPresentation.typeLabel(resetType: announcement.resetType)
-        let detail = CodexResetPresentation.detail(resetType: announcement.resetType, absolute: absolute)
+        let typeLabel = CodexResetPresentation.typeLabel(resetType: announcement.resetType, bundle: bundle)
+        let detail = CodexResetPresentation.detail(
+            resetType: announcement.resetType, absolute: absolute, bundle: bundle
+        )
         let help = CodexResetPresentation.help(
-            resetType: announcement.resetType, announcement: announcement.text
+            resetType: announcement.resetType, announcement: announcement.text, bundle: bundle
         )
         return CodexResetCardLines(
             prediction: prediction,
@@ -368,7 +371,7 @@ struct CodexResetCardLines: Equatable, Sendable {
                 absolute: absolute,
                 detail: detail,
                 help: help,
-                spoken: CodexResetPresentation.spoken(relative: relative, detail: detail)
+                spoken: CodexResetPresentation.spoken(relative: relative, detail: detail, bundle: bundle)
             )
         )
     }
@@ -384,23 +387,25 @@ struct CodexResetCardLines: Equatable, Sendable {
         _ status: CodexResetStatus?,
         now: Date,
         locale: Locale,
-        calendar: Calendar
+        calendar: Calendar,
+        bundle: Bundle
     ) -> Prediction {
         switch status?.card {
         case .scheduled(let date):
-            guard date > now else { return noPrediction }
+            guard date > now else { return noPrediction(bundle: bundle) }
             let stamp = CodexResetPresentation.predictionStamp(
                 date: date, locale: locale, calendar: calendar
             )
-            let countdown = CodexResetPresentation.resets(relative: CodexResetPresentation.relative(
-                announcedAt: date, now: now, locale: locale
-            ))
+            let countdown = CodexResetPresentation.resets(
+                relative: CodexResetPresentation.relative(announcedAt: date, now: now, locale: locale),
+                bundle: bundle
+            )
             return Prediction(trailing: nil, countdown: countdown, bound: stamp, note: nil)
         case .watch(let watch):
             let note = CodexResetPresentation.context(
                 forecastWindow: watch.forecastWindow, text: watch.text
             )
-            let trailing = CodexResetPresentation.confidence(watch)
+            let trailing = CodexResetPresentation.confidence(watch, bundle: bundle)
             guard let ends = watch.windowEnds, ends > now else {
                 return Prediction(trailing: trailing, countdown: nil, bound: nil, note: note)
             }
@@ -412,19 +417,19 @@ struct CodexResetCardLines: Equatable, Sendable {
             )
             return Prediction(
                 trailing: trailing,
-                countdown: CodexResetPresentation.mayReset(relative: relative),
-                bound: CodexResetPresentation.expectedBefore(stamp),
+                countdown: CodexResetPresentation.mayReset(relative: relative, bundle: bundle),
+                bound: CodexResetPresentation.expectedBefore(stamp, bundle: bundle),
                 note: note
             )
         case .empty, nil:
-            return noPrediction
+            return noPrediction(bundle: bundle)
         }
     }
 
     /// What the prediction row says when it has no instant left to count to.
-    private static var noPrediction: Prediction {
+    private static func noPrediction(bundle: Bundle) -> Prediction {
         Prediction(
-            trailing: String.localized("No prediction yet"),
+            trailing: String(localized: "No prediction yet", bundle: bundle),
             countdown: nil,
             bound: nil,
             note: nil

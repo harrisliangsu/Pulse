@@ -7,8 +7,13 @@ import Testing
 /// The floating Token spend summary: its two-week chart, the money it may
 /// say, where the window sits, and that a cancelled read cannot publish.
 /// Synthetic ledgers only.
+///
+/// Sentence assertions name the English table. `String.localized` follows
+/// the process language, which another suite changes while these run.
 @Suite("Token spend glance")
 struct SpendGlanceTests {
+    private static let english = LocalizationSource.bundle(for: .english)
+    private static let englishLocale = Locale(identifier: "en_US")
     private static let calendar = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
@@ -250,16 +255,7 @@ struct SpendGlanceTests {
         let summary = SpendSummary.of([.codex: ledger], overLast: nil, now: Self.today, calendar: Self.calendar)
         #expect(summary.sessions.contains { $0.session.id.contains("/Users/ada") })
         let activity = SpendGlanceActivity.of([.codex: ledger], now: Self.today, calendar: Self.calendar)
-        let picture = SpendGlancePicture.make(
-            span: .week,
-            custom: Self.today...Self.today,
-            summary: summary,
-            activity: activity,
-            observedAt: nil,
-            hasReadLimitations: false,
-            now: Self.today,
-            calendar: Self.calendar
-        )
+        let picture = Self.picture(summary: summary, activity: activity)
         let drawn = picture.drawnText.joined(separator: "\n")
         #expect(!drawn.contains("/Users"))
         #expect(!drawn.contains("secret.jsonl"))
@@ -268,6 +264,184 @@ struct SpendGlanceTests {
         #expect(picture.agents.map(\.name) == ["Codex"])
         #expect(picture.bars.count == SpendGlance.activityDays)
         #expect(picture.brand == "Blinky")
-        #expect(picture.span == SpendSpan.week.title)
+        #expect(picture.span == "Last 7 days")
+    }
+
+    @Test("The poster always names Blinky, and leaves out an empty agents list and an empty chart")
+    func posterOmitsEmptySections() {
+        let empty = Self.picture()
+        #expect(empty.brand == "Blinky")
+        #expect(empty.drawnText.first == "Blinky")
+        #expect(empty.drawnText.last == "Blinky")
+        #expect(empty.span == "Last 7 days")
+        #expect(empty.tokens == "Nothing in this span")
+        #expect(empty.cost == nil)
+        #expect(empty.costNote == nil)
+        #expect(empty.agents.isEmpty)
+        #expect(empty.agentsTitle.isEmpty)
+        #expect(empty.bars.isEmpty)
+        #expect(empty.activityTitle.isEmpty)
+        #expect(empty.footnotes.isEmpty)
+        #expect(!empty.drawnText.contains("By agent"))
+        #expect(!empty.drawnText.contains("Last 14 days"))
+
+        var priced = SpendSummary()
+        priced.tokens = 8
+        priced.cost = 1
+        let noAgents = Self.picture(summary: priced)
+        #expect(noAgents.brand == "Blinky")
+        #expect(noAgents.tokens == "8 tokens")
+        #expect(noAgents.cost == SpendFormat.money(1, locale: Self.englishLocale) as String?)
+        #expect(noAgents.costNote == nil)
+        #expect(noAgents.agents.isEmpty)
+        #expect(!noAgents.drawnText.contains("By agent"))
+    }
+
+    @Test("A priced poster shows the span, the tokens, the cost, the agents, and fourteen bars")
+    func posterShowsThePricedSummary() {
+        let ledger = Self.ledger([Self.day(2, tokens: 10, cost: 1), Self.day(0, tokens: 30, cost: 2)])
+        let summary = SpendSummary.of([.codex: ledger], overLast: nil, now: Self.today, calendar: Self.calendar)
+        let activity = SpendGlanceActivity.of([.codex: ledger], now: Self.today, calendar: Self.calendar)
+        let picture = Self.picture(summary: summary, activity: activity)
+        #expect(summary.tokens == 40)
+        #expect(picture.brand == "Blinky")
+        #expect(picture.span == "Last 7 days")
+        #expect(picture.tokens == "40 tokens")
+        #expect(picture.cost == SpendFormat.money(summary.cost, locale: Self.englishLocale) as String?)
+        #expect(picture.costNote == nil)
+        #expect(picture.agentsTitle == "By agent")
+        #expect(picture.agents.map(\.name) == ["Codex"])
+        #expect(picture.agents.first?.tokens == "40")
+        #expect(picture.agents.first?.cost == SpendFormat.money(summary.cost, locale: Self.englishLocale) as String?)
+        #expect(picture.bars.contains { $0.tokens == nil })
+        #expect(picture.activityTitle == "Last 14 days")
+        #expect(picture.bars.count == SpendGlance.activityDays)
+        #expect(picture.bars.map(\.tokens) == activity.days.map(\.tokens))
+        #expect(picture.bars.map(\.share).max() == 1 as Double?)
+        #expect(picture.bars.filter { $0.tokens == nil }.allSatisfy { $0.share == 0 })
+        #expect(picture.drawnText.contains("By agent"))
+        #expect(picture.drawnText.contains("Last 14 days"))
+        #expect(picture.drawnText.first == "Blinky")
+        #expect(picture.drawnText.last == "Blinky")
+    }
+
+    @Test("The poster says when a cost is unavailable or only partial")
+    func posterNotesTheEstimate() {
+        var unavailable = SpendSummary()
+        unavailable.tokens = 20
+        unavailable.unpricedTokens = 20
+        unavailable.cost = 0
+        unavailable.agents = [.init(agent: .codex, tokens: 20, cost: 0, unpricedTokens: 20)]
+        let missing = Self.picture(summary: unavailable)
+        #expect(missing.brand == "Blinky")
+        #expect(missing.span == "Last 7 days")
+        #expect(missing.tokens == "20 tokens")
+        #expect(missing.cost == nil)
+        #expect(missing.costNote == "Estimate unavailable")
+        #expect(missing.agentsTitle == "By agent")
+        #expect(missing.agents.map(\.name) == ["Codex"])
+        #expect(missing.agents.first?.cost == nil)
+
+        var partial = SpendSummary()
+        partial.tokens = 20
+        partial.unpricedTokens = 5
+        partial.cost = 1.5
+        partial.agents = [.init(agent: .codex, tokens: 20, cost: 1.5, unpricedTokens: 5)]
+        let mixed = Self.picture(summary: partial)
+        let money = SpendFormat.money(1.5, locale: Self.englishLocale)
+        #expect(mixed.cost == money as String?)
+        #expect(mixed.costNote == "Partial estimate")
+        #expect(mixed.agents.first?.cost == "\(money)*" as String?)
+        #expect(mixed.brand == "Blinky")
+    }
+
+    @Test("The poster footnotes a partial count and a record it could not read")
+    func posterFootnotesLimits() {
+        let activity = SpendGlanceActivity.of(
+            [.codex: Self.ledger([Self.day(1, tokens: 12)], partial: true)],
+            now: Self.today,
+            calendar: Self.calendar
+        )
+        var summary = SpendSummary()
+        summary.tokens = 12
+        summary.cost = 1
+        let partialChart = Self.picture(summary: summary, activity: activity)
+        #expect(partialChart.bars.count == SpendGlance.activityDays)
+        #expect(partialChart.activityTitle == "Last 14 days")
+        #expect(partialChart.costNote == nil)
+        #expect(partialChart.footnotes == ["Counts may be incomplete."])
+        #expect(partialChart.brand == "Blinky")
+
+        var incomplete = summary
+        incomplete.hasPartialCounts = true
+        let both = Self.picture(
+            summary: incomplete,
+            activity: activity,
+            observedAt: Self.today,
+            limitations: true
+        )
+        #expect(both.costNote == "Partial estimate")
+        #expect(both.footnotes == [
+            "Updated just now",
+            "Counts may be incomplete.",
+            "Some compressed records could not be read.",
+        ])
+        #expect(both.drawnText.first == "Blinky")
+        #expect(both.drawnText.last == "Blinky")
+    }
+
+    @Test("The chart button exists only while reading is on, and off cannot open the summary")
+    @MainActor
+    func entryStaysClosedWhileReadingIsOff() async throws {
+        #expect(SpendGlance.showsEntry(reading: true, canOpen: true))
+        #expect(!SpendGlance.showsEntry(reading: false, canOpen: true))
+        #expect(!SpendGlance.showsEntry(reading: true, canOpen: false))
+        #expect(!SpendGlance.showsEntry(reading: false, canOpen: false))
+
+        let name = "pulse-spend-glance-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        let settings = AppSettings(readsTokenSpend: false, defaults: defaults)
+        let model = SpendGlanceModel(settings: settings)
+        model.isOpen = true
+        #expect(!model.loadKey.isEnabled)
+        #expect(model.summaryRequest == nil)
+        await model.load()
+        #expect(model.read.snapshot == nil)
+        #expect(!model.figuresReady)
+
+        settings.readsTokenSpend = true
+        model.isOpen = false
+        #expect(model.loadKey.isEnabled)
+        #expect(model.summaryRequest == nil)
+        await model.load()
+        #expect(model.read.snapshot == nil)
+        #expect(!model.figuresReady)
+
+        settings.readsTokenSpend = false
+        let controller = SpendGlanceController(settings: settings)
+        controller.toggle()
+        controller.show()
+        #expect(!controller.isOpen)
+    }
+
+    private static func picture(
+        summary: SpendSummary = SpendSummary(),
+        activity: SpendGlanceActivity = SpendGlanceActivity(),
+        observedAt: Date? = nil,
+        limitations: Bool = false
+    ) -> SpendGlancePicture {
+        SpendGlancePicture.make(
+            span: .week,
+            custom: today...today,
+            summary: summary,
+            activity: activity,
+            observedAt: observedAt,
+            hasReadLimitations: limitations,
+            now: today,
+            calendar: calendar,
+            locale: englishLocale,
+            bundle: english
+        )
     }
 }

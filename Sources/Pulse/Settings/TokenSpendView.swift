@@ -1069,19 +1069,24 @@ enum SpendSpan: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    var title: String {
+    var title: String { title(in: LocalizationSource.bundle) }
+
+    /// The same words from one language's table. The property follows the
+    /// app's current language; a test names the table so the runner's
+    /// language cannot change the sentence between two lookups.
+    func title(in bundle: Bundle) -> String {
         switch self {
         // Interpolate a string, never the integer: an `Int` in a localization
         // key produces `%lld`, which will not match a `%@` entry.
-        case .today: .localized("Today")
-        case .week: .localized("Last \("7") days")
-        case .month: .localized("Last \("30") days")
-        case .quarter: .localized("Last \("90") days")
-        case .thisMonth: .localized("This month")
-        case .lastMonth: .localized("Last month")
-        case .thisYear: .localized("This year")
-        case .all: .localized("All time")
-        case .custom: .localized("Custom range")
+        case .today: String(localized: "Today", bundle: bundle)
+        case .week: String(localized: "Last \("7") days", bundle: bundle)
+        case .month: String(localized: "Last \("30") days", bundle: bundle)
+        case .quarter: String(localized: "Last \("90") days", bundle: bundle)
+        case .thisMonth: String(localized: "This month", bundle: bundle)
+        case .lastMonth: String(localized: "Last month", bundle: bundle)
+        case .thisYear: String(localized: "This year", bundle: bundle)
+        case .all: String(localized: "All time", bundle: bundle)
+        case .custom: String(localized: "Custom range", bundle: bundle)
         }
     }
 }

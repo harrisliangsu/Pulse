@@ -25,6 +25,10 @@ final class SpendGlanceController {
         model = SpendGlanceModel(settings: settings)
     }
 
+    /// Whether the summary is open. False while reading is off: `show` and
+    /// `toggle` both leave it closed, and neither makes a window.
+    var isOpen: Bool { model.isOpen }
+
     func toggle() {
         guard settings.readsTokenSpend else {
             close()

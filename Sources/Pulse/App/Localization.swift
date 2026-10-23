@@ -96,6 +96,16 @@ enum LocalizationSource {
         }
     }
 
+    /// One language's strings, independent of `use(_:)`.
+    ///
+    /// A test that asserts a sentence has to name the language. Reading
+    /// `bundle` instead follows whatever another test set, and two lookups of
+    /// the same key can disagree.
+    static func bundle(for language: AppLanguage) -> Bundle {
+        guard let name = language.bundleName else { return .module }
+        return loadTable(named: name) ?? .module
+    }
+
     /// Finds a language's `.lproj` bundle.
     ///
     /// Resolved against the names the bundle itself reports rather than a

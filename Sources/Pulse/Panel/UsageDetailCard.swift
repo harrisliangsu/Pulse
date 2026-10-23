@@ -567,12 +567,19 @@ struct UsageDetailCard: View {
     ///
     /// Nonisolated: the glance image builds this string off the view, and a
     /// `View`'s methods are otherwise main-actor isolated.
-    nonisolated static func updatedText(_ date: Date, now: Date = Date()) -> String {
-        if now.timeIntervalSince(date) < 60 { return .localized("Updated just now") }
+    nonisolated static func updatedText(
+        _ date: Date,
+        now: Date = Date(),
+        locale: Locale = LocalizationSource.locale,
+        bundle: Bundle = LocalizationSource.bundle
+    ) -> String {
+        if now.timeIntervalSince(date) < 60 {
+            return String(localized: "Updated just now", bundle: bundle)
+        }
         let formatter = RelativeDateTimeFormatter()
-        formatter.locale = LocalizationSource.locale
+        formatter.locale = locale
         formatter.unitsStyle = .short
-        return .localized("Updated \(formatter.localizedString(for: date, relativeTo: now))")
+        return String(localized: "Updated \(formatter.localizedString(for: date, relativeTo: now))", bundle: bundle)
     }
 
     private static func resetText(_ window: UsageWindow) -> String {
@@ -924,7 +931,8 @@ struct UsageDetailCard: View {
                         Spacer(minLength: 0)
                     }
 
-                    if showsTokenSpend, let openTokenSpend {
+                    if SpendGlance.showsEntry(reading: showsTokenSpend, canOpen: openTokenSpend != nil),
+                       let openTokenSpend {
                         HeaderIconButton(
                             systemImage: "chart.bar",
                             label: String.localized("Token spend"),

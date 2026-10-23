@@ -35,7 +35,7 @@ The window is its own panel (`SpendGlanceController`), placed beside the rail on
 
 **Share copies an image, and nothing else.** One click draws the summary that is on screen (`SpendGlancePoster`, from `SpendGlancePicture`) and puts PNG and TIFF on the general pasteboard (`SpendGlanceExport`), the same two types as the recap. The image carries the span, the total, the cost when there is one, the agents, the 14 days, and the Blinky name. It does not include session titles, paths, or addresses, and it does not save a file. Share stays disabled until the span's figures are ready, so it cannot copy the empty summary still on screen while the arithmetic is in flight.
 
-`SpendGlanceTests`.
+`SpendGlanceTests` covers the read fences, the poster (Blinky, the span, the tokens, a cost or its note, agents only when the list has rows, fourteen bars, and the partial and compressed-record footnotes, with those sentences taken from the English table), and that reading off leaves no chart button and no open path.
 
 ## Pricing a model its own maker does not publish
 
