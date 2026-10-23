@@ -4,6 +4,11 @@ import Testing
 
 @Suite("Codex Resets status")
 struct CodexResetForecastTests {
+    /// Sentence templates, not the process language. Another suite calls
+    /// `LocalizationSource.use` while these run.
+    private static let english = LocalizationSource.bundle(for: .english)
+    private static let simplifiedChinese = LocalizationSource.bundle(for: .chineseSimplified)
+
     private let scheduledFor = "2026-09-24T18:30:00Z"
     private let expiresAt = "2026-09-23T12:00:00Z"
 
@@ -291,21 +296,26 @@ struct CodexResetForecastTests {
                 scheduled: nil,
                 watch: nil,
                 latest: .init(id: "id", resetType: type, announcedAt: announced, text: text)
-            )).latest
+            ), bundle: Self.english).latest
         }
 
-        let bankedHelp = try #require(CodexResetPresentation.help(resetType: "banked", announcement: nil))
+        let bankedHelp = try #require(CodexResetPresentation.help(
+            resetType: "banked", announcement: nil, bundle: Self.english
+        ))
         let banked = try #require(row(type: "banked", text: "We are loading a banked reset."))
         #expect(banked.help == bankedHelp)
         #expect(banked.help != "We are loading a banked reset.")
-        #expect(banked.typeLabel == CodexResetPresentation.typeLabel(resetType: "banked"))
+        #expect(banked.typeLabel == CodexResetPresentation.typeLabel(resetType: "banked", bundle: Self.english))
         #expect(banked.detail.contains(banked.typeLabel))
         #expect(banked.detail.contains(banked.absolute))
 
         #expect(row(type: "regular", text: "  Reset.  ")?.help == "Reset.")
         #expect(row(type: "regular", text: nil)?.help == nil)
         #expect(row(type: "regular", text: " \n ")?.help == nil)
-        #expect(row(type: "regular", text: "Reset.")?.typeLabel == CodexResetPresentation.typeLabel(resetType: "regular"))
+        #expect(row(type: "regular", text: "Reset.")?.typeLabel == CodexResetPresentation.typeLabel(
+            resetType: "regular", bundle: Self.english
+        ))
+        #expect(row(type: "regular", text: "Reset.")?.typeLabel == "Regular reset")
 
         let other = try #require(row(type: "surprise", text: "Something new."))
         #expect(other.help == "Something new.")
@@ -542,18 +552,24 @@ struct CodexResetForecastTests {
         var shanghai = Calendar(identifier: .gregorian)
         shanghai.timeZone = try #require(TimeZone(identifier: "Asia/Shanghai"))
         let zh = Locale(identifier: "zh_CN")
-        let lines = CodexResetCardLines.make(status, now: now, locale: zh, calendar: shanghai)
+        let lines = CodexResetCardLines.make(
+            status, now: now, locale: zh, calendar: shanghai, bundle: Self.simplifiedChinese
+        )
         let relative = CodexResetPresentation.relative(announcedAt: ends, now: now, locale: zh)
-        #expect(lines.prediction.countdown == CodexResetPresentation.mayReset(relative: relative))
+        #expect(lines.prediction.countdown == CodexResetPresentation.mayReset(
+            relative: relative, bundle: Self.simplifiedChinese
+        ))
         let stamp = CodexResetPresentation.predictionStamp(date: ends, locale: zh, calendar: shanghai)
-        #expect(lines.prediction.bound == CodexResetPresentation.expectedBefore(stamp))
+        #expect(lines.prediction.bound == CodexResetPresentation.expectedBefore(
+            stamp, bundle: Self.simplifiedChinese
+        ))
         #expect(lines.prediction.countdown?.contains(prose) == false)
         #expect(lines.prediction.countdown?.contains("DevDay") == false)
         #expect(lines.prediction.bound?.contains("DevDay") == false)
         #expect(lines.prediction.note == note)
         let watch = try #require(status.watch)
-        #expect(lines.prediction.trailing == CodexResetPresentation.confidence(watch))
-        #expect(lines.latest?.typeLabel == String.localized("Regular reset"))
+        #expect(lines.prediction.trailing == CodexResetPresentation.confidence(watch, bundle: Self.simplifiedChinese))
+        #expect(lines.latest?.typeLabel == "常规重置")
         #expect(stamp.contains("30"))
         #expect(stamp.contains("14") || stamp.contains("15") || stamp.contains("2"))
     }
@@ -618,21 +634,27 @@ struct CodexResetForecastTests {
         let en = Locale(identifier: "en_US")
         var utc = Calendar(identifier: .gregorian)
         utc.timeZone = try #require(TimeZone(secondsFromGMT: 0))
-        let lines = CodexResetCardLines.make(status, now: now, locale: en, calendar: utc)
+        let lines = CodexResetCardLines.make(
+            status, now: now, locale: en, calendar: utc, bundle: Self.english
+        )
         let enRelative = CodexResetPresentation.relative(announcedAt: ends, now: now, locale: en)
         #expect(enRelative == "in 21 hours")
-        #expect(lines.prediction.countdown == CodexResetPresentation.mayReset(relative: enRelative))
+        #expect(lines.prediction.countdown == CodexResetPresentation.mayReset(
+            relative: enRelative, bundle: Self.english
+        ))
         #expect(lines.prediction.countdown?.contains(prose) == false)
         #expect(lines.prediction.countdown?.contains("DevDay") == false)
         let enStamp = CodexResetPresentation.predictionStamp(date: ends, locale: en, calendar: utc)
-        #expect(lines.prediction.bound == CodexResetPresentation.expectedBefore(enStamp))
+        #expect(lines.prediction.bound == CodexResetPresentation.expectedBefore(enStamp, bundle: Self.english))
         #expect(lines.prediction.bound?.contains(prose) == false)
         #expect(lines.prediction.note == note)
         let watch = try #require(status.watch)
-        #expect(lines.prediction.trailing == CodexResetPresentation.confidence(watch))
+        #expect(lines.prediction.trailing == CodexResetPresentation.confidence(watch, bundle: Self.english))
         #expect(lines.prediction.countdown != lines.prediction.note)
 
-        let past = CodexResetCardLines.make(status, now: ends.addingTimeInterval(60), locale: en, calendar: utc)
+        let past = CodexResetCardLines.make(
+            status, now: ends.addingTimeInterval(60), locale: en, calendar: utc, bundle: Self.english
+        )
         #expect(past.prediction.countdown == nil)
         #expect(past.prediction.bound == nil)
         #expect(past.prediction.note == note)
@@ -646,12 +668,16 @@ struct CodexResetForecastTests {
             watch: .init(level: "elevated", chancePercent: 42, forecastWindow: "within 24h")
         )
         let now = Date(timeIntervalSince1970: 1_800_000_000)
-        let proseLines = CodexResetCardLines.make(proseOnly, now: now, locale: Locale(identifier: "en_US"))
+        let proseLines = CodexResetCardLines.make(
+            proseOnly, now: now, locale: Locale(identifier: "en_US"), bundle: Self.english
+        )
         #expect(proseLines.prediction.countdown == nil)
         #expect(proseLines.prediction.bound == nil)
         #expect(proseLines.prediction.note == "within 24h")
         let proseWatch = try #require(proseOnly.watch)
-        #expect(proseLines.prediction.trailing == CodexResetPresentation.confidence(proseWatch))
+        #expect(proseLines.prediction.trailing == CodexResetPresentation.confidence(
+            proseWatch, bundle: Self.english
+        ))
 
         let when = now.addingTimeInterval(21 * 3600)
         let scheduled = CodexResetStatus(
@@ -666,11 +692,14 @@ struct CodexResetForecastTests {
         )
         #expect(scheduled.explicitReset == when)
         #expect(scheduled.card == .scheduled(when))
-        let lines = CodexResetCardLines.make(scheduled, now: now, locale: Locale(identifier: "en_US"))
+        let lines = CodexResetCardLines.make(
+            scheduled, now: now, locale: Locale(identifier: "en_US"), bundle: Self.english
+        )
         let relative = CodexResetPresentation.relative(announcedAt: when, now: now, locale: Locale(identifier: "en_US"))
         #expect(relative == "in 21 hours")
-        #expect(lines.prediction.countdown == CodexResetPresentation.resets(relative: relative))
-        #expect(lines.prediction.countdown != CodexResetPresentation.mayReset(relative: relative))
+        #expect(lines.prediction.countdown == CodexResetPresentation.resets(relative: relative, bundle: Self.english))
+        #expect(lines.prediction.countdown != CodexResetPresentation.mayReset(relative: relative, bundle: Self.english))
+        #expect(lines.prediction.countdown == "Resets in 21 hours")
         #expect(lines.prediction.bound == CodexResetPresentation.predictionStamp(date: when, locale: Locale(identifier: "en_US")))
         #expect(lines.prediction.note == nil)
         #expect(lines.prediction.trailing == nil)
@@ -679,11 +708,12 @@ struct CodexResetForecastTests {
         let ago = CodexResetCardLines.make(
             CodexResetStatus(scheduled: .init(id: "old", scheduledFor: now.addingTimeInterval(-3600)), watch: nil),
             now: now,
-            locale: Locale(identifier: "en_US")
+            locale: Locale(identifier: "en_US"),
+            bundle: Self.english
         )
         #expect(ago.prediction.countdown == nil)
         #expect(ago.prediction.bound == nil)
-        #expect(ago.prediction.trailing == String.localized("No prediction yet"))
+        #expect(ago.prediction.trailing == "No prediction yet")
     }
 
     @Test("A cached watch from before the window end still decodes")
@@ -750,14 +780,20 @@ struct CodexResetForecastTests {
           }
         }
         """)))
-        let staleLines = CodexResetCardLines.make(stale, now: now, locale: zh, calendar: shanghai)
+        let staleLines = CodexResetCardLines.make(
+            stale, now: now, locale: zh, calendar: shanghai, bundle: Self.simplifiedChinese
+        )
         let relative = CodexResetPresentation.relative(announcedAt: scheduledFor, now: now, locale: zh)
-        #expect(staleLines.prediction.countdown == CodexResetPresentation.resets(relative: relative))
+        #expect(staleLines.prediction.countdown == CodexResetPresentation.resets(
+            relative: relative, bundle: Self.simplifiedChinese
+        ))
+        #expect(staleLines.prediction.countdown?.hasSuffix("重置") == true)
         #expect(staleLines.prediction.bound == CodexResetPresentation.predictionStamp(
             date: scheduledFor, locale: zh, calendar: shanghai
         ))
         #expect(staleLines.prediction.bound != CodexResetPresentation.expectedBefore(
-            CodexResetPresentation.predictionStamp(date: scheduledFor, locale: zh, calendar: shanghai)
+            CodexResetPresentation.predictionStamp(date: scheduledFor, locale: zh, calendar: shanghai),
+            bundle: Self.simplifiedChinese
         ))
         #expect(stale.latest?.announcedAt == CodexResetDates.parse("2026-10-11T04:01:00Z"))
 
@@ -776,12 +812,14 @@ struct CodexResetForecastTests {
           }
         }
         """)))
-        let freshLines = CodexResetCardLines.make(fresh, now: now, locale: zh, calendar: shanghai)
+        let freshLines = CodexResetCardLines.make(
+            fresh, now: now, locale: zh, calendar: shanghai, bundle: Self.simplifiedChinese
+        )
         #expect(fresh.card == .empty)
         #expect(fresh.explicitReset == nil)
         #expect(freshLines.prediction.countdown == nil)
         #expect(freshLines.prediction.bound == nil)
-        #expect(freshLines.prediction.trailing == String.localized("No prediction yet"))
+        #expect(freshLines.prediction.trailing == "暂无预测")
         #expect(freshLines.latest?.absolute == CodexResetPresentation.absolute(
             announcedAt: announced, locale: zh, calendar: shanghai
         ))
@@ -814,20 +852,26 @@ struct CodexResetForecastTests {
           }
         }
         """)))
-        let staleLines = CodexResetCardLines.make(stale, now: now, locale: zh, calendar: shanghai)
+        let staleLines = CodexResetCardLines.make(
+            stale, now: now, locale: zh, calendar: shanghai, bundle: Self.simplifiedChinese
+        )
         let relative = CodexResetPresentation.relative(announcedAt: scheduledFor, now: now, locale: zh)
-        #expect(staleLines.prediction.countdown == CodexResetPresentation.resets(relative: relative))
+        #expect(staleLines.prediction.countdown == CodexResetPresentation.resets(
+            relative: relative, bundle: Self.simplifiedChinese
+        ))
+        #expect(staleLines.prediction.countdown?.hasSuffix("重置") == true)
         #expect(staleLines.prediction.bound == CodexResetPresentation.predictionStamp(
             date: scheduledFor, locale: zh, calendar: shanghai
         ))
 
         let passed = CodexResetCardLines.make(
-            stale, now: scheduledFor.addingTimeInterval(60), locale: zh, calendar: shanghai
+            stale, now: scheduledFor.addingTimeInterval(60), locale: zh, calendar: shanghai,
+            bundle: Self.simplifiedChinese
         )
         #expect(passed.prediction.countdown == nil)
         #expect(passed.prediction.bound == nil)
-        #expect(passed.prediction.trailing == String.localized("No prediction yet"))
-        #expect(passed.latest?.typeLabel == String.localized("Regular reset"))
+        #expect(passed.prediction.trailing == "暂无预测")
+        #expect(passed.latest?.typeLabel == "常规重置")
 
         let announced = try #require(CodexResetDates.parse("2026-10-15T06:28:13.000Z"))
         let fresh = try #require(CodexResetStatus.parse(json("""
@@ -849,11 +893,12 @@ struct CodexResetForecastTests {
         let freshLines = CodexResetCardLines.make(
             fresh,
             now: announced.addingTimeInterval(6 * 60),
-            locale: Locale(identifier: "en_US")
+            locale: Locale(identifier: "en_US"),
+            bundle: Self.english
         )
         #expect(freshLines.prediction.countdown == nil)
         #expect(freshLines.prediction.bound == nil)
-        #expect(freshLines.prediction.trailing == String.localized("No prediction yet"))
+        #expect(freshLines.prediction.trailing == "No prediction yet")
         #expect(freshLines.latest?.relative == "6 minutes ago")
         #expect(fresh.predictionKey.isEmpty)
         #expect(stale.predictionKey != fresh.predictionKey)

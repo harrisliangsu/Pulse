@@ -59,16 +59,38 @@ struct BotMarkAttentionTests {
         return values[values.count / 2]
     }
 
+    /// When the pointer arrives.
+    ///
+    /// Three seconds is long enough for the opening blink and expression to
+    /// settle. Proud and eager are already in a state that spins (`proud`,
+    /// `happy`) when the first ambient gesture comes due, and that timer is
+    /// 2.5–5s, so a spin often projects the eyes during the 3–3.5s window —
+    /// about as far as the snap this measures, and often enough that a median
+    /// of twenty-one runs is not a stable filter. One second is after the
+    /// opening settle and before that gesture. The attention spring is the
+    /// same one either way.
+    static func arrivalTime(for persona: BotMarkPersona) -> Double {
+        switch persona {
+        case .proud, .eager: 1
+        default: 3
+        }
+    }
+
     /// Every persona but playful, whose gestures dart the eyes about thirty
     /// units in a frame on their own, pointer or not — a glance, and not
     /// something the pointer does. Measured when this was written: 30 to 60
-    /// units in a frame on arrival before the fix, 1 to 5 after. Proud's own
-    /// gestures dart too, in about one window in seven, which is why this is
-    /// a median of twenty-one runs rather than one.
+    /// units in a frame on arrival before the fix, 1 to 5 after. A median of
+    /// twenty-one runs, because a glance still moves the eyes a little.
     @Test("The eyes travel to the pointer rather than jump",
           arguments: BotMarkPersona.allCases.filter { $0 != .playful })
     func arrivalIsEased(persona: BotMarkPersona) {
-        let arriving = Self.median(21) { Self.worstGazeStep(persona: persona, pointer: CGPoint(x: 0.5, y: 0.2)) }
+        let arriving = Self.median(21) {
+            Self.worstGazeStep(
+                persona: persona,
+                pointer: CGPoint(x: 0.5, y: 0.2),
+                from: Self.arrivalTime(for: persona)
+            )
+        }
         #expect(arriving < 12, "\(persona)'s eyes moved \(arriving) units in one frame")
     }
 }

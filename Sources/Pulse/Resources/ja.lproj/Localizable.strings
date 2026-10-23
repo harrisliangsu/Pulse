@@ -552,6 +552,8 @@
 "Counting" = "集計方法";
 "Read from local records and exports, priced at models.dev's published rates." = "ローカルの記録と書き出しから読み取り、models.dev が公開する価格で換算します。";
 "Rescan" = "再スキャン";
+"Share this summary" = "共有";
+"%@ - %@" = "%@〜%@";
 "Total" = "合計";
 "Reading…" = "読み取り中…";
 "Nothing yet" = "まだ記録がありません";

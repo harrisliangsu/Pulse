@@ -543,6 +543,8 @@
 "Counting" = "Учитывать";
 "Read from local records and exports, priced at models.dev's published rates." = "Данные из локальных записей и экспортированных файлов по опубликованным ценам models.dev.";
 "Rescan" = "Пересканировать";
+"Share this summary" = "Поделиться";
+"%@ - %@" = "%@ — %@";
 "Total" = "Всего";
 "Reading…" = "Чтение…";
 "Nothing yet" = "Пока ничего";

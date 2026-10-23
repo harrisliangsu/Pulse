@@ -552,6 +552,8 @@
 "Counting" = "統計方式";
 "Read from local records and exports, priced at models.dev's published rates." = "讀取本機的記錄與匯出檔，並以 models.dev 公布的價格計價。";
 "Rescan" = "重新掃描";
+"Share this summary" = "分享";
+"%@ - %@" = "%@ 至 %@";
 "Total" = "合計";
 "Reading…" = "讀取中…";
 "Nothing yet" = "還沒有記錄";

@@ -222,6 +222,13 @@ struct UsageDetailCard: View {
     /// The panel is never key, so Settings and Quit on the menu bar extras
     /// are a hunt. These ride the card header: they take no extra height.
     var openSettings: (() -> Void)? = nil
+    /// Token spend summary. Shown only while reading is on, and only as a
+    /// click: hovering a ring still opens this card.
+    var showsTokenSpend = false
+    var openTokenSpend: (() -> Void)? = nil
+    /// The button's screen rect, so a click on it can toggle the summary
+    /// instead of counting as a click outside that window.
+    var onTokenSpendFrame: ((CGRect) -> Void)? = nil
     /// Codex Resets' public status. Nil until a fetch or the disk cache lands.
     /// The prediction row still says there is no prediction rather than
     /// leaving a hole. A latest announcement is a separate row under that.
@@ -557,12 +564,22 @@ struct UsageDetailCard: View {
     }
 
     /// "Updated 3 min ago".
-    static func updatedText(_ date: Date, now: Date = Date()) -> String {
-        if now.timeIntervalSince(date) < 60 { return .localized("Updated just now") }
+    ///
+    /// Nonisolated: the glance image builds this string off the view, and a
+    /// `View`'s methods are otherwise main-actor isolated.
+    nonisolated static func updatedText(
+        _ date: Date,
+        now: Date = Date(),
+        locale: Locale = LocalizationSource.locale,
+        bundle: Bundle = LocalizationSource.bundle
+    ) -> String {
+        if now.timeIntervalSince(date) < 60 {
+            return String(localized: "Updated just now", bundle: bundle)
+        }
         let formatter = RelativeDateTimeFormatter()
-        formatter.locale = LocalizationSource.locale
+        formatter.locale = locale
         formatter.unitsStyle = .short
-        return .localized("Updated \(formatter.localizedString(for: date, relativeTo: now))")
+        return String(localized: "Updated \(formatter.localizedString(for: date, relativeTo: now))", bundle: bundle)
     }
 
     private static func resetText(_ window: UsageWindow) -> String {
@@ -914,6 +931,17 @@ struct UsageDetailCard: View {
                         Spacer(minLength: 0)
                     }
 
+                    if SpendGlance.showsEntry(reading: showsTokenSpend, canOpen: openTokenSpend != nil),
+                       let openTokenSpend {
+                        HeaderIconButton(
+                            systemImage: "chart.bar",
+                            label: String.localized("Token spend"),
+                            action: openTokenSpend
+                        )
+                        .background(ScreenRectReporter { onTokenSpendFrame?($0) })
+                        .onDisappear { onTokenSpendFrame?(.null) }
+                    }
+
                     if let openSettings {
                         HeaderIconButton(
                             systemImage: "gearshape",
@@ -1103,6 +1131,46 @@ private struct CodexResetsLink: View {
             .accessibilityAction(.default) {
                 NSWorkspace.shared.open(CodexResetClient.site)
             }
+    }
+}
+
+/// The entry button's rectangle in screen coordinates, reported whenever it
+/// moves. The summary window treats a click inside it as the toggle.
+private struct ScreenRectReporter: NSViewRepresentable {
+    var onChange: (CGRect) -> Void
+
+    func makeNSView(context: Context) -> Reporter {
+        let view = Reporter()
+        view.onChange = onChange
+        return view
+    }
+
+    func updateNSView(_ view: Reporter, context: Context) {
+        view.onChange = onChange
+        view.publish()
+    }
+
+    final class Reporter: NSView {
+        var onChange: (CGRect) -> Void = { _ in }
+
+        override func layout() {
+            super.layout()
+            publish()
+        }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            publish()
+        }
+
+        func publish() {
+            guard let window else {
+                onChange(.null)
+                return
+            }
+            let rect = window.convertToScreen(convert(bounds, to: nil))
+            onChange(rect.insetBy(dx: -6, dy: -6))
+        }
     }
 }
 
