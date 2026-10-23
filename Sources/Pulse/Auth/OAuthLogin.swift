@@ -196,7 +196,7 @@ enum OAuthLogin {
 
         var message: String {
             switch self {
-            case .unsupported: .localized("This provider can't be signed in to from Pulse.")
+            case .unsupported: .localized("This provider can't be signed in to from Blinky.")
             case .portBusy: .localized("Finish or close the sign-in already running, then try again.")
             case .cancelled: .localized("Sign-in was cancelled.")
             case .timedOut: .localized("The browser didn't come back. If it showed an error, try again.")

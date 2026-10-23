@@ -12,11 +12,11 @@ struct ExtensionsSettingsView: View {
     /// Opens an extension's own pane.
     let open: (AccountKey) -> Void
 
-    static let guideURL = URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md")!
+    static let guideURL = URL(string: "https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/extensions.md")!
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            Text(localized: "An extension is a program you add yourself that reports one account's usage. Pulse draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials.")
+            Text(localized: "An extension is a program you add yourself that reports one account's usage. Blinky draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials.")
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -30,7 +30,7 @@ struct ExtensionsSettingsView: View {
                 SettingsRowDivider()
                 SettingsRow(
                     String.localized("Look again"),
-                    subtitle: String.localized("Pulse reads this folder when it starts. After adding or changing an extension, look again.")
+                    subtitle: String.localized("Blinky reads this folder when it starts. After adding or changing an extension, look again.")
                 ) {
                     Button(String.localized("Look again")) { settings.rescanExtensions() }
                 }
@@ -124,7 +124,7 @@ struct ExtensionProgramGroup: View {
             SettingsRowDivider()
             SettingsRow(
                 String.localized("Id"),
-                subtitle: String.localized("From its pulse-extension.json. Pulse keeps this extension's settings under it.")
+                subtitle: String.localized("From its pulse-extension.json. Blinky keeps this extension's settings under it.")
             ) {
                 Text(verbatim: pulseExtension.id)
                     .foregroundStyle(.secondary)

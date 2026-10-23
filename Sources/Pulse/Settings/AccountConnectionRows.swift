@@ -125,7 +125,7 @@ struct ServerAddressRow: View {
             String.localized("Server address"),
             subtitle: fields.serverAddressInvalid
                 ? String.localized("That address can't be used. It needs https://, unless the server is on your own network.")
-                : String.localized("Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else.")
+                : String.localized("Your own deployment's address, such as https://gateway.example.com. Blinky asks it for usage and sends nothing else.")
         ) {
             HStack(spacing: 8) {
                 TextField("", text: $fields.serverAddress)
@@ -178,7 +178,7 @@ struct BalanceBasisRow: View {
     private static func balanceBasisSubtitle(_ basis: BalanceBasis) -> String {
         switch basis {
         case .sinceTopUp:
-            .localized("How much of the balance Pulse last saw you top up to is gone.")
+            .localized("How much of the balance Blinky last saw you top up to is gone.")
         case .balanceOnly:
             .localized("The money left, with no ring. There is no allowance to measure against.")
         case .budget:

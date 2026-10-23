@@ -29,7 +29,7 @@ extension ProviderProfile {
         accessDescription: { .localized("Reads the Nous Portal login Hermes Agent saved in ~/.hermes. No Keychain prompt.") },
         soleRoute: {
             (String.localized("Hermes Agent's login"),
-             String.localized("Uses the login Hermes Agent already saved. Pulse never renews it."))
+             String.localized("Uses the login Hermes Agent already saved. Blinky never renews it."))
         },
         reportsSpendableBalance: true,
         spendingIsWatchedLocally: false,

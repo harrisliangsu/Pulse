@@ -73,11 +73,13 @@ final class AppUpdate {
 
     /// This fork's update files on GitHub. Upstream's `update.qunqin.org`
     /// mirror and the qunqin24 raw feed are not hosts here: every check reads
-    /// harrisliangsu/Pulse, and a failed check is not retried against anything else.
+    /// harrisliangsu/blinky-mac, and a failed check is not retried against anything else.
+    /// The repository was renamed from harrisliangsu/Pulse. A plist that still
+    /// names that old path is not a second feed; checks read blinky-mac.
     /// A constant string, so it can be the default of the nonisolated feed helpers
     /// below. On this `@MainActor` type an unmarked `static let` is isolated, and
     /// a default argument is evaluated off the actor.
-    nonisolated static let githubBase = "https://raw.githubusercontent.com/harrisliangsu/Pulse/main/"
+    nonisolated static let githubBase = "https://raw.githubusercontent.com/harrisliangsu/blinky-mac/main/"
 
     /// The feed for the language Pulse is set to, on this fork's GitHub files.
     ///
@@ -90,7 +92,7 @@ final class AppUpdate {
     /// Chinese and English; Japanese, Korean and Russian read the English.
     ///
     /// `base` defaults to this fork. A bundle's `SUFeedURL` is used only when
-    /// it already names harrisliangsu/Pulse on `raw.githubusercontent.com`, so
+    /// it already names harrisliangsu/blinky-mac on `raw.githubusercontent.com`, so
     /// a plist cannot point the app at upstream or at the mirror.
     nonisolated static func feedURL(for language: AppLanguage, base: String = githubBase) -> String {
         let file = switch language {
@@ -108,7 +110,7 @@ final class AppUpdate {
             let infoURL,
             let url = URL(string: infoURL),
             url.host == "raw.githubusercontent.com",
-            url.path.hasPrefix("/harrisliangsu/Pulse/")
+            url.path.hasPrefix("/harrisliangsu/blinky-mac/")
         else { return githubBase }
         let directory = url.deletingLastPathComponent().absoluteString
         return directory.hasSuffix("/") ? directory : directory + "/"

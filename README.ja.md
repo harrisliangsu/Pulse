@@ -1,8 +1,12 @@
 <p align="center">
-  <img src="AppIcon/pulse-icon-1024.png" width="112" alt="Pulse">
+  <img src="AppIcon/pulse-icon-1024.png" width="112" alt="Blinky">
 </p>
 
-<h1 align="center">Pulse</h1>
+<h1 align="center">Blinky</h1>
+
+<p align="center">
+  <b>Blinky</b> は Harris による macOS 向けフォークで、上流は <a href="https://github.com/qunqin24/Pulse">Pulse</a> です。iOS 版と同じ名前です。このリポジトリは上流の Pulse ではありません。
+</p>
 
 <p align="center">
   <b>使用量のページを開かなくても、Claude Code・Codex・Cursor の残りがわかる。</b><br>
@@ -10,19 +14,19 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harrisliangsu/Pulse/releases/latest"><img src="https://img.shields.io/badge/%E3%83%80%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%89-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS 版 Pulse をダウンロード"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/releases/latest"><img src="https://img.shields.io/badge/%E3%83%80%E3%82%A6%E3%83%B3%E3%83%AD%E3%83%BC%E3%83%89-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS 版 Blinky をダウンロード"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/harrisliangsu/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/harrisliangsu/Pulse?color=black" alt="最新リリース"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/releases/latest"><img src="https://img.shields.io/github/v/release/harrisliangsu/blinky-mac?color=black" alt="最新リリース"></a>
   <img src="https://img.shields.io/badge/macOS-14.0%2B%20Sonoma-333333?logo=apple" alt="macOS 14+">
-  <a href="https://github.com/harrisliangsu/Pulse/actions/workflows/ci.yml"><img src="https://github.com/harrisliangsu/Pulse/actions/workflows/ci.yml/badge.svg" alt="CI ビルド"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/actions/workflows/ci.yml"><img src="https://github.com/harrisliangsu/blinky-mac/actions/workflows/ci.yml/badge.svg" alt="CI ビルド"></a>
   <img src="https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white" alt="Swift 6.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="ライセンス"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/stargazers"><img src="https://img.shields.io/github/stars/harrisliangsu/Pulse?color=black" alt="GitHub スター"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/releases"><img src="https://img.shields.io/github/downloads/harrisliangsu/Pulse/total?color=black" alt="ダウンロード数"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/issues"><img src="https://img.shields.io/github/issues/harrisliangsu/Pulse?color=black" alt="オープンな Issue"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/commits/main"><img src="https://img.shields.io/github/last-commit/harrisliangsu/Pulse?color=black" alt="最終コミット"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/stargazers"><img src="https://img.shields.io/github/stars/harrisliangsu/blinky-mac?color=black" alt="GitHub スター"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/releases"><img src="https://img.shields.io/github/downloads/harrisliangsu/blinky-mac/total?color=black" alt="ダウンロード数"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/issues"><img src="https://img.shields.io/github/issues/harrisliangsu/blinky-mac?color=black" alt="オープンな Issue"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/commits/main"><img src="https://img.shields.io/github/last-commit/harrisliangsu/blinky-mac?color=black" alt="最終コミット"></a>
 </p>
 
 <p align="center">
@@ -30,39 +34,39 @@
 </p>
 
 <p align="center">
-  <img src="Docs/images/demo.gif" height="400" alt="画面の端に寄せた Pulse のフローティングレール">
+  <img src="Docs/images/demo.gif" height="400" alt="画面の端に寄せた Blinky のフローティングレール">
   &nbsp;&nbsp;
   <img src="Docs/images/panel.webp" height="400" alt="リングにポインタを乗せると、すべての上限とリセット時刻を並べたカードが開きます">
 </p>
 
 - **76 のサービスをひと目で**——Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Kiro、Grok、DeepSeek、Kimi Code など。それぞれに専用のリングがあります。
-- **Pulse のアカウントもサーバーもなし**——いまお使いのログインをそのまま使い、何も送り返しません。
+- **Blinky のアカウントもサーバーもなし**——いまお使いのログインをそのまま使い、何も送り返しません。
 - **表示するのは実際の数字だけ**——使用率はすべてサービス自身が報告した値です。数少ない推定値にはそう明記し、サービスが数字を出さないときは、推測せずにそのことを表示します。
 - **ネイティブで控えめ**——Swift と SwiftUI 製で、macOS 26 では Liquid Glass。画面の左・右・上、または下の Dock の横に寄せられ、使っていないときは細い線に畳まれます。メニューバーだけで使うこともできます。
 
-**最近の追加：** メニューバーでの使用量表示とアカウントごとのダッシュボード、リセット後に利用枠を自動で始める機能、動くボットのマーク。[更新内容](https://github.com/harrisliangsu/Pulse/releases/latest)。
+**最近の追加：** メニューバーでの使用量表示とアカウントごとのダッシュボード、リセット後に利用枠を自動で始める機能、動くボットのマーク。[更新内容](https://github.com/harrisliangsu/blinky-mac/releases/latest)。
 
 <p align="center">
-  <img src="Docs/images/bot-mark.gif" width="300" alt="Pulse のアニメーションマーク：各リングのボットがそのアカウントの状態に反応します">
+  <img src="Docs/images/bot-mark.gif" width="300" alt="Blinky のアニメーションマーク：各リングのボットがそのアカウントの状態に反応します">
 </p>
 
 <p align="center">
-  <sub>Pulse のおかげで突然の上限を避けられたなら、⭐ をもらえると、ほかの人にも見つけてもらいやすくなります。</sub>
+  <sub>Blinky のおかげで突然の上限を避けられたなら、⭐ をもらえると、ほかの人にも見つけてもらいやすくなります。</sub>
 </p>
 
 ---
 
 ## インストール
 
-1. [Releases](https://github.com/harrisliangsu/Pulse/releases/latest) から最新の **`Pulse-x.y.z.dmg`** をダウンロードします。
-2. ディスクイメージを開き、**Pulse** を `Applications` フォルダへドラッグします。
+1. [Releases](https://github.com/harrisliangsu/blinky-mac/releases/latest) から最新の **`Pulse-x.y.z.dmg`** をダウンロードします。
+2. ディスクイメージを開き、**Blinky** を `Applications` フォルダへドラッグします。ディスク上のファイル名は引き続き `Pulse.app` なので、更新は既にあるコピーを置き換えます。
 3. 初回起動時に監視するサービスを選びます。最初はすべて未選択で、**「完了」** を押してから認証情報を読み取り、使用量を確認します。選択画面を閉じると監視は始まりません。設定からサービスをオンにすることもできます。アップデート後も選択は保たれ、新たに対応したサービスが Mac に見つかった場合だけ、一度追加を尋ねます。
-4. Pulse はメニューバーに常駐します。メニューバーが混み合っている場合は、フローティングレール——または折りたたまれた細い帯——を右クリックし、**「設定…」** を選んでください。**設定 › 一般 › ショートカット** でグローバルショートカットを割り当てることもできます。
+4. Blinky はメニューバーに常駐します。メニューバーが混み合っている場合は、フローティングレール——または折りたたまれた細い帯——を右クリックし、**「設定…」** を選んでください。**設定 › 一般 › ショートカット** でグローバルショートカットを割り当てることもできます。
 
 > [!NOTE]
 > **macOS での初回起動（Gatekeeper）**：<br>
-> Pulse は Apple Developer 証明書を持たないオープンソースプロジェクトです。初回起動時に macOS がアプリをブロックすることがあります：
-> - **方法 1（GUI）**：Pulse を起動し、警告を閉じ、**システム設定 → プライバシーとセキュリティ** を開き、**このまま開く** をクリックします。
+> Blinky は Apple Developer 証明書を持たないオープンソースプロジェクトです。初回起動時に macOS がアプリをブロックすることがあります：
+> - **方法 1（GUI）**：Blinky を起動し、警告を閉じ、**システム設定 → プライバシーとセキュリティ** を開き、**このまま開く** をクリックします。
 > - **方法 2（ターミナル）**：
 >   ```bash
 >   xattr -cr /Applications/Pulse.app
@@ -122,9 +126,9 @@
 
 ## プライバシーとセキュリティ
 
-- **Pulse のアカウントもサーバーもなし**——あなたの Mac が、あなた自身のログインで、使っているサービスにつなぎます。
+- **Blinky のアカウントもサーバーもなし**——あなたの Mac が、あなた自身のログインで、使っているサービスにつなぎます。
 - **接続先は五つだけ、すべてここに**——それらのサービス、その公開ステータスページ、モデル価格の [models.dev](https://models.dev)、米ドル以外の通貨を選んだときだけの [ExchangeRate-API](https://www.exchangerate-api.com)、更新確認の GitHub/Sparkle。
-- **キーは暗号化してこの Mac に**。Pulse が読むローカルの使用記録も Mac の外には出ません。
+- **キーは暗号化してこの Mac に**。Blinky が読むローカルの使用記録も Mac の外には出ません。
 
 [詳細](Docs/features.md#privacy-and-security)（英語）。
 
@@ -132,12 +136,12 @@
 
 ## ソースからビルド
 
-Pulse はネイティブの Swift と SwiftUI でビルドされています。現在のソースをビルドするには、完全な **Xcode**（Command Line Tools ではなく）と **macOS 26 SDK** が必要です。アプリの動作要件は **macOS 14+** です。
+Blinky はネイティブの Swift と SwiftUI でビルドされています。現在のソースをビルドするには、完全な **Xcode**（Command Line Tools ではなく）と **macOS 26 SDK** が必要です。アプリの動作要件は **macOS 14+** です。
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/harrisliangsu/Pulse.git
-cd Pulse
+git clone https://github.com/harrisliangsu/blinky-mac.git
+cd blinky-mac
 
 # アプリバンドルをビルド
 ./Scripts/bundle.sh
@@ -158,18 +162,18 @@ open build.noindex/Pulse.app
 
 ## デザインの出典
 
-Pulse は 2026 年 8 月に [**Vinz**（@hivinz_）](https://x.com/hivinz_/status/2092996055248126353) が X で共有した UI コンセプトに着想を得ています。Pulse は独立した実装で、インタラクション、機能、アニメーション、視覚的な細部はすべて独自のものです。Vinz は Pulse と提携しておらず、責任も負いません。
+画面は [Pulse](https://github.com/qunqin24/Pulse) に基づいています。Pulse は 2026 年 8 月に [**Vinz**（@hivinz_）](https://x.com/hivinz_/status/2092996055248126353) が X で共有した UI コンセプトに着想を得た、独立した実装です。Blinky の Mac 版はそのフォークです。Vinz は Pulse および Blinky と提携しておらず、責任も負いません。
 
 ---
 
-## Pulse を応援する
+## 上流の作者を支援する
 
 <p align="center">
-  <sub>Pulse は無料のオープンソースで、余暇の時間で開発・更新しています。<br>突然のレート制限から救われたら、作者にコーヒーを一杯どうぞ。</sub>
+  <sub>Blinky の Mac 版は Pulse のフォークです。下のリンクは上流の作者のものです。</sub>
 </p>
 
 <p align="center">
-  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/Afdian-%E3%82%B3%E3%83%BC%E3%83%92%E3%83%BC%E3%82%92%E4%B8%80%E6%9D%AF-946CE6?style=for-the-badge" alt="Afdian で Pulse を応援"></a>
+  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/Afdian-%E3%82%B3%E3%83%BC%E3%83%92%E3%83%BC%E3%82%92%E4%B8%80%E6%9D%AF-946CE6?style=for-the-badge" alt="Afdian で上流の作者を支援"></a>
 </p>
 
 ---
@@ -182,10 +186,10 @@ Pulse は 2026 年 8 月に [**Vinz**（@hivinz_）](https://x.com/hivinz_/statu
 
 ## Star の推移
 
-<a href="https://star-history.com/#harrisliangsu/Pulse&Date">
+<a href="https://star-history.com/#harrisliangsu/blinky-mac&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/Pulse&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/Pulse&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=harrisliangsu/Pulse&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/blinky-mac&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/blinky-mac&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=harrisliangsu/blinky-mac&type=Date" />
   </picture>
 </a>

@@ -23,7 +23,7 @@ extension ProviderProfile {
         iconResource: "extension",
         credential: .apiKey(optional: true),
         accessDescription: { .localized("Uses a key entered in Settings, or reads the login the codebuff CLI saved in ~/.config/manicode. No Keychain prompt.") },
-        keySubtitle: { .localized("From codebuff.com. Optional — Pulse can use the login the codebuff CLI saved. Stored encrypted on this Mac.") },
+        keySubtitle: { .localized("From codebuff.com. Optional — Blinky can use the login the codebuff CLI saved. Stored encrypted on this Mac.") },
         setupSlug: "codebuff",
         discoveryPaths: [".config/manicode"],
         fetch: { await CodebuffUsageService.fetch($0) }

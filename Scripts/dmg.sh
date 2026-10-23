@@ -27,7 +27,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="$(tr -d '[:space:]' < VERSION)"
-VOLUME="Pulse"
+VOLUME="Blinky"
 STAGING="build.noindex/dmg"
 WRITABLE="build.noindex/pulse-rw.dmg"
 FINAL="build.noindex/Pulse-$VERSION.dmg"

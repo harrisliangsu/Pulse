@@ -81,7 +81,7 @@ enum ConnectionRemedy: Equatable {
     /// that share a service share a page too.
     static func helpURL(for provider: Provider) -> URL {
         if provider == .pulseExtension {
-            return URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md")!
+            return URL(string: "https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/extensions.md")!
         }
         let page: String
         if let written = provider.handWritten {
@@ -115,6 +115,6 @@ enum ConnectionRemedy: Equatable {
             page = provider.profile?.setupSlug ?? provider.rawValue
         }
         // Setup pages are the user-facing ones. They live in this fork.
-        return URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/setup/\(page).md")!
+        return URL(string: "https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/setup/\(page).md")!
     }
 }

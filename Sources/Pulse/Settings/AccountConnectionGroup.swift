@@ -83,8 +83,8 @@ struct AccountConnectionGroup: View {
                     String.localized("GitHub account"),
                     subtitle: signIn.githubError
                         ?? (credentials.savedKey.isEmpty
-                            ? String.localized("Opens GitHub's own page. Pulse asks to read your profile, nothing else.")
-                            : String.localized("Signed in. Pulse holds a read-only token for this Mac."))
+                            ? String.localized("Opens GitHub's own page. Blinky asks to read your profile, nothing else.")
+                            : String.localized("Signed in. Blinky holds a read-only token for this Mac."))
                 ) {
                     if signIn.githubTask != nil {
                         Button(String.localized("Cancel")) { signIn.endGitHubSignIn() }
@@ -337,7 +337,7 @@ struct AccountConnectionGroup: View {
         // Pulse can read, and this field is for anyone whose account is signed
         // in somewhere other than this Mac.
         case .commandCode:
-            .localized("From commandcode.ai. Optional — Pulse can use the login Command Code saved. Stored encrypted on this Mac.")
+            .localized("From commandcode.ai. Optional — Blinky can use the login Command Code saved. Stored encrypted on this Mac.")
         case .deepSeek:
             .localized("From platform.deepseek.com. Stored encrypted on this Mac.")
         // A group key from whoever runs the deployment, not an account
@@ -354,7 +354,7 @@ struct AccountConnectionGroup: View {
         // organisation and nothing on this Mac carries one. Optional, like
         // Volcengine's: without it Pulse reads the plan Devin's own app saved.
         case .devin:
-            .localized("A Bearer token from app.devin.ai, then a space, then your organization. Optional — Pulse can read what Devin's app saved. Stored encrypted on this Mac.")
+            .localized("A Bearer token from app.devin.ai, then a space, then your organization. Optional — Blinky can read what Devin's app saved. Stored encrypted on this Mac.")
         default:
             .localized("Stored encrypted on this Mac.")
         }

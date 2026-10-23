@@ -244,7 +244,7 @@ struct NotificationsPane: View {
             return .localized("Notifications need the bundled app.")
         }
         if settings.wantsAdvanceReminders, alerts.authorization == .denied {
-            return .localized("Turned off for Pulse in System Settings › Notifications.")
+            return .localized("Turned off for Blinky in System Settings › Notifications.")
         }
         return .localized("Before an explicit time from Codex Resets; a forecast with no time stays quiet.")
     }
@@ -271,7 +271,7 @@ struct NotificationsPane: View {
         }
 
         if settings.wantsAlerts, alerts.authorization == .denied {
-            return .localized("Turned off for Pulse in System Settings › Notifications.")
+            return .localized("Turned off for Blinky in System Settings › Notifications.")
         }
         return .localized("Notify when a limit passes this, and again when it is spent.")
     }

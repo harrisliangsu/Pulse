@@ -216,7 +216,7 @@ struct PlacementPane: View {
 
                 SettingsRow(
                     String.localized("Reset order"),
-                    subtitle: String.localized("Back to the order Pulse ships with.")
+                    subtitle: String.localized("Back to the order Blinky ships with.")
                 ) {
                     Button(String.localized("Reset")) { settings.resetOrder() }
                         .disabled(!settings.hasCustomOrder)

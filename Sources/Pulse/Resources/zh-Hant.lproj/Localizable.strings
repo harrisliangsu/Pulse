@@ -1,9 +1,9 @@
 /* Menu bar */
 "Settings…" = "設定…";
-"Quit Pulse" = "結束 Pulse";
+"Quit Blinky" = "結束 Blinky";
 
 /* Settings window */
-"Pulse Settings" = "Pulse 設定";
+"Blinky Settings" = "Blinky 設定";
 "Panel" = "面板";
 "Application" = "應用程式";
 "General" = "一般";
@@ -40,7 +40,7 @@
 "Copy diagnostics" = "複製診斷資訊";
 "Not recorded" = "尚無記錄";
 "Read cached usage" = "讀取用量快取";
-"Prints Pulse's saved readings, not the provider's original reply, without fetching or opening credentials." = "輸出 Pulse 已儲存的讀數，不是服務商的原始回覆；不會連網，也不存取憑證。";
+"Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials." = "輸出 Blinky 已儲存的讀數，不是服務商的原始回覆；不會連網，也不存取憑證。";
 "Copy command" = "複製指令";
 "Developer kit" = "開發者整合包";
 "Raycast extension, tmux and shell status, and a sketchybar plugin." = "包含 Raycast 擴充功能、tmux 和終端機裡的狀態顯示，以及 sketchybar 外掛。";
@@ -48,13 +48,13 @@
 "Installation guide" = "安裝指南";
 "Open an account" = "開啟帳號設定";
 "Account link" = "帳號連結";
-"Opens this account's settings in the installed Pulse app." = "在已安裝的 Pulse 中直接開啟這個帳號的設定。";
+"Opens this account's settings in the installed Blinky app." = "在已安裝的 Blinky 中直接開啟這個帳號的設定。";
 "Copy link" = "複製連結";
 "Open from terminal" = "從終端機開啟";
-"Keep Pulse running to update the cache. Every reading includes its age; an old reading is not a live check." = "讓 Pulse 保持執行才會更新快取。每筆讀數都附有時間，舊讀數不等於即時檢查。";
+"Keep Blinky running to update the cache. Every reading includes its age; an old reading is not a live check." = "讓 Blinky 保持執行才會更新快取。每筆讀數都附有時間，舊讀數不等於即時檢查。";
 "Integration files weren't found. Open the installation guide." = "找不到整合檔案，請開啟安裝指南。";
 "Export" = "匯出";
-"Pulse Integrations already exists here. Choose another folder." = "這個位置已經有 Pulse Integrations，請選擇其他資料夾。";
+"Blinky Integrations already exists here. Choose another folder." = "這個位置已經有 Blinky Integrations，請選擇其他資料夾。";
 "Integration files exported." = "整合檔案已匯出。";
 "Couldn't export integration files. Choose a writable folder." = "無法匯出整合檔案，請選擇可寫入的資料夾。";
 "Connected. Use Claude Code to send a new reading." = "已連接，使用 Claude Code 就會產生新的讀數。";
@@ -178,7 +178,7 @@
 
 
 /* Accessibility */
-"Pulse floating usage panel" = "Pulse 浮動用量面板";
+"Blinky floating usage panel" = "Blinky 浮動用量面板";
 "Provider usage selector" = "服務商用量選擇器";
 "%@ usage" = "%@ 用量";
 "%@ usage details" = "%@ 用量明細";
@@ -271,7 +271,7 @@
 "No history yet" = "尚無紀錄";
 "Nothing has been logged on this Mac yet, so there is no history to add up." = "本機上還沒有紀錄，無從統計。";
 "Token spend reading is off" = "「讀取本機用量記錄」未開啟";
-"This history comes from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "這一節依據這台 Mac 上的用量記錄統計。只有開啟「讀取本機用量記錄」後，Pulse 才會讀取這些記錄。";
+"This history comes from the usage records on this Mac, which Blinky reads only while Token spend reading is on." = "這一節依據這台 Mac 上的用量記錄統計。只有開啟「讀取本機用量記錄」後，Blinky 才會讀取這些記錄。";
 "Account total" = "帳號累計";
 
 /* Budget estimate */
@@ -317,7 +317,7 @@
 
 /* Launch at login */
 "Open at login" = "登入時啟動";
-"Start Pulse automatically when you log in." = "登入 macOS 後自動啟動 Pulse。";
+"Start Blinky automatically when you log in." = "登入 macOS 後自動啟動 Blinky。";
 "Waiting for approval in System Settings › General › Login Items." = "等待在「系統設定 › 一般 › 登入項目」中允許。";
 
 "Show Dock icon while Settings or a recap is open" = "開啟設定或月報、年報時顯示 Dock 圖示";
@@ -325,7 +325,7 @@
 
 /* 選單列圖示 */
 "Hide menu bar icon" = "隱藏選單列圖示";
-"Remove Pulse from the menu bar; use the panel menu or shortcut to open settings." = "從選單列移除 Pulse。要開啟設定，可用面板選單或快速鍵。";
+"Remove Blinky from the menu bar; use the panel menu or shortcut to open settings." = "從選單列移除 Blinky。要開啟設定，可用面板選單或快速鍵。";
 
 /* Liquid Glass */
 "Liquid Glass" = "液態玻璃";
@@ -354,11 +354,11 @@
 "Devin's own app" = "Devin 自己的應用程式";
 "Reads what Devin saved the last time it started." = "讀取 Devin 上次啟動時儲存的方案資訊。";
 "Asks Devin for your quota, with the token you entered." = "用你填入的 token 向 Devin 查詢額度。";
-"A Bearer token from app.devin.ai, then a space, then your organization. Optional — Pulse can read what Devin's app saved. Stored encrypted on this Mac." = "從 app.devin.ai 取得的 Bearer token，後面加一個空格，再填組織。可不填——此時 Pulse 會讀取 Devin 應用程式儲存的方案。加密儲存在本機。";
+"A Bearer token from app.devin.ai, then a space, then your organization. Optional — Blinky can read what Devin's app saved. Stored encrypted on this Mac." = "從 app.devin.ai 取得的 Bearer token，後面加一個空格，再填組織。可不填——此時 Blinky 會讀取 Devin 應用程式儲存的方案。加密儲存在本機。";
 "Grok Bot is billed to your Cursor account." = "Grok Bot 的額度算在你的 Cursor 帳號上。";
 "Uses the login Cursor already saved." = "使用 Cursor 儲存的登入資訊。";
 "Refresh" = "重新整理";
-"Pulse %@ is available" = "Pulse %@ 可更新";
+"Blinky %@ is available" = "Blinky %@ 可更新";
 "Check now" = "立即檢查";
 "Checking…" = "檢查中…";
 "Built from source — no update check." = "由原始碼建置，不檢查更新。";
@@ -401,7 +401,7 @@
 "That key was refused. Check it in Settings." = "這個金鑰被拒絕，請在設定中檢查。";
 "Claude Code's saved login expired. Use Claude Code, or connect the status line." = "Claude Code 儲存的登入已過期。請使用一次 Claude Code，或在設定中連接狀態列。";
 "Keep reading Claude Code's usage after its login expires?" = "登入過期後仍繼續讀取 Claude Code 的用量？";
-"Claude Code saves a login that lasts a few hours, and only Claude Code can renew it. It also reports your limits to whatever status line command is registered — Pulse can be that command, and then it keeps working whether the login is fresh or not.\n\nThis edits ~/.claude/settings.json and changes the status line at the bottom of your Claude Code sessions. Any status line you already have keeps working, and you can disconnect it in Settings." = "Claude Code 儲存的登入只有幾小時有效期，且只能由 Claude Code 續期。它還會把額度上報給註冊的狀態列命令——Pulse 可以擔任這個命令，此後無論登入是否有效，用量都能持續更新。\n\n此操作會修改 ~/.claude/settings.json，並改變 Claude Code 工作階段底部的狀態列。你已有的狀態列不受影響，隨時可以在設定中斷開連接。";
+"Claude Code saves a login that lasts a few hours, and only Claude Code can renew it. It also reports your limits to whatever status line command is registered — Blinky can be that command, and then it keeps working whether the login is fresh or not.\n\nThis edits ~/.claude/settings.json and changes the status line at the bottom of your Claude Code sessions. Any status line you already have keeps working, and you can disconnect it in Settings." = "Claude Code 儲存的登入只有幾小時有效期，且只能由 Claude Code 續期。它還會把額度上報給註冊的狀態列命令——Blinky 可以擔任這個命令，此後無論登入是否有效，用量都能持續更新。\n\n此操作會修改 ~/.claude/settings.json，並改變 Claude Code 工作階段底部的狀態列。你已有的狀態列不受影響，隨時可以在設定中斷開連接。";
 "Not now" = "以後再說";
 "Order" = "排序";
 "Add an API key in Settings." = "請在設定裡填入 API 金鑰。";
@@ -414,9 +414,9 @@
 "From bigmodel.cn. Stored encrypted on this Mac." = "在 bigmodel.cn 取得。加密儲存在本機。";
 "From platform.minimax.io. Stored encrypted on this Mac." = "在 platform.minimax.io 取得。加密儲存在本機。";
 "From platform.minimaxi.com. Stored encrypted on this Mac." = "在 platform.minimaxi.com 取得。加密儲存在本機。";
-"From commandcode.ai. Optional — Pulse can use the login Command Code saved. Stored encrypted on this Mac." = "在 commandcode.ai 取得。可不填——Pulse 也可以使用 Command Code 儲存的登入。加密儲存在本機。";
+"From commandcode.ai. Optional — Blinky can use the login Command Code saved. Stored encrypted on this Mac." = "在 commandcode.ai 取得。可不填——Blinky 也可以使用 Command Code 儲存的登入。加密儲存在本機。";
 "Couldn't connect the status line" = "無法連接狀態列";
-"~/.claude/settings.json couldn't be read, and Pulse won't overwrite a file it doesn't understand. Check it, then connect from Settings." = "無法讀取 ~/.claude/settings.json，而 Pulse 不會覆寫它看不懂的檔案。請檢查後，再到設定裡連接。";
+"~/.claude/settings.json couldn't be read, and Blinky won't overwrite a file it doesn't understand. Check it, then connect from Settings." = "無法讀取 ~/.claude/settings.json，而 Blinky 不會覆寫它看不懂的檔案。請檢查後，再到設定裡連接。";
 "Move %@ up" = "把 %@ 往上移";
 "Move %@ down" = "把 %@ 往下移";
 "Not shown" = "未顯示";
@@ -428,8 +428,8 @@
 "Sign in…" = "登入…";
 "Sign out" = "登出";
 "GitHub account" = "GitHub 帳號";
-"Opens GitHub's own page. Pulse asks to read your profile, nothing else." = "會開啟 GitHub 自己的頁面。Pulse 只要求讀取你的個人資料，不會要求其他權限。";
-"Signed in. Pulse holds a read-only token for this Mac." = "已登入。Pulse 在本機保存了一個唯讀權杖。";
+"Opens GitHub's own page. Blinky asks to read your profile, nothing else." = "會開啟 GitHub 自己的頁面。Blinky 只要求讀取你的個人資料，不會要求其他權限。";
+"Signed in. Blinky holds a read-only token for this Mac." = "已登入。Blinky 在本機保存了一個唯讀權杖。";
 "The browser didn't come back." = "瀏覽器沒有傳回結果。";
 "Cancel" = "取消";
 "Code" = "驗證碼";
@@ -446,14 +446,14 @@
 "Couldn't save the login on this Mac." = "無法在本機儲存登入資訊。";
 "Sign in to this account again in Settings." = "請在設定中重新登入這個帳號。";
 "Sign in from Settings to see usage." = "在設定中登入後就會看到用量。";
-"This provider can't be signed in to from Pulse." = "這個服務商無法從 Pulse 登入。";
+"This provider can't be signed in to from Blinky." = "這個服務商無法從 Blinky 登入。";
 "Finish or close the sign-in already running, then try again." = "請先完成或關閉正在進行的登入，然後再試一次。";
 "Sign-in was cancelled." = "登入已取消。";
 "The browser didn't come back. If it showed an error, try again." = "瀏覽器沒有傳回結果。如果頁面顯示了錯誤，請再試一次。";
 "This page can be closed." = "這個頁面可以關閉了。";
 "Sign-in failed. You can close this page." = "登入失敗，可以關閉這個頁面。";
-"Signed in. You can close this page and go back to Pulse." = "已登入，可以關閉頁面回到 Pulse 了。";
-"Read from each provider's own account. Pulse shows the figures they report; where it has to infer one, the figure itself says so." = "數據直接取自各服務商自己的帳號。Pulse 只顯示它們提供的數字；少數需要推算的，會在數字旁註明。";
+"Signed in. You can close this page and go back to Blinky." = "已登入，可以關閉頁面回到 Blinky 了。";
+"Read from each provider's own account. Blinky shows the figures they report; where it has to infer one, the figure itself says so." = "數據直接取自各服務商自己的帳號。Blinky 只顯示它們提供的數字；少數需要推算的，會在數字旁註明。";
 "Panel design inspired by Vinz's work shared on X." = "面板設計靈感來自 Vinz 在 X 上分享的作品。";
 "Open" = "開啟";
 "under 15 minutes" = "不到 15 分鐘";
@@ -468,7 +468,7 @@
 "Desktop app" = "桌面版";
 "Uses the session the Claude desktop app is signed in with." = "使用 Claude 桌面版已登入的工作階段。";
 "Sign in to the Claude desktop app to see usage." = "登入 Claude 桌面版後就會看到用量。";
-"Pulse needs your keychain to read the Claude desktop app's session. Refresh to be asked again." = "Pulse 需要鑰匙圈權限才能讀取 Claude 桌面版的工作階段。按重新整理可以再問一次。";
+"Blinky needs your keychain to read the Claude desktop app's session. Refresh to be asked again." = "Blinky 需要鑰匙圈權限才能讀取 Claude 桌面版的工作階段。按重新整理可以再問一次。";
 "The Claude desktop app's session was refused. Open it and sign in again." = "Claude 桌面版的工作階段被拒絕。請開啟它重新登入。";
 
 /* Notifications */
@@ -476,7 +476,7 @@
 "Off" = "關閉";
 "Warn at" = "提醒門檻";
 "Notify when a limit passes this, and again when it is spent." = "額度超過這個比例時提醒一次，用盡時再提醒一次。";
-"Turned off for Pulse in System Settings › Notifications." = "已在「系統設定 › 通知」中關閉 Pulse 的通知。";
+"Turned off for Blinky in System Settings › Notifications." = "已在「系統設定 › 通知」中關閉 Blinky 的通知。";
 "Notifications need the bundled app." = "通知僅在打包後的應用程式中可用。";
 "When a limit comes back" = "額度恢復時";
 "After it turns over, and only for one you were warned about." = "額度轉過之後才提醒，且僅限先前預警過的。";
@@ -498,7 +498,7 @@
 
 /* Resetting the rail order */
 "Reset order" = "重設排序";
-"Back to the order Pulse ships with." = "回到 Pulse 預設的排列。";
+"Back to the order Blinky ships with." = "回到 Blinky 預設的排列。";
 "Reset" = "重設";
 
 /* Volcengine / Volcengine Ark */
@@ -525,8 +525,8 @@
 "A ring for each model group" = "每個模型群組各一個圓環";
 "Gemini and the third-party models draw on separate allowances. One ring can only follow the busier of the two." = "Gemini 與第三方模型使用各自獨立的額度，一個圓環只能反映其中用得多的那一邊。";
 "%@ didn't answer, so there is nothing to chart yet. Try again in a moment." = "%@ 沒有回應，目前沒有可顯示的圖表。請稍後再試。";
-"Add a key above and Pulse can read this account's history." = "在上方填入金鑰，Pulse 就能讀取這個帳號的用量記錄。";
-"This account is switched off, so Pulse hasn't asked for its history." = "這個帳號已關閉，Pulse 沒有讀取它的用量記錄。";
+"Add a key above and Blinky can read this account's history." = "在上方填入金鑰，Blinky 就能讀取這個帳號的用量記錄。";
+"This account is switched off, so Blinky hasn't asked for its history." = "這個帳號已關閉，Blinky 沒有讀取它的用量記錄。";
 "Since top-up" = "自上次儲值";
 "Balance only" = "只看餘額";
 "My budget" = "我的預算";
@@ -534,7 +534,7 @@
 "of your budget" = "佔你的預算";
 "Full tank" = "滿額基準";
 "What you call a full balance. The ring measures against it." = "你認為餘額多少算滿，圓環就以這個數為基準。";
-"How much of the balance Pulse last saw you top up to is gone." = "自 Pulse 上次看到你儲值以來，已經用掉多少。";
+"How much of the balance Blinky last saw you top up to is gone." = "自 Blinky 上次看到你儲值以來，已經用掉多少。";
 "How much of the figure you set is gone." = "你設定的金額已經用掉多少。";
 "From platform.deepseek.com. Stored encrypted on this Mac." = "在 platform.deepseek.com 取得。加密儲存在本機。";
 "Balance" = "餘額";
@@ -646,17 +646,17 @@
 "Kimi Code's saved login expired. Sign in again in Settings." = "Kimi Code 存的登入已過期。請在設定裡重新登入。";
 "Light" = "淺色";
 "No Qoder session found. Sign in at qoder.com first." = "找不到 Qoder 的登入資訊，請先在 qoder.com 登入。";
-"Opens Kimi Code's own page. Pulse only reads usage." = "會開啟 Kimi Code 自己的頁面。Pulse 只讀取用量。";
+"Opens Kimi Code's own page. Blinky only reads usage." = "會開啟 Kimi Code 自己的頁面。Blinky 只讀取用量。";
 "Reads Qoder Credits from the signed-in account page." = "從已登入的 Qoder 帳號頁讀取 Credits。";
 "Sign in to Kimi Code in Settings, or paste an API key." = "在設定裡登入 Kimi Code，或貼上 API key。";
-"Signed in. Pulse holds a login for this Mac." = "已登入。Pulse 在本機保存了這份登入。";
+"Signed in. Blinky holds a login for this Mac." = "已登入。Blinky 在本機保存了這份登入。";
 "Signed in. The API key in Connection is used instead." = "已登入。Connection 裡的 API key 會優先使用。";
 "Signed-in account" = "已登入的帳號";
 "The Qoder session expired. Sign in again and add it." = "Qoder 的登入已過期，請重新登入後再新增。";
 "Tiny" = "極小";
 "Token or session" = "令牌或登入工作階段";
 "Use the signed-in account when possible, the API key when not." = "能登入就走登入，否則用 API key。";
-"Uses the Kimi Code login Pulse holds." = "使用 Pulse 保存的 Kimi Code 登入。";
+"Uses the Kimi Code login Blinky holds." = "使用 Blinky 保存的 Kimi Code 登入。";
 /* Xiaomi Coding Plan */
 "No Xiaomi session found. Sign in at platform.xiaomimimo.com first." = "找不到小米的登入資訊，請先在 platform.xiaomimimo.com 登入。";
 "Sign in to Xiaomi's platform in a browser to see usage." = "在瀏覽器登入小米開放平台後才能看到用量。";
@@ -671,12 +671,12 @@
 "Follow System" = "跟隨系統";
 "System Proxy Only" = "使用代理";
 "Custom Proxy" = "自訂代理";
-"Pulse connects directly and ignores the proxy in macOS settings." = "Pulse 直接連線，不使用 macOS 設定中的代理。";
+"Blinky connects directly and ignores the proxy in macOS settings." = "Blinky 直接連線，不使用 macOS 設定中的代理。";
 "Uses the proxy in macOS settings, or connects directly when there is none." = "使用 macOS 設定中的代理；未設定代理時直接連線。";
 "Uses the proxy in macOS settings, and doesn't connect when there is none." = "使用 macOS 設定中的代理；未開啟代理時不連網。";
-"A proxy for Pulse only." = "只為 Pulse 指定代理。";
-"macOS has no proxy switched on, so Pulse isn't connecting." = "macOS 目前沒有開啟代理，Pulse 暫不連網。";
-"No proxy is switched on in macOS, so Pulse didn't connect." = "macOS 沒有開啟代理，Pulse 未連網。";
+"A proxy for Blinky only." = "只為 Blinky 指定代理。";
+"macOS has no proxy switched on, so Blinky isn't connecting." = "macOS 目前沒有開啟代理，Blinky 暫不連網。";
+"No proxy is switched on in macOS, so Blinky didn't connect." = "macOS 沒有開啟代理，Blinky 未連網。";
 "Type" = "類型";
 "HTTP" = "HTTP";
 "SOCKS5" = "SOCKS5";
@@ -691,28 +691,28 @@
 "Choose services to monitor" = "選擇要監控的服務";
 "Choose services to start monitoring…" = "選擇服務，開始監控…";
 "New services detected" = "找到新支援的服務";
-"Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "請至少勾選一項服務。按「完成」後，Pulse 才會讀取所選服務的登入資訊並查詢用量。之後可以在設定中更改。";
+"Choose at least one service. Blinky reads its login and checks usage only after you finish. You can change this later in Settings." = "請至少勾選一項服務。按「完成」後，Blinky 才會讀取所選服務的登入資訊並查詢用量。之後可以在設定中更改。";
 "This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "此版本新增支援了在你的 Mac 上找到的更多服務。勾選想加入的服務即可，已有選擇會保留。";
 "Detected on this Mac" = "已在這部 Mac 上找到";
 "Select detected services" = "選擇已找到的服務";
 "Done" = "完成";
 "Enable a service in its settings to start monitoring." = "在服務的設定頁中開啟，即可開始監控。";
 "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "讀取 Claude Code 存在鑰匙圈或憑證檔案中的登入資訊。可能要求鑰匙圈存取權限，其中包括 Claude 桌面版的 cookie 儲存空間。";
-"Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "讀取 ~/.codex/auth.json，也可能啟動 codex app-server 使用已儲存的登入。Pulse 不會要求鑰匙圈存取權限。";
-"Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Pulse does not request Keychain access." = "連線至執行中的編輯器，讀取本機語言伺服器的用量與連線權杖；或啟動 agy CLI，使用它已儲存的登入。Pulse 不會要求鑰匙圈存取權限。";
+"Reads ~/.codex/auth.json and may run codex app-server with its saved login. Blinky does not request Keychain access." = "讀取 ~/.codex/auth.json，也可能啟動 codex app-server 使用已儲存的登入。Blinky 不會要求鑰匙圈存取權限。";
+"Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Blinky does not request Keychain access." = "連線至執行中的編輯器，讀取本機語言伺服器的用量與連線權杖；或啟動 agy CLI，使用它已儲存的登入。Blinky 不會要求鑰匙圈存取權限。";
 "Reads the login saved in Cursor's local database. No Keychain prompt." = "讀取 Cursor 本機資料庫中儲存的登入資訊。不會出現鑰匙圈提示。";
 "Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "讀取 ~/.grok/auth.json 中儲存的登入資訊。不會出現鑰匙圈提示。";
 "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取 OpenCode 的 auth.json。不會出現鑰匙圈提示。";
 "Uses a key entered in Settings, or reads the saved GLM key files. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取本機儲存的 GLM 金鑰檔案。不會出現鑰匙圈提示。";
 "Uses a key entered in Settings, or reads ~/.commandcode/auth.json. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取 ~/.commandcode/auth.json。不會出現鑰匙圈提示。";
 "Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan." = "讀取本機 Chromium 瀏覽器中 Devin 網頁版的登入資訊，無需額外授權；也可能讀取桌面版儲存的方案。";
-"Runs arkcli with its saved login, or uses access keys entered in Settings. Pulse does not request Keychain access." = "啟動 arkcli 使用已儲存的登入，或使用在設定中輸入的存取金鑰。Pulse 不會要求鑰匙圈存取權限。";
+"Runs arkcli with its saved login, or uses access keys entered in Settings. Blinky does not request Keychain access." = "啟動 arkcli 使用已儲存的登入，或使用在設定中輸入的存取金鑰。Blinky 不會要求鑰匙圈存取權限。";
 "Kiro CLI ACP" = "Kiro CLI ACP";
 "Uses Kiro CLI's signed-in session without reading its credentials." = "沿用 Kiro CLI 已登入的狀態，不讀取它的憑證。";
 "Kiro CLI isn't installed." = "尚未安裝 Kiro CLI。";
 "Update Kiro CLI to read subscription usage." = "請更新 Kiro CLI 以讀取訂閱用量。";
 "Sign in to Kiro CLI to see usage." = "請先登入 Kiro CLI 以查看用量。";
-"Runs Kiro CLI's native ACP usage method with its saved login. Pulse does not read or store Kiro credentials." = "呼叫 Kiro CLI 內建的 ACP 用量功能，沿用它已儲存的登入。Pulse 不會讀取也不會儲存 Kiro 憑證。";
+"Runs Kiro CLI's native ACP usage method with its saved login. Blinky does not read or store Kiro credentials." = "呼叫 Kiro CLI 內建的 ACP 用量功能，沿用它已儲存的登入。Blinky 不會讀取也不會儲存 Kiro 憑證。";
 "Asks Kiro CLI over ACP, using the login it already saved." = "透過 ACP 向 Kiro CLI 查詢，沿用它已儲存的登入。";
 "Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "使用你在設定中匯入的瀏覽器登入資訊。匯入時可能要求瀏覽器的鑰匙圈存取權限。";
 "Uses the GitHub login you connect in Settings. No Keychain prompt." = "使用你在設定中連結的 GitHub 登入。不會出現鑰匙圈提示。";
@@ -759,7 +759,7 @@
 "Sends the key you enter only to the server address you enter. No Keychain prompt." = "僅把你輸入的金鑰傳送到你輸入的伺服器位址。不會出現鑰匙圈提示。";
 "A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac." = "來自你的 sub2api 部署的群組 API 金鑰。僅傳送到上方的位址。加密儲存在本機。";
 "A Personal Access Token from v2ex.com. Stored encrypted on this Mac." = "在 v2ex.com 產生的個人存取權杖。加密儲存在本機。";
-"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "自建閘道的位址，例如 https://gateway.example.com。Pulse 只向它查詢用量，不會送出其他任何資料。";
+"Your own deployment's address, such as https://gateway.example.com. Blinky asks it for usage and sends nothing else." = "自建閘道的位址，例如 https://gateway.example.com。Blinky 只向它查詢用量，不會送出其他任何資料。";
 "The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "你的 AI 用戶端連接此閘道所用的金鑰。僅傳送到上方的位址。加密儲存在本機。";
 "Credit allowance" = "點數額度";
 "Team credits" = "團隊共享點數";
@@ -795,7 +795,7 @@
 "No StepFun session found. Sign in at %@ first." = "找不到階躍星辰的登入資訊，請先在 %@ 登入。";
 
 /* Extensions */
-"An extension is a program you add yourself that reports one account's usage. Pulse draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials." = "擴充功能是你自己加入的程式，用來回報某一個帳號的用量，Pulse 會把它輸出的資料畫成圓環。只有你開啟後 Pulse 才會執行它，也不會交給它任何登入憑證。";
+"An extension is a program you add yourself that reports one account's usage. Blinky draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials." = "擴充功能是你自己加入的程式，用來回報某一個帳號的用量，Blinky 會把它輸出的資料畫成圓環。只有你開啟後 Blinky 才會執行它，也不會交給它任何登入憑證。";
 "Another extension already uses the id %@." = "另一個擴充功能已經在用 ID「%@」。";
 "Couldn't be used" = "無法使用";
 "Each extension is a folder of its own, holding pulse-extension.json and its program." = "每個擴充功能各自一個資料夾，裡面放 pulse-extension.json 和它的程式。";
@@ -805,7 +805,7 @@
 "Extensions folder" = "擴充功能資料夾";
 "Folder" = "資料夾";
 "Found" = "已找到";
-"From its pulse-extension.json. Pulse keeps this extension's settings under it." = "來自它的 pulse-extension.json。Pulse 用這個 ID 儲存這個擴充功能的設定。";
+"From its pulse-extension.json. Blinky keeps this extension's settings under it." = "來自它的 pulse-extension.json。Blinky 用這個 ID 儲存這個擴充功能的設定。";
 "How to write an extension" = "如何撰寫擴充功能";
 "Id" = "ID";
 "Its id must be lowercase letters, digits, dots, dashes or underscores, 64 at most." = "ID 只能使用小寫字母、數字、句點、連字號和底線，最多 64 個字元。";
@@ -818,8 +818,8 @@
 "No pulse-extension.json in this folder." = "這個資料夾裡沒有 pulse-extension.json。";
 "None yet" = "還沒有";
 "Program" = "程式";
-"Pulse reads this folder when it starts. After adding or changing an extension, look again." = "Pulse 在啟動時讀取這個資料夾。加入或修改擴充功能後，請按「重新尋找」。";
-"Runs a program from your extensions folder on the refresh schedule. Pulse passes it no credentials; what it reads and where it connects are up to the program." = "每次更新時執行擴充功能資料夾裡的這個程式。Pulse 不會交給它任何憑證；它讀取什麼、連線到哪裡，由程式自己決定。";
+"Blinky reads this folder when it starts. After adding or changing an extension, look again." = "Blinky 在啟動時讀取這個資料夾。加入或修改擴充功能後，請按「重新尋找」。";
+"Runs a program from your extensions folder on the refresh schedule. Blinky passes it no credentials; what it reads and where it connects are up to the program." = "每次更新時執行擴充功能資料夾裡的這個程式。Blinky 不會交給它任何憑證；它讀取什麼、連線到哪裡，由程式自己決定。";
 "Show in Finder" = "在 Finder 中顯示";
 "Shown in the panel" = "已在面板中顯示";
 "Stopped if it hasn't answered by then." = "超過這個時間還沒有回傳結果，就會被停止。";
@@ -828,7 +828,7 @@
 "The extension stopped with an error." = "擴充功能執行出錯，已結束。";
 "This extension's program can't be run. Check its folder." = "無法執行這個擴充功能的程式，請檢查它的資料夾。";
 "Time limit" = "時間限制";
-"Written for extension schema %@, which this version of Pulse doesn't read." = "依擴充功能格式第 %@ 版撰寫，目前版本的 Pulse 無法讀取。";
+"Written for extension schema %@, which this version of Blinky doesn't read." = "依擴充功能格式第 %@ 版撰寫，目前版本的 Blinky 無法讀取。";
 "pulse-extension.json isn't valid JSON, or is missing a field." = "pulse-extension.json 不是有效的 JSON，或者缺少必填欄位。";
 "%@. Lowest %@, highest %@." = "%@。最低 %@，最高 %@。";
 
@@ -853,7 +853,7 @@
 
 /* Kilo Code */
 "Uses a key entered in Settings, or reads ~/.local/share/kilo/auth.json. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取 ~/.local/share/kilo/auth.json。不會出現鑰匙圈提示。";
-"From app.kilo.ai. Optional — Pulse can use the login the Kilo CLI saved. Stored encrypted on this Mac." = "在 app.kilo.ai 取得。可不填——Pulse 也可以使用 Kilo CLI 儲存的登入。加密儲存在本機。";
+"From app.kilo.ai. Optional — Blinky can use the login the Kilo CLI saved. Stored encrypted on this Mac." = "在 app.kilo.ai 取得。可不填——Blinky 也可以使用 Kilo CLI 儲存的登入。加密儲存在本機。";
 
 /* Mistral */
 /* Factory */
@@ -929,12 +929,12 @@
 
 /* Alibaba Token Plan */
 "Bailian CLI" = "百鍊 CLI";
-"Runs the Bailian CLI (bl) with its saved login. Pulse does not read or store its credentials." = "執行百鍊 CLI（bl），沿用它已儲存的登入。Pulse 不會讀取或儲存其中的憑證。";
+"Runs the Bailian CLI (bl) with its saved login. Blinky does not read or store its credentials." = "執行百鍊 CLI（bl），沿用它已儲存的登入。Blinky 不會讀取或儲存其中的憑證。";
 "Uses the login the Bailian CLI already saved." = "使用百鍊 CLI 儲存的登入資訊。";
 /* Nous Portal */
 "Reads the Nous Portal login Hermes Agent saved in ~/.hermes. No Keychain prompt." = "讀取 Hermes Agent 儲存在 ~/.hermes 中的 Nous Portal 登入資訊。不會出現鑰匙圈提示。";
 "Hermes Agent's login" = "Hermes Agent 的登入資訊";
-"Uses the login Hermes Agent already saved. Pulse never renews it." = "使用 Hermes Agent 儲存的登入資訊。Pulse 不會替它續期。";
+"Uses the login Hermes Agent already saved. Blinky never renews it." = "使用 Hermes Agent 儲存的登入資訊。Blinky 不會替它續期。";
 
 /* Hugging Face */
 "Uses a token entered in Settings, or reads the one hf auth login saved in ~/.cache/huggingface. No Keychain prompt." = "使用在設定中輸入的 token，或讀取 hf auth login 儲存在 ~/.cache/huggingface 中的 token。不會出現鑰匙圈提示。";
@@ -945,7 +945,7 @@
 
 /* Codebuff */
 "Uses a key entered in Settings, or reads the login the codebuff CLI saved in ~/.config/manicode. No Keychain prompt." = "使用在設定中輸入的金鑰，或讀取 codebuff CLI 儲存在 ~/.config/manicode 中的登入資訊。不會出現鑰匙圈提示。";
-"From codebuff.com. Optional — Pulse can use the login the codebuff CLI saved. Stored encrypted on this Mac." = "在 codebuff.com 取得。可不填——Pulse 也可以使用 codebuff CLI 儲存的登入。加密儲存在本機。";
+"From codebuff.com. Optional — Blinky can use the login the codebuff CLI saved. Stored encrypted on this Mac." = "在 codebuff.com 取得。可不填——Blinky 也可以使用 codebuff CLI 儲存的登入。加密儲存在本機。";
 
 /* Venice */
 "From venice.ai's API settings. Stored encrypted on this Mac." = "在 venice.ai 的 API 設定中取得。加密儲存在本機。";
@@ -998,7 +998,7 @@
 "Last started" = "上次自動開始";
 "Use at your own risk" = "請自行承擔風險";
 "I understand the risk, turn it on" = "我了解風險，開啟";
-"This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Pulse only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that." = "這不是 Anthropic 或 OpenAI 的功能。自動開始用量視窗可能被視為規避用量限制，你的帳號可能因此被限制或停用。Pulse 只會透過你已登入的命令列工具傳送一則簡短訊息，由此給你的帳號帶來的任何後果，Pulse 概不負責。請確認你能接受這一點，再開啟。";
+"This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Blinky only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that." = "這不是 Anthropic 或 OpenAI 的功能。自動開始用量視窗可能被視為規避用量限制，你的帳號可能因此被限制或停用。Blinky 只會透過你已登入的命令列工具傳送一則簡短訊息，由此給你的帳號帶來的任何後果，Blinky 概不負責。請確認你能接受這一點，再開啟。";
 "Not started yet" = "尚未自動開始";
 "%@ · the command-line tool was not found" = "%@ · 找不到命令列工具";
 "%@ · it did not go through; check the tool is signed in" = "%@ · 未能傳送，請檢查工具是否已登入";
@@ -1056,7 +1056,7 @@
 "No OpenCode console session found. Sign in at opencode.ai first." = "沒有找到 OpenCode 控制台的登入狀態。請先在 opencode.ai 登入。";
 "Costs as %@ charged them, for the whole account." = "金額為 %@ 的實際計費，涵蓋整個帳號。";
 "The console session has expired. Read it again in Settings." = "控制台登入已失效，請到設定裡重新讀取。";
-"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode 控制台保留 30 天的請求紀錄：帳號下所有裝置、所有應用程式的每一次請求，以及每次的花費。沒有設定金鑰、或金鑰被拒絕時，也會用它讀取方案額度。Pulse 只保存控制台的登入 Cookie，加密存放在這台 Mac 上。";
+"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Blinky keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode 控制台保留 30 天的請求紀錄：帳號下所有裝置、所有應用程式的每一次請求，以及每次的花費。沒有設定金鑰、或金鑰被拒絕時，也會用它讀取方案額度。Blinky 只保存控制台的登入 Cookie，加密存放在這台 Mac 上。";
 "Turn on Detailed card above to see the request log on the card." = "在上方開啟「詳細卡片」，就能在卡片上看到請求紀錄。";
 "Read from %@ · workspace %@." = "已從 %@ 讀取 · 工作區「%@」。";
 "The console turned this session away. Sign in again at opencode.ai, then read it again." = "控制台拒絕了這個登入狀態。請在 opencode.ai 重新登入後再讀取。";
@@ -1064,11 +1064,11 @@
 "Reading the account's records…" = "正在讀取帳號紀錄…";
 "From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "來自 %@ 的帳號請求紀錄，涵蓋所有裝置和所有使用它的應用程式，金額為每次請求的實際計費。紀錄保留 30 天。";
 
-"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days." = "來自 %@ 控制台的帳號用量，涵蓋所有金鑰和所有裝置，金額為每天的實際計費。Pulse 讀取最近 30 天。";
+"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Blinky reads the last 30 days." = "來自 %@ 控制台的帳號用量，涵蓋所有金鑰和所有裝置，金額為每天的實際計費。Blinky 讀取最近 30 天。";
 "DeepSeek console" = "DeepSeek 控制台";
 "Account usage" = "帳號用量";
 "Kept. The usage history below and the detailed card read the whole account with it." = "已儲存。下方的用量紀錄和詳細卡片會用它讀取整個帳號。";
-"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac." = "DeepSeek 控制台記錄的帳號用量：涵蓋所有金鑰和所有裝置，按天統計，並附有實際計費。沒有設定金鑰，或金鑰被拒絕時，也會用它讀取餘額。Pulse 只保存控制台的登入資訊，加密存放在這台 Mac 上。";
+"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Blinky keeps only the console's sign-in, encrypted on this Mac." = "DeepSeek 控制台記錄的帳號用量：涵蓋所有金鑰和所有裝置，按天統計，並附有實際計費。沒有設定金鑰，或金鑰被拒絕時，也會用它讀取餘額。Blinky 只保存控制台的登入資訊，加密存放在這台 Mac 上。";
 "Reads Chrome, Edge, Brave, Arc and other Chromium browsers." = "可從 Chrome、Edge、Brave、Arc 等 Chromium 瀏覽器讀取。";
 "No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc." = "沒有找到 Chromium 瀏覽器。請在 Chrome、Edge、Brave 或 Arc 中登入 platform.deepseek.com。";
 "No DeepSeek console sign-in found. Sign in at platform.deepseek.com first." = "沒有找到 DeepSeek 控制台的登入狀態。請先在 platform.deepseek.com 登入。";
@@ -1166,7 +1166,7 @@
 "You used" = "你用的";
 "Where the money went" = "錢花在哪裡";
 "The cache took off the API price" = "快取讓 API 價格少了";
-"Estimated at each model's published API price. The plan price is the one you typed in Pulse." = "依各模型公布的 API 價格估算；訂閱價格是你在 Pulse 裡填寫的。";
+"Estimated at each model's published API price. The plan price is the one you typed in Blinky." = "依各模型公布的 API 價格估算；訂閱價格是你在 Blinky 裡填寫的。";
 "Figures are to date, and the plan price is prorated by the days so far." = "數字截至今天，訂閱價格按已過去的天數折算。";
 "That was" = "這就是";
 "your %@." = "你的 %@。";
@@ -1197,7 +1197,7 @@
 "Last month's recap, at the start of the month. Needs Token spend reading." = "每月月初提醒上個月的月報已完成。需要先開啟「讀取本機用量記錄」。";
 "Your %@ recap is ready" = "%@ 的月報已完成";
 "The recap needs Token spend" = "月報需要先讀取本機用量記錄";
-"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "月報依據這台 Mac 上的用量記錄製作。只有開啟「讀取本機用量記錄」後，Pulse 才會讀取。";
+"It is built from the usage records on this Mac, which Blinky reads only while Token spend reading is on." = "月報依據這台 Mac 上的用量記錄製作。只有開啟「讀取本機用量記錄」後，Blinky 才會讀取。";
 "Open Token spend" = "開啟 Token 消耗";
 "The records could not be read." = "無法讀取用量記錄。";
 "No records for %@" = "%@ 沒有用量記錄";
@@ -1306,7 +1306,7 @@
 
 // Service status: why a read failed
 "No request was made." = "沒有發出請求。";
-"The page answered, but not with anything Pulse reads for this provider." = "狀態頁有回應，但其中沒有 Pulse 能為這個服務商讀取的內容。";
+"The page answered, but not with anything Blinky reads for this provider." = "狀態頁有回應，但其中沒有 Blinky 能為這個服務商讀取的內容。";
 "The page answered HTTP %@." = "狀態頁回傳了 HTTP %@。";
 
 // Recap: day and week

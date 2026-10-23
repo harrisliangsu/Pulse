@@ -1,5 +1,7 @@
 # `Pulse --json`
 
+The app's name on screen is Blinky. This command is still the `Pulse` executable inside `Pulse.app`.
+
 Owns: the JSON contract other people's status lines are built on. Where the figures come from and how often they move: [refresh-and-data.md](refresh-and-data.md).
 
 ```bash

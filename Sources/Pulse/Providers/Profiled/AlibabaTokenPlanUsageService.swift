@@ -25,7 +25,7 @@ extension ProviderProfile {
         iconResource: "alibabacloud",
         credential: .localLogin,
         accessDescription: {
-            .localized("Runs the Bailian CLI (bl) with its saved login. Pulse does not read or store its credentials.")
+            .localized("Runs the Bailian CLI (bl) with its saved login. Blinky does not read or store its credentials.")
         },
         soleRoute: {
             (.localized("Bailian CLI"), .localized("Uses the login the Bailian CLI already saved."))

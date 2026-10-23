@@ -6,7 +6,7 @@ import Testing
 /// notes in the update window come in that language. The qunqin.org mirror
 /// is not a host.
 struct AppUpdateFeedTests {
-    private static let base = "https://raw.githubusercontent.com/harrisliangsu/Pulse/main/"
+    private static let base = "https://raw.githubusercontent.com/harrisliangsu/blinky-mac/main/"
 
     @Test func followingTheSystemReadsTheMainFeed() {
         #expect(AppUpdate.feedURL(for: .system) == Self.base + "appcast.xml")
@@ -33,11 +33,17 @@ struct AppUpdateFeedTests {
         #expect(AppUpdate.feedBase(from: "https://update.qunqin.org/appcast.xml") == AppUpdate.githubBase)
         #expect(AppUpdate.feedBase(from: "https://raw.githubusercontent.com/qunqin24/Pulse/main/appcast.xml") == AppUpdate.githubBase)
         #expect(
-            AppUpdate.feedBase(from: "https://raw.githubusercontent.com/harrisliangsu/Pulse/main/appcast.xml")
+            AppUpdate.feedBase(from: "https://raw.githubusercontent.com/harrisliangsu/blinky-mac/main/appcast.xml")
                 == AppUpdate.githubBase
         )
         #expect(
-            AppUpdate.feedBase(from: "https://raw.githubusercontent.com/harrisliangsu/Pulse/main/appcast-zh.xml")
+            AppUpdate.feedBase(from: "https://raw.githubusercontent.com/harrisliangsu/blinky-mac/main/appcast-zh.xml")
+                == AppUpdate.githubBase
+        )
+        // Renamed from harrisliangsu/Pulse. An older bundle still has that
+        // SUFeedURL; it is not treated as a different feed.
+        #expect(
+            AppUpdate.feedBase(from: "https://raw.githubusercontent.com/harrisliangsu/Pulse/main/appcast.xml")
                 == AppUpdate.githubBase
         )
     }

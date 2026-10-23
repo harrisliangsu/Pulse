@@ -1,9 +1,9 @@
 /* Menu bar */
 "Settings…" = "設定…";
-"Quit Pulse" = "Pulse を終了";
+"Quit Blinky" = "Blinky を終了";
 
 /* Settings window */
-"Pulse Settings" = "Pulse 設定";
+"Blinky Settings" = "Blinky 設定";
 "Panel" = "パネル";
 "Application" = "アプリケーション";
 "General" = "一般";
@@ -40,7 +40,7 @@
 "Copy diagnostics" = "診断情報をコピー";
 "Not recorded" = "記録なし";
 "Read cached usage" = "キャッシュされた使用量を読む";
-"Prints Pulse's saved readings, not the provider's original reply, without fetching or opening credentials." = "Pulse が保存した読み取り結果を出力します。プロバイダの元の応答ではありません。通信や認証情報へのアクセスは行いません。";
+"Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials." = "Blinky が保存した読み取り結果を出力します。プロバイダの元の応答ではありません。通信や認証情報へのアクセスは行いません。";
 "Copy command" = "コマンドをコピー";
 "Developer kit" = "開発者キット";
 "Raycast extension, tmux and shell status, and a sketchybar plugin." = "Raycast 拡張、tmux とシェルのステータス、sketchybar プラグインが含まれます。";
@@ -48,13 +48,13 @@
 "Installation guide" = "インストールガイド";
 "Open an account" = "アカウントを開く";
 "Account link" = "アカウントリンク";
-"Opens this account's settings in the installed Pulse app." = "インストール済みの Pulse でこのアカウントの設定を直接開きます。";
+"Opens this account's settings in the installed Blinky app." = "インストール済みの Blinky でこのアカウントの設定を直接開きます。";
 "Copy link" = "リンクをコピー";
 "Open from terminal" = "ターミナルから開く";
-"Keep Pulse running to update the cache. Every reading includes its age; an old reading is not a live check." = "キャッシュを更新するには Pulse を起動したままにしてください。どの取得結果にも時刻が付きます。古い結果はリアルタイムの確認ではありません。";
+"Keep Blinky running to update the cache. Every reading includes its age; an old reading is not a live check." = "キャッシュを更新するには Blinky を起動したままにしてください。どの取得結果にも時刻が付きます。古い結果はリアルタイムの確認ではありません。";
 "Integration files weren't found. Open the installation guide." = "連携ファイルが見つかりません。インストールガイドを開いてください。";
 "Export" = "書き出す";
-"Pulse Integrations already exists here. Choose another folder." = "この場所には既に Pulse Integrations があります。別のフォルダを選んでください。";
+"Blinky Integrations already exists here. Choose another folder." = "この場所には既に Blinky Integrations があります。別のフォルダを選んでください。";
 "Integration files exported." = "連携ファイルを書き出しました。";
 "Couldn't export integration files. Choose a writable folder." = "連携ファイルを書き出せませんでした。書き込めるフォルダを選んでください。";
 "Connected. Use Claude Code to send a new reading." = "接続しました。Claude Code を使うと新しい取得結果が届きます。";
@@ -178,7 +178,7 @@
 
 
 /* Accessibility */
-"Pulse floating usage panel" = "Pulse フローティング使用量パネル";
+"Blinky floating usage panel" = "Blinky フローティング使用量パネル";
 "Provider usage selector" = "プロバイダ使用量セレクタ";
 "%@ usage" = "%@ の使用量";
 "%@ usage details" = "%@ の使用量の詳細";
@@ -271,7 +271,7 @@
 "No history yet" = "履歴はまだありません";
 "Nothing has been logged on this Mac yet, so there is no history to add up." = "この Mac にはまだログがないため、集計できる履歴がありません。";
 "Token spend reading is off" = "「ローカルの使用量記録を読み取る」がオフです";
-"This history comes from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "この履歴は、この Mac の使用量記録から集計します。Pulse が記録を読むのは、「ローカルの使用量記録を読み取る」がオンのときだけです。";
+"This history comes from the usage records on this Mac, which Blinky reads only while Token spend reading is on." = "この履歴は、この Mac の使用量記録から集計します。Blinky が記録を読むのは、「ローカルの使用量記録を読み取る」がオンのときだけです。";
 "Account total" = "アカウント累計";
 
 /* Budget estimate */
@@ -317,7 +317,7 @@
 
 /* Launch at login */
 "Open at login" = "ログイン時に開く";
-"Start Pulse automatically when you log in." = "macOS にログインすると Pulse を自動的に起動します。";
+"Start Blinky automatically when you log in." = "macOS にログインすると Blinky を自動的に起動します。";
 "Waiting for approval in System Settings › General › Login Items." = "「システム設定 › 一般 › ログイン項目」での許可を待っています。";
 
 "Show Dock icon while Settings or a recap is open" = "設定やまとめを開いている間 Dock にアイコンを表示";
@@ -325,7 +325,7 @@
 
 /* メニューバーのアイコン */
 "Hide menu bar icon" = "メニューバーのアイコンを隠す";
-"Remove Pulse from the menu bar; use the panel menu or shortcut to open settings." = "Pulse をメニューバーから外します。設定はパネルのメニューかショートカットで開けます。";
+"Remove Blinky from the menu bar; use the panel menu or shortcut to open settings." = "Blinky をメニューバーから外します。設定はパネルのメニューかショートカットで開けます。";
 
 /* Liquid Glass */
 "Liquid Glass" = "Liquid Glass";
@@ -354,11 +354,11 @@
 "Devin's own app" = "Devin 自身の App";
 "Reads what Devin saved the last time it started." = "Devin が前回の起動時に保存したプラン情報を読みます。";
 "Asks Devin for your quota, with the token you entered." = "入力したトークンで Devin に残量を問い合わせます。";
-"A Bearer token from app.devin.ai, then a space, then your organization. Optional — Pulse can read what Devin's app saved. Stored encrypted on this Mac." = "app.devin.ai の Bearer トークン、半角スペース、組織名の順です。省略可能で、その場合は Devin の App が保存した内容を Pulse が読みます。この Mac に暗号化して保存されます。";
+"A Bearer token from app.devin.ai, then a space, then your organization. Optional — Blinky can read what Devin's app saved. Stored encrypted on this Mac." = "app.devin.ai の Bearer トークン、半角スペース、組織名の順です。省略可能で、その場合は Devin の App が保存した内容を Blinky が読みます。この Mac に暗号化して保存されます。";
 "Grok Bot is billed to your Cursor account." = "Grok Bot の利用分は Cursor アカウントに請求されます。";
 "Uses the login Cursor already saved." = "Cursor が既に保存しているログインを使います。";
 "Refresh" = "更新";
-"Pulse %@ is available" = "Pulse %@ が利用できます";
+"Blinky %@ is available" = "Blinky %@ が利用できます";
 "Check now" = "今すぐ確認";
 "Checking…" = "確認中…";
 "Built from source — no update check." = "ソースからビルドされているため、更新は確認しません。";
@@ -401,7 +401,7 @@
 "That key was refused. Check it in Settings." = "このキーは拒否されました。設定で確認してください。";
 "Claude Code's saved login expired. Use Claude Code, or connect the status line." = "Claude Code が保存したログインの期限が切れました。Claude Code を使うか、ステータスラインを接続してください。";
 "Keep reading Claude Code's usage after its login expires?" = "ログインの期限が切れた後も Claude Code の使用量を読み続けますか？";
-"Claude Code saves a login that lasts a few hours, and only Claude Code can renew it. It also reports your limits to whatever status line command is registered — Pulse can be that command, and then it keeps working whether the login is fresh or not.\n\nThis edits ~/.claude/settings.json and changes the status line at the bottom of your Claude Code sessions. Any status line you already have keeps working, and you can disconnect it in Settings." = "Claude Code が保存するログインは数時間しか持たず、更新できるのは Claude Code 自身だけです。一方で Claude Code は、登録されたステータスラインコマンドに上限を報告します。Pulse がそのコマンドになれば、ログインが新しいかどうかに関係なく読み続けられます。\n\nこの操作は ~/.claude/settings.json を書き換え、Claude Code のセッション下部のステータスラインを変更します。既にお使いのステータスラインはそのまま動き、設定でいつでも接続を解除できます。";
+"Claude Code saves a login that lasts a few hours, and only Claude Code can renew it. It also reports your limits to whatever status line command is registered — Blinky can be that command, and then it keeps working whether the login is fresh or not.\n\nThis edits ~/.claude/settings.json and changes the status line at the bottom of your Claude Code sessions. Any status line you already have keeps working, and you can disconnect it in Settings." = "Claude Code が保存するログインは数時間しか持たず、更新できるのは Claude Code 自身だけです。一方で Claude Code は、登録されたステータスラインコマンドに上限を報告します。Blinky がそのコマンドになれば、ログインが新しいかどうかに関係なく読み続けられます。\n\nこの操作は ~/.claude/settings.json を書き換え、Claude Code のセッション下部のステータスラインを変更します。既にお使いのステータスラインはそのまま動き、設定でいつでも接続を解除できます。";
 "Not now" = "あとで";
 "Order" = "並び順";
 "Add an API key in Settings." = "設定で API キーを入力してください。";
@@ -414,9 +414,9 @@
 "From bigmodel.cn. Stored encrypted on this Mac." = "bigmodel.cn で取得します。この Mac に暗号化して保存されます。";
 "From platform.minimax.io. Stored encrypted on this Mac." = "platform.minimax.io で取得します。この Mac に暗号化して保存されます。";
 "From platform.minimaxi.com. Stored encrypted on this Mac." = "platform.minimaxi.com で取得します。この Mac に暗号化して保存されます。";
-"From commandcode.ai. Optional — Pulse can use the login Command Code saved. Stored encrypted on this Mac." = "commandcode.ai で取得します。省略可能で、その場合は Command Code が保存したログインを Pulse が使います。この Mac に暗号化して保存されます。";
+"From commandcode.ai. Optional — Blinky can use the login Command Code saved. Stored encrypted on this Mac." = "commandcode.ai で取得します。省略可能で、その場合は Command Code が保存したログインを Blinky が使います。この Mac に暗号化して保存されます。";
 "Couldn't connect the status line" = "ステータスラインに接続できませんでした";
-"~/.claude/settings.json couldn't be read, and Pulse won't overwrite a file it doesn't understand. Check it, then connect from Settings." = "~/.claude/settings.json を読み取れず、Pulse は理解できないファイルを上書きしません。中身を確認してから、設定で接続してください。";
+"~/.claude/settings.json couldn't be read, and Blinky won't overwrite a file it doesn't understand. Check it, then connect from Settings." = "~/.claude/settings.json を読み取れず、Blinky は理解できないファイルを上書きしません。中身を確認してから、設定で接続してください。";
 "Move %@ up" = "%@ を上へ";
 "Move %@ down" = "%@ を下へ";
 "Not shown" = "非表示";
@@ -428,8 +428,8 @@
 "Sign in…" = "サインイン…";
 "Sign out" = "サインアウト";
 "GitHub account" = "GitHub アカウント";
-"Opens GitHub's own page. Pulse asks to read your profile, nothing else." = "GitHub 自身のページを開きます。Pulse が求めるのはプロフィールの読み取りだけです。";
-"Signed in. Pulse holds a read-only token for this Mac." = "サインイン済みです。Pulse はこの Mac に読み取り専用のトークンを保持します。";
+"Opens GitHub's own page. Blinky asks to read your profile, nothing else." = "GitHub 自身のページを開きます。Blinky が求めるのはプロフィールの読み取りだけです。";
+"Signed in. Blinky holds a read-only token for this Mac." = "サインイン済みです。Blinky はこの Mac に読み取り専用のトークンを保持します。";
 "The browser didn't come back." = "ブラウザから戻ってきませんでした。";
 "Cancel" = "キャンセル";
 "Code" = "確認コード";
@@ -446,14 +446,14 @@
 "Couldn't save the login on this Mac." = "この Mac にログインを保存できませんでした。";
 "Sign in to this account again in Settings." = "設定でこのアカウントにサインインし直してください。";
 "Sign in from Settings to see usage." = "設定でサインインすると使用量が表示されます。";
-"This provider can't be signed in to from Pulse." = "このプロバイダには Pulse からサインインできません。";
+"This provider can't be signed in to from Blinky." = "このプロバイダには Blinky からサインインできません。";
 "Finish or close the sign-in already running, then try again." = "進行中のサインインを完了するか閉じてから、もう一度お試しください。";
 "Sign-in was cancelled." = "サインインはキャンセルされました。";
 "The browser didn't come back. If it showed an error, try again." = "ブラウザから戻ってきませんでした。エラーが表示されていた場合は、もう一度お試しください。";
 "This page can be closed." = "このページは閉じて構いません。";
 "Sign-in failed. You can close this page." = "サインインに失敗しました。このページは閉じて構いません。";
-"Signed in. You can close this page and go back to Pulse." = "サインインしました。このページを閉じて Pulse に戻ってください。";
-"Read from each provider's own account. Pulse shows the figures they report; where it has to infer one, the figure itself says so." = "各プロバイダのアカウントから直接読み取ります。Pulse が表示するのは各社が報告する数値で、推定せざるを得ない場合はその数値自体にその旨が示されます。";
+"Signed in. You can close this page and go back to Blinky." = "サインインしました。このページを閉じて Blinky に戻ってください。";
+"Read from each provider's own account. Blinky shows the figures they report; where it has to infer one, the figure itself says so." = "各プロバイダのアカウントから直接読み取ります。Blinky が表示するのは各社が報告する数値で、推定せざるを得ない場合はその数値自体にその旨が示されます。";
 "Panel design inspired by Vinz's work shared on X." = "パネルのデザインは、Vinz が X で公開した作品から着想を得ています。";
 "Open" = "開く";
 "under 15 minutes" = "15 分未満";
@@ -468,7 +468,7 @@
 "Desktop app" = "デスクトップ App";
 "Uses the session the Claude desktop app is signed in with." = "Claude デスクトップ App がサインインしているセッションを使います。";
 "Sign in to the Claude desktop app to see usage." = "Claude デスクトップ App にサインインすると使用量が表示されます。";
-"Pulse needs your keychain to read the Claude desktop app's session. Refresh to be asked again." = "Claude デスクトップ App のセッションを読むにはキーチェーンの許可が必要です。更新するともう一度尋ねます。";
+"Blinky needs your keychain to read the Claude desktop app's session. Refresh to be asked again." = "Claude デスクトップ App のセッションを読むにはキーチェーンの許可が必要です。更新するともう一度尋ねます。";
 "The Claude desktop app's session was refused. Open it and sign in again." = "Claude デスクトップ App のセッションが拒否されました。App を開いてサインインし直してください。";
 
 /* Notifications */
@@ -476,7 +476,7 @@
 "Off" = "オフ";
 "Warn at" = "警告する位置";
 "Notify when a limit passes this, and again when it is spent." = "上限がこの割合を超えたときに 1 回、使い切ったときにもう 1 回通知します。";
-"Turned off for Pulse in System Settings › Notifications." = "「システム設定 › 通知」で Pulse の通知がオフになっています。";
+"Turned off for Blinky in System Settings › Notifications." = "「システム設定 › 通知」で Blinky の通知がオフになっています。";
 "Notifications need the bundled app." = "通知にはバンドル済みの App が必要です。";
 "When a limit comes back" = "上限が戻ったとき";
 "After it turns over, and only for one you were warned about." = "上限が戻ったあとに知らせます。以前に警告したものだけです。";
@@ -498,7 +498,7 @@
 
 /* Resetting the rail order */
 "Reset order" = "並び順をリセット";
-"Back to the order Pulse ships with." = "Pulse の初期の並びに戻します。";
+"Back to the order Blinky ships with." = "Blinky の初期の並びに戻します。";
 "Reset" = "リセット";
 
 /* Volcengine / Volcengine Ark */
@@ -525,8 +525,8 @@
 "A ring for each model group" = "モデルのグループごとにリング";
 "Gemini and the third-party models draw on separate allowances. One ring can only follow the busier of the two." = "Gemini とサードパーティのモデルは別々の割り当てを使います。リングが 1 本では、多く使っている方しか追えません。";
 "%@ didn't answer, so there is nothing to chart yet. Try again in a moment." = "%@ から応答がなく、まだグラフにできません。しばらくしてからお試しください。";
-"Add a key above and Pulse can read this account's history." = "上でキーを入力すると、このアカウントの履歴を読めるようになります。";
-"This account is switched off, so Pulse hasn't asked for its history." = "このアカウントはオフのため、Pulse は履歴を取りに行っていません。";
+"Add a key above and Blinky can read this account's history." = "上でキーを入力すると、このアカウントの履歴を読めるようになります。";
+"This account is switched off, so Blinky hasn't asked for its history." = "このアカウントはオフのため、Blinky は履歴を取りに行っていません。";
 "Since top-up" = "前回のチャージ以降";
 "Balance only" = "残高のみ";
 "My budget" = "自分の予算";
@@ -534,7 +534,7 @@
 "of your budget" = "予算に対して";
 "Full tank" = "満額の基準";
 "What you call a full balance. The ring measures against it." = "いくらを満額とみなすかです。リングはこれを基準に測ります。";
-"How much of the balance Pulse last saw you top up to is gone." = "Pulse が最後に見たチャージ額から、どれだけ使ったかです。";
+"How much of the balance Blinky last saw you top up to is gone." = "Blinky が最後に見たチャージ額から、どれだけ使ったかです。";
 "How much of the figure you set is gone." = "設定した金額のうち、どれだけ使ったかです。";
 "From platform.deepseek.com. Stored encrypted on this Mac." = "platform.deepseek.com で取得します。この Mac に暗号化して保存されます。";
 "Balance" = "残高";
@@ -646,17 +646,17 @@
 "Kimi Code's saved login expired. Sign in again in Settings." = "Kimi Code の保存済みログインが期限切れです。設定でもう一度サインインしてください。";
 "Light" = "ライト";
 "No Qoder session found. Sign in at qoder.com first." = "Qoder のセッションが見つかりません。先に qoder.com でサインインしてください。";
-"Opens Kimi Code's own page. Pulse only reads usage." = "Kimi Code 自身のページを開きます。Pulse は使用量だけを読みます。";
+"Opens Kimi Code's own page. Blinky only reads usage." = "Kimi Code 自身のページを開きます。Blinky は使用量だけを読みます。";
 "Reads Qoder Credits from the signed-in account page." = "サインイン済みアカウントのページから Qoder Credits を読みます。";
 "Sign in to Kimi Code in Settings, or paste an API key." = "設定で Kimi Code にサインインするか、API キーを貼り付けてください。";
-"Signed in. Pulse holds a login for this Mac." = "サインイン済み。Pulse がこの Mac 用のログインを保持しています。";
+"Signed in. Blinky holds a login for this Mac." = "サインイン済み。Blinky がこの Mac 用のログインを保持しています。";
 "Signed in. The API key in Connection is used instead." = "サインイン済み。接続の API キーが代わりに使われます。";
 "Signed-in account" = "サインイン済みアカウント";
 "The Qoder session expired. Sign in again and add it." = "Qoder のセッションが期限切れです。もう一度サインインして追加してください。";
 "Tiny" = "極小";
 "Token or session" = "トークンまたはセッション";
 "Use the signed-in account when possible, the API key when not." = "可能ならサインイン済みアカウントを使い、ダメなら API キーを使います。";
-"Uses the Kimi Code login Pulse holds." = "Pulse が保持する Kimi Code のログインを使います。";
+"Uses the Kimi Code login Blinky holds." = "Blinky が保持する Kimi Code のログインを使います。";
 /* Xiaomi Coding Plan */
 "No Xiaomi session found. Sign in at platform.xiaomimimo.com first." = "Xiaomi のセッションが見つかりません。先に platform.xiaomimimo.com でサインインしてください。";
 "Sign in to Xiaomi's platform in a browser to see usage." = "ブラウザで Xiaomi のプラットフォームにサインインすると使用量が表示されます。";
@@ -671,12 +671,12 @@
 "Follow System" = "システム設定に従う";
 "System Proxy Only" = "システムのプロキシのみ";
 "Custom Proxy" = "カスタムプロキシ";
-"Pulse connects directly and ignores the proxy in macOS settings." = "Pulse は直接接続し、macOS の設定にあるプロキシを使いません。";
+"Blinky connects directly and ignores the proxy in macOS settings." = "Blinky は直接接続し、macOS の設定にあるプロキシを使いません。";
 "Uses the proxy in macOS settings, or connects directly when there is none." = "macOS の設定にあるプロキシを使います。設定がなければ直接接続します。";
 "Uses the proxy in macOS settings, and doesn't connect when there is none." = "macOS の設定にあるプロキシを使います。プロキシがオフのときは接続しません。";
-"A proxy for Pulse only." = "Pulse 専用のプロキシを指定します。";
-"macOS has no proxy switched on, so Pulse isn't connecting." = "macOS でプロキシがオンになっていないため、Pulse は接続していません。";
-"No proxy is switched on in macOS, so Pulse didn't connect." = "macOS でプロキシがオンになっていないため、Pulse は接続しませんでした。";
+"A proxy for Blinky only." = "Blinky 専用のプロキシを指定します。";
+"macOS has no proxy switched on, so Blinky isn't connecting." = "macOS でプロキシがオンになっていないため、Blinky は接続していません。";
+"No proxy is switched on in macOS, so Blinky didn't connect." = "macOS でプロキシがオンになっていないため、Blinky は接続しませんでした。";
 "Type" = "種類";
 "HTTP" = "HTTP";
 "SOCKS5" = "SOCKS5";
@@ -691,28 +691,28 @@
 "Choose services to monitor" = "監視するサービスを選択";
 "Choose services to start monitoring…" = "サービスを選んで監視を開始…";
 "New services detected" = "新たに対応したサービス";
-"Choose at least one service. Pulse reads its login and checks usage only after you finish. You can change this later in Settings." = "サービスを 1 つ以上選んでください。「完了」を押すと、選んだサービスのログイン情報を読み取り、使用量の確認を始めます。後から設定で変更できます。";
+"Choose at least one service. Blinky reads its login and checks usage only after you finish. You can change this later in Settings." = "サービスを 1 つ以上選んでください。「完了」を押すと、選んだサービスのログイン情報を読み取り、使用量の確認を始めます。後から設定で変更できます。";
 "This version supports more services found on your Mac. Choose any you want to add; your existing choices stay in place." = "このバージョンで新たに対応したサービスが Mac に見つかりました。追加するものを選んでください。これまでの選択はそのままです。";
 "Detected on this Mac" = "この Mac で検出";
 "Select detected services" = "検出したサービスを選択";
 "Done" = "完了";
 "Enable a service in its settings to start monitoring." = "監視を始めるには、そのサービスの設定で有効にしてください。";
 "Reads Claude Code's saved login from Keychain or its credentials file. May ask for Keychain access, including Claude Desktop's cookie storage." = "キーチェーンまたは認証情報ファイルから Claude Code のログインを読み取ります。Claude デスクトップの Cookie 保存領域を含め、キーチェーンへのアクセスを求めることがあります。";
-"Reads ~/.codex/auth.json and may run codex app-server with its saved login. Pulse does not request Keychain access." = "~/.codex/auth.json を読み取り、保存済みのログインで codex app-server を起動する場合があります。Pulse はキーチェーンへのアクセスを求めません。";
-"Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Pulse does not request Keychain access." = "起動中のエディタのローカル言語サーバから使用量と接続トークンを読み取るか、保存済みのログインで agy CLI を起動します。Pulse はキーチェーンへのアクセスを求めません。";
+"Reads ~/.codex/auth.json and may run codex app-server with its saved login. Blinky does not request Keychain access." = "~/.codex/auth.json を読み取り、保存済みのログインで codex app-server を起動する場合があります。Blinky はキーチェーンへのアクセスを求めません。";
+"Reads the running editor's local language server and connection token, or runs the agy CLI with its saved login. Blinky does not request Keychain access." = "起動中のエディタのローカル言語サーバから使用量と接続トークンを読み取るか、保存済みのログインで agy CLI を起動します。Blinky はキーチェーンへのアクセスを求めません。";
 "Reads the login saved in Cursor's local database. No Keychain prompt." = "Cursor のローカルデータベースに保存されたログインを読み取ります。キーチェーンの確認はありません。";
 "Reads the login saved in ~/.grok/auth.json. No Keychain prompt." = "~/.grok/auth.json に保存されたログインを読み取ります。キーチェーンの確認はありません。";
 "Uses a key entered in Settings, or reads OpenCode's auth.json. No Keychain prompt." = "設定で入力したキーを使うか、OpenCode の auth.json を読み取ります。キーチェーンの確認はありません。";
 "Uses a key entered in Settings, or reads the saved GLM key files. No Keychain prompt." = "設定で入力したキーを使うか、保存済みの GLM キーファイルを読み取ります。キーチェーンの確認はありません。";
 "Uses a key entered in Settings, or reads ~/.commandcode/auth.json. No Keychain prompt." = "設定で入力したキーを使うか、~/.commandcode/auth.json を読み取ります。キーチェーンの確認はありません。";
 "Reads Devin's web login from local Chromium browsers without a prompt; may also read the desktop app's saved plan." = "この Mac の Chromium 系ブラウザから Devin の Web ログインを読み取ります。確認ダイアログは出ません。デスクトップ App の保存済みプランも読む場合があります。";
-"Runs arkcli with its saved login, or uses access keys entered in Settings. Pulse does not request Keychain access." = "保存済みのログインで arkcli を起動するか、設定で入力したアクセスキーを使います。Pulse はキーチェーンへのアクセスを求めません。";
+"Runs arkcli with its saved login, or uses access keys entered in Settings. Blinky does not request Keychain access." = "保存済みのログインで arkcli を起動するか、設定で入力したアクセスキーを使います。Blinky はキーチェーンへのアクセスを求めません。";
 "Kiro CLI ACP" = "Kiro CLI ACP";
 "Uses Kiro CLI's signed-in session without reading its credentials." = "Kiro CLI のサインイン済みセッションを使い、認証情報は読み取りません。";
 "Kiro CLI isn't installed." = "Kiro CLI がインストールされていません。";
 "Update Kiro CLI to read subscription usage." = "サブスクリプション使用量を読むには Kiro CLI を更新してください。";
 "Sign in to Kiro CLI to see usage." = "使用量を表示するには Kiro CLI にサインインしてください。";
-"Runs Kiro CLI's native ACP usage method with its saved login. Pulse does not read or store Kiro credentials." = "保存済みログインで Kiro CLI のネイティブ ACP 使用量メソッドを実行します。Pulse は Kiro の認証情報を読み取りも保存もしません。";
+"Runs Kiro CLI's native ACP usage method with its saved login. Blinky does not read or store Kiro credentials." = "保存済みログインで Kiro CLI のネイティブ ACP 使用量メソッドを実行します。Blinky は Kiro の認証情報を読み取りも保存もしません。";
 "Asks Kiro CLI over ACP, using the login it already saved." = "ACP 経由で Kiro CLI に問い合わせ、保存済みのログインを使います。";
 "Uses a browser session you import in Settings. Importing may ask for browser Keychain access." = "設定で読み込んだブラウザのログインセッションを使います。読み込み時にブラウザのキーチェーンへのアクセスを求めることがあります。";
 "Uses the GitHub login you connect in Settings. No Keychain prompt." = "設定で連携した GitHub のログインを使います。キーチェーンの確認はありません。";
@@ -759,7 +759,7 @@
 "Sends the key you enter only to the server address you enter. No Keychain prompt." = "入力したキーは、入力したサーバーのアドレスにだけ送られます。キーチェーンの確認はありません。";
 "A group API key from your sub2api deployment. Sent only to the address above. Stored encrypted on this Mac." = "あなたの sub2api のグループ API キーです。上のアドレスにだけ送られます。この Mac に暗号化して保存されます。";
 "A Personal Access Token from v2ex.com. Stored encrypted on this Mac." = "v2ex.com で発行した Personal Access Token です。この Mac に暗号化して保存されます。";
-"Your own deployment's address, such as https://gateway.example.com. Pulse asks it for usage and sends nothing else." = "あなた自身のゲートウェイのアドレスです。例：https://gateway.example.com。Pulse は使用状況を尋ねるだけで、ほかには何も送りません。";
+"Your own deployment's address, such as https://gateway.example.com. Blinky asks it for usage and sends nothing else." = "あなた自身のゲートウェイのアドレスです。例：https://gateway.example.com。Blinky は使用状況を尋ねるだけで、ほかには何も送りません。";
 "The same key your AI client uses for this gateway. Sent only to the address above. Stored encrypted on this Mac." = "この ゲートウェイ に AI クライアントが使っているのと同じキーです。上のアドレスにだけ送られます。この Mac に暗号化して保存されます。";
 "Credit allowance" = "クレジット枠";
 "Team credits" = "チーム共有クレジット";
@@ -795,7 +795,7 @@
 "No StepFun session found. Sign in at %@ first." = "StepFun のセッションが見つかりません。先に %@ でサインインしてください。";
 
 /* Extensions */
-"An extension is a program you add yourself that reports one account's usage. Pulse draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials." = "拡張機能は自分で追加するプログラムで、1 つのアカウントの使用量を報告します。Pulse はその出力をリングとして表示します。オンにするまでは実行せず、認証情報も一切渡しません。";
+"An extension is a program you add yourself that reports one account's usage. Blinky draws what it prints as a ring, runs it only once you switch it on, and gives it no credentials." = "拡張機能は自分で追加するプログラムで、1 つのアカウントの使用量を報告します。Blinky はその出力をリングとして表示します。オンにするまでは実行せず、認証情報も一切渡しません。";
 "Another extension already uses the id %@." = "ID「%@」は別の拡張機能がすでに使っています。";
 "Couldn't be used" = "使用できないもの";
 "Each extension is a folder of its own, holding pulse-extension.json and its program." = "拡張機能は 1 つにつき 1 フォルダで、pulse-extension.json とプログラム本体を入れます。";
@@ -805,7 +805,7 @@
 "Extensions folder" = "拡張機能フォルダ";
 "Folder" = "フォルダ";
 "Found" = "見つかったもの";
-"From its pulse-extension.json. Pulse keeps this extension's settings under it." = "pulse-extension.json に書かれた値です。Pulse はこの拡張機能の設定をこの ID で保存します。";
+"From its pulse-extension.json. Blinky keeps this extension's settings under it." = "pulse-extension.json に書かれた値です。Blinky はこの拡張機能の設定をこの ID で保存します。";
 "How to write an extension" = "拡張機能の作り方";
 "Id" = "ID";
 "Its id must be lowercase letters, digits, dots, dashes or underscores, 64 at most." = "ID に使えるのは小文字の英字・数字・ピリオド・ハイフン・アンダースコアのみで、64 文字までです。";
@@ -818,8 +818,8 @@
 "No pulse-extension.json in this folder." = "このフォルダに pulse-extension.json がありません。";
 "None yet" = "まだありません";
 "Program" = "プログラム";
-"Pulse reads this folder when it starts. After adding or changing an extension, look again." = "Pulse は起動時にこのフォルダを読み込みます。拡張機能を追加・変更したら、再読み込みしてください。";
-"Runs a program from your extensions folder on the refresh schedule. Pulse passes it no credentials; what it reads and where it connects are up to the program." = "拡張機能フォルダ内のプログラムを更新のたびに実行します。Pulse は認証情報を渡しません。何を読み取り、どこに接続するかはプログラム次第です。";
+"Blinky reads this folder when it starts. After adding or changing an extension, look again." = "Blinky は起動時にこのフォルダを読み込みます。拡張機能を追加・変更したら、再読み込みしてください。";
+"Runs a program from your extensions folder on the refresh schedule. Blinky passes it no credentials; what it reads and where it connects are up to the program." = "拡張機能フォルダ内のプログラムを更新のたびに実行します。Blinky は認証情報を渡しません。何を読み取り、どこに接続するかはプログラム次第です。";
 "Show in Finder" = "Finder に表示";
 "Shown in the panel" = "パネルに表示中";
 "Stopped if it hasn't answered by then." = "この時間内に応答がなければ停止します。";
@@ -828,7 +828,7 @@
 "The extension stopped with an error." = "拡張機能がエラーで終了しました。";
 "This extension's program can't be run. Check its folder." = "この拡張機能のプログラムを実行できません。フォルダを確認してください。";
 "Time limit" = "制限時間";
-"Written for extension schema %@, which this version of Pulse doesn't read." = "拡張機能スキーマ %@ 向けに書かれていますが、このバージョンの Pulse は読み込めません。";
+"Written for extension schema %@, which this version of Blinky doesn't read." = "拡張機能スキーマ %@ 向けに書かれていますが、このバージョンの Blinky は読み込めません。";
 "pulse-extension.json isn't valid JSON, or is missing a field." = "pulse-extension.json が正しい JSON ではないか、必要な項目が欠けています。";
 "%@. Lowest %@, highest %@." = "%@。最低 %@、最高 %@。";
 
@@ -853,7 +853,7 @@
 
 /* Kilo Code */
 "Uses a key entered in Settings, or reads ~/.local/share/kilo/auth.json. No Keychain prompt." = "設定で入力したキーを使うか、~/.local/share/kilo/auth.json を読み取ります。キーチェーンの確認はありません。";
-"From app.kilo.ai. Optional — Pulse can use the login the Kilo CLI saved. Stored encrypted on this Mac." = "app.kilo.ai で取得します。省略可能で、その場合は Kilo CLI が保存したログインを Pulse が使います。この Mac に暗号化して保存されます。";
+"From app.kilo.ai. Optional — Blinky can use the login the Kilo CLI saved. Stored encrypted on this Mac." = "app.kilo.ai で取得します。省略可能で、その場合は Kilo CLI が保存したログインを Blinky が使います。この Mac に暗号化して保存されます。";
 
 /* Mistral */
 /* Factory */
@@ -929,12 +929,12 @@
 
 /* Alibaba Token Plan */
 "Bailian CLI" = "Bailian CLI";
-"Runs the Bailian CLI (bl) with its saved login. Pulse does not read or store its credentials." = "保存済みのログインで Bailian CLI（bl）を実行します。Pulse はその認証情報を読み取りも保存もしません。";
+"Runs the Bailian CLI (bl) with its saved login. Blinky does not read or store its credentials." = "保存済みのログインで Bailian CLI（bl）を実行します。Blinky はその認証情報を読み取りも保存もしません。";
 "Uses the login the Bailian CLI already saved." = "Bailian CLI が既に保存しているログインを使います。";
 /* Nous Portal */
 "Reads the Nous Portal login Hermes Agent saved in ~/.hermes. No Keychain prompt." = "Hermes Agent が ~/.hermes に保存した Nous Portal のログインを読み取ります。キーチェーンの確認はありません。";
 "Hermes Agent's login" = "Hermes Agent のログイン";
-"Uses the login Hermes Agent already saved. Pulse never renews it." = "Hermes Agent が既に保存しているログインを使います。Pulse がこのログインを更新することはありません。";
+"Uses the login Hermes Agent already saved. Blinky never renews it." = "Hermes Agent が既に保存しているログインを使います。Blinky がこのログインを更新することはありません。";
 
 /* Hugging Face */
 "Uses a token entered in Settings, or reads the one hf auth login saved in ~/.cache/huggingface. No Keychain prompt." = "設定で入力したトークンを使うか、hf auth login が ~/.cache/huggingface に保存したトークンを読み取ります。キーチェーンの確認はありません。";
@@ -945,7 +945,7 @@
 
 /* Codebuff */
 "Uses a key entered in Settings, or reads the login the codebuff CLI saved in ~/.config/manicode. No Keychain prompt." = "設定で入力したキーを使うか、codebuff CLI が ~/.config/manicode に保存したログインを読み取ります。キーチェーンの確認はありません。";
-"From codebuff.com. Optional — Pulse can use the login the codebuff CLI saved. Stored encrypted on this Mac." = "codebuff.com で取得します。省略可能で、その場合は codebuff CLI が保存したログインを Pulse が使います。この Mac に暗号化して保存されます。";
+"From codebuff.com. Optional — Blinky can use the login the codebuff CLI saved. Stored encrypted on this Mac." = "codebuff.com で取得します。省略可能で、その場合は codebuff CLI が保存したログインを Blinky が使います。この Mac に暗号化して保存されます。";
 
 /* Venice */
 "From venice.ai's API settings. Stored encrypted on this Mac." = "venice.ai の API 設定で取得します。この Mac に暗号化して保存されます。";
@@ -998,7 +998,7 @@
 "Last started" = "前回の自動開始";
 "Use at your own risk" = "自己責任でご利用ください";
 "I understand the risk, turn it on" = "リスクを理解して有効にする";
-"This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Pulse only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that." = "これは Anthropic や OpenAI が提供する機能ではありません。使用量ウィンドウを自動で開始することは使用制限の回避とみなされ、アカウントの制限や停止につながる可能性があります。Pulse はサインイン済みのツールから短いメッセージを 1 通送るだけで、その結果アカウントに生じたいかなる影響についても責任を負いません。これを受け入れる場合のみ有効にしてください。";
+"This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Blinky only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that." = "これは Anthropic や OpenAI が提供する機能ではありません。使用量ウィンドウを自動で開始することは使用制限の回避とみなされ、アカウントの制限や停止につながる可能性があります。Blinky はサインイン済みのツールから短いメッセージを 1 通送るだけで、その結果アカウントに生じたいかなる影響についても責任を負いません。これを受け入れる場合のみ有効にしてください。";
 "Not started yet" = "まだ自動開始していません";
 "%@ · the command-line tool was not found" = "%@ · コマンドラインツールが見つかりません";
 "%@ · it did not go through; check the tool is signed in" = "%@ · 送信できませんでした。ツールにサインインしているか確認してください";
@@ -1056,7 +1056,7 @@
 "No OpenCode console session found. Sign in at opencode.ai first." = "OpenCode コンソールのセッションが見つかりません。先に opencode.ai でサインインしてください。";
 "Costs as %@ charged them, for the whole account." = "金額は %@ の実際の請求額で、アカウント全体のものです。";
 "The console session has expired. Read it again in Settings." = "コンソールのセッションが切れました。設定で読み取り直してください。";
-"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Pulse keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode のコンソールが 30 日間保持するリクエスト記録です。アカウントのすべてのデバイス・すべての App からのリクエストと、それぞれの費用が含まれます。キーが未設定か拒否されたときは、プランの上限もこれで読み取ります。Pulse はコンソールのサインイン用 Cookie だけを、この Mac に暗号化して保存します。";
+"The request log OpenCode's console keeps for 30 days — every machine and every app on the account, and what each request cost — and the plan's limits, when no key is set or the key is turned away. Blinky keeps only the console's sign-in cookies, encrypted on this Mac." = "OpenCode のコンソールが 30 日間保持するリクエスト記録です。アカウントのすべてのデバイス・すべての App からのリクエストと、それぞれの費用が含まれます。キーが未設定か拒否されたときは、プランの上限もこれで読み取ります。Blinky はコンソールのサインイン用 Cookie だけを、この Mac に暗号化して保存します。";
 "Turn on Detailed card above to see the request log on the card." = "上の「詳細カード」をオンにすると、カードにリクエスト記録が表示されます。";
 "Read from %@ · workspace %@." = "%@ から読み取りました · ワークスペース「%@」。";
 "The console turned this session away. Sign in again at opencode.ai, then read it again." = "コンソールがこのセッションを受け付けませんでした。opencode.ai でサインインし直してから、もう一度読み取ってください。";
@@ -1064,11 +1064,11 @@
 "Reading the account's records…" = "アカウントの記録を読み取り中…";
 "From %@'s request log for the whole account — every machine and every app that uses it — with what each request was charged. The log keeps 30 days." = "%@ のアカウント全体のリクエスト記録で、すべてのデバイスとそれを使うすべての App を含みます。金額は各リクエストの実際の請求額です。記録は 30 日間保持されます。";
 
-"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days." = "%@ のコンソールが記録したアカウント全体の使用量で、すべてのキーとすべてのデバイスを含みます。金額は日ごとの実際の請求額です。Pulse は直近 30 日分を読み取ります。";
+"From %@'s console for the whole account — every key and every machine — with what was charged, day by day. Blinky reads the last 30 days." = "%@ のコンソールが記録したアカウント全体の使用量で、すべてのキーとすべてのデバイスを含みます。金額は日ごとの実際の請求額です。Blinky は直近 30 日分を読み取ります。";
 "DeepSeek console" = "DeepSeek コンソール";
 "Account usage" = "アカウントの使用量";
 "Kept. The usage history below and the detailed card read the whole account with it." = "保存済みです。下の使用履歴と詳細カードは、これを使ってアカウント全体を読み取ります。";
-"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Pulse keeps only the console's sign-in, encrypted on this Mac." = "DeepSeek のコンソールが記録するアカウントの使用量です。すべてのキー・すべてのデバイスの日ごとの使用量と、実際の請求額が含まれます。キーが未設定か拒否されたときは、残高もこれで読み取ります。Pulse はコンソールのサインイン情報だけを、この Mac に暗号化して保存します。";
+"The usage DeepSeek's console keeps for the account — every key and every machine, day by day, and what was charged — and the balance, when no key is set or the key is turned away. Blinky keeps only the console's sign-in, encrypted on this Mac." = "DeepSeek のコンソールが記録するアカウントの使用量です。すべてのキー・すべてのデバイスの日ごとの使用量と、実際の請求額が含まれます。キーが未設定か拒否されたときは、残高もこれで読み取ります。Blinky はコンソールのサインイン情報だけを、この Mac に暗号化して保存します。";
 "Reads Chrome, Edge, Brave, Arc and other Chromium browsers." = "Chrome、Edge、Brave、Arc などの Chromium 系ブラウザから読み取ります。";
 "No Chromium browser was found. Sign in at platform.deepseek.com in Chrome, Edge, Brave or Arc." = "Chromium 系ブラウザが見つかりません。Chrome、Edge、Brave、Arc のいずれかで platform.deepseek.com にサインインしてください。";
 "No DeepSeek console sign-in found. Sign in at platform.deepseek.com first." = "DeepSeek コンソールのサインインが見つかりません。先に platform.deepseek.com でサインインしてください。";
@@ -1166,7 +1166,7 @@
 "You used" = "利用額";
 "Where the money went" = "金額の内訳";
 "The cache took off the API price" = "キャッシュで下がった API 価格";
-"Estimated at each model's published API price. The plan price is the one you typed in Pulse." = "各モデルが公開している API 料金で概算しています。プランの料金は Pulse に入力された値です。";
+"Estimated at each model's published API price. The plan price is the one you typed in Blinky." = "各モデルが公開している API 料金で概算しています。プランの料金は Blinky に入力された値です。";
 "Figures are to date, and the plan price is prorated by the days so far." = "数値は本日までのもので、プランの料金は経過日数で日割りにしています。";
 "That was" = "これが";
 "your %@." = "あなたの%@。";
@@ -1197,7 +1197,7 @@
 "Last month's recap, at the start of the month. Needs Token spend reading." = "月初に、先月のまとめができたことを知らせます。「ローカルの使用量記録を読み取る」がオンのときだけ使えます。";
 "Your %@ recap is ready" = "%@のまとめができました";
 "The recap needs Token spend" = "まとめには「トークン使用量」が必要です";
-"It is built from the usage records on this Mac, which Pulse reads only while Token spend reading is on." = "この Mac の使用量記録から作ります。Pulse が記録を読むのは、「ローカルの使用量記録を読み取る」がオンのときだけです。";
+"It is built from the usage records on this Mac, which Blinky reads only while Token spend reading is on." = "この Mac の使用量記録から作ります。Blinky が記録を読むのは、「ローカルの使用量記録を読み取る」がオンのときだけです。";
 "Open Token spend" = "トークン使用量を開く";
 "The records could not be read." = "記録を読み取れませんでした。";
 "No records for %@" = "%@の記録はありません";
@@ -1306,7 +1306,7 @@
 
 // Service status: why a read failed
 "No request was made." = "リクエストは送られていません。";
-"The page answered, but not with anything Pulse reads for this provider." = "ステータスページは応答しましたが、Pulse がこのサービスについて読み取れる内容はありませんでした。";
+"The page answered, but not with anything Blinky reads for this provider." = "ステータスページは応答しましたが、Blinky がこのサービスについて読み取れる内容はありませんでした。";
 "The page answered HTTP %@." = "ステータスページは HTTP %@ を返しました。";
 
 // Recap: day and week

@@ -387,7 +387,7 @@ struct RecapPaybackView: View {
 
     private var footnotes: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(localized: "Estimated at each model's published API price. The plan price is the one you typed in Pulse.")
+            Text(localized: "Estimated at each model's published API price. The plan price is the one you typed in Blinky.")
             // A period still running: both figures stop today.
             if deck.payback?.isToDate == true {
                 Text(localized: "Figures are to date, and the plan price is prorated by the days so far.")

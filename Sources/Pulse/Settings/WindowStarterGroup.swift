@@ -74,7 +74,7 @@ struct WindowStarterGroup: View {
             }
             Button(String.localized("Cancel"), role: .cancel) { confirmingStarter = nil }
         } message: {
-            Text(localized: "This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Pulse only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that.")
+            Text(localized: "This is not a feature of Anthropic or OpenAI. Starting usage windows automatically may be treated as getting around usage limits, and could get your account restricted or suspended. Blinky only sends one short message through the tool you are already signed in to, and is not responsible for anything that happens to your account as a result. Turn it on only if you accept that.")
         }
     }
 

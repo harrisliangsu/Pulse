@@ -141,7 +141,7 @@ struct NetworkPane: View {
     private var proxySubtitle: String {
         let mode = settings.networkProxy.mode
         if mode == .systemRequired, !systemProxyOn {
-            return .localized("macOS has no proxy switched on, so Pulse isn't connecting.")
+            return .localized("macOS has no proxy switched on, so Blinky isn't connecting.")
         }
         return mode.explanation
     }

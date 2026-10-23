@@ -2,8 +2,8 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "pulse-usage",
   "type": "module",
-  "title": "Pulse Usage",
-  "description": "Search your Pulse accounts and inspect cached usage, reset times, and reading age.",
+  "title": "Blinky Usage",
+  "description": "Search your Blinky accounts and inspect cached usage, reset times, and reading age.",
   "icon": "icon.png",
   "author": "qunqin24",
   "license": "Apache-2.0",
@@ -12,8 +12,8 @@
     {
       "name": "usage",
       "title": "Show AI Usage",
-      "subtitle": "Pulse",
-      "description": "Search accounts, inspect limits, and open account settings in Pulse.",
+      "subtitle": "Blinky",
+      "description": "Search accounts, inspect limits, and open account settings in Blinky.",
       "mode": "view"
     }
   ],
@@ -21,8 +21,8 @@
     {
       "name": "pulsePath",
       "type": "textfield",
-      "title": "Pulse Executable",
-      "description": "Full path to the executable inside Pulse.app. Spaces are supported; do not add shell quotes.",
+      "title": "Blinky executable",
+      "description": "Full path to the executable inside Pulse.app. The app is named Blinky. Spaces are supported; do not add shell quotes.",
       "required": false,
       "default": "/Applications/Pulse.app/Contents/MacOS/Pulse"
     }

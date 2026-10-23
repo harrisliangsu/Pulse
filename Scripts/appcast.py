@@ -104,9 +104,9 @@ FEED_URL = f"https://raw.githubusercontent.com/{REPO_SLUG}/main/appcast.xml"
 SKELETON = f"""<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
     <channel>
-        <title>Pulse</title>
+        <title>Blinky</title>
         <link>{FEED_URL}</link>
-        <description>Updates for Pulse.</description>
+        <description>Updates for Blinky.</description>
         <language>zh-CN</language>
     </channel>
 </rss>
@@ -156,7 +156,7 @@ def sign(archive: Path) -> tuple[str, str]:
 
 # Bookkeeping, not news: the version bump itself and the commit this script's
 # own output produces.
-BORING = re.compile(r"^(Pulse \d|Offer \d[\d.]* to Sparkle$)")
+BORING = re.compile(r"^(Pulse \d|Blinky \d|Offer \d[\d.]* to Sparkle$)")
 
 # Spacing only — **no colours and no fonts.** Sparkle injects a stylesheet of
 # its own (`ReleaseNotesColorStyle.css`) that turns the text white under
@@ -205,7 +205,7 @@ def changes(version: str, previous: str | None) -> list[str]:
 def notes_html(version: str, listing: str, link_text: str) -> str:
     """One language's notes as the update window shows them."""
     link = f'<p><a href="{REPO}/releases/tag/v{version}">{html.escape(link_text)}</a></p>'
-    inner = f"{STYLE}<h2>Pulse {html.escape(version)}</h2>{listing}{link}"
+    inner = f"{STYLE}<h2>Blinky {html.escape(version)}</h2>{listing}{link}"
     # A CDATA section cannot contain its own terminator; nothing here should
     # produce one, but a commit subject is user-written text.
     return inner.replace("]]>", "]]&gt;")

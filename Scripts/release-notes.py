@@ -82,7 +82,7 @@ def install_zh(version: str) -> str:
         [
             "## 安装",
             "",
-            f"下载 **Pulse-{version}.dmg**，打开后拖入「应用程序」。未公证，首次启动会被阻止：先打开 Pulse 并关闭警告，再到 **系统设置 → 隐私与安全性 → 安全性 → 仍要打开**。只需操作一次。",
+            f"下载 **Pulse-{version}.dmg**，打开后把 Blinky 拖入「应用程序」。未公证，首次启动会被阻止：先打开 Blinky 并关闭警告，再到 **系统设置 → 隐私与安全性 → 安全性 → 仍要打开**。只需操作一次。",
             "",
             "需要 macOS 14 或更高版本，支持 Apple 芯片和 Intel。",
         ]
@@ -94,7 +94,7 @@ def install_en(version: str) -> str:
         [
             "## Install",
             "",
-            f"Download **Pulse-{version}.dmg** and drag Pulse into Applications. Not notarized, so macOS blocks the first launch: open Pulse, dismiss the warning, then go to **System Settings → Privacy & Security → Security → Open Anyway**. Once only.",
+            f"Download **Pulse-{version}.dmg** and drag Blinky into Applications. Not notarized, so macOS blocks the first launch: open Blinky, dismiss the warning, then go to **System Settings → Privacy & Security → Security → Open Anyway**. Once only.",
             "",
             "Requires macOS 14 or newer. Universal (Apple Silicon and Intel).",
         ]
@@ -124,15 +124,15 @@ def build(version: str) -> str:
         else "**首次安装？** 下载下方安装包即可。"
     )
     already_en = (
-        f"**Already running {prev}?** Pulse will offer {version} on its own — or use **Settings → About → Check now**."
+        f"**Already running {prev}?** Blinky will offer {version} on its own — or use **Settings → About → Check now**."
         if prev
         else "**First install?** Download the package below."
     )
 
     parts = [
-        f"[中文](#cn-pulse-{version}) | [English](#en-pulse-{version})",
+        f"[中文](#cn-blinky-{version}) | [English](#en-blinky-{version})",
         "",
-        f'<h2 id="cn-pulse-{version}">Pulse {version}</h2>',
+        f'<h2 id="cn-blinky-{version}">Blinky {version}</h2>',
         "",
         already_zh,
         "",
@@ -146,7 +146,7 @@ def build(version: str) -> str:
         "",
         "---",
         "",
-        f'<h2 id="en-pulse-{version}">Pulse {version}</h2>',
+        f'<h2 id="en-blinky-{version}">Blinky {version}</h2>',
         "",
         already_en,
         "",
