@@ -1,17 +1,17 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import SwiftUI
 
-/// The source list: the panes in sections, then every account, narrowed by the
-/// search the shell holds.
+/// The source list: the panes in sections, then Providers as one row.
 ///
-/// The shell sets the column's width and the search field on this view rather
-/// than here: both are properties of the split view's sidebar column.
+/// Built-in accounts are not rows here. They are on the Providers page, and
+/// a search lists the ones it matches. The shell sets the column's width and
+/// the search field on this view rather than here: both are properties of the
+/// split view's sidebar column.
 struct SettingsSidebar: View {
     let settings: AppSettings
     @Bindable var navigation: SettingsNavigation
-    /// Narrows the sidebar. Sixteen providers plus every added account is a
-    /// list that scrolls on any window worth opening. Held by the shell so a
-    /// language change, which rebuilds the split view, does not clear it.
+    /// Narrows the sidebar. Held by the shell so a language change, which
+    /// rebuilds the split view, does not clear it.
     let search: String
 
     var body: some View {
@@ -19,78 +19,54 @@ struct SettingsSidebar: View {
             if SettingsPane.panel.contains(where: matches) || matches(.spend) {
                 Section(String.localized("Panel")) {
                     ForEach(SettingsPane.panel.filter(matches), id: \.self) { row($0) }
-                    // Above the accounts, not below them. Eighteen
-                    // provider rows is more than a sidebar shows at once,
-                    // and a pane whose whole subject is "all of them
-                    // together" was landing under the fold — reachable
-                    // only by scrolling past the thing it summarises.
                     if matches(.spend) { row(.spend) }
                 }
             }
 
-            // Above the accounts for the same reason Token spend is: under
-            // twenty-odd provider rows these were below the fold, and they
-            // are the panes a person opens Settings for.
             if SettingsPane.application.contains(where: matches) {
                 Section(String.localized("Application")) {
                     ForEach(SettingsPane.application.filter(matches), id: \.self) { row($0) }
                 }
             }
 
-            // What is switched on, first and together: with seventy-odd
-            // providers, the handful somebody actually uses were a scroll
-            // through the alphabet away. Rail order, both kinds.
-            let enabled = matchingProviderAccounts.filter(settings.isEnabled)
-            if !enabled.isEmpty {
-                Section(String.localized("Enabled")) {
-                    ForEach(enabled) { account in
-                        row(.account(account))
-                    }
-                }
-            }
-
-            // The rest, subscriptions and API accounts apart, each in rail
-            // order: a sidebar that disagreed with the thing it configures
-            // is its own small confusion. An enabled account is not listed
-            // again — two rows with one selection tag highlight together.
-            // See `Provider.Billing`.
-            ForEach(Provider.Billing.allCases, id: \.self) { billing in
-                let accounts = matchingProviderAccounts.filter {
-                    $0.provider.billing == billing && !settings.isEnabled($0)
-                }
-                if !accounts.isEmpty {
-                    Section(billing.sectionTitle) {
-                        ForEach(accounts) { account in
+            // One row for every built-in account. The open account stays
+            // under it so that row's selection tag is still in the list.
+            if matches(.providers) {
+                Section {
+                    row(.providers)
+                    if !isSearching {
+                        ForEach(listedProviderAccounts) { account in
                             row(.account(account))
                         }
                     }
                 }
             }
 
-            // Apart from the accounts, as programs somebody added rather
-            // than services Pulse ships: the list says which is which
-            // before any pane is opened.
-            if matches(.extensions) || !matchingExtensionAccounts.isEmpty {
-                Section(String.localized("Extensions")) {
-                    if matches(.extensions) { row(.extensions) }
-                    ForEach(matchingExtensionAccounts) { account in
+            ForEach(searchedProviderGroups) { group in
+                Section(group.title) {
+                    ForEach(group.accounts) { account in
                         row(.account(account))
                     }
                 }
             }
 
-            // Rarely visited, so below the accounts: out of the way of the
-            // panes above, and still one scroll away.
-            if SettingsPane.trailing.contains(where: matches) {
-                Section {
-                    ForEach(SettingsPane.trailing.filter(matches), id: \.self) { row($0) }
+            // Manage extensions, Developer integrations and About, with any
+            // extension somebody added. A header, and no extra click: these
+            // are the rows the long provider list used to push off screen.
+            if showsBottom {
+                Section(String.localized("Other")) {
+                    if matches(.extensions) { row(.extensions) }
+                    ForEach(matchingExtensionAccounts) { account in
+                        row(.account(account))
+                    }
+                    if matches(.integrations) { row(.integrations) }
+                    if matches(.about) { row(.about) }
                 }
             }
         }
         .listStyle(.sidebar)
         .overlay {
-            if isSearching, matchingAccounts.isEmpty,
-               !(SettingsPane.panel + [.spend, .extensions] + SettingsPane.application + SettingsPane.trailing).contains(where: matches) {
+            if isSearching, matchingAccounts.isEmpty, !SettingsPane.fixedPanes.contains(where: matches) {
                 Text(localized: "No matches")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
@@ -124,6 +100,30 @@ struct SettingsSidebar: View {
 
     private var matchingExtensionAccounts: [AccountKey] {
         matchingAccounts.filter { $0.provider == .pulseExtension }
+    }
+
+    private var openAccount: AccountKey? {
+        if case .account(let account) = navigation.pane { return account }
+        return nil
+    }
+
+    private var listedProviderAccounts: [AccountKey] {
+        SettingsProviderListing.accounts(
+            searching: isSearching,
+            matches: matchingProviderAccounts,
+            open: openAccount
+        )
+    }
+
+    /// Provider groups for a search. Empty when the field is empty: the
+    /// accounts are on the Providers page, not in the sidebar.
+    private var searchedProviderGroups: [ProviderAccountGroups.Group] {
+        guard isSearching else { return [] }
+        return ProviderAccountGroups.make(accounts: listedProviderAccounts, isEnabled: settings.isEnabled)
+    }
+
+    private var showsBottom: Bool {
+        matches(.extensions) || matches(.integrations) || matches(.about) || !matchingExtensionAccounts.isEmpty
     }
 
     /// By the pane's name, or by the name of any setting on it: with the

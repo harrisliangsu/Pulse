@@ -1,4 +1,5 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
+import AppKit
 import Foundation
 import Observation
 import Sparkle
@@ -23,7 +24,9 @@ import Sparkle
 /// Sparkle owns the schedule and the windows it puts up. What is kept here is
 /// only what the rest of the app asks about: whether a check can happen at
 /// all, whether one is running, and whether a newer version was found — which
-/// is what the menu bar shows.
+/// is what the menu bar shows. The one extra step is activation: this process
+/// is an `.accessory` app, and Sparkle's own driver shows a found update
+/// behind every other app unless something has made this one `.regular` first.
 ///
 /// **The installed file name is not changed from this delegate.** Sparkle
 /// writes the update over `host.bundlePath` because
@@ -62,6 +65,11 @@ final class AppUpdate {
 
     private var controller: SPUStandardUpdaterController?
     private let relay = UpdaterRelay()
+    /// True from the moment a Sparkle window needs to be in front until that
+    /// session ends. `DockPresence` is the only writer of the activation policy;
+    /// this tells it the offer is up.
+    private var updateOfferVisible = false
+    var onUpdateOfferVisible: ((Bool) -> Void)?
 
     init() {
         // The feed URL is the tell: present only in a bundle built by
@@ -75,7 +83,7 @@ final class AppUpdate {
         controller = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: relay,
-            userDriverDelegate: nil
+            userDriverDelegate: relay
         )
     }
 
@@ -125,11 +133,25 @@ final class AppUpdate {
     }
 
     /// Asks now, and shows Sparkle's own window with whatever it finds.
+    ///
+    /// The checking window is created on a later turn, after Sparkle's install
+    /// probe. By then this process is `.regular` and has been activated. Left
+    /// as `.accessory`, Sparkle's `showWindow` opens behind everything else —
+    /// `activateIgnoringOtherApps` included, which is why the permission prompt
+    /// is not shown.
     func check() {
-        guard let controller else { return }
+        guard let updater = controller?.updater else { return }
         isChecking = true
         didFail = false
-        controller.updater.checkForUpdates()
+        if updateOfferVisible || !updater.sessionInProgress {
+            showUpdateOffer()
+        }
+        updater.checkForUpdates()
+        // Sparkle refused the check (nothing started, so nothing will finish).
+        // A session that was already running is left to its own finish.
+        if !updater.sessionInProgress {
+            hideUpdateOffer()
+        }
     }
 
     /// Asks quietly, for a screen that is about to state the result: no
@@ -177,6 +199,41 @@ final class AppUpdate {
     fileprivate func endCycle() {
         isChecking = false
     }
+
+    /// Bring Sparkle's standard window forward. Called for a manual check and
+    /// again when a check, scheduled or not, is about to show an update or a
+    /// modal alert. `SUAutomaticallyUpdate` stays false: this shows the offer,
+    /// it does not install.
+    fileprivate func showUpdateOffer() {
+        updateOfferVisible = true
+        onUpdateOfferVisible?(true)
+    }
+
+    fileprivate func hideUpdateOffer() {
+        guard updateOfferVisible else { return }
+        updateOfferVisible = false
+        onUpdateOfferVisible?(false)
+    }
+
+    /// Sparkle has already decided whether to order the offer front, behind,
+    /// or not at all. The next turn is after that decision, so the offer can
+    /// be made key here whichever way it went.
+    ///
+    /// The frame name is Sparkle's (`SUUpdateAlert.windowDidLoad`, 2.9.6). The
+    /// controller class is the same window when the frame name is missing.
+    fileprivate func focusUpdateOffer() {
+        NSApp.activate(ignoringOtherApps: true)
+        for window in NSApp.windows where Self.isSparkleUpdateOffer(
+            frameAutosaveName: window.frameAutosaveName,
+            windowControllerClassName: window.windowController.map { String(describing: type(of: $0)) }
+        ) {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    nonisolated static func isSparkleUpdateOffer(frameAutosaveName: String, windowControllerClassName: String?) -> Bool {
+        frameAutosaveName == "SUUpdateAlert2" || windowControllerClassName == "SUUpdateAlert"
+    }
 }
 
 /// Sparkle's delegate, kept apart from `AppUpdate` itself.
@@ -185,7 +242,7 @@ final class AppUpdate {
 /// and its methods cannot be main-actor-isolated. Rather than fight that on a
 /// type that is also `@Observable`, this stands between the two and hops onto
 /// the main actor — where Sparkle calls it from in any case.
-private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
+private final class UpdaterRelay: NSObject, SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     /// Weak: the app owns the updater, not the other way round.
     weak var owner: AppUpdate?
 
@@ -220,5 +277,43 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate {
         error: (any Error)?
     ) {
         MainActor.assumeIsolated { owner?.endCycle() }
+    }
+
+    /// Before Sparkle shows a found update, scheduled or from Check for Updates.
+    ///
+    /// Returning control with the app still `.accessory` is the bug: for a
+    /// background app whose check was not just now, Sparkle's standard driver
+    /// shows the offer with `showWindow` and does not activate, or `orderBack`
+    /// when this app already has a key window. A regular app that is already
+    /// active can instead wait for the *next* activation and never show it.
+    /// Gentle reminders are a different UI; this keeps Sparkle's own window.
+    /// Side effects do not belong in `shouldHandle`, so the activation is here.
+    nonisolated func standardUserDriverWillHandleShowingUpdate(
+        _ handleShowingUpdate: Bool,
+        forUpdate update: SUAppcastItem,
+        state: SPUUserUpdateState
+    ) {
+        guard handleShowingUpdate else { return }
+        MainActor.assumeIsolated {
+            owner?.showUpdateOffer()
+            let appUpdate = owner
+            // After this returns, Sparkle orders the offer front, behind, or
+            // not at all. The task runs once that call has returned.
+            Task { @MainActor in
+                appUpdate?.focusUpdateOffer()
+            }
+        }
+    }
+
+    /// "Up to date", and a failure Sparkle puts in an alert. `runModal` follows
+    /// this return, so the app has to be activable before that call.
+    nonisolated func standardUserDriverWillShowModalAlert() {
+        MainActor.assumeIsolated { owner?.showUpdateOffer() }
+    }
+
+    /// The offer was dismissed, skipped, or failed. Settings may still want
+    /// the Dock icon; `DockPresence` is what decides.
+    nonisolated func standardUserDriverWillFinishUpdateSession() {
+        MainActor.assumeIsolated { owner?.hideUpdateOffer() }
     }
 }

@@ -9,6 +9,10 @@ import AppKit
 /// `AppSettings.showsDockIconInSettings` allows it, and Pulse is a menu bar app
 /// again the moment neither is true.
 ///
+/// Sparkle's update window is not one of those tracked windows. An accessory
+/// policy is also why that window opens behind everything else, so while the
+/// offer is up the icon stays even if the Settings switch is off.
+///
 /// One owner rather than one per window: with each controller setting the
 /// policy itself, closing the Settings window under an open recap — or the
 /// other way round — took the Dock icon away from the window still showing.
@@ -18,10 +22,30 @@ import AppKit
 final class DockPresence {
     private let settings: AppSettings
     private let windows = NSHashTable<NSWindow>.weakObjects()
+    /// Sparkle's update session is showing a window. Cleared when that session ends.
+    private var updateOfferVisible = false
 
     init(settings: AppSettings) {
         self.settings = settings
         settings.onDockIconChange = { [weak self] in self?.apply() }
+    }
+
+    /// `.regular` while Settings or the recap wants the Dock icon, or while
+    /// Sparkle is showing an update. Anything else stays `.accessory`.
+    nonisolated static func activationPolicy(
+        trackedWindowOpen: Bool,
+        showsDockIconInSettings: Bool,
+        updateOfferVisible: Bool
+    ) -> NSApplication.ActivationPolicy {
+        let settingsWantDock = trackedWindowOpen && showsDockIconInSettings
+        return settingsWantDock || updateOfferVisible ? .regular : .accessory
+    }
+
+    /// The update offer is not a window this type tracks. `AppUpdate` says when
+    /// Sparkle is showing one, and when that session has finished.
+    func setUpdateOfferVisible(_ visible: Bool) {
+        updateOfferVisible = visible
+        apply()
     }
 
     func track(_ window: NSWindow) {
@@ -41,12 +65,19 @@ final class DockPresence {
     /// the middle of: it still reports visible, so it is left out of the count.
     func apply(closing: NSWindow? = nil) {
         let open = windows.allObjects.contains { $0 !== closing && ($0.isVisible || $0.isMiniaturized) }
-        let policy: NSApplication.ActivationPolicy = open && settings.showsDockIconInSettings ? .regular : .accessory
-        guard NSApp.activationPolicy() != policy else { return }
-        NSApp.setActivationPolicy(policy)
+        let policy = Self.activationPolicy(
+            trackedWindowOpen: open,
+            showsDockIconInSettings: settings.showsDockIconInSettings,
+            updateOfferVisible: updateOfferVisible
+        )
+        let changed = NSApp.activationPolicy() != policy
+        if changed { NSApp.setActivationPolicy(policy) }
         // Changing the policy can drop activation, and a window is what the
-        // person is looking at.
-        if policy == .regular { NSApp.activate(ignoringOtherApps: true) }
+        // person is looking at. An update offer that is already `.regular`
+        // (Settings is open) still has to become the key window.
+        if policy == .regular && (changed || updateOfferVisible) {
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 }
 

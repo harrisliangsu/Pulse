@@ -179,7 +179,7 @@ jobs:
 
           # When this version is already in the feed, appcast.py rewrites that
           # item's enclosure from the zip this run just published (Publish
-          # uses --clobber) and leaves every older version alone. A second
+          # uses --clobber). The feed keeps that one newest item. A second
           # run for the same tag therefore commits a signature for the asset
           # that is actually on the release.
           Scripts/appcast.py "$VERSION" "build.noindex/Blinky-$VERSION.zip" "$URL"

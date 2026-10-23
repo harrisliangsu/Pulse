@@ -45,15 +45,17 @@ class OfferTests(unittest.TestCase):
             "notes-for-1.3.0",
         )
 
-    def test_insert_is_newest_first_and_leaves_the_older_enclosure(self) -> None:
-        self.assertLess(
-            self.feed.index(appcast.version_marker("1.3.0")),
-            self.feed.index(appcast.version_marker("1.2.0")),
-        )
-        older = _item(self.feed, "1.2.0")
-        self.assertIn('sparkle:edSignature="sig-old"', older)
-        self.assertIn('length="100"', older)
-        self.assertIn("notes-for-1.2.0", older)
+    def test_insert_keeps_only_the_newest_item(self) -> None:
+        self.assertEqual(appcast.KEPT_ITEMS, 1)
+        self.assertEqual(self.feed.count("<item>"), 1)
+        self.assertIn(appcast.version_marker("1.3.0"), self.feed)
+        self.assertNotIn(appcast.version_marker("1.2.0"), self.feed)
+        current = _item(self.feed, "1.3.0")
+        self.assertIn('sparkle:edSignature="sig-new"', current)
+        self.assertIn('length="200"', current)
+        self.assertIn("notes-for-1.3.0", current)
+        self.assertNotIn("notes-for-1.2.0", self.feed)
+        self.assertNotIn('sparkle:edSignature="sig-old"', self.feed)
 
     def test_same_version_replaces_enclosure_only(self) -> None:
         updated = appcast.offer(
@@ -72,10 +74,54 @@ class OfferTests(unittest.TestCase):
         self.assertIn("notes-for-1.3.0", current)
         self.assertNotIn("notes-that-must-not-replace", updated)
         self.assertNotIn('sparkle:edSignature="sig-new"', updated)
+        self.assertEqual(updated.count("<item>"), 1)
 
-        # The other version is the one that must not be re-signed.
-        self.assertEqual(_item(updated, "1.2.0"), _item(self.feed, "1.2.0"))
-        self.assertEqual(updated.count("<item>"), 2)
+    def test_reoffer_of_the_newest_drops_older_items(self) -> None:
+        older = appcast.render_item(
+            "1.2.0",
+            "https://example.invalid/Blinky-1.2.0.zip",
+            "sig-old",
+            "100",
+            "notes-for-1.2.0",
+        )
+        newer = appcast.render_item(
+            "1.3.0",
+            "https://example.invalid/Blinky-1.3.0.zip",
+            "sig-new",
+            "200",
+            "notes-for-1.3.0",
+        )
+        anchor = "        <language>zh-CN</language>\n"
+        feed = appcast.SKELETON.replace(anchor, anchor + newer + older, 1)
+        self.assertEqual(feed.count("<item>"), 2)
+
+        updated = appcast.offer(
+            feed,
+            "1.3.0",
+            "https://example.invalid/Blinky-1.3.0-rebuilt.zip",
+            "sig-rebuilt",
+            "333",
+            "notes-that-must-not-replace",
+        )
+        self.assertEqual(updated.count("<item>"), 1)
+        self.assertIn("notes-for-1.3.0", updated)
+        self.assertIn('sparkle:edSignature="sig-rebuilt"', updated)
+        self.assertNotIn("notes-for-1.2.0", updated)
+        self.assertNotIn(appcast.version_marker("1.2.0"), updated)
+
+    def test_described_insert_keeps_one_item(self) -> None:
+        notes = '<description xml:lang="en"><![CDATA[only-this-version]]></description>'
+        updated = appcast.insert_described(
+            self.feed,
+            "1.4.0",
+            "https://example.invalid/Blinky-1.4.0.zip",
+            "sig-described",
+            "9",
+            notes,
+        )
+        self.assertEqual(updated.count("<item>"), 1)
+        self.assertIn("only-this-version", updated)
+        self.assertNotIn(appcast.version_marker("1.3.0"), updated)
 
     def test_identical_reoffer_is_a_no_diff(self) -> None:
         again = appcast.offer(
@@ -111,8 +157,9 @@ class OfferTests(unittest.TestCase):
         path = appcast.FEED
         original = path.read_text()
         versions = re.findall(r"<sparkle:version>([^<]+)</sparkle:version>", original)
-        self.assertGreaterEqual(len(versions), 2)
-        newest, older = versions[0], versions[1]
+        self.assertEqual(len(versions), appcast.KEPT_ITEMS)
+        self.assertEqual(original.count("<item>"), appcast.KEPT_ITEMS)
+        newest = versions[0]
 
         updated = appcast.offer(
             original,
@@ -124,7 +171,7 @@ class OfferTests(unittest.TestCase):
         )
 
         self.assertEqual(path.read_text(), original)
-        self.assertEqual(_item(updated, older), _item(original, older))
+        self.assertEqual(updated.count("<item>"), 1)
         current = _item(updated, newest)
         self.assertIn('sparkle:edSignature="sig-from-test"', current)
         self.assertIn('length="42"', current)
