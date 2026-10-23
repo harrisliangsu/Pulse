@@ -696,6 +696,9 @@ final class UsageAlerts {
     /// withdrawn in System Settings long after it was given, and a switch that
     /// is on while macOS is dropping everything Pulse posts is a lie.
     private(set) var authorization: UNAuthorizationStatus = .notDetermined
+    /// The updater keeps its own copy of this, so a scheduled find can decide
+    /// without asking the centre again. Called from the same read.
+    var onAuthorizationChange: ((UNAuthorizationStatus) -> Void)?
 
     private let settings: AppSettings
     // Read-only outside this type so tests can verify no warning is consumed during authorization.
@@ -741,16 +744,16 @@ final class UsageAlerts {
     /// Wires up what happens when one is clicked, and reads the current grant.
     /// Called once at launch — asking for permission is not done here, because
     /// a permission dialog at launch for a feature nobody has switched on is
-    /// how an app gets denied for good.
+    /// how an app gets denied for good. The update notice is the exception
+    /// that asks later, from About or from a scheduled find, and only while
+    /// Notify first is the choice.
     func start(
         openSettings: @escaping @MainActor () -> Void,
-        openRecap: @escaping @MainActor (Recap.Period) -> Void = { _ in }
+        openRecap: @escaping @MainActor (Recap.Period) -> Void = { _ in },
+        openUpdate: @escaping @MainActor () -> Void = {}
     ) {
         guard Self.isSupported else { return }
-
-        let handler = NotificationTapHandler(open: openSettings, openRecap: openRecap)
-        tapHandler = handler
-        UNUserNotificationCenter.current().delegate = handler
+        installTapHandler(openSettings: openSettings, openRecap: openRecap, openUpdate: openUpdate)
 
         // The grant first: `checkServices` does nothing while it is unknown, so
         // a first tick ahead of it was a wasted one, and an outage already
@@ -783,30 +786,68 @@ final class UsageAlerts {
         Task { await readAuthorization() }
     }
 
-    /// Asks, if anything is switched on and nobody has been asked yet. Called
-    /// from the settings pane the moment a switch goes on, which is the one
-    /// place the dialog is expected.
+    /// Asks, if a usage alert is switched on and nobody has been asked yet.
+    /// Called from the settings pane the moment a switch goes on. The update
+    /// notice asks through `requestUpdateNoticeAuthorization()` instead, and
+    /// only while Notify first is the choice.
     func requestAuthorizationIfNeeded() async -> Bool {
         guard Self.isSupported else { return false }
         return await requestAuthorizationIfNeeded {
-            let granted = (try? await UNUserNotificationCenter.current()
-                .requestAuthorization(options: [.alert, .sound])) ?? false
-            await self.readAuthorization()
-            return granted
+            await self.performAuthorizationRequest()
         }
     }
 
     /// Injectable authorization operation: tests never contact the system centre.
     func requestAuthorizationIfNeeded(using request: @escaping @MainActor () async -> Bool) async -> Bool {
         guard settings.wantsNotificationPermission else { return false }
+        return await performAuthorizationRequest(using: request) {
+            self.settings.wantsNotificationPermission
+        }
+    }
+
+    /// The update notice, which is not a usage-alert switch. Asked when Notify
+    /// first is left on — opening About, choosing it, or a scheduled find that
+    /// has not been allowed to post yet. Show the window does not ask.
+    func requestUpdateNoticeAuthorization() async -> Bool {
+        guard Self.isSupported else { return false }
+        return await requestUpdateNoticeAuthorization {
+            await self.performAuthorizationRequest()
+        }
+    }
+
+    /// Same as `requestUpdateNoticeAuthorization()`, with the centre call
+    /// supplied. A false result is a refusal or a missing centre, and the
+    /// caller shows Sparkle's window so the update is not lost.
+    func requestUpdateNoticeAuthorization(using request: @escaping @MainActor () async -> Bool) async -> Bool {
+        guard settings.updateDiscovery == .notifyFirst else { return false }
+        return await performAuthorizationRequest(using: request) {
+            self.settings.updateDiscovery == .notifyFirst
+        }
+    }
+
+    private func performAuthorizationRequest() async -> Bool {
+        let granted = (try? await UNUserNotificationCenter.current()
+            .requestAuthorization(options: [.alert, .sound])) ?? false
+        await readAuthorization()
+        return granted
+    }
+
+    /// One in-flight prompt for every caller. `stillWanted` is checked before
+    /// joining and again after, so a switch that went off while the prompt was
+    /// up does not count as a grant for that feature.
+    private func performAuthorizationRequest(
+        using request: @escaping @MainActor () async -> Bool,
+        stillWanted: @escaping @MainActor () -> Bool
+    ) async -> Bool {
+        guard stillWanted() else { return false }
         if let authorizationRequest {
-            return await authorizationRequest.value && settings.wantsNotificationPermission
+            return await authorizationRequest.value && stillWanted()
         }
         let pending = Task { await request() }
         authorizationRequest = pending
         let granted = await pending.value
         authorizationRequest = nil
-        return granted && settings.wantsNotificationPermission
+        return granted && stillWanted()
     }
 
     /// Whether a `.stale` reading should count against this account.
@@ -1160,6 +1201,21 @@ final class UsageAlerts {
         authorization = await UNUserNotificationCenter.current()
             .notificationSettings()
             .authorizationStatus
+        onAuthorizationChange?(authorization)
+    }
+
+    /// The click handler, installed at launch even when monitoring has not
+    /// started yet, so an update notice can open the offer before a provider
+    /// has been chosen. A second call leaves the first handler in place.
+    func installTapHandler(
+        openSettings: @escaping @MainActor () -> Void,
+        openRecap: @escaping @MainActor (Recap.Period) -> Void = { _ in },
+        openUpdate: @escaping @MainActor () -> Void = {}
+    ) {
+        guard Self.isSupported, tapHandler == nil else { return }
+        let handler = NotificationTapHandler(open: openSettings, openRecap: openRecap, openUpdate: openUpdate)
+        tapHandler = handler
+        UNUserNotificationCenter.current().delegate = handler
     }
 
     /// One serial queue, so two saves cannot land out of order and neither
@@ -1210,17 +1266,42 @@ final class UsageAlerts {
 /// for a feature that is one click away as it is.
 ///
 /// The recap's identifier carries its month (`RecapNoticeRule`), so a click
-/// opens the recap on that month.
+/// opens the recap on that month. The update notice (`blinky-update`) opens
+/// the offer Sparkle is holding; dismissing that one does nothing, because
+/// the window was not asked for.
 final class NotificationTapHandler: NSObject, UNUserNotificationCenterDelegate, @unchecked Sendable {
+    enum Destination: Equatable {
+        case settings
+        case recap(Recap.Period)
+        case update
+    }
+
     private let open: @MainActor () -> Void
     private let openRecap: @MainActor (Recap.Period) -> Void
+    private let openUpdate: @MainActor () -> Void
 
     init(
         open: @escaping @MainActor () -> Void,
-        openRecap: @escaping @MainActor (Recap.Period) -> Void = { _ in }
+        openRecap: @escaping @MainActor (Recap.Period) -> Void = { _ in },
+        openUpdate: @escaping @MainActor () -> Void = {}
     ) {
         self.open = open
         self.openRecap = openRecap
+        self.openUpdate = openUpdate
+    }
+
+    /// Where a click goes. A dismissed update notice is `nil`: the offer stays
+    /// held. Every other notice still opens Settings, including a dismissal,
+    /// which is the behaviour those notices already had.
+    static func destination(for identifier: String, actionIdentifier: String = UNNotificationDefaultActionIdentifier) -> Destination? {
+        if identifier == UpdateAnnouncement.notificationIdentifier {
+            guard actionIdentifier == UNNotificationDefaultActionIdentifier else { return nil }
+            return .update
+        }
+        if let period = RecapNoticeRule.period(fromIdentifier: identifier) {
+            return .recap(period)
+        }
+        return .settings
     }
 
     func userNotificationCenter(
@@ -1243,10 +1324,19 @@ final class NotificationTapHandler: NSObject, UNUserNotificationCenterDelegate, 
     ) {
         let open = open
         let openRecap = openRecap
-        let recap = RecapNoticeRule.period(fromIdentifier: response.notification.request.identifier)
+        let openUpdate = openUpdate
+        let destination = Self.destination(
+            for: response.notification.request.identifier,
+            actionIdentifier: response.actionIdentifier
+        )
         let finish = UncheckedBox(completionHandler)
         Task { @MainActor in
-            if let recap { openRecap(recap) } else { open() }
+            switch destination {
+            case .settings: open()
+            case .recap(let period): openRecap(period)
+            case .update: openUpdate()
+            case nil: break
+            }
             finish.value()
         }
     }

@@ -6,6 +6,10 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.5.8
+
+- **定时检查会先通知，再打开更新窗口。** 在「设置 → 关于」里，「自动检查」下面有「发现更新时」，默认是「先通知」：点击通知后才打开更新窗口。选「直接打开窗口」则会立刻打开。菜单里的「检查更新」和关于里的「检查更新」仍会直接打开窗口。若系统拒绝了通知权限，窗口会直接打开，以免漏掉这次更新。[#65](https://github.com/harrisliangsu/blinky-mac/pull/65)
+
 ## 1.5.7
 
 - **Token 消耗可以在悬浮面板旁边打开。** 打开 Token 消耗后，用量卡片标题栏上的按钮会打开与设置里相同统计区间的摘要，分享会把这份摘要复制成图片。完整的 Token 消耗页面仍在设置中。[Docs/token-spend.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md) [#62](https://github.com/harrisliangsu/blinky-mac/pull/62)

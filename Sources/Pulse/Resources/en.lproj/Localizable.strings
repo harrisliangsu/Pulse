@@ -375,6 +375,12 @@
 "Update to %@" = "Update to %@";
 "Check automatically" = "Check automatically";
 "Every two hours. Updates are offered, never installed on their own." = "Every two hours. Updates are offered, never installed on their own.";
+"When an update is found" = "When an update is found";
+"Notify first" = "Notify first";
+"Show the window" = "Show the window";
+"A scheduled check posts a notification, and the update window opens when that notification is clicked. Check now still opens the window." = "A scheduled check posts a notification, and the update window opens when that notification is clicked. Check now still opens the window.";
+"A scheduled check opens the update window." = "A scheduled check opens the update window.";
+"Open this notification to review and install it." = "Open this notification to review and install it.";
 "Couldn't reach the update feed." = "Couldn't reach the update feed.";
 "Uses the key you entered." = "Uses the key you entered.";
 "Signed-in account" = "Signed-in account";

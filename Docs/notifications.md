@@ -2,11 +2,11 @@
 
 Owns: when Pulse posts a system notification, what it says, and what it refuses to say. Settings copy and layout: [ui/settings.md](ui/settings.md). Where readings come from: [refresh-and-data.md](refresh-and-data.md).
 
-Source: [`Sources/Pulse/Usage/UsageAlerts.swift`](../Sources/Pulse/Usage/UsageAlerts.swift). Settings: `AppSettings.alertThreshold` / `alertsOnReset` / `alertsOnFailure` / `lowBalanceAlerts` / `alertsOnOutage` / `alertsOnRecap`, plus the time-to-empty group (`exhaustionAlerts`, `exhaustionStages`, `exhaustionNotifyBeforeReset`). Every fetch goes through `UsageStore.commit(_:raw:for:)`, which passes both the raw result and the reconciled display reading. An explicit notification-setting change also calls `reconsiderAlerts()` after authorization succeeds. Celebrations (ribbons / Hero sound) are driven from the same `observe` path via `celebratesReset` / `celebratesHourlyReset` and `ResetCelebration`, and are not posted as notifications.
+Source: [`Sources/Pulse/Usage/UsageAlerts.swift`](../Sources/Pulse/Usage/UsageAlerts.swift) for the usage notices, and [`Sources/Pulse/App/AppUpdate.swift`](../Sources/Pulse/App/AppUpdate.swift) with [`UpdateAnnouncement.swift`](../Sources/Pulse/App/UpdateAnnouncement.swift) for a newer version of Blinky. Settings: `AppSettings.alertThreshold` / `alertsOnReset` / `alertsOnFailure` / `lowBalanceAlerts` / `alertsOnOutage` / `alertsOnRecap`, plus the time-to-empty group (`exhaustionAlerts`, `exhaustionStages`, `exhaustionNotifyBeforeReset`). Every fetch goes through `UsageStore.commit(_:raw:for:)`, which passes both the raw result and the reconciled display reading. An explicit notification-setting change also calls `reconsiderAlerts()` after authorization succeeds. Celebrations (ribbons / Hero sound) are driven from the same `observe` path via `celebratesReset` / `celebratesHourlyReset` and `ResetCelebration`, and are not posted as notifications.
 
 ## What can be said
 
-Nine things, and nothing else in that list. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card. Advance reminders are a separate list, below: they are scheduled before a time, not spoken after a reading. The time-to-empty notices are the same list as the percentage ones: they speak after a reading, and they are not a second system.
+Nine things, and nothing else in that list. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card. Advance reminders are a separate list, below: they are scheduled before a time, not spoken after a reading. The time-to-empty notices are the same list as the percentage ones: they speak after a reading, and they are not a second system. A newer version of Blinky is announced separately ([An update](#an-update)); it is not one of these nine.
 
 | Alert | Fires when | Gated by |
 |---|---|---|
@@ -95,6 +95,15 @@ Requested 2026-10-04, after the status rows on the Codex, Claude Code and DeepSe
 - **Months only.** Day and week recaps ([recap.md](recap.md#the-window)) say nothing: a daily notice would come every morning about something the reader can open at any time, and a weekly one is the same at a lower rate.
 - **Not a usage alert.** `wantsUsageAlerts` excludes it (no `alerts.json` entry); `wantsAlerts`, which decides whether permission is worth asking for, includes it. `AppSettings.onRecapAlertChange` asks for permission, not the view.
 
+## An update
+
+"Blinky 1.5.8 is available", when a scheduled check finds a newer version and **When an update is found** is **Notify first** (Settings → About, the default). It is not one of the nine usage notices: there is no switch beside the threshold, and `wantsNotificationPermission` stays false so a usage-alert prompt is not raised just because this is the default. Opening About, choosing Notify first, or a scheduled find that has not been allowed to post is what asks. **Show the window** does not ask and does not post this notice.
+
+- **The window opens when the notification is clicked.** The identifier is `blinky-update`. `NotificationTapHandler` routes that click to `AppUpdate.check`, which brings forward the offer Sparkle is already holding. Dismissing the notice does not open the window; Check for Updates… still does, and so does About's Check now. Both open the window without posting a notice, whatever the setting is. While the notice is waiting, that update session stays open, so the next scheduled check waits until the offer is opened or dismissed.
+- **A refused grant shows the window.** If the system status is denied, or the prompt comes back refused, or the centre cannot be used, the scheduled find shows Sparkle's offer instead of posting. The update is not dropped.
+- **Default sound**, as [above](#what-can-be-said). One notice at a time; a later find replaces it. The session withdraws it when the reader has the offer in front of them, or when the offer is dismissed.
+- The choice and the fallback are `UpdateAnnouncement`. `UpdateAnnouncementTests` pins them. [ui/settings.md](ui/settings.md), [releasing.md](releasing.md#sparkle).
+
 ## Rules that are not obvious
 
 **A first sighting starts at nothing announced**, so a limit already past the line is said once, immediately — including when the setting is switched on or the threshold lowered (`UsageStore.reconsiderAlerts()`). Otherwise someone who switches it on at 93% gets silence and then a wall; the cost is at most one notification per limit.
@@ -145,7 +154,7 @@ It is updated even when a grant was refused or the build is unbundled, so neithe
 
 `UNUserNotificationCenter.current()` raises without an app bundle and kills the process. `swift run` builds a bare executable, so every entry point is guarded by `UsageAlerts.isSupported` (`Bundle.main.bundleIdentifier != nil`) and the Settings row says why the switches are dead. **Test notifications from `./Scripts/bundle.sh`, never from `swift run`.**
 
-Permission is asked when a switch goes on in Settings, never at launch (a prompt for a feature nobody switched on gets denied for good). The request is awaited before reconsidering readings; concurrent changes share one in-flight request. Refreshes finishing while the prompt is open update the display but cannot mark warnings announced. A refused request triggers no reconsideration; the completion re-checks that alerts are still wanted.
+Permission is asked when a switch goes on in Settings, never at launch (a prompt for a feature nobody switched on gets denied for good). The update notice is separate: it asks when Notify first is left on, from About or from a scheduled find, and a refusal shows Sparkle's window. The request is awaited before reconsidering readings; concurrent changes share one in-flight request. Refreshes finishing while the prompt is open update the display but cannot mark warnings announced. A refused request triggers no reconsideration; the completion re-checks that alerts are still wanted. The update notice re-checks that Notify first is still the choice.
 
 The delegate implements the completion-handler `willPresent` and requests banner, list and sound even while Settings is active; otherwise enabling a warning in Settings could consume it while macOS suppressed it. System notification and sound settings still apply. Tests verify authorization ordering and the delegate selector, not real banner delivery.
 
@@ -153,6 +162,6 @@ The subtitle reports `UNAuthorizationStatus`, not the switches, since a grant ca
 
 ## Clicking one
 
-Opens the Settings window on the last-shown pane (except the recap notification, above). Not the account's own pane: the selection is `SettingsView`'s state, and threading it out is not worth it.
+Opens the Settings window on the last-shown pane (except the recap notification, above, and the update notification, which opens Sparkle's update window). Not the account's own pane: the selection is `SettingsView`'s state, and threading it out is not worth it. Dismissing the update notification does not open that window.
 
 The delegate uses the **completion-handler** spelling of `userNotificationCenter(_:didReceive:withCompletionHandler:)`. These are optional protocol requirements, so a mismatched signature compiles and is never called.

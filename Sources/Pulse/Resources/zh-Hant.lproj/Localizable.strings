@@ -369,6 +369,12 @@
 "Update to %@" = "更新到 %@";
 "Check automatically" = "自動檢查";
 "Every two hours. Updates are offered, never installed on their own." = "每兩小時檢查一次。只會提示，不會自行安裝。";
+"When an update is found" = "發現更新時";
+"Notify first" = "先通知";
+"Show the window" = "直接打開視窗";
+"A scheduled check posts a notification, and the update window opens when that notification is clicked. Check now still opens the window." = "定時檢查會先發一則通知，點開這則通知後才打開更新視窗。「立即檢查」仍會直接打開視窗。";
+"A scheduled check opens the update window." = "定時檢查發現新版本後，直接打開更新視窗。";
+"Open this notification to review and install it." = "打開這則通知即可查看並安裝。";
 "Couldn't reach the update feed." = "無法連上更新來源。";
 "Uses the key you entered." = "使用你填入的金鑰。";
 "API key" = "API 金鑰";

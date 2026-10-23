@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.8
+
+- **A scheduled check notifies you before opening the update window.** Settings → About, under Check automatically: When an update is found defaults to Notify first, and the window opens when that notification is clicked. Show the window opens it immediately. Check for Updates… and Check now still open the window. If notification permission is refused, the window opens so the update is not missed. [#65](https://github.com/harrisliangsu/blinky-mac/pull/65)
+
 ## 1.5.7
 
 - **Token spend can open beside the floating panel.** With Token spend on, the button on the usage card's header opens a summary for the same span as Settings, and Share copies that summary as an image. The full Token spend page stays in Settings. [Docs/token-spend.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md) [#62](https://github.com/harrisliangsu/blinky-mac/pull/62)

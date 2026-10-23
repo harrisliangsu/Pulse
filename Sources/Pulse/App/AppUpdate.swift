@@ -3,6 +3,7 @@ import AppKit
 import Foundation
 import Observation
 import Sparkle
+import UserNotifications
 
 /// Keeping Pulse up to date, through Sparkle.
 ///
@@ -24,7 +25,11 @@ import Sparkle
 /// Sparkle owns the schedule and the windows it puts up. What is kept here is
 /// only what the rest of the app asks about: whether a check can happen at
 /// all, whether one is running, and whether a newer version was found — which
-/// is what the menu bar shows. The one extra step is activation: this process
+/// is what the menu bar shows. A scheduled find follows `UpdateDiscovery`:
+/// notify first posts a notification and leaves the window hidden until that
+/// notification is clicked; show the window is Sparkle's offer immediately.
+/// The decision is `UpdateAnnouncement`, which does not touch Sparkle. The
+/// one extra step when the offer window does show is activation: this process
 /// is an `.accessory` app, and Sparkle's own driver shows a found update
 /// behind every other app unless something has made this one `.regular` first.
 ///
@@ -63,6 +68,7 @@ final class AppUpdate {
         set { controller?.updater.automaticallyChecksForUpdates = newValue }
     }
 
+    private let settings: AppSettings
     private var controller: SPUStandardUpdaterController?
     private let relay = UpdaterRelay()
     /// True from the moment a Sparkle window needs to be in front until that
@@ -70,8 +76,22 @@ final class AppUpdate {
     /// this tells it the offer is up.
     private var updateOfferVisible = false
     var onUpdateOfferVisible: ((Bool) -> Void)?
+    /// A scheduled find is waiting on a notification, or on the permission
+    /// prompt that comes before one. Check for Updates…, Check now, and a
+    /// click on the notice reveal it instead of starting a second check.
+    private var holdingScheduledOffer = false
+    /// Bumped when the reader asks for the window or the session ends, so a
+    /// permission prompt that returns late does not also post a notice.
+    private var offerGeneration = 0
+    /// What the system last said about posting. Refreshed before a scheduled
+    /// find is announced. `.notDetermined` until that read lands.
+    private(set) var notificationPermission: UpdateAnnouncement.Permission = .notDetermined
+    /// Asks for the update notice. Nil until the app has wired `UsageAlerts`,
+    /// and a nil answer is treated as not granted — the window is shown.
+    var askToNotify: (@MainActor () async -> Bool)?
 
-    init() {
+    init(settings: AppSettings) {
+        self.settings = settings
         // The feed URL is the tell: present only in a bundle built by
         // Scripts/bundle.sh, which is also the only place the framework is.
         guard
@@ -85,6 +105,7 @@ final class AppUpdate {
             updaterDelegate: relay,
             userDriverDelegate: relay
         )
+        Task { await refreshNotificationPermission() }
     }
 
     /// This fork's update files on GitHub. Upstream's `update.qunqin.org`
@@ -134,23 +155,32 @@ final class AppUpdate {
 
     /// Asks now, and shows Sparkle's own window with whatever it finds.
     ///
-    /// The checking window is created on a later turn, after Sparkle's install
-    /// probe. By then this process is `.regular` and has been activated. Left
-    /// as `.accessory`, Sparkle's `showWindow` opens behind everything else —
+    /// Check for Updates…, About's Check now, and a click on the update
+    /// notification all come here. A scheduled find that is waiting on a
+    /// notification is revealed instead of checked again. The checking window
+    /// is created on a later turn, after Sparkle's install probe. By then this
+    /// process is `.regular` and has been activated. Left as `.accessory`,
+    /// Sparkle's `showWindow` opens behind everything else —
     /// `activateIgnoringOtherApps` included, which is why the permission prompt
     /// is not shown.
     func check() {
         guard let updater = controller?.updater else { return }
-        isChecking = true
-        didFail = false
-        if updateOfferVisible || !updater.sessionInProgress {
-            showUpdateOffer()
-        }
-        updater.checkForUpdates()
-        // Sparkle refused the check (nothing started, so nothing will finish).
-        // A session that was already running is left to its own finish.
-        if !updater.sessionInProgress {
-            hideUpdateOffer()
+        offerGeneration += 1
+        switch UpdateAnnouncement.check(holdingScheduledOffer: holdingScheduledOffer) {
+        case .revealHeldOffer:
+            revealDeferredUpdate()
+        case .startUserInitiatedCheck:
+            isChecking = true
+            didFail = false
+            if updateOfferVisible || !updater.sessionInProgress {
+                showUpdateOffer()
+            }
+            updater.checkForUpdates()
+            // Sparkle refused the check (nothing started, so nothing will finish).
+            // A session that was already running is left to its own finish.
+            if !updater.sessionInProgress {
+                hideUpdateOffer()
+            }
         }
     }
 
@@ -200,10 +230,161 @@ final class AppUpdate {
         isChecking = false
     }
 
-    /// Bring Sparkle's standard window forward. Called for a manual check and
-    /// again when a check, scheduled or not, is about to show an update or a
-    /// modal alert. `SUAutomaticallyUpdate` stays false: this shows the offer,
-    /// it does not install.
+    /// The reader chose Show the window while a notice was still held.
+    func showPendingOfferIfNeeded() {
+        guard holdingScheduledOffer else { return }
+        offerGeneration += 1
+        revealDeferredUpdate()
+    }
+
+    func noteNotificationPermission(_ permission: UpdateAnnouncement.Permission) {
+        notificationPermission = permission
+    }
+
+    /// Sparkle is about to run a scheduled check. The grant is read now so the
+    /// decision at the end of it is the one System Settings currently holds.
+    fileprivate func schedulePermissionRefresh() {
+        Task { await refreshNotificationPermission() }
+    }
+
+    fileprivate func refreshNotificationPermission() async {
+        guard UsageAlerts.isSupported else {
+            notificationPermission = .denied
+            return
+        }
+        let status = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+        notificationPermission = UpdateAnnouncement.permission(status)
+    }
+
+    /// Sparkle found a scheduled update and was told not to show it. The
+    /// window stays hidden until the notice is clicked, unless the grant
+    /// cannot carry a notice — then the window is the offer.
+    fileprivate func beginHoldingScheduledOffer(version: String) {
+        // Sparkle calls this on the next runloop. Check for Updates… may have
+        // brought the offer forward in between, and that path already shows
+        // the window. Don't also post a notice for it.
+        guard !updateOfferVisible else { return }
+        holdingScheduledOffer = true
+        Task { await deliverScheduledOffer(version: version) }
+    }
+
+    private func deliverScheduledOffer(version: String) async {
+        let generation = offerGeneration
+        await refreshNotificationPermission()
+        guard generation == offerGeneration, holdingScheduledOffer else { return }
+        switch UpdateAnnouncement.action(
+            origin: .scheduled,
+            discovery: settings.updateDiscovery,
+            permission: notificationPermission
+        ) {
+        case .notify:
+            postUpdateNotification(version: version)
+        case .showOffer:
+            revealDeferredUpdate()
+        case .askPermission:
+            await askThenOffer(version: version, generation: generation)
+        }
+    }
+
+    /// The permission dialog has to be in front. An accessory app's own
+    /// prompts open behind everything else, so this uses the same activation
+    /// as the offer window and drops it when the grant comes through.
+    private func askThenOffer(version: String, generation: Int) async {
+        showUpdateOffer()
+        let granted = await askToNotify?() ?? false
+        guard generation == offerGeneration, holdingScheduledOffer else { return }
+        switch UpdateAnnouncement.actionAfterPermission(
+            granted: granted,
+            discovery: settings.updateDiscovery
+        ) {
+        case .notify:
+            hideUpdateOffer()
+            await refreshNotificationPermission()
+            guard generation == offerGeneration, holdingScheduledOffer else { return }
+            postUpdateNotification(version: version)
+        case .showOffer, .askPermission:
+            revealDeferredUpdate()
+        }
+    }
+
+    private func postUpdateNotification(version: String) {
+        guard UsageAlerts.isSupported else {
+            revealDeferredUpdate()
+            return
+        }
+        let content = UNMutableNotificationContent()
+        content.title = String.localized("Blinky \(version) is available")
+        content.body = String.localized("Open this notification to review and install it.")
+        content.sound = .default
+        let request = UNNotificationRequest(
+            identifier: UpdateAnnouncement.notificationIdentifier,
+            content: content,
+            trigger: nil
+        )
+        let generation = offerGeneration
+        Task { @MainActor in
+            do {
+                try await UNUserNotificationCenter.current().add(request)
+            } catch {
+                guard generation == self.offerGeneration, self.holdingScheduledOffer else { return }
+                self.revealDeferredUpdate()
+            }
+        }
+    }
+
+    private func withdrawUpdateNotification() {
+        guard UsageAlerts.isSupported else { return }
+        let identifier = UpdateAnnouncement.notificationIdentifier
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [identifier])
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
+    }
+
+    /// The held offer, brought forward.
+    ///
+    /// Sparkle has already created the offer and set `showingUpdate`.
+    /// `checkForUpdates` in that state calls `showUpdateInFocus` rather than
+    /// starting another check. It does not call `willHandleShowingUpdate`
+    /// again, so the focus step that call usually performs is done here.
+    private func revealDeferredUpdate() {
+        holdingScheduledOffer = false
+        withdrawUpdateNotification()
+        showUpdateOffer()
+        controller?.updater.checkForUpdates()
+        let appUpdate = self
+        Task { @MainActor in
+            appUpdate.focusUpdateOffer()
+        }
+    }
+
+    /// The reader has the offer in front of them. The notice has done its job.
+    fileprivate func noteUpdateAttention() {
+        holdingScheduledOffer = false
+        withdrawUpdateNotification()
+    }
+
+    fileprivate func endUpdateSession() {
+        offerGeneration += 1
+        holdingScheduledOffer = false
+        withdrawUpdateNotification()
+        hideUpdateOffer()
+    }
+
+    /// Whether Sparkle should present this scheduled find itself.
+    /// No side effects: Sparkle requires the answer to be pure.
+    fileprivate func sparkleShouldShowScheduledUpdate(immediateFocus: Bool) -> Bool {
+        UpdateAnnouncement.sparkleShowsScheduledUpdate(
+            discovery: settings.updateDiscovery,
+            permission: notificationPermission,
+            immediateFocus: immediateFocus
+        )
+    }
+
+    /// Bring Sparkle's standard window forward. Called when the offer window
+    /// is about to show — a manual check, Show the window, a refused
+    /// notification grant, or a click on the notice — and before a modal
+    /// alert. Not called for a scheduled find that is only posting a
+    /// notification. `SUAutomaticallyUpdate` stays false: this shows the
+    /// offer, it does not install.
     fileprivate func showUpdateOffer() {
         updateOfferVisible = true
         onUpdateOfferVisible?(true)
@@ -279,30 +460,63 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate, SPUStandardUserD
         MainActor.assumeIsolated { owner?.endCycle() }
     }
 
-    /// Before Sparkle shows a found update, scheduled or from Check for Updates.
+    nonisolated func updater(_: SPUUpdater, willScheduleUpdateCheckAfterDelay _: TimeInterval) {
+        MainActor.assumeIsolated { owner?.schedulePermissionRefresh() }
+    }
+
+    /// Background apps that schedule checks are asked to implement gentle
+    /// reminders. Notify first is that reminder; Show the window still answers
+    /// the question by letting Sparkle present the offer.
     ///
-    /// Returning control with the app still `.accessory` is the bug: for a
-    /// background app whose check was not just now, Sparkle's standard driver
-    /// shows the offer with `showWindow` and does not activate, or `orderBack`
-    /// when this app already has a key window. A regular app that is already
-    /// active can instead wait for the *next* activation and never show it.
-    /// Gentle reminders are a different UI; this keeps Sparkle's own window.
-    /// Side effects do not belong in `shouldHandle`, so the activation is here.
+    /// `nonisolated`, like every other method here. Left unmarked, the property
+    /// is main-actor isolated and cannot witness Sparkle's requirement.
+    nonisolated var supportsGentleScheduledUpdateReminders: Bool { true }
+
+    /// No side effects. `immediateFocus` is passed through and does not change
+    /// the answer: a scheduled check near launch still follows the setting.
+    nonisolated func standardUserDriverShouldHandleShowingScheduledUpdate(
+        _: SUAppcastItem,
+        andInImmediateFocus immediateFocus: Bool
+    ) -> Bool {
+        MainActor.assumeIsolated {
+            owner?.sparkleShouldShowScheduledUpdate(immediateFocus: immediateFocus) ?? true
+        }
+    }
+
+    /// Before Sparkle shows a found update, or before this app handles one it
+    /// asked to handle.
+    ///
+    /// When Sparkle is showing the offer, returning with the app still
+    /// `.accessory` is the bug: for a background app whose check was not just
+    /// now, the standard driver shows the offer with `showWindow` and does not
+    /// activate, or `orderBack` when this app already has a key window. A
+    /// regular app that is already active can instead wait for the *next*
+    /// activation and never show it. Side effects do not belong in
+    /// `shouldHandle`, so the activation is here — and only when the window
+    /// is actually going up. A scheduled Notify first find (`handleShowingUpdate`
+    /// false) posts a notification instead and does not activate.
     nonisolated func standardUserDriverWillHandleShowingUpdate(
         _ handleShowingUpdate: Bool,
         forUpdate update: SUAppcastItem,
         state: SPUUserUpdateState
     ) {
-        guard handleShowingUpdate else { return }
         MainActor.assumeIsolated {
-            owner?.showUpdateOffer()
-            let appUpdate = owner
-            // After this returns, Sparkle orders the offer front, behind, or
-            // not at all. The task runs once that call has returned.
-            Task { @MainActor in
-                appUpdate?.focusUpdateOffer()
+            if handleShowingUpdate {
+                owner?.showUpdateOffer()
+                let appUpdate = owner
+                // After this returns, Sparkle orders the offer front, behind, or
+                // not at all. The task runs once that call has returned.
+                Task { @MainActor in
+                    appUpdate?.focusUpdateOffer()
+                }
+            } else {
+                owner?.beginHoldingScheduledOffer(version: update.displayVersionString)
             }
         }
+    }
+
+    nonisolated func standardUserDriverDidReceiveUserAttention(forUpdate _: SUAppcastItem) {
+        MainActor.assumeIsolated { owner?.noteUpdateAttention() }
     }
 
     /// "Up to date", and a failure Sparkle puts in an alert. `runModal` follows
@@ -312,8 +526,9 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate, SPUStandardUserD
     }
 
     /// The offer was dismissed, skipped, or failed. Settings may still want
-    /// the Dock icon; `DockPresence` is what decides.
+    /// the Dock icon; `DockPresence` is what decides. A notice still on screen
+    /// is withdrawn with the session.
     nonisolated func standardUserDriverWillFinishUpdateSession() {
-        MainActor.assumeIsolated { owner?.hideUpdateOffer() }
+        MainActor.assumeIsolated { owner?.endUpdateSession() }
     }
 }

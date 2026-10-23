@@ -4,6 +4,8 @@ import SwiftUI
 
 struct AboutPane: View {
     let update: AppUpdate
+    let settings: AppSettings
+    let alerts: UsageAlerts
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -40,6 +42,21 @@ struct AboutPane: View {
                         ))
                         .labelsHidden()
                         .toggleStyle(.switch)
+                    }
+
+                    SettingsRowDivider()
+
+                    SettingsRow(String.localized("When an update is found"), subtitle: discoverySubtitle) {
+                        Picker("", selection: Binding(
+                            get: { settings.updateDiscovery },
+                            set: { settings.updateDiscovery = $0 }
+                        )) {
+                            ForEach(UpdateDiscovery.allCases) { choice in
+                                Text(choice.title).tag(choice)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
                     }
                 }
 
@@ -107,13 +124,27 @@ struct AboutPane: View {
         }
         // Without this the row says "up to date" on nothing but the last
         // answer, however old. Quiet: the subtitle is where the result goes.
-        .onAppear { update.probe() }
+        .onAppear {
+            update.probe()
+            if settings.updateDiscovery == .notifyFirst {
+                Task { _ = await alerts.requestUpdateNoticeAuthorization() }
+            }
+        }
     }
 
     /// The version, and what is known about a newer one. All four states are
     /// distinguishable on purpose: "no update" and "couldn't ask" look
     /// identical otherwise, and a check that silently failed is worse than one
     /// that says so.
+    private var discoverySubtitle: String {
+        switch settings.updateDiscovery {
+        case .notifyFirst:
+            String.localized("A scheduled check posts a notification, and the update window opens when that notification is clicked. Check now still opens the window.")
+        case .showWindow:
+            String.localized("A scheduled check opens the update window.")
+        }
+    }
+
     private var updateSubtitle: String {
         if let newer = update.newer {
             return .localized("\(Self.version) installed · \(newer.version) available")

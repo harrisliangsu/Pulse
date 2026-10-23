@@ -9,7 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     let settings: AppSettings
     /// Not private for the same reason: the status-item menu shows a newer
     /// version when there is one.
-    let update = AppUpdate()
+    let update: AppUpdate
     private let placement = PanelPlacement.restored()
     /// Not private: the settings pane shows what the system says about
     /// permission, which is not the same as what the switches say.
@@ -44,11 +44,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// under the layout suites (`FreeAcrossTests` failed now and then).
     init(settings: AppSettings) {
         self.settings = settings
+        update = AppUpdate(settings: settings)
         super.init()
         // Sparkle's window is not one DockPresence tracks. The updater says
         // when that window is up; the Dock icon follows, as it does for Settings.
         update.onUpdateOfferVisible = { [weak self] visible in
             self?.dock.setUpdateOfferVisible(visible)
+        }
+        update.askToNotify = { [weak self] in
+            guard let self else { return false }
+            return await self.alerts.requestUpdateNoticeAuthorization()
         }
     }
 
@@ -96,6 +101,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         LoginItem.applyDefaultOnFirstRun()
         LoginItem.repairPathIfNeeded()
 
+        alerts.onAuthorizationChange = { [weak self] status in
+            self?.update.noteNotificationPermission(UpdateAnnouncement.permission(status))
+        }
+        settings.onUpdateDiscoveryChange = { [weak self] in
+            self?.updateDiscoveryChanged()
+        }
+        installNotificationHandler()
         // Daily at most, and only from a bundle — see `AppUpdate`.
         update.checkIfDue()
         rateKeeper.start()
@@ -183,7 +195,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard !settings.needsProviderSelection, panelController == nil else { return }
         alerts.start(
             openSettings: { [weak self] in self?.showSettings() },
-            openRecap: { [weak self] period in self?.showRecap(period: period) }
+            openRecap: { [weak self] period in self?.showRecap(period: period) },
+            openUpdate: { [weak self] in self?.update.check() }
         )
         recapNotice.start()
         let glance = SpendGlanceController(settings: settings)
@@ -519,6 +532,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         )
         settingsWindow = window
         window.show(link: link, pane: pane)
+    }
+
+    private func installNotificationHandler() {
+        alerts.installTapHandler(
+            openSettings: { [weak self] in self?.showSettings() },
+            openRecap: { [weak self] period in self?.showRecap(period: period) },
+            openUpdate: { [weak self] in self?.update.check() }
+        )
+    }
+
+    /// Notify first asks when it is chosen. Show the window opens an offer
+    /// that was waiting on a notification, so the switch is not a silent loss.
+    private func updateDiscoveryChanged() {
+        switch settings.updateDiscovery {
+        case .notifyFirst:
+            Task { _ = await alerts.requestUpdateNoticeAuthorization() }
+        case .showWindow:
+            update.showPendingOfferIfNeeded()
+        }
     }
 
     /// The recap window, on a period if one is named: the Token spend pane's

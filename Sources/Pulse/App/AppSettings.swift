@@ -54,6 +54,9 @@ final class AppSettings {
     /// Called when the recap notification is switched, so a month already
     /// announceable is announced now.
     var onRecapAlertChange: (() -> Void)?
+    /// Called when the reader changes how a scheduled update is announced.
+    /// Not `onChange`: that refetches every provider.
+    var onUpdateDiscoveryChange: (() -> Void)?
 
     // MARK: - Application (AppSettings+Application)
 
@@ -132,6 +135,16 @@ final class AppSettings {
     /// changes so the UI re-reads its strings without a relaunch.
     var language: AppLanguage {
         didSet { languageChanged(from: oldValue) }
+    }
+
+    /// How a scheduled update check tells the user a newer version exists.
+    ///
+    /// Notify first is the default: a notification, and Sparkle's window when
+    /// that notification is clicked. Show the window is the previous behaviour.
+    /// Check for Updates… is neither — the reader asked, so the window opens
+    /// either way. Not `onChange`, which refetches every provider.
+    var updateDiscovery: UpdateDiscovery = .notifyFirst {
+        didSet { updateDiscoveryChanged(from: oldValue) }
     }
 
     /// The currency estimates are shown in. Dollars by default, which is what
