@@ -564,7 +564,10 @@ struct UsageDetailCard: View {
     }
 
     /// "Updated 3 min ago".
-    static func updatedText(_ date: Date, now: Date = Date()) -> String {
+    ///
+    /// Nonisolated: the glance image builds this string off the view, and a
+    /// `View`'s methods are otherwise main-actor isolated.
+    nonisolated static func updatedText(_ date: Date, now: Date = Date()) -> String {
         if now.timeIntervalSince(date) < 60 { return .localized("Updated just now") }
         let formatter = RelativeDateTimeFormatter()
         formatter.locale = LocalizationSource.locale

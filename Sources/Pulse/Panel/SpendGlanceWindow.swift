@@ -95,26 +95,30 @@ final class SpendGlanceController {
 
     private func installMonitors() {
         guard localMonitor == nil else { return }
-        // Monitors run on the main thread. `assumeIsolated` is the hop the
-        // shortcut recorder uses for the same reason: the handler is not
-        // annotated with the main actor.
+        // Monitors run on the main thread. The handler is not annotated with
+        // the main actor, and an `NSEvent` cannot cross into that body — a
+        // key code and a window identity can. Same split as the shortcut recorder.
         localMonitor = NSEvent.addLocalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown, .keyDown]
         ) { [weak self] event in
-            MainActor.assumeIsolated {
-                guard let self, let window = self.window, window.isVisible else { return event }
-                if event.type == .keyDown {
-                    if event.keyCode == 53, event.window === window {
+            let type = event.type
+            let keyCode = event.keyCode
+            let eventWindow = event.window.map { ObjectIdentifier($0) }
+            let point = NSEvent.mouseLocation
+            let swallow = MainActor.assumeIsolated { () -> Bool in
+                guard let self, let window = self.window, window.isVisible else { return false }
+                if type == .keyDown {
+                    if keyCode == 53, eventWindow == ObjectIdentifier(window) {
                         self.close()
-                        return nil
+                        return true
                     }
-                    return event
+                    return false
                 }
-                let point = NSEvent.mouseLocation
-                if window.frame.contains(point) || self.entryRect.contains(point) { return event }
+                if window.frame.contains(point) || self.entryRect.contains(point) { return false }
                 self.close()
-                return event
+                return false
             }
+            return swallow ? nil : event
         }
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             MainActor.assumeIsolated { self?.close() }
