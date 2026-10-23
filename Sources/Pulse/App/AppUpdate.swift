@@ -467,7 +467,10 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate, SPUStandardUserD
     /// Background apps that schedule checks are asked to implement gentle
     /// reminders. Notify first is that reminder; Show the window still answers
     /// the question by letting Sparkle present the offer.
-    var supportsGentleScheduledUpdateReminders: Bool { true }
+    ///
+    /// `nonisolated`, like every other method here. Left unmarked, the property
+    /// is main-actor isolated and cannot witness Sparkle's requirement.
+    nonisolated var supportsGentleScheduledUpdateReminders: Bool { true }
 
     /// No side effects. `immediateFocus` is passed through and does not change
     /// the answer: a scheduled check near launch still follows the setting.
