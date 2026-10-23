@@ -6,22 +6,22 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.4</title>
-            <pubDate>Fri, 23 Oct 2026 09:59:10 -0000</pubDate>
-            <sparkle:version>1.5.4</sparkle:version>
-            <sparkle:shortVersionString>1.5.4</sparkle:shortVersionString>
+            <title>1.5.5</title>
+            <pubDate>Fri, 23 Oct 2026 10:18:33 -0000</pubDate>
+            <sparkle:version>1.5.5</sparkle:version>
+            <sparkle:shortVersionString>1.5.5</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.4</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5</link>
             <description><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.4</h2><ul><li><strong>设置里的供应商收在「供应商」下。</strong> 打开设置后点侧栏的「供应商」进入各账号；在侧栏搜索仍可按名称找到账号。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>Blinky 菜单可以检查更新。</strong> 「检查更新」在「关于 Blinky」下面，打开的窗口与「设置 → 关于」里的检查更新相同。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>管理扩展、开发者集成和关于收在同一组。</strong> 这三项在设置侧栏底部的「其他」里。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>通用里的开机启动登记的是正在运行的这一份。</strong> 开关是「设置 → 通用」的第一行；从 Pulse.app 换成 Blinky.app 之后，若开关本来是开的，下次启动会登记正在运行的 Blinky.app。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>发现新版本时，更新窗口会到前面。</strong> 自动检查或「检查更新」发现新版本时，Blinky 会把 Sparkle 的更新窗口调到最前，并在安装前询问。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>更新窗口只显示正在提供的这一版。</strong> 窗口里的说明是这一版的更新记录，更早的版本不再叠在同一个窗口里。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.4">在 GitHub 查看更新说明</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.4/Blinky-1.5.4.zip"
-                       length="22131269"
+</style><h2>Blinky 1.5.5</h2><ul><li><strong>卡片会说明限额何时可能用尽。</strong> 开关在「设置 → 通知 → 用尽预测」。距离用尽不超过六小时时，会写出窗口名称和大致时间，例如「每周 · 约 4 小时后用尽」；更远时，可以说明按当前速度可能撑不到下次重置。通知默认在剩余 24 小时提醒一次，还可以再加几档。Codex 的 5 小时和每周窗口，在回复写明时长和重置时间时也会计算。<a href="https://github.com/harrisliangsu/blinky-mac/pull/61">#61</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.5/Blinky-1.5.5.zip"
+                       length="22228693"
                        type="application/octet-stream"
-                       sparkle:edSignature="I9K7mVzpG2hz+p6Ena02QoiSJKLSjP35rLeucw8zGZ8JE45r2+1yn4r2vSanC2QLQwR95wFm7nj7hILwFh3UCg==" />
+                       sparkle:edSignature="O+1eg5RgRXJ0SmXte4uI5CZi8jFMnegDseYzlVOCusCBoxcdlnh2RTmazXK3O2HiYxQwEtxYiPSnWZZ/OAMRBQ==" />
         </item>
     </channel>
 </rss>

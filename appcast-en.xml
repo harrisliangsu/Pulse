@@ -6,22 +6,22 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.4</title>
-            <pubDate>Fri, 23 Oct 2026 09:59:10 -0000</pubDate>
-            <sparkle:version>1.5.4</sparkle:version>
-            <sparkle:shortVersionString>1.5.4</sparkle:shortVersionString>
+            <title>1.5.5</title>
+            <pubDate>Fri, 23 Oct 2026 10:18:33 -0000</pubDate>
+            <sparkle:version>1.5.5</sparkle:version>
+            <sparkle:shortVersionString>1.5.5</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.4</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5</link>
             <description><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.4</h2><ul><li><strong>Settings lists every provider under Providers.</strong> Open Settings and choose Providers; search still finds an account by its name or the name you gave it. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>The Blinky menu checks for updates.</strong> Check for Updates… is under About and opens the same update window as the button in Settings → About. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>Manage extensions, Developer integrations and About share one section.</strong> They sit under Other at the bottom of the Settings sidebar. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>Open at login is the first row under General.</strong> The switch registers the copy that is running, including Blinky.app after a rename from Pulse.app, and simplified Chinese labels the row 开机启动. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>Sparkle&#x27;s update window comes forward.</strong> A check that finds a newer version, on the schedule or from Check for Updates…, brings that window to the front and asks before installing. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>The update window shows only the version being offered.</strong> Its notes are that version&#x27;s changelog entry, and earlier releases are not stacked in the same window. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.4">Release notes on GitHub</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.4/Blinky-1.5.4.zip"
-                       length="22131269"
+</style><h2>Blinky 1.5.5</h2><ul><li><strong>The card says when a limit may run out.</strong> Settings → Notifications → Exhaustion forecast. Within six hours it names the window and a rough time, for example “Weekly · may run out in about 4 hours”; further out it can say the pace may not last until the reset. Notifications start with one warning at 24 hours left, and more stages can be added. Codex’s 5-hour and weekly windows are included when the reply states a length and a reset. <a href="https://github.com/harrisliangsu/blinky-mac/pull/61">#61</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.5/Blinky-1.5.5.zip"
+                       length="22228693"
                        type="application/octet-stream"
-                       sparkle:edSignature="I9K7mVzpG2hz+p6Ena02QoiSJKLSjP35rLeucw8zGZ8JE45r2+1yn4r2vSanC2QLQwR95wFm7nj7hILwFh3UCg==" />
+                       sparkle:edSignature="O+1eg5RgRXJ0SmXte4uI5CZi8jFMnegDseYzlVOCusCBoxcdlnh2RTmazXK3O2HiYxQwEtxYiPSnWZZ/OAMRBQ==" />
         </item>
     </channel>
 </rss>
