@@ -18,6 +18,9 @@ on:
 
 permissions:
   contents: write
+  # Listing Build runs needs this. contents: write is what Publish and the
+  # feed push already use; setting any permission drops the rest.
+  actions: read
 
 # One Release at a time. A second run waits; it is not cancelled mid-upload.
 #
@@ -83,7 +86,47 @@ jobs:
       - name: Localization keys
         run: ./Scripts/check-localization.sh
 
+      # ci.yml (the workflow named Build) already compiles and tests this
+      # commit on push and on pull request. Skip the debug build and
+      # swift test here when that run has finished green. No run, a
+      # failure, a cancellation, or a run that has not finished yet all
+      # leave both steps in place. A tag pushed as the commit lands
+      # usually finds Build still going, and these tests are what stands
+      # between that and a Sparkle update.
+      - name: Prior CI for this commit
+        id: prior_ci
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHA="$(git rev-parse HEAD)"
+          echo "commit=$SHA"
+          # The file name, so a renamed workflow title still means this check.
+          line="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow ci.yml \
+            --commit "$SHA" \
+            --status success \
+            --limit 1 \
+            --json headSha,conclusion,event,url \
+            --jq '.[0] // empty | if . == null or . == "" then "" else "\(.headSha)\t\(.conclusion)\t\(.event)\t\(.url)" end')"
+          case "$line" in
+            "$SHA"$'\t'"success"$'\t'*)
+              echo "green=true" >> "$GITHUB_OUTPUT"
+              echo "Build already succeeded for $SHA (${line##*$'\t'}). Skipping the debug build and tests."
+              ;;
+            "")
+              echo "green=false" >> "$GITHUB_OUTPUT"
+              echo "No successful Build workflow for $SHA. The debug build and tests will run."
+              ;;
+            *)
+              echo "::error::Unexpected Build lookup result: $line"
+              exit 1
+              ;;
+          esac
+
       - name: Build
+        if: steps.prior_ci.outputs.green != 'true'
         run: |
           set -o pipefail
           swift build 2>&1 | tee build.log
@@ -93,19 +136,24 @@ jobs:
             exit 1
           fi
 
-      # A tag publishes to everyone who has the app installed. The tests are
-      # the last thing standing between a regression in the rules and a
-      # Sparkle update, so they run here too rather than only on push.
+      # Runs together with the debug build above: both stay when this
+      # commit has no finished green Build yet.
       - name: Tests
+        if: steps.prior_ci.outputs.green != 'true'
         run: swift test
 
       # The disk image carries the install instructions on its window, so it is
       # the download people should get; the zip is there for anything that
       # would rather have an archive.
+      #
+      # One universal release build. bundle.sh writes the app and the zip;
+      # dmg.sh --reuse packs that same app. This step used to run dmg.sh
+      # (which builds) and then bundle.sh --zip, so
+      # `swift build -c release --arch arm64 --arch x86_64` ran twice.
       - name: Package
         run: |
-          ./Scripts/dmg.sh
           ./Scripts/bundle.sh --zip
+          ./Scripts/dmg.sh --reuse
           ls -lh build.noindex/
 
       - name: Release notes

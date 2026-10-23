@@ -8,7 +8,11 @@
 # allow it by hand — instructions that live only in a README are instructions
 # nobody downloading a zip ever sees, so they are printed on the window itself.
 #
-#   ./Scripts/dmg.sh
+#   ./Scripts/dmg.sh             → build, then write the disk image
+#   ./Scripts/dmg.sh --reuse     → package the Blinky.app already in
+#                                  build.noindex, without building. Its
+#                                  CFBundleShortVersionString must match VERSION.
+#   ./Scripts/dmg.sh --relayout  → recapture Scripts/dmg-DS_Store
 #
 # Replace Scripts/dmg-background.tiff to change how the window looks. It must
 # stay 660x420 points (the file carries a 1x and a 2x representation); the icon
@@ -28,23 +32,52 @@ cd "$(dirname "$0")/.."
 
 VERSION="$(tr -d '[:space:]' < VERSION)"
 VOLUME="Blinky"
+APP="build.noindex/Blinky.app"
 STAGING="build.noindex/dmg"
 WRITABLE="build.noindex/blinky-rw.dmg"
 FINAL="build.noindex/Blinky-$VERSION.dmg"
 
-./Scripts/bundle.sh
+REUSE=0
+RELAYOUT=0
+for arg in "$@"; do
+    case "$arg" in
+        --reuse) REUSE=1 ;;
+        --relayout) RELAYOUT=1 ;;
+        *)
+            echo "Unknown option: $arg" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# Release builds once in bundle.sh, then calls this with --reuse so the
+# disk image and the zip are the same Blinky.app. A local ./Scripts/dmg.sh
+# still builds.
+if [ "$REUSE" -eq 1 ]; then
+    if [ ! -x "$APP/Contents/MacOS/Pulse" ]; then
+        echo "No $APP to package. Run ./Scripts/bundle.sh first." >&2
+        exit 1
+    fi
+    bundled="$(defaults read "$PWD/$APP/Contents/Info.plist" CFBundleShortVersionString | tr -d '[:space:]')"
+    if [ "$bundled" != "$VERSION" ]; then
+        echo "$APP is version $bundled; VERSION is $VERSION. Run ./Scripts/bundle.sh again." >&2
+        exit 1
+    fi
+    echo "Reusing $APP (version $VERSION)."
+else
+    ./Scripts/bundle.sh
+fi
 
 echo "Staging the disk image…"
 rm -rf "$STAGING" "$WRITABLE" "$FINAL"
 mkdir -p "$STAGING/.background"
-cp -R "build.noindex/Blinky.app" "$STAGING/"
+cp -R "$APP" "$STAGING/"
 ln -s /Applications "$STAGING/Applications"
 cp Scripts/dmg-background.tiff "$STAGING/.background/background.tiff"
 
 # The captured layout goes in before the image is created, so a headless build
 # needs Finder for nothing at all.
-RELAYOUT="${1:-}"
-if [ -f "Scripts/dmg-DS_Store" ] && [ "$RELAYOUT" != "--relayout" ]; then
+if [ -f "Scripts/dmg-DS_Store" ] && [ "$RELAYOUT" -eq 0 ]; then
     cp "Scripts/dmg-DS_Store" "$STAGING/.DS_Store"
 fi
 
@@ -86,7 +119,7 @@ fi
 
 # Capturing it back out is what makes the next build — and every CI build —
 # able to skip Finder entirely.
-if [ "$RELAYOUT" = "--relayout" ] && [ -f "$MOUNT/.DS_Store" ]; then
+if [ "$RELAYOUT" -eq 1 ] && [ -f "$MOUNT/.DS_Store" ]; then
     cp "$MOUNT/.DS_Store" "Scripts/dmg-DS_Store"
     echo "→ Scripts/dmg-DS_Store (commit this)"
 fi
