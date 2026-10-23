@@ -6,22 +6,22 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.9</title>
-            <pubDate>Fri, 23 Oct 2026 14:22:53 -0000</pubDate>
-            <sparkle:version>1.5.9</sparkle:version>
-            <sparkle:shortVersionString>1.5.9</sparkle:shortVersionString>
+            <title>1.5.10</title>
+            <pubDate>Fri, 23 Oct 2026 16:53:08 -0000</pubDate>
+            <sparkle:version>1.5.10</sparkle:version>
+            <sparkle:shortVersionString>1.5.10</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.9</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.10</link>
             <description><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.9</h2><ul><li><strong>Opening Blinky shows its main window.</strong> Finder, Spotlight, Launchpad, and the Dock open the window titled Blinky on the Appearance pane, and a launch at login stays in the menu bar unless Show main window when opened at login is on under Settings → General → Startup and windows. <a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/architecture.md#login-item">Docs/architecture.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/70">#70</a></li><li><strong>The Dock icon can stay on.</strong> Always show Dock icon, in that same section, keeps Blinky in the Dock and in ⌘-Tab, and Show Dock icon while a window is open still covers the main window, a recap, and the service chooser while that switch is off. <a href="https://github.com/harrisliangsu/blinky-mac/pull/70">#70</a></li><li><strong>A login launch waits to ask.</strong> The service chooser and the first-run questions stay back until Blinky is opened by hand, and General explains it when the menu bar icon had to be turned back on. <a href="https://github.com/harrisliangsu/blinky-mac/pull/70">#70</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.9">Release notes on GitHub</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.9/Blinky-1.5.9.zip"
-                       length="22538109"
+</style><h2>Blinky 1.5.10</h2><ul><li><strong>Settings splits the usage card from the rings&#x27; colours.</strong> Usage card, under Panel, holds the figures, the second ring, the reset clock, the exhaustion forecast on the card, and which accounts that forecast shares with the exhaustion notifications. Appearance gains Colour: the ring scheme, Turn red at, and the alert colour when docked. Rings and figures is no longer a pane. Notifications is now Exhaustion and reminders, and it keeps limits and outages, the exhaustion notifications, reset reminders, and celebrations. <a href="https://github.com/harrisliangsu/blinky-mac/pull/71">#71</a></li><li><strong>A scheduled update can install the next time Blinky quits.</strong> Settings → About → When an update is found adds Install silently. A scheduled check downloads the update and installs it on quit, with no notification and no update window. Notify first stays the default. Check now still opens the window. <a href="https://github.com/harrisliangsu/blinky-mac/pull/71">#71</a></li><li><strong>The Token spend panel leads with tokens.</strong> The window beside the usage card uses the same time range as Settings, including a custom range, and switches among model, agent, project, and session. Tokens are the large figure and the estimate is smaller. The chart follows that range, and Share says when the image is on the clipboard. <a href="https://github.com/harrisliangsu/blinky-mac/pull/71">#71</a></li><li><strong>Opening Settings names Blinky in the menu bar.</strong> The gear, Settings…, ⌘,, a reopen, and a settings link activate Blinky after the window&#x27;s Dock policy is applied, so the menu bar shows Blinky. <a href="https://github.com/harrisliangsu/blinky-mac/pull/71">#71</a></li><li><strong>The Token spend window closes from its close button and from Escape.</strong> The red close button and Escape hide the summary opened from the usage card. <a href="https://github.com/harrisliangsu/blinky-mac/pull/71">#71</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.10">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.10/Blinky-1.5.10.zip"
+                       length="22597773"
                        type="application/octet-stream"
-                       sparkle:edSignature="40WF0cFCzrr3q2DtYSTEGD9QQ/6llYZ7WnOTTd+RnTmWElpJRA9qA0BliJc6OLKC/la3ahLIHwLSZVoay1k8AA==" />
+                       sparkle:edSignature="VUGQheiBUusHWvm9Cwhlj2h8rOmCj9kw7bz2RJVLa34nv0B7vYUeOuWKrZvbB0JxdBY107rcaJeANvdm09vpDA==" />
         </item>
     </channel>
 </rss>
