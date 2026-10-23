@@ -552,6 +552,8 @@
 "Counting" = "집계 방식";
 "Read from local records and exports, priced at models.dev's published rates." = "로컬 기록과 내보낸 파일에서 읽어, models.dev에 공개된 가격으로 환산합니다.";
 "Rescan" = "다시 검사";
+"Share this summary" = "공유";
+"%@ - %@" = "%@–%@";
 "Total" = "합계";
 "Reading…" = "읽는 중…";
 "Nothing yet" = "아직 기록이 없습니다";

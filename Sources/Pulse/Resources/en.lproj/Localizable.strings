@@ -579,6 +579,8 @@
 "Counting" = "Counting";
 "Read from local records and exports, priced at models.dev's published rates." = "Read from local records and exports, priced at models.dev's published rates.";
 "Rescan" = "Rescan";
+"Share this summary" = "Share";
+"%@ - %@" = "%@ - %@";
 "Total" = "Total";
 "Reading…" = "Reading…";
 "Nothing yet" = "Nothing yet";

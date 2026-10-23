@@ -579,6 +579,8 @@
 "Counting" = "统计方式";
 "Read from local records and exports, priced at models.dev's published rates." = "读取本机的记录与导出文件，按 models.dev 公布的价格计价。";
 "Rescan" = "重新扫描";
+"Share this summary" = "分享";
+"%@ - %@" = "%@ 至 %@";
 "Total" = "合计";
 "Reading…" = "正在读取…";
 "Nothing yet" = "还没有记录";

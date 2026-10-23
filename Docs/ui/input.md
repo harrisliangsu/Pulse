@@ -57,6 +57,12 @@ Taken in `sendEvent` rather than with SwiftUI's `.contextMenu`, for the reason e
 
 `placement.isMenuOpen` is set for the span of `popUp`, which runs its own tracking loop. Without it the pointer is on the menu — off the panel by every test `pointerMoved` makes — and the rail winds down to its sliver the moment the menu appears beside it. `scheduleHide` guards on it exactly as it guards on `isDragging`, and re-arms the same way.
 
+## The Token spend button
+
+It sits on the usage card's header with Settings and Quit, and only while Token spend is on. It is a `HeaderIconButton`: `PointerHand` records the press and fires on mouse-up. Hovering a ring still opens that provider's card; the summary opens only from this click.
+
+The summary is a separate window that can become key, so Escape and a click outside dismiss it. The click-outside monitor ignores the button's screen rectangle, so that same click toggles the window closed. A press on the rail is still `FloatingPanel.sendEvent` and is not this button. [../token-spend.md](../token-spend.md#the-glance-window)
+
 ## Global shortcuts
 
 `GlobalShortcut` / `GlobalShortcutMonitor` (App/). `RegisterEventHotKey`, **not** an event tap: a tap that sees other apps' keystrokes needs Accessibility permission, and that is not a trade worth offering to open a settings window. Two actions, both **unset until somebody sets one** — a default combination is a key taken out of every other app's hands on behalf of someone who never asked.

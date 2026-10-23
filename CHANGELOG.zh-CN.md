@@ -6,6 +6,10 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.5.7
+
+- **Token 消耗可以在悬浮面板旁边打开。** 打开 Token 消耗后，用量卡片标题栏上的按钮会打开与设置里相同统计区间的摘要，分享会把这份摘要复制成图片。完整的 Token 消耗页面仍在设置中。[Docs/token-spend.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md) [#62](https://github.com/harrisliangsu/blinky-mac/pull/62)
+
 ## 1.5.6
 
 - **设置里，相关的选项收在一起，倒计时会显示小时数。** 开关关闭时，它下面的选项会收起；「设置 → 通知」里的用尽预测分成卡片、通知和账号三组，具体倒计时默认显示 6 小时，撑不到下次重置时的另外一条通知默认关闭。[#66](https://github.com/harrisliangsu/blinky-mac/pull/66)

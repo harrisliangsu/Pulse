@@ -53,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private var panelController: FloatingPanelController?
+    private var spendGlance: SpendGlanceController?
     private var statusItem: NSStatusItem?
     private var settingsWindow: SettingsWindowController?
     private var recapWindow: RecapWindowController?
@@ -185,7 +186,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             openRecap: { [weak self] period in self?.showRecap(period: period) }
         )
         recapNotice.start()
-        let controller = FloatingPanelController(store: store, settings: settings, placement: placement, openSettings: { [weak self] in self?.showSettings() })
+        let glance = SpendGlanceController(settings: settings)
+        spendGlance = glance
+        let controller = FloatingPanelController(
+            store: store,
+            settings: settings,
+            placement: placement,
+            openSettings: { [weak self] in self?.showSettings() },
+            openTokenSpend: { glance.toggle() },
+            onTokenSpendFrame: { glance.entryRect = $0 }
+        )
+        glance.anchor = { [weak controller] in controller?.glanceAnchor() }
         panelController = controller
         controller.contextMenu = { [weak self] in self?.panelMenu() ?? NSMenu() }
         if settings.isPanelVisible { controller.show() }

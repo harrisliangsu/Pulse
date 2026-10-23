@@ -222,6 +222,13 @@ struct UsageDetailCard: View {
     /// The panel is never key, so Settings and Quit on the menu bar extras
     /// are a hunt. These ride the card header: they take no extra height.
     var openSettings: (() -> Void)? = nil
+    /// Token spend summary. Shown only while reading is on, and only as a
+    /// click: hovering a ring still opens this card.
+    var showsTokenSpend = false
+    var openTokenSpend: (() -> Void)? = nil
+    /// The button's screen rect, so a click on it can toggle the summary
+    /// instead of counting as a click outside that window.
+    var onTokenSpendFrame: ((CGRect) -> Void)? = nil
     /// Codex Resets' public status. Nil until a fetch or the disk cache lands.
     /// The prediction row still says there is no prediction rather than
     /// leaving a hole. A latest announcement is a separate row under that.
@@ -914,6 +921,16 @@ struct UsageDetailCard: View {
                         Spacer(minLength: 0)
                     }
 
+                    if showsTokenSpend, let openTokenSpend {
+                        HeaderIconButton(
+                            systemImage: "chart.bar",
+                            label: String.localized("Token spend"),
+                            action: openTokenSpend
+                        )
+                        .background(ScreenRectReporter { onTokenSpendFrame?($0) })
+                        .onDisappear { onTokenSpendFrame?(.null) }
+                    }
+
                     if let openSettings {
                         HeaderIconButton(
                             systemImage: "gearshape",
@@ -1103,6 +1120,46 @@ private struct CodexResetsLink: View {
             .accessibilityAction(.default) {
                 NSWorkspace.shared.open(CodexResetClient.site)
             }
+    }
+}
+
+/// The entry button's rectangle in screen coordinates, reported whenever it
+/// moves. The summary window treats a click inside it as the toggle.
+private struct ScreenRectReporter: NSViewRepresentable {
+    var onChange: (CGRect) -> Void
+
+    func makeNSView(context: Context) -> Reporter {
+        let view = Reporter()
+        view.onChange = onChange
+        return view
+    }
+
+    func updateNSView(_ view: Reporter, context: Context) {
+        view.onChange = onChange
+        view.publish()
+    }
+
+    final class Reporter: NSView {
+        var onChange: (CGRect) -> Void = { _ in }
+
+        override func layout() {
+            super.layout()
+            publish()
+        }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            publish()
+        }
+
+        func publish() {
+            guard let window else {
+                onChange(.null)
+                return
+            }
+            let rect = window.convertToScreen(convert(bounds, to: nil))
+            onChange(rect.insetBy(dx: -6, dy: -6))
+        }
     }
 }
 

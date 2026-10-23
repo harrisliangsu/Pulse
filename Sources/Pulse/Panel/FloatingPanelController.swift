@@ -107,12 +107,24 @@ final class FloatingPanelController {
     /// Opens Settings from the rail's context menu and the card's gear.
     /// The panel never becomes key, so the menu-bar shortcuts do not reach it.
     private let openSettings: () -> Void
+    /// Opens the Token spend summary from the card header.
+    private let openTokenSpend: () -> Void
+    private let onTokenSpendFrame: (CGRect) -> Void
 
-    init(store: UsageStore, settings: AppSettings, placement: PanelPlacement, openSettings: @escaping () -> Void) {
+    init(
+        store: UsageStore,
+        settings: AppSettings,
+        placement: PanelPlacement,
+        openSettings: @escaping () -> Void,
+        openTokenSpend: @escaping () -> Void = {},
+        onTokenSpendFrame: @escaping (CGRect) -> Void = { _ in }
+    ) {
         self.store = store
         self.settings = settings
         self.placement = placement
         self.openSettings = openSettings
+        self.openTokenSpend = openTokenSpend
+        self.onTokenSpendFrame = onTokenSpendFrame
         placement.snapsToEdges = settings.snapsToEdges
 
         // The sliver has to be reachable without leaving the rail, or hiding
@@ -144,7 +156,9 @@ final class FloatingPanelController {
                 store: store,
                 settings: settings,
                 placement: placement,
-                openSettings: openSettings
+                openSettings: openSettings,
+                openTokenSpend: openTokenSpend,
+                onTokenSpendFrame: onTokenSpendFrame
             )
         )
         hostingView.sizingOptions = []
@@ -266,6 +280,27 @@ final class FloatingPanelController {
     var contextMenu: (() -> NSMenu)? {
         get { panel.contextMenu }
         set { panel.contextMenu = newValue }
+    }
+
+    /// The rail in screen coordinates, for the Token spend window to sit beside it.
+    func glanceAnchor() -> SpendGlanceAnchor? {
+        guard let screen = panel.screen ?? NSScreen.main, let railInPanel = panel.railFrame?() else { return nil }
+        let rail = CGRect(
+            x: panel.frame.minX + railInPanel.minX,
+            y: panel.frame.maxY - railInPanel.maxY,
+            width: railInPanel.width,
+            height: railInPanel.height
+        )
+        let clearance = placement.edge.isVertical
+            ? DetailCardLayout.width + DetailCardLayout.pointerWidth + SpendGlancePlacement.gap
+            : SpendGlancePlacement.gap
+        return SpendGlanceAnchor(
+            rail: rail,
+            edge: placement.edge,
+            screen: screen.visibleFrame,
+            cardClearance: clearance,
+            level: panel.level
+        )
     }
 
     func show() {

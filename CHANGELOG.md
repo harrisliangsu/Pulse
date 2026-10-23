@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.7
+
+- **Token spend can open beside the floating panel.** With Token spend on, the button on the usage card's header opens a summary for the same span as Settings, and Share copies that summary as an image. The full Token spend page stays in Settings. [Docs/token-spend.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md) [#62](https://github.com/harrisliangsu/blinky-mac/pull/62)
+
 ## 1.5.6
 
 - **Settings groups a control with the choices that belong to it.** In Settings, a child row hides while its switch is off, and Notifications shows the countdown hours, starting at 6. A separate notice before the reset stays off until it is turned on. [#66](https://github.com/harrisliangsu/blinky-mac/pull/66)
