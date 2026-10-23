@@ -1,6 +1,6 @@
 # Update mirror
 
-**This fork does not use it.** Installed copies of harrisliangsu/Pulse read `https://raw.githubusercontent.com/harrisliangsu/Pulse/main/appcast.xml` (and `appcast-zh.xml` / `appcast-en.xml` when a language is set). They do not read qunqin24/Pulse, and they do not fall back to **update.qunqin.org**. `AppUpdate.feedBase(from:)` ignores a plist URL that is not this fork's GitHub feed. The worker under `Scripts/update-mirror/` is upstream's, kept so the file is not dropped on the next sync; nothing in this repository's app or release workflow calls it.
+**This fork does not use it.** Installed copies of harrisliangsu/blinky-mac read `https://raw.githubusercontent.com/harrisliangsu/blinky-mac/main/appcast.xml` (and `appcast-zh.xml` / `appcast-en.xml` when a language is set). They do not read qunqin24/Pulse, and they do not fall back to **update.qunqin.org**. `AppUpdate.feedBase(from:)` ignores a plist URL that is not this fork's GitHub feed. The worker under `Scripts/update-mirror/` is upstream's, kept so the file is not dropped on the next sync; nothing in this repository's app or release workflow calls it.
 
 Upstream uses the mirror because GitHub is unreachable in some places. The rest of this page describes that worker, not a host this fork's app will contact.
 
@@ -24,7 +24,7 @@ A cache at the edge and a `/download/latest` redirect were written first and tak
 One host. `feedURLStringForUpdater:` calls `AppUpdate.feedURL(for:base:)` (`AppUpdateFeedTests`):
 
 - Following the system reads `appcast.xml`. Simplified and Traditional Chinese read `appcast-zh.xml`. English, Japanese and Korean read `appcast-en.xml`.
-- The directory is `https://raw.githubusercontent.com/harrisliangsu/Pulse/main/`. A `SUFeedURL` that already names that path may supply the directory; `update.qunqin.org` and `qunqin24/Pulse` do not.
+- The directory is `https://raw.githubusercontent.com/harrisliangsu/blinky-mac/main/`. A `SUFeedURL` that already names that path may supply the directory; `update.qunqin.org` and `qunqin24/Pulse` do not.
 - A check that fails is reported. It is not tried again on another host.
 
 `SUFeedURL` in `Info.plist` stays this fork's GitHub URL: it is what a build without the delegate would read, and what tells `AppUpdate` it is running from a bundle. [releasing.md](releasing.md#sparkle)

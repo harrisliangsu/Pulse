@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.0
+
+- **The name on screen is Blinky.** The menu bar, Settings, About, and update notes show Blinky, the same name as the iOS app, and this remains a fork of [Pulse](https://github.com/qunqin24/Pulse).
+
 ## 1.4.29
 
 - **Antigravity prices its Gemini 3.8 Flash variants.** Names ending in `-n`, `-control` and `-xpe` use the published rate for `gemini-3.8-flash`, where those rows had no public price. Thanks to [@1206-skittle](https://github.com/qunqin24/Pulse/issues/90) for the report.
@@ -53,7 +57,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.4.26
 
-- **Codex’s predicted reset does not stay after the reset has happened.** Once the weekly limit has refilled, or the predicted time has passed, the Codex card no longer shows that countdown as still coming; opening the card or a usage refresh reads Codex Resets again. [#47](https://github.com/harrisliangsu/Pulse/pull/47)
+- **Codex’s predicted reset does not stay after the reset has happened.** Once the weekly limit has refilled, or the predicted time has passed, the Codex card no longer shows that countdown as still coming; opening the card or a usage refresh reads Codex Resets again. [#47](https://github.com/harrisliangsu/blinky-mac/pull/47)
 
 ## 1.4.25
 
@@ -71,11 +75,11 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.4.23
 
-- **Codex’s predicted reset follows an announced reset.** After Codex Resets publishes a reset, Predicted reset and Last reset on the Codex card show that announcement. [#43](https://github.com/harrisliangsu/Pulse/pull/43)
+- **Codex’s predicted reset follows an announced reset.** After Codex Resets publishes a reset, Predicted reset and Last reset on the Codex card show that announcement. [#43](https://github.com/harrisliangsu/blinky-mac/pull/43)
 
 ## 1.4.22
 
-- **Extensions can report metrics of their own.** Figures such as time to first token and output rate appear on the card with a trend line. [How to report them](https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md#metrics). Thanks to [@xkaaaaaa](https://github.com/qunqin24/Pulse/issues/80) for the suggestion.
+- **Extensions can report metrics of their own.** Figures such as time to first token and output rate appear on the card with a trend line. [How to report them](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/extensions.md#metrics). Thanks to [@xkaaaaaa](https://github.com/qunqin24/Pulse/issues/80) for the suggestion.
 - **No Proxy and System Proxy Only.** Choose them under Settings → Network and refresh → Proxy; System Proxy Only connects nowhere while macOS has no proxy switched on, and Follow System stays the default.
 - **Hide the floating panel from screenshots.** Turn on Hide from screenshots under Settings → Position and behavior, and screenshot tools that support it leave the panel out; recordings and screen sharing may still show it.
 - **Old figures are no longer shown once a provider confirms there is no plan.** This covers z.ai, Xiaomi Coding Plan, Grok Bot and others.
@@ -132,7 +136,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 - **The Position row wraps.** When the window is too narrow for the label and the choices side by side, the choices move under the label.
 - **The recap's big numbers are no longer clipped.** A 9 or a 5 keeps its right edge, and the month and year leave room for the mark beside them. The price field is the width of a price.
 - **Token kinds name what was not classified.** The breakdown shows an Unclassified row, and Fresh is now Input. Work that is only unclassified reads as not reported.
-- **Synced from upstream qunqin24/Pulse** (17 commits, through the Support section after their 1.8.1 line, since 1.4.14). This fork's version is **1.4.15**. Their Sparkle offer for 1.8.1 was not copied; `appcast.xml` is unchanged until this version is tagged. The README's Support section, with its Afdian badge, is included; this repository's badges and links stay on harrisliangsu/Pulse.
+- **Synced from upstream qunqin24/Pulse** (17 commits, through the Support section after their 1.8.1 line, since 1.4.14). This fork's version is **1.4.15**. Their Sparkle offer for 1.8.1 was not copied; `appcast.xml` is unchanged until this version is tagged. The README's Support section, with its Afdian badge, is included; this repository's badges and links stay on harrisliangsu/blinky-mac.
 - **Fork fixes in this sync:** update checks stay on this repository's GitHub feeds and are not retried against update.qunqin.org. Ring colour schemes, reset reminders (predicted and regular, 12 / 24 / 48 hours), celebrations including the hourly one, the appearance picker, Kimi's extra accounts, Qoder and Zen are carried into the split settings files. The shared usage fetch still asks Qoder, Kimi's extra accounts, and the Codex reset forecast.
 - **Fork-only pieces kept:** Codex reset forecast, the latest-reset row (including on a card that is already open), hover copy on the reset type, and advance reminders; ring colour schemes (Red alert / Gradient / Quiet, and Quiet keeps green); ResetCelebration ribbons, including the optional five-hour / hourly one; Kimi device-code sign-in and multi-account; Qoder (including a personal token and discovery of Qoder IDE and `~/.qoder`); Zen's cookie store; bilingual release notes; and this repo's Sparkle feed and signing key.
 
@@ -202,7 +206,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.4.7
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Synced from upstream qunqin24/Pulse** (seven commits this fork had not yet taken, through their 1.6.1 line). This fork stays on its own version: **1.4.7**. Their Sparkle offer was not copied; `appcast.xml` is unchanged until this version is tagged.
 - **A new icon.** A P drawn in one stroke: the stem is the screen edge the panel docks to, the lime bowl a usage ring left open. It is built from an Icon Composer document, as macOS 26 expects, so Liquid Glass follows the dark, clear, and tinted icon styles. Older systems still get the flattened icon.
 - **With Liquid Glass on and the panel docked, the rail can be dragged from between its rings**, not only by a ring. A near-invisible fill under the glass gives the window those pixels. The settings caption that said to drag by a ring is gone. Thanks to [@annsyun](https://github.com/qunqin24/Pulse/issues/68) for reporting it upstream.
@@ -212,7 +216,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.4.6
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Synced from upstream qunqin24/Pulse** (one hundred and thirteen commits this fork had not yet taken, through the opt-in that starts Claude Code’s and Codex’s usage windows after they reset).
 - **Extensions.** A program in the extensions folder can report one account’s usage — an internal quota, or a prepaid balance — and Pulse draws it as a ring. Nothing runs until it is switched on, and Pulse hands it no credentials. How to write one: [Docs/extensions.md](Docs/extensions.md).
 - **Fifty-two more providers, 77 built in.** They are described by a profile rather than a new case in every switch: ClinePass, Alibaba Cloud Model Studio’s Coding Plan and Token Plan, Qwen Cloud, LongCat, Gemini, Kilo Code, Factory, Augment Code, Windsurf, Amp, Mistral, Moonshot, OpenAI API, xAI API, and the rest named in the README. Those fifty-two were ported by reading [CodexBar](https://github.com/steipete/CodexBar) and have not all been checked against a live account.
@@ -227,7 +231,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.4.5
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Synced from upstream qunqin24/Pulse** (twelve commits this fork had not yet taken, on top of their 1.4.0 line).
 - **StepFun’s Step Plan is the twenty-fifth provider.** A signed-in browser session for `platform.stepfun.com` or `platform.stepfun.ai` (or a pasted `Cookie:` header) reads a Token Plan’s monthly credits and top-up packs as one ring, with the date the soonest of them lapse, or a Coding Plan’s five-hour and weekly windows. An account with no plan says so.
 - **Qoder shows when bonus packs lapse.** Each pack has its own end date; the card shows the soonest, such as “Oct 18: 86 credits expire”, with packs ending the same day added together. `--json` gains `expiresAt` and `expiringAmount`.
@@ -248,7 +252,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.4.3
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Synced from upstream qunqin24/Pulse 1.4.0** (the seventeen commits this fork had not yet taken).
 - **sub2api, New API, and V2EX.** Two self-hosted gateways read a balance or allowance from a server address and key you enter. V2EX reads its AI Chat allowance with a Personal Access Token.
 - **Qoder follows upstream’s account-page read.** Credits and a team plan’s shared pool are two rings. Buying a pack is not treated as a reset. The site (`qoder.com` or `qoder.com.cn`) is a setting, and changing it clears the saved session. A personal token (`pt-` / `jt-`) still works, and discovery still notices Qoder IDE and `~/.qoder`.
@@ -280,7 +284,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.3.2
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Synced from upstream qunqin24/Pulse** (five commits on top of their post-1.3.0 line that this fork had not yet taken).
 - **Hide the menu bar icon** (off by default). Reach Pulse through the floating panel menu or global shortcuts alone; Settings always keeps at least one working entry point.
 - **Agent guidance entry point** — `AGENTS.md` for coding agents working in this repo.
@@ -289,7 +293,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.3.1
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Synced from upstream qunqin24/Pulse** (nine commits on top of their 1.3.0 line).
 - **Kiro** as a new provider — reads subscription usage over the CLI’s own ACP, without touching its credentials.
 - **CLI activity scan only where a provider is being watched**, so idle agents do not wake the rail.
@@ -301,7 +305,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.3.0
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Synced from upstream qunqin24/Pulse 1.3.0** (includes their 1.2.1 work that this fork had not yet taken).
 - **First-run provider picker.** Pulse reads no credentials and starts no monitoring until you choose what it may watch. Later upgrades only suggest newly detected local services; they never enable one on their own.
 - **Proxy settings.** Keep following macOS, or set HTTP / HTTPS / SOCKS5. Provider requests, sign-in flows, and helpers such as Codex and arkcli share the same choice.
@@ -314,31 +318,31 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.2.4
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **An opt-in for 5-hour ribbons.** “Celebrate a reset” still means a week or a month by default. A new switch — **Also celebrate hourly quota resets** — covers Zhipu and Kimi’s short window when you want it. Off by default. A clock that only slides a few minutes — Codex’s session — is still not a reset.
 - **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.
 
 ## 1.2.3
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Quiet keeps green for healthy usage.** Settings → General → Ring colour scheme → **Quiet** no longer washes the rail grey. Below the Turn-red threshold a ring, percent label and usage bar stay the same green Red alert uses; at or above that line, or when the provider says the limit is spent, they go muted grey — never red. 93% remaining stays green; 2% remaining and a spent limit go grey.
 - **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.
 
 ## 1.2.2
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **One Ring colour scheme.** Settings → General replaces the spent-only colour picker with **Ring colour scheme**: **Red alert** (green and red only, with the nested **Turn red at** threshold), **Gradient** (never red), or **Quiet** (grey, never red). Quiet no longer reddens past the threshold. Existing Emphasize / Follow usage / Quiet values migrate onto the matching scheme.
 - **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.
 
 ## 1.2.1
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Choose how a spent ring is coloured.** Settings → General has a Spent ring colour picker under Turn red at: **Emphasize** (the default, the same deep red as before), **Follow usage** (colour as any other 100% reading), or **Quiet** (a muted grey). Exhausted is no longer forced deep-red if you pick otherwise. The provider still says whether the limit is spent — this only picks the hue.
 - **Fork-only pieces kept:** Qoder, Kimi device-code / multi-account, ResetCelebration ribbons, bilingual release notes, and this repo’s Sparkle feed / signing key.
 
 ## 1.2.0
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
 - **Animated marks.** A ring’s provider logo can be replaced by a small animated bot. Off by default, switched on per account in that account’s settings pane. It says only what the panel already knows: that provider’s CLI is running, Pulse is fetching a reading, the limit is spent, there is no reading yet, or nothing is happening. A ring drawing a mark no longer draws the white activity arc — a travelling arc and a bot that visibly gets to work are one fact drawn twice.
 - **Personality, shape and colour.** Eight personalities decide which motions a mark plays and at what pace, dealt automatically so the ring beside it is a different character. Eighteen body shapes, round by default. Colour is the provider’s brand where it has one, otherwise dealt to stand apart from its neighbours’ hues, or chosen outright. All three are per account.
 - **It reacts to what is happening.** The eyes follow the pointer across the panel, and the ring being pointed at stops to listen. Work alternates between working, generating and writing, with anger added out of hours. A machine that has been quiet for twenty minutes gets bored, and sleepy about it at night. A limit that resets is celebrated; a finished turn gets a cheer. The reset is recognised by the same rule the reset notification uses, whether or not notifications are on.
@@ -348,8 +352,8 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.1.3
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
-- **More token-spend sources.** Local-record readers for Gemini CLI, Cline, Roo Code, OpenClaw, GitHub Copilot and more, plus exports from Cursor, Trae and others. Some sources need a prior export or capture. [Sources](https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend-sources.md).
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **More token-spend sources.** Local-record readers for Gemini CLI, Cline, Roo Code, OpenClaw, GitHub Copilot and more, plus exports from Cursor, Trae and others. Some sources need a prior export or capture. [Sources](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend-sources.md).
 - **Model usage details.** Open a model for input/output/cache, daily and hourly usage, and per-agent contributions; detail tables sort and page. Costs use published API rates — not a subscription bill.
 - **Chart hover values.** Point at a history chart to read the token count for that date or hour, including short bars and empty periods.
 - **Rail menu and global shortcuts.** Right-click the floating rail to open Settings. Optional shortcuts open Settings or show/hide the rail (unassigned by default).
@@ -362,9 +366,9 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.1.2
 
-- **This repository ([harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
-- **Devin joins as a provider.** Daily and weekly quota come from a Chromium browser session (no keychain prompt). With no credential, Pulse reads the app’s dated saved plan. Account and organization boundaries stay isolated. [Setup](https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/devin.md).
-- **Token spend.** Local sessions from Claude Code, Codex, OpenCode, Kilo CLI, Grok Build, Kimi CLI and Devin CLI are grouped by span, agent, model, project, session and token kind. Costs use published API rates — not a subscription bill. [Details](https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend.md).
+- **This repository ([harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)) is the update source.** Sparkle’s appcast and GitHub Releases point here, not upstream qunqin24/Pulse.
+- **Devin joins as a provider.** Daily and weekly quota come from a Chromium browser session (no keychain prompt). With no credential, Pulse reads the app’s dated saved plan. Account and organization boundaries stay isolated. [Setup](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/providers/devin.md).
+- **Token spend.** Local sessions from Claude Code, Codex, OpenCode, Kilo CLI, Grok Build, Kimi CLI and Devin CLI are grouped by span, agent, model, project, session and token kind. Costs use published API rates — not a subscription bill. [Details](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md).
 - **Detail cards no longer drift** along the rail as they open and close.
 - **Model pricing and aliases** match the names agents actually write; snapshots and spending stay inside their proper bounds.
 - **Cross-midnight sessions** count only their in-range work; log/database cache updates and custom session titles are corrected.
@@ -372,7 +376,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.1.1
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **Choose where the ring turns red.** Settings now has a warning threshold for the amber→red boundary; the green boundary stays fixed, and a spent limit still overrides the colour. Exact equality at the threshold counts as red.
 - **Claude Code warning severities leave room.** A warning from Claude Code is no longer read as a spent limit; locked reasons and unknown severities still mark the limit spent.
 - **Sign-in UI stays on its own provider.** Device-code Cancel, the code row, and sign-in errors only appear on the pane for the provider you started — not on every Accounts group.
@@ -380,7 +384,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.1.0
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。 安装自本仓库的副本会从这里收到后续版本。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。 安装自本仓库的副本会从这里收到后续版本。
 - **A large balance no longer overflows the ring.** The rail shows ¥5k, ¥123k, $1.2M rather than the full figure, which did not fit and was being cut off — the exact balance is on the card and in Settings. It is always rounded **down**, so the ring never claims you have more than you do.
 
 - **The rail no longer sits slightly too low until you touch something.** On most displays the panel is taller than the space macOS will grant it, and Pulse works out where to draw the rail from the position the window actually got. It was asking that question a moment too early — before the window was on screen, when the answer was still the position it had **requested** — so the rail was drawn about 76pt below where it belonged, and then jumped into place the first time any setting changed.

@@ -135,7 +135,7 @@ Once reading is on, the first group gains a **Usage recaps** row (zh-Hans 用量
 
 ### Developer integrations
 
-In the sidebar's last, untitled section. It copies the actual executable's `--json` command with shell quoting, exports the bundled developer kit into a new `Pulse Integrations` folder, and copies links or `open` commands for any configured account. Exports refuse an existing destination and exclude dependency/build folders. Install instructions: [../integrations.md](../integrations.md).
+In the sidebar's last, untitled section. It copies the actual executable's `--json` command with shell quoting, exports the bundled developer kit into a new `Blinky Integrations` folder, and copies links or `open` commands for any configured account. Exports refuse an existing destination and exclude dependency/build folders. Install instructions: [../integrations.md](../integrations.md).
 
 ## Controls
 

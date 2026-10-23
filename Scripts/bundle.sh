@@ -48,7 +48,7 @@ FEED_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/main/appcast.xml"
 # private half. See Scripts/appcast.py.
 PUBLIC_KEY="$(tr -d '[:space:]' < Scripts/sparkle-public-key.txt)"
 
-echo "Building Pulse $VERSION (universal)…"
+echo "Building Blinky $VERSION (universal)…"
 
 # macOS picks which design an app gets from the SDK version recorded in its
 # binary's LC_BUILD_VERSION, not from the version it is running on. Below 26 it
@@ -146,8 +146,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleName</key><string>Pulse</string>
-    <key>CFBundleDisplayName</key><string>Pulse</string>
+    <key>CFBundleName</key><string>Blinky</string>
+    <key>CFBundleDisplayName</key><string>Blinky</string>
     <key>CFBundleExecutable</key><string>Pulse</string>
     <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>

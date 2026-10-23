@@ -866,7 +866,7 @@ struct UsageDetailCard: View {
                         )
                         HeaderIconButton(
                             systemImage: "power",
-                            label: String.localized("Quit Pulse")
+                            label: String.localized("Quit Blinky")
                         ) {
                             NSApplication.shared.terminate(nil)
                         }

@@ -82,7 +82,7 @@ enum ExtensionCatalog {
             case .unreadableManifest:
                 .localized("pulse-extension.json isn't valid JSON, or is missing a field.")
             case .unsupportedSchema(let version):
-                .localized("Written for extension schema \(String(version)), which this version of Pulse doesn't read.")
+                .localized("Written for extension schema \(String(version)), which this version of Blinky doesn't read.")
             case .invalidID:
                 .localized("Its id must be lowercase letters, digits, dots, dashes or underscores, 64 at most.")
             case .missingName:

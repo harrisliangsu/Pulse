@@ -426,8 +426,8 @@ struct RecapScorecardView: View {
         HStack(spacing: 20) {
             RecapMark(side: 72)
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: "Pulse").font(.recap(32, .semibold))
-                Text(verbatim: "github.com/harrisliangsu/Pulse")
+                Text(verbatim: "Blinky").font(.recap(32, .semibold))
+                Text(verbatim: "github.com/harrisliangsu/blinky-mac")
                     .font(.recap(17, .regular, mono: true))
                     .foregroundStyle(Color(recap: 0x55554F))
                     .lineLimit(1)

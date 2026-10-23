@@ -2,6 +2,8 @@
 
 Maintained map. Change the topic file that owns a behaviour in the same patch as the code. [CLAUDE.md](../CLAUDE.md) is a short AI entry; [CONTRIBUTING.md](../CONTRIBUTING.md) is the human process.
 
+The name on screen is **Blinky** (menu bar, Settings, About, update notes). The Swift module, the `Pulse` executable, `Pulse.app`, and the bundle identifier `io.github.qunqin24.Pulse` stay as they are, so an existing install keeps its data and its updates. This fork lives at [harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac). Upstream remains [qunqin24/Pulse](https://github.com/qunqin24/Pulse).
+
 `Docs/` is the only docs tree. Investigation notes that are not “how it works now” live under [history/](history/) rather than being folded into current architecture.
 
 ## Start here
@@ -27,7 +29,7 @@ Topic docs, at the top of this folder. Subfolders are under [Folders](#folders).
 | [window-starter.md](window-starter.md) | Starting Claude Code's and Codex's usage windows after a reset: the risk confirmation, when, and what is sent |
 | [build-from-source.md](build-from-source.md) | Toolchain, `swift build`, `#Preview`, local run |
 | [releasing.md](releasing.md) | Tag, bundle, Sparkle, DMG, CI |
-| [update-mirror.md](update-mirror.md) | Upstream's update.qunqin.org mirror, which this fork does not read; this fork's feeds stay on harrisliangsu/Pulse |
+| [update-mirror.md](update-mirror.md) | Upstream's update.qunqin.org mirror, which this fork does not read; this fork's feeds stay on harrisliangsu/blinky-mac |
 | [ollama-cloud.md](ollama-cloud.md) | The current contract for Ollama Cloud: how usage is read from a signed-in page (no quota API); [providers/ollama-cloud.md](providers/ollama-cloud.md) only places it in the matrix |
 
 ## Folders

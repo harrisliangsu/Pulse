@@ -53,7 +53,7 @@ struct GeneralPane: View {
 
                 SettingsRow(
                     String.localized("Hide menu bar icon"),
-                    subtitle: String.localized("Remove Pulse from the menu bar; use the panel menu or shortcut to open settings.")
+                    subtitle: String.localized("Remove Blinky from the menu bar; use the panel menu or shortcut to open settings.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { settings.hidesMenuBarIcon },
@@ -234,7 +234,7 @@ struct GeneralPane: View {
         case .needsApproval:
             .localized("Waiting for approval in System Settings › General › Login Items.")
         case .on, .off:
-            .localized("Start Pulse automatically when you log in.")
+            .localized("Start Blinky automatically when you log in.")
         }
     }
 }

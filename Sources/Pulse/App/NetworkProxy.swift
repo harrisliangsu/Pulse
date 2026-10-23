@@ -31,10 +31,10 @@ enum NetworkProxyMode: String, CaseIterable, Codable, Identifiable, Sendable {
     /// What the choice does, under the picker.
     var explanation: String {
         switch self {
-        case .direct: .localized("Pulse connects directly and ignores the proxy in macOS settings.")
+        case .direct: .localized("Blinky connects directly and ignores the proxy in macOS settings.")
         case .system: .localized("Uses the proxy in macOS settings, or connects directly when there is none.")
         case .systemRequired: .localized("Uses the proxy in macOS settings, and doesn't connect when there is none.")
-        case .manual: .localized("A proxy for Pulse only.")
+        case .manual: .localized("A proxy for Blinky only.")
         }
     }
 }

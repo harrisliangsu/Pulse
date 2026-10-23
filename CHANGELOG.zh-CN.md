@@ -6,6 +6,10 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.5.0
+
+- **界面上的名称改为 Blinky。** 菜单栏、设置、关于和更新说明都显示 Blinky，与 iOS 版同一个名字，本应用仍是 [Pulse](https://github.com/qunqin24/Pulse) 的 macOS 分支。
+
 ## 1.4.29
 
 - **Antigravity 补上了 Gemini 3.8 Flash 变体的价格。** 记录里以 `-n`、`-control`、`-xpe` 结尾的型号按 `gemini-3.8-flash` 的公开价格估算。感谢 [@1206-skittle](https://github.com/qunqin24/Pulse/issues/90) 报告。
@@ -49,7 +53,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.4.26
 
-- **Codex 的预测重置不会停在已经发生的重置上。** 每周限额已经恢复，或预测的时刻已经过去时，Codex 卡片不再把这次「预测重置」显示成即将到来；打开卡片或用量刷新时会重新读取 Codex Resets。[#47](https://github.com/harrisliangsu/Pulse/pull/47)
+- **Codex 的预测重置不会停在已经发生的重置上。** 每周限额已经恢复，或预测的时刻已经过去时，Codex 卡片不再把这次「预测重置」显示成即将到来；打开卡片或用量刷新时会重新读取 Codex Resets。[#47](https://github.com/harrisliangsu/blinky-mac/pull/47)
 
 ## 1.4.25
 
@@ -67,11 +71,11 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.4.23
 
-- **Codex 的预测重置会跟上已经公布的重置。** Codex Resets 公布一次重置之后，Codex 卡片上的「预测重置」和「最近重置」显示这次公布的结果。[#43](https://github.com/harrisliangsu/Pulse/pull/43)
+- **Codex 的预测重置会跟上已经公布的重置。** Codex Resets 公布一次重置之后，Codex 卡片上的「预测重置」和「最近重置」显示这次公布的结果。[#43](https://github.com/harrisliangsu/blinky-mac/pull/43)
 
 ## 1.4.22
 
-- **扩展可以上报自定义指标。** 例如首字时间和输出速率，显示在卡片上并画出趋势线，[写法](https://github.com/harrisliangsu/Pulse/blob/main/Docs/extensions.md#metrics)见文档。感谢 [@xkaaaaaa](https://github.com/qunqin24/Pulse/issues/80) 提议。
+- **扩展可以上报自定义指标。** 例如首字时间和输出速率，显示在卡片上并画出趋势线，[写法](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/extensions.md#metrics)见文档。感谢 [@xkaaaaaa](https://github.com/qunqin24/Pulse/issues/80) 提议。
 - **新增「不使用代理」和「使用代理」。** 在「设置 → 网络与刷新 → 代理」中选择；「使用代理」在系统代理未开启时不联网，默认仍为「跟随系统」。
 - **截图时隐藏悬浮面板。** 在「设置 → 位置与行为」中打开「截图时隐藏」，支持此设置的截图工具不会截到悬浮面板；录屏和共享屏幕时仍可能显示。
 - **服务商确认没有套餐后，不再显示旧额度。** 适用于 z.ai、Xiaomi Coding Plan、Grok Bot 等。
@@ -128,7 +132,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 - **「位置」一行会换行。** 窗口不够宽、标签和选项并排放不下时，选项移到标签下面，不再把说明挤成一个字一行。
 - **月报里的大数字不再被切掉一块。** 9、5 这类数字的右边不再被削平，月份和年份旁边的标记也不会压住最后一位。订阅价格的输入框缩到和价格差不多宽。
 - **Token 种类会写出没能归类的部分。** 分类里多了一行「未分类」，原先的 Fresh 改称「输入」。只有未分类的用量显示为未记录，不再画成测出来的 0。
-- **同步上游 qunqin24/Pulse**（17 个提交，直到其 1.8.1 之后的支持区，自 1.4.14 起）。本仓库版本为 **1.4.15**。没有抄入上游 1.8.1 的 Sparkle 推送；`appcast.xml` 保持不动，等这个版本打 tag 后再由发布流程写入。README 收进了支持区和爱发电徽章；本仓库的徽章和链接仍指向 harrisliangsu/Pulse。
+- **同步上游 qunqin24/Pulse**（17 个提交，直到其 1.8.1 之后的支持区，自 1.4.14 起）。本仓库版本为 **1.4.15**。没有抄入上游 1.8.1 的 Sparkle 推送；`appcast.xml` 保持不动，等这个版本打 tag 后再由发布流程写入。README 收进了支持区和爱发电徽章；本仓库的徽章和链接仍指向 harrisliangsu/blinky-mac。
 - **这次同步里为本仓库补上的衔接：** 更新检查仍只读本仓库在 GitHub 上的源，失败不会改去 update.qunqin.org 再试。环颜色方案、重置提醒（预测和普通，提前 12 / 24 / 48 小时）、限额恢复彩带（含小时额度）、外观选择、Kimi 的多账号、Qoder 和 Zen，都进了拆开后的设置文件。共用的用量读取仍会问 Qoder、Kimi 的额外账号，以及 Codex 的重置预测。
 - **保留本仓库特有能力：** Codex 重置预测、最近一次重置（已经打开的卡片也会出现）、悬停类型说明，以及提前提醒；环颜色方案（红色告警 / 渐变 / 低调，低调在阈值以下保持绿色）；限额恢复彩带，含可选的五小时 / 小时额度；Kimi 设备码登录与多账号；Qoder（含个人令牌，以及 Qoder IDE 与 `~/.qoder` 的发现）；Zen 的 Cookie 存储；双语 Release 说明；以及本仓库的 Sparkle 源与签名公钥。
 
@@ -198,7 +202,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.4.7
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **同步上游 qunqin24/Pulse**（本仓库尚未合入的七个提交，直到其 1.6.1）。本仓库版本仍走自己的线：**1.4.7**。没有抄入上游的 Sparkle 推送；`appcast.xml` 保持不动，等这个版本打 tag 后再由发布流程写入。
 - **新图标。** 一笔画成的 P：竖笔是面板贴着的屏幕边，荧光绿的圆肚子是一个还没合上的用量环。按 macOS 26 的要求，从图标编排文档编译，液态玻璃会跟随深色、透明和着色图标样式。更早的系统仍用压平后的图标。
 - **开着液态玻璃、面板吸附在屏幕边时，圆环之间的空白处也能拖动了**，不再只能按住圆环。玻璃下面铺了一层几乎看不见的填充，让窗口自己拥有这些像素。设置里「开启后只能按住圆环拖动」这句提示已去掉。感谢 [@annsyun](https://github.com/qunqin24/Pulse/issues/68) 在上游反馈。
@@ -208,7 +212,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.4.6
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **同步上游 qunqin24/Pulse**（本仓库尚未合入的一百一十三个提交，直到「重置后可选地启动 Claude Code 与 Codex 的用量窗口」）。
 - **扩展。** 把一个小程序放进扩展文件夹，就能让 Pulse 显示某个账号的用量，也可以报预存余额，画成一个圆环。开启之前不会运行，Pulse 也不会交给它任何凭据。写法见 [Docs/extensions.md](Docs/extensions.md)。
 - **新增五十二个服务商，内置共七十七个。** 这些服务商用一份 profile 描述，不必在每个 switch 里加一支。包括 ClinePass、阿里云百炼 Coding Plan 与 Token Plan、Qwen Cloud、美团 LongCat、Gemini、Kilo Code、Factory、Augment Code、Windsurf、Amp、Mistral、Moonshot、OpenAI API、xAI API，其余名单在 README。这五十二个参照 [CodexBar](https://github.com/steipete/CodexBar) 移植，还没有全部用真实账号验证过。
@@ -223,7 +227,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.4.5
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **同步上游 qunqin24/Pulse**（相对其 1.4.0 之后、本仓库尚未合入的十二个提交）。
 - **新增阶跃星辰 Step Plan，成为第二十五个服务商。** 读取浏览器里 `platform.stepfun.com` 或 `platform.stepfun.ai` 的登录（也可以粘贴 `Cookie:` 头）。Token Plan 的月度积分和加油包合成一个圆环，并显示最早一批的到期日；Coding Plan 显示 5 小时和每周两个窗口。没有套餐时会直说。
 - **Qoder 显示加油包何时到期。** 每个积分包有自己的到期时间；卡片显示最早到期的那批，例如「10月18日 86 积分到期」，同一天到期的合并计算。`--json` 新增 `expiresAt` 和 `expiringAmount`。
@@ -244,7 +248,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.4.3
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **同步上游 qunqin24/Pulse 1.4.0**（本仓库尚未合入的十七个提交）。
 - **新增 sub2api、New API 与 V2EX。** 两个自建网关填入服务器地址和密钥即可读取余额或额度；V2EX 使用个人访问令牌读取 AI Chat 额度。
 - **Qoder 改用上游的账户页读取。** 积分额度与团队共享积分分成两个圆环。买来的加油包不再被当成一次重置。站点（`qoder.com` 或 `qoder.com.cn`）是一项设置，切换后会清掉已保存的登录。个人令牌（`pt-` / `jt-`）仍然可用，发现逻辑仍会注意 Qoder IDE 与 `~/.qoder`。
@@ -276,7 +280,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.3.2
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **同步上游 qunqin24/Pulse**（相对其 1.3.0 之后、本仓库尚未合入的五个提交）。
 - **可隐藏菜单栏图标**（默认关闭）。仍可通过浮动栏菜单或全局快捷键进入 Pulse；设置会保证始终至少留有一个可用入口。
 - **Agent 指引入口**——仓库根目录新增 `AGENTS.md`，方便编码代理在本仓库中工作。
@@ -285,7 +289,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.3.1
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **同步上游 qunqin24/Pulse**（相对其 1.3.0 线共九个提交）。
 - **新增 Kiro 服务商**——通过 CLI 自带的 ACP 读取订阅用量，不触碰其凭据。
 - **仅在正在监控的服务商上扫描 CLI 活动**，空闲代理不会唤醒浮动栏。
@@ -296,7 +300,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.3.0
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **同步上游 qunqin24/Pulse 1.3.0**（含本仓库尚未合入的上游 1.2.1 改动）。
 - **首次启动先选择要监控的服务。** 选定前不读凭据、不开始监控；以后升级发现新的本机服务时只会提示，不会擅自开启。
 - **代理设置。** 可继续跟随 macOS，或指定 HTTP / HTTPS / SOCKS5。供应商请求、登录流程以及 Codex、arkcli 等辅助进程共用同一选择。
@@ -309,31 +313,31 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.2.4
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **5 小时彩带改为可选。** 「限额恢复彩带」默认仍只庆祝周/月。新增 **「也庆祝小时额度重置」**，打开后智谱和 Kimi 的短窗口也会播放彩带。默认关闭。时钟只往前挪几分钟（Codex 的会话钟）仍然不算恢复。
 - **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
 
 ## 1.2.3
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **低调方案保住绿色，只把告警段改成灰。** 设置 → 通用 → 环颜色方案 → **低调**不再把整条胶囊洗成灰。低于「变红阈值」时圆环、百分比和进度条仍用红色告警同一档绿色；达到或超过该线、或服务商标明额度用尽时，改为柔和灰——从不画红。剩余 93% 仍是绿；剩余 2% 和用尽是灰。
 - **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
 
 ## 1.2.2
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **一个「环颜色方案」设置。** 设置 → 通用里，用尽时的单独颜色选择改为统一的**环颜色方案**：**红色告警**（只有绿/红，并保留嵌套的**变红阈值**）、**渐变**（从不画红）、**低调**（灰色，从不画红）。低调方案越过阈值也不再变红。原先的「强调 / 跟随用量 / 低调」会迁移到对应方案。
 - **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
 
 ## 1.2.1
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **额度用尽时的环颜色可以自己选。** 设置 → 通用里，「变红阈值」下方新增「耗尽时的环颜色」：**强调**（默认，沿用原来的深红）、**跟随用量**（按普通 100% 读数上色）、**低调**（柔和灰）。选了后两种就不会再被强制画成深红。服务商仍决定额度是否用尽——这里只改颜色。
 - **保留本仓库特有能力：** Qoder、Kimi 设备码/多账号、限额恢复彩带、双语 Release 说明，以及本仓库的 Sparkle 源与签名公钥。
 
 ## 1.2.0
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **动画标记。** 可以把某个账号环里的供应商图标换成一个会动的小机器人，默认关闭，在该账号的设置页里逐个开启。它只说面板已经知道的事：该供应商的 CLI 正在跑、Pulse 正在取新读数、额度已用满、还没有读数、或者什么都没发生。开启动画标记的环不再画白色活动弧——转动的白弧和一个明显在干活的小机器人是同一件事画了两遍。
 - **人格、形状与颜色。** 八种人格决定它播放哪些动作和节奏，默认自动分配，保证相邻的环是不同的角色；十八种身体形状可选，默认都是圆形；颜色默认取供应商品牌色，没有品牌色的会自动分配一个与邻居区分开的色相，也可以自己指定。三项都按账号设置。
 - **它会对正在发生的事做出反应。** 眼睛跟随面板上的鼠标，被指着的那个会停下来倾听；干活时在「工作、生成、书写」之间切换，非工作时间干活会一边生气一边干；长时间没有任何 CLI 写入会无聊，深夜则犯困；额度重置时庆祝，一轮活干完时兴奋。重置的判定用的是通知系统同一条规则，与通知是否开启无关。
@@ -343,8 +347,8 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.1.3
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
-- **更多 Token 消耗来源。** 新增 Gemini CLI、Cline、Roo Code、OpenClaw、GitHub Copilot 等本地记录读取，并支持 Cursor、Trae 等导出数据。部分来源需要先导出或捕获记录；可读格式及验证范围见[来源说明](https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend-sources.md)。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **更多 Token 消耗来源。** 新增 Gemini CLI、Cline、Roo Code、OpenClaw、GitHub Copilot 等本地记录读取，并支持 Cursor、Trae 等导出数据。部分来源需要先导出或捕获记录；可读格式及验证范围见[来源说明](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend-sources.md)。
 - **模型用量详情。** 点击模型可查看输入、输出、缓存读写、每日与每小时消耗，以及各 Agent 的贡献；明细表支持排序和分页。费用按公开 API 价格折算，不是订阅账单。
 - **图表悬停读数。** 指向历史图表即可查看对应日期或小时的 token 数量，较短的柱形和零用量时段也能选中。
 - **浮动栏菜单与全局快捷键。** 右键浮动栏即可打开设置；可自行设置快捷键，用于打开设置或显示、隐藏浮动栏。默认不绑定按键。
@@ -357,9 +361,9 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.1.2
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
-- **Devin 成为新的服务商。** 从 Chromium 浏览器会话读取每日、每周额度，无需钥匙串授权；无登录凭据时读取应用保存的带日期套餐。不同账户和组织的读数保持隔离。[说明](https://github.com/harrisliangsu/Pulse/blob/main/Docs/providers/devin.md)。
-- **Token 消耗统计。** 汇总 Claude Code、Codex、OpenCode、Kilo CLI、Grok Build、Kimi CLI 和 Devin CLI 的本机会话，按区间、Agent、模型、项目、会话和 token 类型查看。费用按公开 API 价格折算，不是订阅账单。[详情](https://github.com/harrisliangsu/Pulse/blob/main/Docs/token-spend.md)。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **Devin 成为新的服务商。** 从 Chromium 浏览器会话读取每日、每周额度，无需钥匙串授权；无登录凭据时读取应用保存的带日期套餐。不同账户和组织的读数保持隔离。[说明](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/providers/devin.md)。
+- **Token 消耗统计。** 汇总 Claude Code、Codex、OpenCode、Kilo CLI、Grok Build、Kimi CLI 和 Devin CLI 的本机会话，按区间、Agent、模型、项目、会话和 token 类型查看。费用按公开 API 价格折算，不是订阅账单。[详情](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md)。
 - **详情卡片展开、收起时不再沿胶囊漂移。**
 - **模型计价与别名**对齐各 Agent 实际写入的名称；快照与消费统计留在正确边界内。
 - **跨天会话**只计入所选区间；修正日志与数据库缓存更新、自定义会话标题读取。
@@ -367,7 +371,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.1.1
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。
 - **圆环何时变红可以自己选。** 设置里新增告警阈值：琥珀→红色的分界可调；绿色分界固定；额度用尽仍优先上色。刚好踩在阈值上也算红。
 - **Claude Code 的 warning 不再当成额度用尽。** warning 严重度会留出空间；锁定原因和未知严重度仍标为用尽。
 - **登录界面只挂在对应服务商。** 设备码的取消、验证码行和登录错误只出现在你开始登录的那一家面板，不会串到其他 Accounts 分组。
@@ -375,7 +379,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.1.0
 
-- **本仓库（[harrisliangsu/Pulse](https://github.com/harrisliangsu/Pulse)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。安装自本仓库的副本会从这里收到后续版本。
+- **本仓库（[harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac)）为更新源。** Sparkle 的 appcast 与 GitHub Releases 指向本仓库，而不是上游 qunqin24/Pulse。安装自本仓库的副本会从这里收到后续版本。
 - **大额余额不再撑破圆环。** 胶囊显示 ¥5k、¥123k、$1.2M 这样的缩略式，而不是装不下、被裁切的完整数字 —— 精确金额在卡片和设置页。永远**向下取整**，圆环绝不会多报你还有多少。
 - **胶囊不再一开始就略偏低、碰一下才归位。** 多数显示器上面板比 macOS 肯给的空间更高，Pulse 是按窗口**实际**落到的位置来算胶囊该画在哪的。它问得太早 —— 窗口还没上屏，答案仍是**请求**的位置 —— 所以胶囊画在了该在位置下方约 76pt，第一次改任何设置才跳回正确位置。
 - **API 余额查得更勤了。** Pulse 靠盯着这台 Mac —— 有 agent 在写 transcript、有数字动了、你瞟了一眼胶囊 —— 来调节节奏，所以忙时勤、闲时静。但 API 上花的钱在本机留不下痕迹，DeepSeek 和 Command Code 就一直被晾满半小时：它等是因为没变，没变是因为它在等。这两家现在至少每五分钟查一次。其余服务商不受影响；低电量或藏起面板时仍会安静；你自己设的固定间隔仍是那个意思。

@@ -139,8 +139,8 @@ struct AccountsGroup: View {
                 ?? (kimiSignedIn
                     ? (settings.source(for: account) == .endpoint
                         ? String.localized("Signed in. The API key in Connection is used instead.")
-                        : String.localized("Signed in. Pulse holds a login for this Mac."))
-                    : String.localized("Opens Kimi Code's own page. Pulse only reads usage."))
+                        : String.localized("Signed in. Blinky holds a login for this Mac."))
+                    : String.localized("Opens Kimi Code's own page. Blinky only reads usage."))
         ) {
             if signIn.signingIn == .kimiCode, !kimiSignedIn {
                 Button(String.localized("Cancel")) { signIn.cancelSignIn() }

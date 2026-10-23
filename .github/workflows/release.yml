@@ -140,7 +140,7 @@ jobs:
             gh release create "v$VERSION" \
               "build.noindex/Pulse-$VERSION.dmg" \
               "build.noindex/Pulse-$VERSION.zip" \
-              --title "Pulse $VERSION" \
+              --title "Blinky $VERSION" \
               --notes-file notes.md \
               $PRERELEASE
           fi

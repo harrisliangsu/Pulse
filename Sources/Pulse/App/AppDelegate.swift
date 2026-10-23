@@ -409,7 +409,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         if let newer = update.newer {
             let item = NSMenuItem(
-                title: .localized("Pulse \(newer.version) is available"),
+                title: .localized("Blinky \(newer.version) is available"),
                 action: #selector(checkForUpdate),
                 keyEquivalent: ""
             )
@@ -445,7 +445,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
 
         let quit = NSMenuItem(
-            title: .localized("Quit Pulse"),
+            title: .localized("Quit Blinky"),
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         )

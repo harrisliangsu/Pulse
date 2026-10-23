@@ -206,12 +206,12 @@ final class LoopbackCallback: @unchecked Sendable {
         }
 
         finish(.success(code))
-        return String.localized("Signed in. You can close this page and go back to Pulse.")
+        return String.localized("Signed in. You can close this page and go back to Blinky.")
     }
 
     private func answer(_ connection: NWConnection, with message: String) {
         let body = """
-        <!doctype html><meta charset="utf-8"><title>Pulse</title>
+        <!doctype html><meta charset="utf-8"><title>Blinky</title>
         <body style="font:16px -apple-system,system-ui,sans-serif;display:grid;place-items:center;height:90vh;margin:0">
         <p>\(message)</p>
         """

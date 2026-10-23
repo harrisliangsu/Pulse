@@ -16,7 +16,7 @@ struct DeveloperIntegrationsView: View {
             SettingsGroup(String.localized("Read cached usage")) {
                 SettingsRow(
                     "Pulse --json",
-                    subtitle: String.localized("Prints Pulse's saved readings, not the provider's original reply, without fetching or opening credentials.")
+                    subtitle: String.localized("Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials.")
                 ) {
                     Button(String.localized("Copy command")) { copy(Self.quote(executable) + " --json") }
                 }
@@ -29,7 +29,7 @@ struct DeveloperIntegrationsView: View {
                 }
                 SettingsRowDivider()
                 SettingsRow(String.localized("Installation guide")) {
-                    Link(destination: URL(string: "https://github.com/harrisliangsu/Pulse/blob/main/Docs/integrations.md")!) {
+                    Link(destination: URL(string: "https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/integrations.md")!) {
                         Text(localized: "Open")
                     }
                 }
@@ -48,7 +48,7 @@ struct DeveloperIntegrationsView: View {
                 SettingsRowDivider()
                 SettingsRow(
                     String.localized("Account link"),
-                    subtitle: String.localized("Opens this account's settings in the installed Pulse app.")
+                    subtitle: String.localized("Opens this account's settings in the installed Blinky app.")
                 ) {
                     Button(String.localized("Copy link")) {
                         copy(PulseLink.account(selectedAccount).url.absoluteString)
@@ -62,7 +62,7 @@ struct DeveloperIntegrationsView: View {
                 }
             }
 
-            Text(localized: "Keep Pulse running to update the cache. Every reading includes its age; an old reading is not a live check.")
+            Text(localized: "Keep Blinky running to update the cache. Every reading includes its age; an old reading is not a live check.")
                 .font(.system(size: 12)).foregroundStyle(.secondary)
             if let message {
                 Text(message).font(.system(size: 12)).foregroundStyle(.secondary)
@@ -102,11 +102,11 @@ struct DeveloperIntegrationsView: View {
         panel.prompt = String.localized("Export")
         panel.begin { response in
             guard response == .OK, let directory = panel.url else { return }
-            let destination = directory.appending(path: "Pulse Integrations")
+            let destination = directory.appending(path: "Blinky Integrations")
             let staging = directory.appending(path: ".pulse-export-\(UUID().uuidString)")
             do {
                 guard !FileManager.default.fileExists(atPath: destination.path) else {
-                    message = String.localized("Pulse Integrations already exists here. Choose another folder.")
+                    message = String.localized("Blinky Integrations already exists here. Choose another folder.")
                     return
                 }
                 try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: false)

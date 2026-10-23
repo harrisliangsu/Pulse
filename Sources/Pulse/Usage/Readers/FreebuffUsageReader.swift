@@ -20,7 +20,7 @@ enum FreebuffUsageReader {
     /// The line a caller shows in place of a figure: no counters are persisted.
     static let limitation =
         "Freebuff stores no token counters; only character-based estimates exist, "
-        + "which Pulse does not report as usage."
+        + "which Blinky does not report as usage."
 
     /// Whether a chat belongs to Freebuff by its agent type.
     static func isFreebuff(_ message: [String: Any]) -> Bool {

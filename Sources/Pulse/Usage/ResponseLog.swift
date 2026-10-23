@@ -87,7 +87,7 @@ enum ResponseLog {
         guard let failed = entries.last(where: { $0.status != 200 }) else {
             return entries.isEmpty
                 ? String.localized("No request was made.")
-                : String.localized("The page answered, but not with anything Pulse reads for this provider.")
+                : String.localized("The page answered, but not with anything Blinky reads for this provider.")
         }
         guard let status = failed.status else { return failed.body }
         return String.localized("The page answered HTTP \(String(status)).")

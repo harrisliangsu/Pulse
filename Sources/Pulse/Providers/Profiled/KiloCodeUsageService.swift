@@ -27,7 +27,7 @@ extension ProviderProfile {
             .localized("Uses a key entered in Settings, or reads ~/.local/share/kilo/auth.json. No Keychain prompt.")
         },
         keySubtitle: {
-            .localized("From app.kilo.ai. Optional — Pulse can use the login the Kilo CLI saved. Stored encrypted on this Mac.")
+            .localized("From app.kilo.ai. Optional — Blinky can use the login the Kilo CLI saved. Stored encrypted on this Mac.")
         },
         reportsSpendableBalance: true,
         setupSlug: "kilo-code",

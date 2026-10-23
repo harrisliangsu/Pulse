@@ -1,6 +1,6 @@
-# Set up Command Code in Pulse
+# Set up Command Code in Blinky
 
-Pulse shows Command Code's spending: your 5-hour and weekly rolling limits, any organization spend limits, and your credit balance. If you're on a running subscription plan, it also shows an estimated monthly limit — marked "estimated" on screen, because Command Code doesn't report the size of your plan's monthly grant, only what's left of it.
+Blinky shows Command Code's spending: your 5-hour and weekly rolling limits, any organization spend limits, and your credit balance. If you're on a running subscription plan, it also shows an estimated monthly limit — marked "estimated" on screen, because Command Code doesn't report the size of your plan's monthly grant, only what's left of it.
 
 ## What you need
 
@@ -13,7 +13,7 @@ Turn on the provider first: go to Settings → Command Code and turn on "Show in
 **Option A — the CLI's own login (no pasting required)**
 1. Install the CLI: `npm install -g command-code@latest`. Check it with `cmd --version` (on native Windows it's `cmdc` instead of `cmd`).
 2. Run `cmd login`. It opens your browser — sign in and click "Authorize". Your terminal confirms "API key stored in ~/.commandcode/auth.json".
-3. Back in Settings → Command Code, there's nothing to enter — Pulse reads that saved login automatically. Refresh Pulse and a ring for Command Code fills in.
+3. Back in Settings → Command Code, there's nothing to enter — Blinky reads that saved login automatically. Refresh Blinky and a ring for Command Code fills in.
 
 **Option B — a pasted API key**
 1. Sign in to Command Code at [commandcode.ai](https://commandcode.ai), then go to your [API keys page](https://commandcode.ai/studio/) and click "Generate API key".
@@ -21,16 +21,16 @@ Turn on the provider first: go to Settings → Command Code and turn on "Show in
 
 ## If it doesn't work
 
-| Message Pulse shows | What to do |
+| Message Blinky shows | What to do |
 |---|---|
 | Add an API key in Settings. | Paste a key (Option B), or sign in with the CLI (Option A) instead. |
 | That key was refused. Check it in Settings. | Re-check the key for typos, or generate a fresh one from your API keys page. |
 | The service didn't respond. | Click Retry. |
 | Checking too often — easing off. | Click Retry after a minute. |
 | The service returned an error. | Click Retry. |
-| Couldn't read the reply. | The provider's reply changed shape. Try again later; if it keeps happening, [report it](https://github.com/harrisliangsu/Pulse/issues). |
+| Couldn't read the reply. | The provider's reply changed shape. Try again later; if it keeps happening, [report it](https://github.com/harrisliangsu/blinky-mac/issues). |
 | No limits reported. | Your account may not have any windows, plan, or balance to report yet. |
 
-## What Pulse reads
+## What Blinky reads
 
-A pasted key is stored encrypted on this Mac and sent only to Command Code's account API. If you sign in with the CLI instead, Pulse reads the key the CLI already saved at `~/.commandcode/auth.json` on this Mac — it doesn't hold a separate copy.
+A pasted key is stored encrypted on this Mac and sent only to Command Code's account API. If you sign in with the CLI instead, Blinky reads the key the CLI already saved at `~/.commandcode/auth.json` on this Mac — it doesn't hold a separate copy.

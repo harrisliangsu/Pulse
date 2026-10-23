@@ -1,36 +1,36 @@
 # Developer integrations / 开发者集成
 
-Open **Pulse Settings → Developer integrations → Export integration files…**. Choose a folder; Pulse creates `Pulse Integrations` inside it. The kit contains a Raycast extension and scripts for tmux, sketchybar and a shell prompt. From a source checkout, the same files are in [`Integrations/`](../Integrations/).
+Open **Blinky Settings → Developer integrations → Export integration files…**. Choose a folder; Blinky creates `Blinky Integrations` inside it. The kit contains a Raycast extension and scripts for tmux, sketchybar and a shell prompt. From a source checkout, the same files are in [`Integrations/`](../Integrations/).
 
-在 **Pulse 设置 → 开发者集成 → 导出集成文件…** 中选择目录，即可获得 `Pulse Integrations` 文件夹。下方示例假定导出到了「下载」目录；其他位置请替换路径。Raycast 扩展通过本地导入安装，终端脚本需要 `jq`。
+在 **Blinky 设置 → 开发者集成 → 导出集成文件…** 中选择目录，即可获得 `Blinky Integrations` 文件夹。下方示例假定导出到了「下载」目录；其他位置请替换路径。Raycast 扩展通过本地导入安装，终端脚本需要 `jq`。
 
-Every integration runs **`Pulse --json`**, which reads the cache without fetching providers or opening credentials. Keep Pulse running to update it. The output contains only accounts enabled on the rail. Missing figures stay missing; inferred figures carry `≈`; older readings remain explicitly dated. JSON contract: [json-output.md](json-output.md).
+Every integration runs **`Pulse --json`**, which reads the cache without fetching providers or opening credentials. Keep Blinky running to update it. The output contains only accounts enabled on the rail. Missing figures stay missing; inferred figures carry `≈`; older readings remain explicitly dated. JSON contract: [json-output.md](json-output.md).
 
-集成只读取缓存，不额外请求服务商。请保持 Pulse 运行；无读数显示 `—`，推算百分比显示 `≈`，脚本默认将至少 30 分钟前的读数标为 `(old)`。Raycast 会显示读数时间、所有限额及重置时间。
+集成只读取缓存，不额外请求服务商。请保持 Blinky 运行；无读数显示 `—`，推算百分比显示 `≈`，脚本默认将至少 30 分钟前的读数标为 `(old)`。Raycast 会显示读数时间、所有限额及重置时间。
 
 ## Raycast
 
 Requires Raycast and Node.js 22.18+ (or a current LTS). The local extension uses Raycast's own API; it is not automatically installed into Raycast by exporting the kit.
 
 ```bash
-cd "$HOME/Downloads/Pulse Integrations/raycast"
+cd "$HOME/Downloads/Blinky Integrations/raycast"
 npm ci
 npm run dev
 ```
 
-Once Raycast registers the extension, search for **Show AI Usage**. Search by provider or account label, inspect all limits and reset times in the detail pane, and press Return to open that account in Pulse. **⌘R reloads the cache**; it does not request new provider data. The action menu also copies an account link or a dated usage summary.
+Once Raycast registers the extension, search for **Show AI Usage**. Search by provider or account label, inspect all limits and reset times in the detail pane, and press Return to open that account in Blinky. **⌘R reloads the cache**; it does not request new provider data. The action menu also copies an account link or a dated usage summary.
 
 在 Raycast 搜索 **Show AI Usage**，可按服务商或账户名称筛选。回车直达对应账户设置；**⌘R 仅读取最新缓存**，不会强制请求服务商。
 
-If Pulse is installed outside `/Applications`, set the extension's **Pulse Executable** preference to the full path ending in `Pulse.app/Contents/MacOS/Pulse`. Enter a plain path, without shell quotes. An unreadable executable or malformed report shows an error with a retry action; an empty cache offers Pulse Settings.
+If Blinky is installed outside `/Applications`, set the extension's **Blinky Executable** preference to the full path ending in `Pulse.app/Contents/MacOS/Pulse`. Enter a plain path, without shell quotes. An unreadable executable or malformed report shows an error with a retry action; an empty cache offers Blinky Settings.
 
 ## Shell and tmux
 
 Install `jq` if needed (`brew install jq`), then try:
 
 ```bash
-/bin/bash "$HOME/Downloads/Pulse Integrations/pulse-status.sh"
-PULSE_ACCOUNT=claudeCode /bin/bash "$HOME/Downloads/Pulse Integrations/pulse-status.sh"
+/bin/bash "$HOME/Downloads/Blinky Integrations/pulse-status.sh"
+PULSE_ACCOUNT=claudeCode /bin/bash "$HOME/Downloads/Blinky Integrations/pulse-status.sh"
 ```
 
 Example: `Claude Code: 42% used · Codex: 81% used (old)`.
@@ -53,7 +53,7 @@ Add to `~/.tmux.conf`:
 
 ```tmux
 set -g status-interval 60
-set -g status-right '#(PULSE_ACCOUNT=claudeCode /bin/bash "$HOME/Downloads/Pulse Integrations/pulse-status.sh" --tmux)'
+set -g status-right '#(PULSE_ACCOUNT=claudeCode /bin/bash "$HOME/Downloads/Blinky Integrations/pulse-status.sh" --tmux)'
 ```
 
 Reload with `tmux source-file ~/.tmux.conf`. `--tmux` escapes `#` in account labels so labels cannot become tmux formatting. The script removes control characters and uses the reported display percentage, including the distinction between `99%` and exhausted.
@@ -63,7 +63,7 @@ For zsh, a `precmd` hook can put the same summary in the right prompt:
 ```zsh
 function pulse_precmd() {
   local value
-  value=$(PULSE_ACCOUNT=claudeCode /bin/bash "$HOME/Downloads/Pulse Integrations/pulse-status.sh") || value='Pulse —'
+  value=$(PULSE_ACCOUNT=claudeCode /bin/bash "$HOME/Downloads/Blinky Integrations/pulse-status.sh") || value='Blinky —'
   RPROMPT="${value//\%/%%}"
 }
 autoload -Uz add-zsh-hook
@@ -79,11 +79,11 @@ Keep `pulse-sketchybar.sh` beside `pulse-status.sh`. Add to `sketchybarrc`:
 ```bash
 sketchybar --add item pulse right \
   --set pulse update_freq=60 \
-    script="PULSE_ACCOUNT=claudeCode /bin/bash \"$HOME/Downloads/Pulse Integrations/pulse-sketchybar.sh\"" \
+    script="PULSE_ACCOUNT=claudeCode /bin/bash \"$HOME/Downloads/Blinky Integrations/pulse-sketchybar.sh\"" \
     click_script="open 'pulse://account/claudeCode'"
 ```
 
-The plugin uses sketchybar's `NAME` variable. A failed cache read replaces the label with `Pulse —`, rather than leaving an old figure unmarked. Change `PULSE_ACCOUNT` and the click link together for another account. Remove the item with `sketchybar --remove pulse`.
+The plugin uses sketchybar's `NAME` variable. A failed cache read replaces the label with `Blinky —`, rather than leaving an old figure unmarked. Change `PULSE_ACCOUNT` and the click link together for another account. Remove the item with `sketchybar --remove pulse`.
 
 ## Account links
 

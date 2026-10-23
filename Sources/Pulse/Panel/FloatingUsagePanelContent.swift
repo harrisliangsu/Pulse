@@ -259,7 +259,7 @@ struct FloatingUsagePanelContent: View {
             .environment(\.usageWarningThreshold, settings.warningThreshold.fraction)
             .environment(\.ringColourScheme, settings.ringColourScheme)
             .accessibilityElement(children: .contain)
-            .accessibilityLabel(String.localized("Pulse floating usage panel"))
+            .accessibilityLabel(String.localized("Blinky floating usage panel"))
             // Strings and layout constants are both read through plain
             // functions, so SwiftUI has nothing to observe for either; rebuild
             // the tree when the language, the size, or the top rail's labels

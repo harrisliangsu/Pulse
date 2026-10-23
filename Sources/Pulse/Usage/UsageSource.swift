@@ -114,7 +114,7 @@ enum UsageSource: String, CaseIterable, Identifiable, Sendable {
         case (.endpoint, .kimiCode):
             .localized("Uses the key you entered.")
         case (.tooling, .kimiCode):
-            .localized("Uses the Kimi Code login Pulse holds.")
+            .localized("Uses the Kimi Code login Blinky holds.")
         case (.endpoint, .claudeCode):
             .localized("Reads your account's limits with the login Claude Code saved.")
         case (.endpoint, .codex):

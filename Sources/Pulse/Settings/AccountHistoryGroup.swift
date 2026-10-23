@@ -23,7 +23,7 @@ struct AccountHistoryGroup: View {
             SettingsGroup(String.localized("Usage history")) {
                 SettingsRow(
                     String.localized("Token spend reading is off"),
-                    subtitle: String.localized("This history comes from the usage records on this Mac, which Pulse reads only while Token spend reading is on.")
+                    subtitle: String.localized("This history comes from the usage records on this Mac, which Blinky reads only while Token spend reading is on.")
                 ) {
                     Button(String.localized("Open Token spend"), action: openTokenSpend)
                 }
@@ -78,9 +78,9 @@ struct AccountHistoryGroup: View {
         case .failed:
             return .localized("\(provider.displayName) didn't answer, so there is nothing to chart yet. Try again in a moment.")
         case .notConfigured:
-            return .localized("Add a key above and Pulse can read this account's history.")
+            return .localized("Add a key above and Blinky can read this account's history.")
         case .notAsked:
-            return .localized("This account is switched off, so Pulse hasn't asked for its history.")
+            return .localized("This account is switched off, so Blinky hasn't asked for its history.")
         case .answered:
             break
         }

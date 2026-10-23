@@ -47,7 +47,7 @@ struct AboutPane: View {
 
                 SettingsRow(
                     String.localized("Usage data"),
-                    subtitle: String.localized("Read from each provider's own account. Pulse shows the figures they report; where it has to infer one, the figure itself says so.")
+                    subtitle: String.localized("Read from each provider's own account. Blinky shows the figures they report; where it has to infer one, the figure itself says so.")
                 ) {
                     EmptyView()
                 }
@@ -59,10 +59,10 @@ struct AboutPane: View {
                 // and half of them will want to type it rather than click.
                 SettingsRow(
                     String.localized("Source code"),
-                    subtitle: "github.com/harrisliangsu/Pulse"
+                    subtitle: "github.com/harrisliangsu/blinky-mac"
                 ) {
                     Button(String.localized("Open")) {
-                        NSWorkspace.shared.open(URL(string: "https://github.com/harrisliangsu/Pulse")!)
+                        NSWorkspace.shared.open(URL(string: "https://github.com/harrisliangsu/blinky-mac")!)
                     }
                 }
             }

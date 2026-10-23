@@ -1,8 +1,12 @@
 <p align="center">
-  <img src="AppIcon/pulse-icon-1024.png" width="112" alt="Pulse">
+  <img src="AppIcon/pulse-icon-1024.png" width="112" alt="Blinky">
 </p>
 
-<h1 align="center">Pulse</h1>
+<h1 align="center">Blinky</h1>
+
+<p align="center">
+  <b>Blinky</b> is Harris's macOS fork of <a href="https://github.com/qunqin24/Pulse">Pulse</a>, under the same name as his iOS app. This repository is not upstream Pulse.
+</p>
 
 <p align="center">
   <b>Know how much Claude Code, Codex and Cursor you have left — without opening a single usage page.</b><br>
@@ -10,19 +14,19 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harrisliangsu/Pulse/releases/latest"><img src="https://img.shields.io/badge/Download-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download Pulse for macOS"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/releases/latest"><img src="https://img.shields.io/badge/Download-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download Blinky for macOS"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/harrisliangsu/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/harrisliangsu/Pulse?color=black" alt="Latest Release"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/releases/latest"><img src="https://img.shields.io/github/v/release/harrisliangsu/blinky-mac?color=black" alt="Latest Release"></a>
   <img src="https://img.shields.io/badge/macOS-14.0%2B%20Sonoma-333333?logo=apple" alt="macOS 14+">
-  <a href="https://github.com/harrisliangsu/Pulse/actions/workflows/ci.yml"><img src="https://github.com/harrisliangsu/Pulse/actions/workflows/ci.yml/badge.svg" alt="CI Build"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/actions/workflows/ci.yml"><img src="https://github.com/harrisliangsu/blinky-mac/actions/workflows/ci.yml/badge.svg" alt="CI Build"></a>
   <img src="https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white" alt="Swift 6.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue" alt="License"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/stargazers"><img src="https://img.shields.io/github/stars/harrisliangsu/Pulse?color=black" alt="GitHub Stars"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/releases"><img src="https://img.shields.io/github/downloads/harrisliangsu/Pulse/total?color=black" alt="Downloads"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/issues"><img src="https://img.shields.io/github/issues/harrisliangsu/Pulse?color=black" alt="Open Issues"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/commits/main"><img src="https://img.shields.io/github/last-commit/harrisliangsu/Pulse?color=black" alt="Last Commit"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/stargazers"><img src="https://img.shields.io/github/stars/harrisliangsu/blinky-mac?color=black" alt="GitHub Stars"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/releases"><img src="https://img.shields.io/github/downloads/harrisliangsu/blinky-mac/total?color=black" alt="Downloads"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/issues"><img src="https://img.shields.io/github/issues/harrisliangsu/blinky-mac?color=black" alt="Open Issues"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/commits/main"><img src="https://img.shields.io/github/last-commit/harrisliangsu/blinky-mac?color=black" alt="Last Commit"></a>
 </p>
 
 <p align="center">
@@ -30,39 +34,39 @@
 </p>
 
 <p align="center">
-  <img src="Docs/images/demo.gif" height="400" alt="Pulse floating rail docked against the screen edge">
+  <img src="Docs/images/demo.gif" height="400" alt="Blinky floating rail docked against the screen edge">
   &nbsp;&nbsp;
   <img src="Docs/images/panel.webp" height="400" alt="Hovering a ring opens a card with every limit and its reset">
 </p>
 
 - **Seventy-six services at a glance** — Claude Code, Codex, Cursor, GitHub Copilot, Antigravity, Kiro, Grok, DeepSeek, Kimi Code and many more, each as its own ring.
-- **No Pulse account, no Pulse server** — it uses the logins you already have, and nothing is sent back.
-- **Real numbers only** — every usage percentage is the one the service itself reported. The few estimates are marked as such, and where a service reports nothing, Pulse says so instead of guessing.
+- **No Blinky account, no Blinky server** — it uses the logins you already have, and nothing is sent back.
+- **Real numbers only** — every usage percentage is the one the service itself reported. The few estimates are marked as such, and where a service reports nothing, Blinky says so instead of guessing.
 - **Native and quiet** — Swift and SwiftUI, Liquid Glass on macOS 26. Dock it left, right, along the top or along the bottom beside the Dock, let it fold to a sliver when idle, or keep it in the menu bar.
 
-**Recently added:** usage in the menu bar with a dashboard for each account, starting usage windows after a reset, and animated bot marks. [What's new](https://github.com/harrisliangsu/Pulse/releases/latest).
+**Recently added:** usage in the menu bar with a dashboard for each account, starting usage windows after a reset, and animated bot marks. [What's new](https://github.com/harrisliangsu/blinky-mac/releases/latest).
 
 <p align="center">
-  <img src="Docs/images/bot-mark.gif" width="300" alt="Pulse animated marks: a bot in each ring reacting to what that account is doing">
+  <img src="Docs/images/bot-mark.gif" width="300" alt="Blinky animated marks: a bot in each ring reacting to what that account is doing">
 </p>
 
 <p align="center">
-  <sub>If Pulse has saved you from a surprise rate limit, a ⭐ helps other people find it.</sub>
+  <sub>If Blinky has saved you from a surprise rate limit, a ⭐ helps other people find it.</sub>
 </p>
 
 ---
 
 ## Installation
 
-1. Download the latest **`Pulse-x.y.z.dmg`** from [Releases](https://github.com/harrisliangsu/Pulse/releases/latest).
-2. Open the disk image and drag **Pulse** into your `Applications` folder.
-3. On first launch, choose the services to monitor. All start unchecked; Pulse reads their credentials and checks usage only after you click **Done**. Closing the chooser leaves monitoring off; you can also enable a service in Settings. Upgrades keep your choices and ask once about newly supported services detected on your Mac.
-4. Pulse lives in the menu bar. If your menu bar is crowded, right-click the floating rail — or the collapsed sliver — and choose **Settings…**; you can also assign a global shortcut for it under **Settings › General › Shortcuts**.
+1. Download the latest **`Pulse-x.y.z.dmg`** from [Releases](https://github.com/harrisliangsu/blinky-mac/releases/latest).
+2. Open the disk image and drag **Blinky** into your `Applications` folder. The file on disk is still `Pulse.app`, so an update replaces the copy already there.
+3. On first launch, choose the services to monitor. All start unchecked; Blinky reads their credentials and checks usage only after you click **Done**. Closing the chooser leaves monitoring off; you can also enable a service in Settings. Upgrades keep your choices and ask once about newly supported services detected on your Mac.
+4. Blinky lives in the menu bar. If your menu bar is crowded, right-click the floating rail — or the collapsed sliver — and choose **Settings…**; you can also assign a global shortcut for it under **Settings › General › Shortcuts**.
 
 > [!NOTE]
 > **macOS Gatekeeper First Launch**:<br>
-> Pulse is an open-source project without an Apple Developer certificate. On first launch, macOS may block the app:
-> - **Option 1 (GUI)**: Launch Pulse, dismiss the alert, open **System Settings → Privacy & Security**, and click **Open Anyway**.
+> Blinky is an open-source project without an Apple Developer certificate. On first launch, macOS may block the app:
+> - **Option 1 (GUI)**: Launch Blinky, dismiss the alert, open **System Settings → Privacy & Security**, and click **Open Anyway**.
 > - **Option 2 (Terminal)**:
 >   ```bash
 >   xattr -cr /Applications/Pulse.app
@@ -122,9 +126,9 @@
 
 ## Privacy & Security
 
-- **No Pulse account, no Pulse server** — your Mac talks to the services you use, under your own logins.
+- **No Blinky account, no Blinky server** — your Mac talks to the services you use, under your own logins.
 - **Five kinds of connection, all listed** — those services, their public status pages, [models.dev](https://models.dev) for model prices, [ExchangeRate-API](https://www.exchangerate-api.com) only when you pick a currency other than the dollar, and GitHub/Sparkle for updates.
-- **Your keys stay on your Mac**, encrypted, and the usage records Pulse reads never leave it.
+- **Your keys stay on your Mac**, encrypted, and the usage records Blinky reads never leave it.
 
 [In detail](Docs/features.md#privacy-and-security).
 
@@ -132,12 +136,12 @@
 
 ## Build from Source
 
-Pulse is built with native Swift and SwiftUI. Building the current sources needs the full **Xcode** (not the Command Line Tools), including the **macOS 26 SDK**; the app runs on **macOS 14+**.
+Blinky is built with native Swift and SwiftUI. Building the current sources needs the full **Xcode** (not the Command Line Tools), including the **macOS 26 SDK**; the app runs on **macOS 14+**.
 
 ```bash
 # Clone the repository
-git clone https://github.com/harrisliangsu/Pulse.git
-cd Pulse
+git clone https://github.com/harrisliangsu/blinky-mac.git
+cd blinky-mac
 
 # Build the app bundle
 ./Scripts/bundle.sh
@@ -158,18 +162,18 @@ How the repo is documented, what must not regress, and how to update the right p
 
 ## Design Attribution
 
-Pulse was inspired by a UI concept shared by [**Vinz** (@hivinz_)](https://x.com/hivinz_/status/2092996055248126353) on X in August 2026. Pulse is an independent implementation with its own interactions, functionality, animations, and visual details. Vinz is not affiliated with or responsible for Pulse.
+The interface comes from [Pulse](https://github.com/qunqin24/Pulse), which was inspired by a UI concept shared by [**Vinz** (@hivinz_)](https://x.com/hivinz_/status/2092996055248126353) on X in August 2026. Pulse is an independent implementation with its own interactions, functionality, animations, and visual details. Blinky for Mac is a fork of that project. Vinz is not affiliated with or responsible for Pulse or Blinky.
 
 ---
 
-## Support Pulse
+## Support the upstream author
 
 <p align="center">
-  <sub>Pulse is free and open source, built in spare time.<br>If it saved you from a surprise rate limit, you can buy the author a coffee — every cup keeps the rings spinning.</sub>
+  <sub>Blinky for Mac is a fork of Pulse. The link below buys a coffee for the upstream author.</sub>
 </p>
 
 <p align="center">
-  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/Afdian-Buy_me_a_coffee-946CE6?style=for-the-badge" alt="Support Pulse on Afdian"></a>
+  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/Afdian-Buy_me_a_coffee-946CE6?style=for-the-badge" alt="Support the Pulse author on Afdian"></a>
 </p>
 
 ---
@@ -182,10 +186,10 @@ Licensed under [Apache 2.0](LICENSE). Bundled third-party assets retain their re
 
 ## Star History
 
-<a href="https://star-history.com/#harrisliangsu/Pulse&Date">
+<a href="https://star-history.com/#harrisliangsu/blinky-mac&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/Pulse&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/Pulse&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=harrisliangsu/Pulse&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/blinky-mac&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/blinky-mac&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=harrisliangsu/blinky-mac&type=Date" />
   </picture>
 </a>

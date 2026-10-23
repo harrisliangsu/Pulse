@@ -54,7 +54,7 @@ test("shell integration handles gaps, estimates, stale readings and exact accoun
   assert.equal(shell([{ ...account, ageSeconds: 1800 }]), "Work: 99% used (old)");
   assert.equal(shell([{ ...account, windows: [{ ...account.windows[0], estimated: true }] }]), "Work: ≈99% used");
   assert.equal(shell([account, missing], [], { PULSE_ACCOUNT: account.id }), "Work: 99% used");
-  assert.equal(shell([]), "Pulse —");
+  assert.equal(shell([]), "Blinky —");
 });
 
 test("tmux labels cannot inject formatting or additional lines", () => {

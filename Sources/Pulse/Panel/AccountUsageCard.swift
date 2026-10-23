@@ -382,7 +382,7 @@ struct AccountUsageCard: View {
             } else if ledger.origin == .providerLogs, provider == .deepSeek {
                 // Day by day, not request by request, and Pulse asks for the
                 // console's own "last 30 days".
-                Text(localized: "From \(provider.displayName)'s console for the whole account — every key and every machine — with what was charged, day by day. Pulse reads the last 30 days.")
+                Text(localized: "From \(provider.displayName)'s console for the whole account — every key and every machine — with what was charged, day by day. Blinky reads the last 30 days.")
             } else if ledger.origin == .providerLogs {
                 // The account's own log, and the money is what was charged —
                 // the one history here that is a bill rather than an estimate.

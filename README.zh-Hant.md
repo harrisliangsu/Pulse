@@ -1,8 +1,12 @@
 <p align="center">
-  <img src="AppIcon/pulse-icon-1024.png" width="112" alt="Pulse">
+  <img src="AppIcon/pulse-icon-1024.png" width="112" alt="Blinky">
 </p>
 
-<h1 align="center">Pulse</h1>
+<h1 align="center">Blinky</h1>
+
+<p align="center">
+  <b>Blinky</b> 是 Harris 的 macOS 分支，上游為 <a href="https://github.com/qunqin24/Pulse">Pulse</a>，與他的 iOS 版同名。本倉庫不是上游 Pulse。
+</p>
 
 <p align="center">
   <b>不用逐一打開用量頁面，就知道 Claude Code、Codex、Cursor 還剩多少額度。</b><br>
@@ -10,19 +14,19 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/harrisliangsu/Pulse/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BC%89-000000?style=for-the-badge&logo=apple&logoColor=white" alt="下載 macOS 版 Pulse"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/releases/latest"><img src="https://img.shields.io/badge/%E4%B8%8B%E8%BC%89-000000?style=for-the-badge&logo=apple&logoColor=white" alt="下載 macOS 版 Blinky"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/harrisliangsu/Pulse/releases/latest"><img src="https://img.shields.io/github/v/release/harrisliangsu/Pulse?color=black" alt="最新版本"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/releases/latest"><img src="https://img.shields.io/github/v/release/harrisliangsu/blinky-mac?color=black" alt="最新版本"></a>
   <img src="https://img.shields.io/badge/macOS-14.0%2B%20Sonoma-333333?logo=apple" alt="macOS 14+">
-  <a href="https://github.com/harrisliangsu/Pulse/actions/workflows/ci.yml"><img src="https://github.com/harrisliangsu/Pulse/actions/workflows/ci.yml/badge.svg" alt="建置狀態"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/actions/workflows/ci.yml"><img src="https://github.com/harrisliangsu/blinky-mac/actions/workflows/ci.yml/badge.svg" alt="建置狀態"></a>
   <img src="https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white" alt="Swift 6.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/授權-Apache%202.0-blue" alt="開源授權"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/stargazers"><img src="https://img.shields.io/github/stars/harrisliangsu/Pulse?label=%E6%98%9F%E6%A8%99&color=black" alt="GitHub 星標"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/releases"><img src="https://img.shields.io/github/downloads/harrisliangsu/Pulse/total?label=%E4%B8%8B%E8%BC%89%E6%AC%A1%E6%95%B8&color=black" alt="下載次數"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/issues"><img src="https://img.shields.io/github/issues/harrisliangsu/Pulse?label=%E5%95%8F%E9%A1%8C&color=black" alt="待處理問題"></a>
-  <a href="https://github.com/harrisliangsu/Pulse/commits/main"><img src="https://img.shields.io/github/last-commit/harrisliangsu/Pulse?label=%E6%9C%80%E8%BF%91%E6%8F%90%E4%BA%A4&color=black" alt="最近提交"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/stargazers"><img src="https://img.shields.io/github/stars/harrisliangsu/blinky-mac?label=%E6%98%9F%E6%A8%99&color=black" alt="GitHub 星標"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/releases"><img src="https://img.shields.io/github/downloads/harrisliangsu/blinky-mac/total?label=%E4%B8%8B%E8%BC%89%E6%AC%A1%E6%95%B8&color=black" alt="下載次數"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/issues"><img src="https://img.shields.io/github/issues/harrisliangsu/blinky-mac?label=%E5%95%8F%E9%A1%8C&color=black" alt="待處理問題"></a>
+  <a href="https://github.com/harrisliangsu/blinky-mac/commits/main"><img src="https://img.shields.io/github/last-commit/harrisliangsu/blinky-mac?label=%E6%9C%80%E8%BF%91%E6%8F%90%E4%BA%A4&color=black" alt="最近提交"></a>
 </p>
 
 <p align="center">
@@ -30,39 +34,39 @@
 </p>
 
 <p align="center">
-  <img src="Docs/images/demo.gif" height="400" alt="貼在螢幕邊緣的 Pulse 懸浮膠囊">
+  <img src="Docs/images/demo.gif" height="400" alt="貼在螢幕邊緣的 Blinky 懸浮膠囊">
   &nbsp;&nbsp;
   <img src="Docs/images/panel.webp" height="400" alt="指標移到圓環上，會打開一張卡片，列出每項額度與重置時間">
 </p>
 
 - **76 個服務，一眼看完**——Claude Code、Codex、Cursor、GitHub Copilot、Antigravity、Kiro、Grok、DeepSeek、Kimi Code 等等，每個都有自己的圓環。
-- **沒有 Pulse 帳號，也沒有 Pulse 伺服器**——直接使用你已有的登入，不回傳任何東西。
-- **只顯示真實數字**——每個用量百分比都是服務商自己回報的。少數估算會明確標示；服務商沒有提供數字時，Pulse 會直接說明，不去猜測。
+- **沒有 Blinky 帳號，也沒有 Blinky 伺服器**——直接使用你已有的登入，不回傳任何東西。
+- **只顯示真實數字**——每個用量百分比都是服務商自己回報的。少數估算會明確標示；服務商沒有提供數字時，Blinky 會直接說明，不去猜測。
 - **原生、安靜**——以 Swift 與 SwiftUI 撰寫，macOS 26 上是 Liquid Glass。可以停靠在左側、右側、頂端，或底部 Dock 旁邊，閒置時收成一條細線，也可以只待在選單列裡。
 
-**最近新增：** 在選單列顯示用量，並附上每個帳號的面板；額度重置後自動開始新視窗；會動的小機器人標記。[更新說明](https://github.com/harrisliangsu/Pulse/releases/latest)。
+**最近新增：** 在選單列顯示用量，並附上每個帳號的面板；額度重置後自動開始新視窗；會動的小機器人標記。[更新說明](https://github.com/harrisliangsu/blinky-mac/releases/latest)。
 
 <p align="center">
-  <img src="Docs/images/bot-mark.gif" width="300" alt="Pulse 動畫標記：每個環裡的小機器人會隨該帳號的狀態反應">
+  <img src="Docs/images/bot-mark.gif" width="300" alt="Blinky 動畫標記：每個環裡的小機器人會隨該帳號的狀態反應">
 </p>
 
 <p align="center">
-  <sub>如果 Pulse 幫你躲過了一次突如其來的限額，按個 ⭐ 能讓更多人發現它。</sub>
+  <sub>如果 Blinky 幫你躲過了一次突如其來的限額，按個 ⭐ 能讓更多人發現它。</sub>
 </p>
 
 ---
 
 ## 安裝
 
-1. 從 [Releases](https://github.com/harrisliangsu/Pulse/releases/latest) 下載最新的 **`Pulse-x.y.z.dmg`**。
-2. 開啟磁碟映像，將 **Pulse** 拖進你的 `Applications` 資料夾。
-3. 首次啟動時，先選擇要監控的服務，預設全部不勾選。按 **「完成」** 後，Pulse 才會讀取所選服務的憑證並查詢用量。關閉選擇視窗會保持未啟用監控；也可以在設定中開啟任一服務。升級會保留原有選擇，對新支援且在這部 Mac 上找到的服務只詢問一次。
-4. Pulse 常駐選單列。若選單列過於擁擠，右鍵點按浮動膠囊——或收合後的細條——並選擇 **「設定…」**；也可在 **設定 › 一般 › 快速鍵** 中為它指派全域快速鍵。
+1. 從 [Releases](https://github.com/harrisliangsu/blinky-mac/releases/latest) 下載最新的 **`Pulse-x.y.z.dmg`**。
+2. 開啟磁碟映像，將 **Blinky** 拖進你的 `Applications` 資料夾。磁碟上的檔名仍是 `Pulse.app`，更新會直接替換已經裝好的那一份。
+3. 首次啟動時，先選擇要監控的服務，預設全部不勾選。按 **「完成」** 後，Blinky 才會讀取所選服務的憑證並查詢用量。關閉選擇視窗會保持未啟用監控；也可以在設定中開啟任一服務。升級會保留原有選擇，對新支援且在這部 Mac 上找到的服務只詢問一次。
+4. Blinky 常駐選單列。若選單列過於擁擠，右鍵點按浮動膠囊——或收合後的細條——並選擇 **「設定…」**；也可在 **設定 › 一般 › 快速鍵** 中為它指派全域快速鍵。
 
 > [!NOTE]
 > **macOS 首次啟動的 Gatekeeper 攔截**：<br>
-> Pulse 是開放原始碼專案，沒有 Apple 開發者憑證。首次啟動時，macOS 可能會阻擋應用程式：
-> - **方式 1（圖形介面）**：啟動 Pulse，關閉警示，打開 **系統設定 → 隱私權與安全性**，然後點按 **仍要打開**。
+> Blinky 是開放原始碼專案，沒有 Apple 開發者憑證。首次啟動時，macOS 可能會阻擋應用程式：
+> - **方式 1（圖形介面）**：啟動 Blinky，關閉警示，打開 **系統設定 → 隱私權與安全性**，然後點按 **仍要打開**。
 > - **方式 2（終端機）**：
 >   ```bash
 >   xattr -cr /Applications/Pulse.app
@@ -122,9 +126,9 @@
 
 ## 隱私與安全
 
-- **沒有 Pulse 帳號，也沒有 Pulse 伺服器**——你的 Mac 用你自己的登入狀態連線至你在用的服務。
+- **沒有 Blinky 帳號，也沒有 Blinky 伺服器**——你的 Mac 用你自己的登入狀態連線至你在用的服務。
 - **只有五類連線，全列在這裡**——這些服務、它們的公開狀態頁、取得模型價格的 [models.dev](https://models.dev)、只在你選了美元以外的貨幣時才用的 [ExchangeRate-API](https://www.exchangerate-api.com)，以及檢查更新的 GitHub/Sparkle。
-- **你的金鑰加密存放在本機**，Pulse 讀取的本機用量紀錄也不會離開你的 Mac。
+- **你的金鑰加密存放在本機**，Blinky 讀取的本機用量紀錄也不會離開你的 Mac。
 
 [詳細說明](Docs/features.md#privacy-and-security)（英文）。
 
@@ -132,12 +136,12 @@
 
 ## 從原始碼建置
 
-Pulse 以原生 Swift 與 SwiftUI 建置。建置目前原始碼需要完整的 **Xcode**（而非 Command Line Tools），並包含 **macOS 26 SDK**；應用程式可在 **macOS 14+** 上執行。
+Blinky 以原生 Swift 與 SwiftUI 建置。建置目前原始碼需要完整的 **Xcode**（而非 Command Line Tools），並包含 **macOS 26 SDK**；應用程式可在 **macOS 14+** 上執行。
 
 ```bash
 # 複製儲存庫
-git clone https://github.com/harrisliangsu/Pulse.git
-cd Pulse
+git clone https://github.com/harrisliangsu/blinky-mac.git
+cd blinky-mac
 
 # 建置應用程式套件
 ./Scripts/bundle.sh
@@ -158,18 +162,18 @@ open build.noindex/Pulse.app
 
 ## 設計來源
 
-Pulse 的靈感來自 [**Vinz**（@hivinz_）](https://x.com/hivinz_/status/2092996055248126353) 於 2026 年 8 月在 X 上分享的 UI 概念。Pulse 是獨立實作，互動、功能、動畫與視覺細節均為自有。Vinz 與 Pulse 沒有關聯，也不為其負責。
+介面來自 [Pulse](https://github.com/qunqin24/Pulse)。Pulse 的靈感來自 [**Vinz**（@hivinz_）](https://x.com/hivinz_/status/2092996055248126353) 於 2026 年 8 月在 X 上分享的 UI 概念，互動、功能、動畫與視覺細節均為 Pulse 自有。Blinky 的 macOS 版是這個專案的分支。Vinz 與 Pulse、Blinky 都沒有關聯，也不為其負責。
 
 ---
 
-## 支持 Pulse
+## 支持上游作者
 
 <p align="center">
-  <sub>Pulse 是免費開源的，用愛發電、抽空更新。<br>如果它幫你躲過了一次突如其來的限流，歡迎請作者喝杯咖啡。</sub>
+  <sub>Blinky 的 macOS 版是 Pulse 的分支。下面的連結是上游作者的愛發電。</sub>
 </p>
 
 <p align="center">
-  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/%E6%84%9B%E7%99%BC%E9%9B%BB-%E8%AB%8B%E4%BD%9C%E8%80%85%E5%96%9D%E6%9D%AF%E5%92%96%E5%95%A1-946CE6?style=for-the-badge" alt="在愛發電支持 Pulse"></a>
+  <a href="https://afdian.com/a/qunqin"><img src="https://img.shields.io/badge/%E6%84%9B%E7%99%BC%E9%9B%BB-%E8%AB%8B%E4%BD%9C%E8%80%85%E5%96%9D%E6%9D%AF%E5%92%96%E5%95%A1-946CE6?style=for-the-badge" alt="在愛發電支持上游作者"></a>
 </p>
 
 ---
@@ -182,10 +186,10 @@ Pulse 的靈感來自 [**Vinz**（@hivinz_）](https://x.com/hivinz_/status/2092
 
 ## Star 成長曲線
 
-<a href="https://star-history.com/#harrisliangsu/Pulse&Date">
+<a href="https://star-history.com/#harrisliangsu/blinky-mac&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/Pulse&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/Pulse&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=harrisliangsu/Pulse&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/blinky-mac&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=harrisliangsu/blinky-mac&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=harrisliangsu/blinky-mac&type=Date" />
   </picture>
 </a>

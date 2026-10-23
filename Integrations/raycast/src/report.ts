@@ -47,23 +47,23 @@ function optionalDate(value: unknown): boolean {
 export function parseReport(text: string): Report {
   const report: unknown = JSON.parse(text);
   if (!object(report) || typeof report.generatedAt !== "string" || !Number.isFinite(Date.parse(report.generatedAt)) || !Array.isArray(report.accounts)) {
-    throw new Error("Invalid Pulse report");
+    throw new Error("Invalid Blinky report");
   }
   for (const account of report.accounts) {
     if (!object(account) || ![account.id, account.provider, account.name, account.label].every((v) => typeof v === "string") ||
         ![account.plan, account.creditBalance, account.source].every(optionalString) ||
         !optionalDate(account.observedAt) ||
         !(account.ageSeconds == null || (typeof account.ageSeconds === "number" && Number.isFinite(account.ageSeconds))) ||
-        !Array.isArray(account.windows)) throw new Error("Invalid Pulse account");
+        !Array.isArray(account.windows)) throw new Error("Invalid Blinky account");
     if (account.headline != null && (!object(account.headline) || typeof account.headline.windowId !== "string" ||
         !percent(account.headline.usedPercent) || typeof account.headline.exhausted !== "boolean" || !optionalDate(account.headline.resetsAt))) {
-      throw new Error("Invalid Pulse headline");
+      throw new Error("Invalid Blinky headline");
     }
     for (const window of account.windows) {
       if (!object(window) || typeof window.id !== "string" || typeof window.kind !== "string" ||
           !percent(window.usedPercent) || typeof window.exhausted !== "boolean" || typeof window.estimated !== "boolean" ||
           !optionalString(window.scope) || !optionalString(window.estimatedFrom) || !optionalDate(window.resetsAt)) {
-        throw new Error("Invalid Pulse window");
+        throw new Error("Invalid Blinky window");
       }
     }
   }

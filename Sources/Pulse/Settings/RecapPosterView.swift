@@ -33,7 +33,7 @@ struct RecapPosterView: View {
     private var header: some View {
         HStack(spacing: 0) {
             RecapMark(side: 46)
-            Text(verbatim: "Pulse")
+            Text(verbatim: "Blinky")
                 .font(.recap(26, .semibold))
                 .padding(.leading, 14)
             Text(verbatim: deck.periodLabel)
