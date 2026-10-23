@@ -6,34 +6,34 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.5</title>
-            <pubDate>Fri, 23 Oct 2026 10:18:33 -0000</pubDate>
-            <sparkle:version>1.5.5</sparkle:version>
-            <sparkle:shortVersionString>1.5.5</sparkle:shortVersionString>
+            <title>1.5.6</title>
+            <pubDate>Fri, 23 Oct 2026 11:24:07 -0000</pubDate>
+            <sparkle:version>1.5.6</sparkle:version>
+            <sparkle:shortVersionString>1.5.6</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6</link>
             <description xml:lang="zh-Hans"><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.5</h2><ul><li><strong>卡片会说明限额何时可能用尽。</strong> 开关在「设置 → 通知 → 用尽预测」。距离用尽不超过六小时时，会写出窗口名称和大致时间，例如「每周 · 约 4 小时后用尽」；更远时，可以说明按当前速度可能撑不到下次重置。通知默认在剩余 24 小时提醒一次，还可以再加几档。Codex 的 5 小时和每周窗口，在回复写明时长和重置时间时也会计算。<a href="https://github.com/harrisliangsu/blinky-mac/pull/61">#61</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5">在 GitHub 查看更新说明</a></p>]]></description>
+</style><h2>Blinky 1.5.6</h2><ul><li><strong>设置里，相关的选项收在一起，倒计时会显示小时数。</strong> 开关关闭时，它下面的选项会收起；「设置 → 通知」里的用尽预测分成卡片、通知和账号三组，具体倒计时默认显示 6 小时，撑不到下次重置时的另外一条通知默认关闭。<a href="https://github.com/harrisliangsu/blinky-mac/pull/66">#66</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6">在 GitHub 查看更新说明</a></p>]]></description>
             <description xml:lang="zh-Hant"><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.5</h2><ul><li><strong>卡片会说明限额何时可能用尽。</strong> 开关在「设置 → 通知 → 用尽预测」。距离用尽不超过六小时时，会写出窗口名称和大致时间，例如「每周 · 约 4 小时后用尽」；更远时，可以说明按当前速度可能撑不到下次重置。通知默认在剩余 24 小时提醒一次，还可以再加几档。Codex 的 5 小时和每周窗口，在回复写明时长和重置时间时也会计算。<a href="https://github.com/harrisliangsu/blinky-mac/pull/61">#61</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5">在 GitHub 查看更新说明</a></p>]]></description>
+</style><h2>Blinky 1.5.6</h2><ul><li><strong>设置里，相关的选项收在一起，倒计时会显示小时数。</strong> 开关关闭时，它下面的选项会收起；「设置 → 通知」里的用尽预测分成卡片、通知和账号三组，具体倒计时默认显示 6 小时，撑不到下次重置时的另外一条通知默认关闭。<a href="https://github.com/harrisliangsu/blinky-mac/pull/66">#66</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6">在 GitHub 查看更新说明</a></p>]]></description>
             <description xml:lang="en"><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.5</h2><ul><li><strong>The card says when a limit may run out.</strong> Settings → Notifications → Exhaustion forecast. Within six hours it names the window and a rough time, for example “Weekly · may run out in about 4 hours”; further out it can say the pace may not last until the reset. Notifications start with one warning at 24 hours left, and more stages can be added. Codex’s 5-hour and weekly windows are included when the reply states a length and a reset. <a href="https://github.com/harrisliangsu/blinky-mac/pull/61">#61</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5">Release notes on GitHub</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.5/Blinky-1.5.5.zip"
-                       length="22228693"
+</style><h2>Blinky 1.5.6</h2><ul><li><strong>Settings groups a control with the choices that belong to it.</strong> In Settings, a child row hides while its switch is off, and Notifications shows the countdown hours, starting at 6. A separate notice before the reset stays off until it is turned on. <a href="https://github.com/harrisliangsu/blinky-mac/pull/66">#66</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.6/Blinky-1.5.6.zip"
+                       length="22245160"
                        type="application/octet-stream"
-                       sparkle:edSignature="O+1eg5RgRXJ0SmXte4uI5CZi8jFMnegDseYzlVOCusCBoxcdlnh2RTmazXK3O2HiYxQwEtxYiPSnWZZ/OAMRBQ==" />
+                       sparkle:edSignature="GNLkWP/IiGzCYQWBfzlpP64cIm2LUvW97Ps+Yql4y/jqSQXZm81OSIkes5Yh+9ty1TJCX/68Xhzuif/RDMg7Dw==" />
         </item>
     </channel>
 </rss>

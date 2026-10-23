@@ -6,22 +6,22 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.5</title>
-            <pubDate>Fri, 23 Oct 2026 10:18:33 -0000</pubDate>
-            <sparkle:version>1.5.5</sparkle:version>
-            <sparkle:shortVersionString>1.5.5</sparkle:shortVersionString>
+            <title>1.5.6</title>
+            <pubDate>Fri, 23 Oct 2026 11:24:07 -0000</pubDate>
+            <sparkle:version>1.5.6</sparkle:version>
+            <sparkle:shortVersionString>1.5.6</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6</link>
             <description><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.5</h2><ul><li><strong>The card says when a limit may run out.</strong> Settings → Notifications → Exhaustion forecast. Within six hours it names the window and a rough time, for example “Weekly · may run out in about 4 hours”; further out it can say the pace may not last until the reset. Notifications start with one warning at 24 hours left, and more stages can be added. Codex’s 5-hour and weekly windows are included when the reply states a length and a reset. <a href="https://github.com/harrisliangsu/blinky-mac/pull/61">#61</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.5">Release notes on GitHub</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.5/Blinky-1.5.5.zip"
-                       length="22228693"
+</style><h2>Blinky 1.5.6</h2><ul><li><strong>Settings groups a control with the choices that belong to it.</strong> In Settings, a child row hides while its switch is off, and Notifications shows the countdown hours, starting at 6. A separate notice before the reset stays off until it is turned on. <a href="https://github.com/harrisliangsu/blinky-mac/pull/66">#66</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.6/Blinky-1.5.6.zip"
+                       length="22245160"
                        type="application/octet-stream"
-                       sparkle:edSignature="O+1eg5RgRXJ0SmXte4uI5CZi8jFMnegDseYzlVOCusCBoxcdlnh2RTmazXK3O2HiYxQwEtxYiPSnWZZ/OAMRBQ==" />
+                       sparkle:edSignature="GNLkWP/IiGzCYQWBfzlpP64cIm2LUvW97Ps+Yql4y/jqSQXZm81OSIkes5Yh+9ty1TJCX/68Xhzuif/RDMg7Dw==" />
         </item>
     </channel>
 </rss>
