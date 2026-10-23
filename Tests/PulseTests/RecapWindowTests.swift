@@ -162,10 +162,15 @@ struct RecapWindowTests {
     @Test("The settings keep, clear and persist the recap choices")
     @MainActor
     func settingsPersist() {
-        let keys = ["settings.recapMonthlyPrice", "settings.recapHidesProjects", "settings.alertsOnRecap", "settings.recapAnnouncedMonth"]
+        let keys = [
+            "settings.recapMonthlyPrice", "settings.recapHidesProjects", "settings.alertsOnRecap",
+            "settings.recapAnnouncedMonth", "settings.exhaustionAlerts",
+        ]
         defer { keys.forEach { UserDefaults.standard.removeObject(forKey: $0) } }
 
         let settings = AppSettings()
+        // Time-to-empty notices start on. Silence them so the recap switch is what this checks.
+        settings.exhaustionAlerts = false
         #expect(settings.recapMonthlyPrice == nil)
         #expect(!settings.recapHidesProjects, "names are shown unless the reader hides them")
         #expect(!settings.alertsOnRecap, "off by default")

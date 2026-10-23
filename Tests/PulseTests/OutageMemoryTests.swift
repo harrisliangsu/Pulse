@@ -114,9 +114,14 @@ struct OutageMemoryTests {
     @MainActor
     func switchesApart() {
         let settings = AppSettings()
+        // Time-to-empty notices start on. Silence them so this switch is the only one awake.
+        settings.exhaustionAlerts = false
         settings.alertsOnOutage = true
         // The test runner's own defaults, not Pulse's; left as found.
-        defer { settings.alertsOnOutage = false }
+        defer {
+            settings.alertsOnOutage = false
+            UserDefaults.standard.removeObject(forKey: "settings.exhaustionAlerts")
+        }
         #expect(settings.wantsAlerts)
         #expect(!settings.wantsUsageAlerts)
     }
