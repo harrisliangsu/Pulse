@@ -139,8 +139,12 @@ final class SpendGlanceController {
             matching: [.leftMouseDown, .rightMouseDown, .keyDown]
         ) { [weak self] event in
             let eventType = event.type
-            let keyCode = event.keyCode
-            let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+            // A mouse event has no key code. Asking for one throws
+            // NSInternalInconsistencyException on macOS 26, which is a click
+            // that quits the app instead of reaching the button.
+            let keyCode: UInt16 = eventType == .keyDown ? event.keyCode : 0
+            let hasModifiers = eventType == .keyDown
+                && !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
             let eventWindow = event.window.map { ObjectIdentifier($0) }
             // The click's own window and point. The cursor is a fallback for an
             // event that names no window; a real click and a synthesized one
