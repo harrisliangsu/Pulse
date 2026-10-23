@@ -6,6 +6,10 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.5.1
+
+- **安装包改名为 Blinky。** 发布页上的文件是 `Blinky-1.5.1.dmg` 和 `Blinky-1.5.1.zip`，磁盘上的应用仍是 `Pulse.app`，套件标识符不变，已经发布的 1.5.0 仍使用 `Pulse-1.5.0.dmg` 和 `Pulse-1.5.0.zip`。[#54](https://github.com/harrisliangsu/blinky-mac/pull/54)
+
 ## 1.5.0
 
 - **界面上的名称改为 Blinky。** 菜单栏、设置、关于和更新说明都显示 Blinky，与 iOS 版同一个名字，本应用仍是 [Pulse](https://github.com/qunqin24/Pulse) 的 macOS 分支。
