@@ -138,7 +138,7 @@ final class SpendGlanceController {
         localMonitor = NSEvent.addLocalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown, .keyDown]
         ) { [weak self] event in
-            let type = event.type
+            let eventType = event.type
             let keyCode = event.keyCode
             let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
             let eventWindow = event.window.map { ObjectIdentifier($0) }
@@ -150,7 +150,7 @@ final class SpendGlanceController {
             let locationInWindow = event.locationInWindow
             let swallowEscape = MainActor.assumeIsolated { () -> Bool in
                 guard let self, let window = self.window, window.isVisible else { return false }
-                if type == .keyDown {
+                if eventType == .keyDown {
                     // A menu or a date popover owns Escape. Closing the summary
                     // here used to throw the picker away as it opened.
                     let menuOpen = NSApp.windows.contains {
@@ -167,10 +167,10 @@ final class SpendGlanceController {
                     return true
                 }
                 let source = NSApp.window(withWindowNumber: windowNumber)
-                let auxiliary = source.map {
+                let auxiliary = source.map { window in
                     SpendGlanceWindowLevel.isAuxiliary(
-                        level: $0.level,
-                        className: String(describing: type(of: $0))
+                        level: window.level,
+                        className: String(describing: Swift.type(of: window))
                     )
                 } ?? false
                 let point = source?.convertPoint(toScreen: locationInWindow) ?? NSEvent.mouseLocation
