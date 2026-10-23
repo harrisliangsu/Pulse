@@ -12,7 +12,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.5.6
 
-- **Settings groups a control with the choices that belong to it.** In Settings, a child row hides while its switch is off, and Notifications shows the countdown hours, starting at 6. A separate notice before the reset stays off until it is turned on.
+- **Settings groups a control with the choices that belong to it.** In Settings, a child row hides while its switch is off, and Notifications shows the countdown hours, starting at 6. A separate notice before the reset stays off until it is turned on. [#66](https://github.com/harrisliangsu/blinky-mac/pull/66)
 
 ## 1.5.5
 
