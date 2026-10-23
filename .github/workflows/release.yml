@@ -247,11 +247,37 @@ jobs:
             echo "Feed already offers $VERSION."
           else
             git commit -m "Offer $VERSION to Sparkle"
-            git push origin main
+            # main can advance while this job packages — another pull request
+            # merging between the fetch above and this push. Rebase onto the
+            # main we are about to update, and try a few times when the push
+            # is rejected. A conflict stops the step. The feed is not force-pushed.
+            pushed=0
+            for attempt in 1 2 3 4 5; do
+              git fetch origin main
+              if ! git rebase origin/main; then
+                echo "::error::Could not rebase the Sparkle feed onto origin/main."
+                git rebase --abort || true
+                exit 1
+              fi
+              if git push origin main; then
+                pushed=1
+                break
+              fi
+              echo "Push to main was rejected (attempt ${attempt} of 5)."
+              if [ "$attempt" -lt 5 ]; then
+                sleep $((attempt * 2))
+              fi
+            done
+            if [ "$pushed" -ne 1 ]; then
+              echo "::error::Could not push the Sparkle feed to main."
+              exit 1
+            fi
           fi
 
-          # Say it out loud rather than trusting the step's own exit code.
-          if ! git show HEAD:appcast.xml | grep -q "<sparkle:shortVersionString>$VERSION<"; then
+          # Read the feed from origin/main after the push. A commit that
+          # exists only on the runner does not offer the update.
+          git fetch origin main
+          if ! git show origin/main:appcast.xml | grep -q "<sparkle:shortVersionString>$VERSION<"; then
             echo "::error::appcast.xml on main does not offer $VERSION — installed copies would never see it."
             exit 1
           fi
