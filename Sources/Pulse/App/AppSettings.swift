@@ -70,15 +70,40 @@ final class AppSettings {
         didSet { hidesMenuBarIconChanged(from: oldValue) }
     }
 
-    /// Whether Pulse shows a Dock icon for as long as the settings window is
-    /// open.
+    /// Whether Pulse shows a Dock icon for as long as a tracked window is open.
     ///
     /// On by default: an `.accessory` app has no Dock icon and no ⌘-Tab entry,
-    /// so a settings window that something else has covered cannot be found
-    /// again. The icon is there only while the window is, and goes with it.
-    /// Goes through its own callback, not `onChange`, which refetches.
+    /// so a window that something else has covered cannot be found again. The
+    /// icon is there only while the window is, and goes with it. Goes through
+    /// its own callback, not `onChange`, which refetches. Ignored while
+    /// `alwaysShowsDockIcon` is on, which keeps the icon up either way.
     var showsDockIconInSettings: Bool {
         didSet { showsDockIconInSettingsChanged(from: oldValue) }
+    }
+
+    /// Whether a launch at login also opens the main window.
+    ///
+    /// Off by default: starting at login stays in the menu bar and the panel.
+    /// A manual launch opens the window either way. Not `onChange`: it is
+    /// read at the next launch and fetches nothing.
+    var showMainWindowAtLogin = Default.showMainWindowAtLogin {
+        didSet { showMainWindowAtLoginChanged(from: oldValue) }
+    }
+
+    /// Whether the Dock icon stays up with every window closed.
+    ///
+    /// Off by default, which keeps the icon tied to an open window. On, the
+    /// app is `.regular` from launch. The Dock callback, not `onChange`.
+    var alwaysShowsDockIcon = Default.alwaysShowsDockIcon {
+        didSet { alwaysShowsDockIconChanged(from: oldValue) }
+    }
+
+    /// Set when the menu bar icon was turned back on because hiding it would
+    /// have left no way into Blinky. General shows a note while this is set.
+    /// Cleared once a panel or a registered shortcut is a way back. Not a
+    /// preference the reader toggles, and not `onChange`.
+    var menuBarIconRestoreNote = Default.menuBarIconRestoreNote {
+        didSet { menuBarIconRestoreNoteChanged(from: oldValue) }
     }
 
     /// Whether the menu bar item also shows the tightest limit: the mark of
@@ -689,6 +714,12 @@ final class AppSettings {
     var detectedProviders: Set<Provider> = []
     var suggestedProviders: Set<Provider> = []
 
+    /// The offered-provider list as it was stored before this launch stamped
+    /// every built-in provider. Not a setting: a login launch that deferred
+    /// the upgrade chooser writes it back, so the one offer is still there
+    /// the next time Blinky is opened by hand.
+    @ObservationIgnored var offeredProvidersBeforeStamp: [String]?
+
     /// What `orderedAccounts` worked out, kept until one of the three things it
     /// depends on changes. Not observed: reading `orderedAccounts` reads those
     /// three, which is what tells an observer.
@@ -1257,6 +1288,9 @@ final class AppSettings {
     ) -> AppSettings {
         let extras = (defaults.data(forKey: Key.extraAccounts))
             .flatMap { try? JSONDecoder().decode([ExtraAccount].self, from: $0) } ?? []
+        // Read before `restore` stamps every built-in provider as offered. A
+        // login launch that does not show the upgrade chooser writes this back.
+        let offeredBeforeStamp = defaults.stringArray(forKey: ProviderSelection.offeredKey)
         // The scan comes before the stored choice is restored, which keeps only
         // accounts it knows: an extension missing from this list would lose its
         // switch on every launch.
@@ -1355,6 +1389,7 @@ final class AppSettings {
         settings.restorePanel(from: defaults)
         settings.restoreRings(from: defaults)
         settings.restoreAccounts(detected: detected, suggested: selection.suggestedProviders, scan: scan)
+        settings.offeredProvidersBeforeStamp = offeredBeforeStamp
         return settings
     }
 

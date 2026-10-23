@@ -12,6 +12,9 @@ import Foundation
 extension AppSettings.Key {
     static let hidesMenuBarIcon = "settings.hidesMenuBarIcon"
     static let showsDockIconInSettings = "settings.showsDockIconInSettings"
+    static let showMainWindowAtLogin = "settings.showMainWindowAtLogin"
+    static let alwaysShowsDockIcon = "settings.alwaysShowsDockIcon"
+    static let menuBarIconRestoreNote = "settings.menuBarIconRestoreNote"
     static let showsUsageInMenuBar = "settings.showsUsageInMenuBar"
     static let showsMenuDashboard = "settings.showsMenuDashboard"
     static let menuBarAccount = "settings.menuBarAccount"
@@ -27,6 +30,9 @@ extension AppSettings.Key {
 extension AppSettings.Default {
     static let hidesMenuBarIcon = false
     static let showsDockIconInSettings = true
+    static let showMainWindowAtLogin = false
+    static let alwaysShowsDockIcon = false
+    static let menuBarIconRestoreNote = false
 }
 
 extension AppSettings {
@@ -40,6 +46,22 @@ extension AppSettings {
         guard showsDockIconInSettings != old else { return }
         defaults.set(showsDockIconInSettings, forKey: Key.showsDockIconInSettings)
         onDockIconChange?()
+    }
+
+    func showMainWindowAtLoginChanged(from old: Bool) {
+        guard showMainWindowAtLogin != old else { return }
+        defaults.set(showMainWindowAtLogin, forKey: Key.showMainWindowAtLogin)
+    }
+
+    func alwaysShowsDockIconChanged(from old: Bool) {
+        guard alwaysShowsDockIcon != old else { return }
+        defaults.set(alwaysShowsDockIcon, forKey: Key.alwaysShowsDockIcon)
+        onDockIconChange?()
+    }
+
+    func menuBarIconRestoreNoteChanged(from old: Bool) {
+        guard menuBarIconRestoreNote != old else { return }
+        defaults.set(menuBarIconRestoreNote, forKey: Key.menuBarIconRestoreNote)
     }
 
     func showsUsageInMenuBarChanged(from old: Bool) {
@@ -140,6 +162,15 @@ extension AppSettings {
 
     /// The settings `init` has no parameter for.
     func restoreApplication(from defaults: UserDefaults) {
+        showMainWindowAtLogin = defaults.settingsFlag(
+            Key.showMainWindowAtLogin, default: Default.showMainWindowAtLogin
+        )
+        alwaysShowsDockIcon = defaults.settingsFlag(
+            Key.alwaysShowsDockIcon, default: Default.alwaysShowsDockIcon
+        )
+        menuBarIconRestoreNote = defaults.settingsFlag(
+            Key.menuBarIconRestoreNote, default: Default.menuBarIconRestoreNote
+        )
         showsUsageInMenuBar = defaults.bool(forKey: Key.showsUsageInMenuBar)
         showsMenuDashboard = defaults.bool(forKey: Key.showsMenuDashboard)
         menuBarAccount = defaults.string(forKey: Key.menuBarAccount)

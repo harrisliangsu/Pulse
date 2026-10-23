@@ -108,8 +108,11 @@ enum SettingsPane: Hashable {
              .localized("Hide from screenshots"), .localized("Hide until pointed at"), .localized("Position"),
              .localized("Snap to screen edges"), .localized("Follow the active display"), .localized("Order")]
         case .general:
-            [.localized("Open at login"), .localized("Hide menu bar icon"), .localized("Shortcuts"),
-             .localized("Interface language")]
+            [.localized("Startup and windows"), .localized("Open at login"),
+             .localized("Show main window when opened at login"),
+             .localized("Always show Dock icon"), .localized("Show Dock icon while a window is open"),
+             .localized("Hide menu bar icon"), .localized("Show floating panel"),
+             .localized("Shortcuts"), .localized("Interface language")]
         case .notifications:
             [.localized("Limits and outages"), .localized("Warn at"), .localized("When a limit comes back"),
              .localized("How early"), .localized("When a reading stops arriving"),

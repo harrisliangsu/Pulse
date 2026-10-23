@@ -68,9 +68,59 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private lazy var recapNotice = RecapNotice(settings: settings, alerts: alerts)
     private var providerSetupWindow: ProviderSetupWindowController?
     private var preparedClaude = false
+    /// The status-line question and the desktop keychain prompt have been
+    /// put on this launch. Separate from `preparedClaude`, which also covers
+    /// the path repair that still runs when those prompts are held back.
+    private var offeredClaudePrompts = false
+    /// Signals read from the open-application event and the parent process.
+    /// Filled in `applicationWillFinishLaunching` and again once launching
+    /// has finished, because the event can arrive in either place.
+    private var launchSignals = LaunchSignals.unknown
+    /// A login launch held the chooser and the other first-run prompts.
+    /// Cleared on a manual open or a reopen, which is when they are shown.
+    private var holdFirstRunPrompts = false
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Installed before the open event is delivered when that delivery
+        // comes after this returns. `currentAppleEvent` covers the case
+        // where it is already the current event.
+        NSAppleEventManager.shared().setEventHandler(
+            self,
+            andSelector: #selector(handleOpenApplication(_:withReplyEvent:)),
+            forEventClass: AEEventClass(kCoreEventClass),
+            andEventID: AEEventID(kAEOpenApplication)
+        )
+        absorbLaunchEvent(NSAppleEventManager.shared().currentAppleEvent)
+        launchSignals = LaunchSignalReader.withParent(launchSignals)
+
+        // `LSUIElement` has kept the Dock icon off. Always show Dock icon is
+        // the one reason to become `.regular` before any window exists;
+        // anything else stays an accessory, which is also what `swift run`
+        // needs because that binary has no bundle key.
+        NSApplication.shared.setActivationPolicy(
+            DockPresence.launchPolicy(alwaysShowsDockIcon: settings.alwaysShowsDockIcon)
+        )
+    }
+
+    /// Records `keyAELaunchedAsLogInItem` when the open-application event is
+    /// the one in hand. A later event that is not that one leaves a flag
+    /// already read alone.
+    @objc private func handleOpenApplication(
+        _ event: NSAppleEventDescriptor,
+        withReplyEvent reply: NSAppleEventDescriptor
+    ) {
+        absorbLaunchEvent(event)
+    }
+
+    private func absorbLaunchEvent(_ event: NSAppleEventDescriptor?) {
+        launchSignals = LaunchSignalReader.merge(existing: launchSignals, event: event)
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApplication.shared.setActivationPolicy(.accessory)
+        absorbLaunchEvent(NSAppleEventManager.shared().currentAppleEvent)
+        if launchSignals.parentBundleIdentifier == nil, launchSignals.parentExecutableName == nil {
+            launchSignals = LaunchSignalReader.withParent(launchSignals)
+        }
 
         settings.onMenuBarIconChange = { [weak self] in
             self?.updateMenuBarItem()
@@ -142,14 +192,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         restoreMenuBarEntryPointIfNeeded()
         updateMenuBarItem()
 
-        if settings.needsProviderSelection {
-            showProviderSelection(providers: Set(Provider.builtIn), isInitial: true)
-        } else {
-            startMonitoring()
-            if !settings.suggestedProviders.isEmpty {
-                showProviderSelection(providers: settings.suggestedProviders, isInitial: false)
-            }
+        let decision = LaunchPlanner.onLaunch(
+            kind: LaunchClassification.kind(launchSignals),
+            showMainWindowAtLogin: settings.showMainWindowAtLogin,
+            needsProviderSelection: settings.needsProviderSelection,
+            hasSuggestedProviders: !settings.suggestedProviders.isEmpty
+        )
+        holdFirstRunPrompts = decision.deferFirstRunPrompts
+        if UpgradeOfferStamp.shouldWithhold(
+            deferFirstRunPrompts: decision.deferFirstRunPrompts,
+            hasSuggestedProviders: !settings.suggestedProviders.isEmpty
+        ) {
+            settings.withholdUpgradeOfferStamp()
         }
+
+        // Monitoring stays stopped until a service is chosen. The chooser
+        // itself waits when this launch was at login.
+        if !settings.needsProviderSelection {
+            startMonitoring()
+        }
+        // The window first, then the chooser, so a fresh install's chooser
+        // is the front window and the main window is the one behind it.
+        if decision.showMainWindow {
+            showSettings(link: nil, userInitiated: false)
+        }
+        if decision.showProviderChooser {
+            showPendingProviderChooser()
+        }
+    }
+
+    /// Closing the last window leaves Blinky running: the panel and the menu
+    /// bar are the app, and the windows are something it shows.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        AppLifetime.terminatesWhenLastWindowCloses
     }
 
     /// The Dock's Quit closes Pulse's windows rather than Pulse (`DockQuit`);
@@ -161,9 +236,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func showProviderSelection(providers: Set<Provider>, isInitial: Bool) {
-        let window = ProviderSetupWindowController(settings: settings, providers: providers, isInitial: isInitial)
+        let window = ProviderSetupWindowController(
+            settings: settings, providers: providers, isInitial: isInitial, dock: dock
+        )
         providerSetupWindow = window
         window.show()
+    }
+
+    /// The chooser a launch or a reopen still owes: the initial one when no
+    /// service is chosen, otherwise the upgrade suggestion. An open chooser
+    /// is brought forward rather than replaced.
+    private func showPendingProviderChooser() {
+        if let chooser = providerSetupWindow {
+            chooser.show()
+            return
+        }
+        if settings.needsProviderSelection {
+            showProviderSelection(providers: Set(Provider.builtIn), isInitial: true)
+        } else if !settings.suggestedProviders.isEmpty {
+            showProviderSelection(providers: settings.suggestedProviders, isInitial: false)
+        }
+    }
+
+    /// Lets the prompts a login launch held go ahead, and stamps the upgrade
+    /// offer so it is not asked again. The chooser itself is the caller's,
+    /// so it can be ordered after the main window.
+    private func releaseDeferredFirstRunPrompts() {
+        guard holdFirstRunPrompts else { return }
+        holdFirstRunPrompts = false
+        settings.stampOfferedProviders()
+        prepareClaudeIfSelected()
     }
 
     private func settingsChanged() {
@@ -221,16 +323,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func prepareClaudeIfSelected() {
         let claude = AccountKey(.claudeCode)
-        guard settings.isEnabled(claude), !preparedClaude else { return }
+        guard settings.isEnabled(claude) else { return }
+        // Repair runs once. The two prompts wait until a launch that is
+        // allowed to ask — a login launch holds them, and a later manual
+        // open is what lets this run a second time for the prompts alone.
+        let offerPrompts = !holdFirstRunPrompts && !offeredClaudePrompts
+        guard !preparedClaude || offerPrompts else { return }
+        let firstPreparation = !preparedClaude
         preparedClaude = true
+        if offerPrompts { offeredClaudePrompts = true }
         // Let the selection window close before either system prompt appears.
         Task { [weak self] in
             guard let self else { return }
             guard self.settings.isEnabled(claude) else {
                 self.preparedClaude = false
+                self.offeredClaudePrompts = false
                 return
             }
-            StatusLineHook.repairPathIfNeeded()
+            if firstPreparation { StatusLineHook.repairPathIfNeeded() }
+            guard offerPrompts else { return }
             ClaudeDesktopSession.requestPermissionAtLaunch(
                 willBeUsed: [.automatic, .desktopApp].contains(self.settings.source(for: claude))
             ) { [weak self] in
@@ -320,14 +431,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func restoreMenuBarEntryPointIfNeeded() {
-        guard settings.hidesMenuBarIcon,
-              Self.menuBarIconMustRemainVisible(
-                  // Before a provider is selected there is no panel controller,
-                  // whatever the persisted visibility preference says.
-                  panelVisible: !settings.needsProviderSelection && settings.isPanelVisible,
-                  hasRegisteredShortcut: shortcuts.hasRegisteredEntryPoint
-              )
-        else { return }
+        // Before a provider is selected there is no panel controller,
+        // whatever the persisted visibility preference says.
+        let mustRemain = Self.menuBarIconMustRemainVisible(
+            panelVisible: !settings.needsProviderSelection && settings.isPanelVisible,
+            hasRegisteredShortcut: shortcuts.hasRegisteredEntryPoint
+        )
+        let note = MenuBarRestoreNote.record(
+            currentlyRecorded: settings.menuBarIconRestoreNote,
+            hidesMenuBarIcon: settings.hidesMenuBarIcon,
+            mustRemainVisible: mustRemain
+        )
+        if settings.menuBarIconRestoreNote != note {
+            settings.menuBarIconRestoreNote = note
+        }
+        guard settings.hidesMenuBarIcon, mustRemain else { return }
         settings.hidesMenuBarIcon = false
     }
 
@@ -483,6 +601,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func chooseServices() {
+        // The menu item is the reader asking. A login launch that was holding
+        // the question lets it go, and the upgrade offer is spent.
+        holdFirstRunPrompts = false
+        settings.stampOfferedProviders()
         providerSetupWindow?.close()
         showProviderSelection(providers: Set(Provider.builtIn), isInitial: true)
     }
@@ -495,27 +617,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         update.check()
     }
 
-    /// Opening Pulse while it is already running — a double-click in
-    /// Applications, Spotlight, Launchpad — opens Settings.
+    /// Opening Pulse while it is already running — the Dock, a double-click
+    /// in Applications, Spotlight, Launchpad — brings the main window forward.
     ///
     /// An accessory app has no Dock icon, and with the panel and the menu bar
     /// icon both hidden (allowed once a global shortcut is registered) nothing
     /// of it is on screen. A forgotten shortcut then left no way back short
     /// of Activity Monitor; opening the app again is the way everybody tries
-    /// first, and it did nothing at all.
+    /// first. A chooser that was held back at login, or that is still the
+    /// way to pick a first service, comes forward with the window.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        // Before a service is chosen the chooser is the way in, not Settings —
-        // the one already open brought forward rather than a second made.
-        if settings.needsProviderSelection {
-            if let chooser = providerSetupWindow {
-                chooser.show()
-            } else {
-                showProviderSelection(providers: Set(Provider.builtIn), isInitial: true)
-            }
-        } else {
-            showSettings()
+        let decision = LaunchPlanner.onReopen(
+            needsProviderSelection: settings.needsProviderSelection,
+            hasSuggestedProviders: !settings.suggestedProviders.isEmpty,
+            surface: reopenSurface()
+        )
+        if decision.showMainWindow {
+            showSettings(link: nil, userInitiated: false)
+        }
+        if decision.releaseDeferredPrompts {
+            releaseDeferredFirstRunPrompts()
+        }
+        if decision.showProviderChooser {
+            showPendingProviderChooser()
         }
         return false
+    }
+
+    private func reopenSurface() -> LaunchPlanner.ReopenSurface {
+        if settingsWindow?.isOnScreen == true { return .mainWindowOpen }
+        if recapWindow?.isOnScreen == true { return .recapOnly }
+        return .noWindow
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
@@ -524,7 +656,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func showSettings(link: PulseLink?, pane: SettingsPane? = nil) {
+    /// `userInitiated` is a menu, a shortcut, or a link. The launch path and
+    /// a reopen pass false: a reopen releases held prompts itself, and a
+    /// login launch must not, or the window it was allowed to open would
+    /// also pop the chooser.
+    private func showSettings(link: PulseLink?, pane: SettingsPane? = nil, userInitiated: Bool = true) {
         let window = settingsWindow ?? SettingsWindowController(
             store: store, settings: settings, placement: placement, update: update, alerts: alerts,
             shortcuts: shortcuts, dock: dock,
@@ -532,6 +668,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         )
         settingsWindow = window
         window.show(link: link, pane: pane)
+        guard userInitiated else { return }
+        let held = holdFirstRunPrompts
+        releaseDeferredFirstRunPrompts()
+        if held { showPendingProviderChooser() }
     }
 
     private func installNotificationHandler() {

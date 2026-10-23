@@ -67,6 +67,18 @@ enum SettingsChildRows {
         showsUsage && !iconHidden
     }
 
+    /// Under Open at login. Hidden while that switch is off; the stored
+    /// choice is kept and comes back with the switch.
+    static func showsMainWindowAtLogin(openAtLogin: Bool) -> Bool {
+        openAtLogin
+    }
+
+    /// Under Always show Dock icon. Hidden while that switch is on, because
+    /// the icon is then up with or without a window. The stored choice is kept.
+    static func showsDockIconWhileWindowOpen(alwaysShowsDockIcon: Bool) -> Bool {
+        !alwaysShowsDockIcon
+    }
+
     static func showsManualProxy(_ mode: NetworkProxyMode) -> Bool {
         mode == .manual
     }

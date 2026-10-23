@@ -3,18 +3,25 @@ import AppKit
 
 /// The Dock icon that follows Pulse's windows.
 ///
-/// Pulse runs as an `.accessory` app, which has no Dock icon and no ⌘-Tab
-/// entry, so a window another app has covered cannot be found again. The icon
-/// is there while **any** tracked window (Settings, the recap) is on screen and
-/// `AppSettings.showsDockIconInSettings` allows it, and Pulse is a menu bar app
-/// again the moment neither is true.
+/// Pulse is bundled with `LSUIElement` true, so it starts as an `.accessory`
+/// app: no Dock icon and no ⌘-Tab entry, and a window another app has covered
+/// cannot be found again. The icon is there while **any** tracked window (the
+/// main window, a recap, the service chooser) is on screen and
+/// `AppSettings.showsDockIconInSettings` allows it, and Pulse is a menu bar
+/// app again the moment neither is true.
+///
+/// `AppSettings.alwaysShowsDockIcon` overrides that. While it is on, the
+/// policy is `.regular` whether or not a window is open. It is applied at
+/// the start of launch as well, so the icon is there before a window opens.
+/// `LSUIElement` stays true: with the switch off, the Dock is not told about
+/// Blinky at all until a window asks.
 ///
 /// Sparkle's update window is not one of those tracked windows. An accessory
 /// policy is also why that window opens behind everything else, so while the
-/// offer is up the icon stays even if the Settings switch is off.
+/// offer is up the icon stays even if the window switch is off.
 ///
 /// One owner rather than one per window: with each controller setting the
-/// policy itself, closing the Settings window under an open recap — or the
+/// policy itself, closing the main window under an open recap — or the
 /// other way round — took the Dock icon away from the window still showing.
 ///
 /// `.regular` is also what puts Pulse in ⌘-Tab, which is the point.
@@ -30,15 +37,32 @@ final class DockPresence {
         settings.onDockIconChange = { [weak self] in self?.apply() }
     }
 
-    /// `.regular` while Settings or the recap wants the Dock icon, or while
-    /// Sparkle is showing an update. Anything else stays `.accessory`.
+    /// `.regular` while Always show Dock icon is on, while a tracked window
+    /// wants the icon, or while Sparkle is showing an update. Anything else
+    /// stays `.accessory`. A tracked window is the main window, a recap, or
+    /// the service chooser; the policy does not distinguish them.
     nonisolated static func activationPolicy(
+        alwaysShowsDockIcon: Bool,
         trackedWindowOpen: Bool,
         showsDockIconInSettings: Bool,
         updateOfferVisible: Bool
     ) -> NSApplication.ActivationPolicy {
+        if alwaysShowsDockIcon { return .regular }
         let settingsWantDock = trackedWindowOpen && showsDockIconInSettings
         return settingsWantDock || updateOfferVisible ? .regular : .accessory
+    }
+
+    /// The policy at launch, before any window exists. Always-show is the
+    /// only reason to be `.regular` this early; `LSUIElement` has already
+    /// kept the icon off, and this is what turns it on without a flash of
+    /// the opposite.
+    nonisolated static func launchPolicy(alwaysShowsDockIcon: Bool) -> NSApplication.ActivationPolicy {
+        activationPolicy(
+            alwaysShowsDockIcon: alwaysShowsDockIcon,
+            trackedWindowOpen: false,
+            showsDockIconInSettings: false,
+            updateOfferVisible: false
+        )
     }
 
     /// The update offer is not a window this type tracks. `AppUpdate` says when
@@ -66,6 +90,7 @@ final class DockPresence {
     func apply(closing: NSWindow? = nil) {
         let open = windows.allObjects.contains { $0 !== closing && ($0.isVisible || $0.isMiniaturized) }
         let policy = Self.activationPolicy(
+            alwaysShowsDockIcon: settings.alwaysShowsDockIcon,
             trackedWindowOpen: open,
             showsDockIconInSettings: settings.showsDockIconInSettings,
             updateOfferVisible: updateOfferVisible
@@ -84,9 +109,10 @@ final class DockPresence {
 /// The Dock's Quit, told apart from every other.
 ///
 /// **Pulse's Dock icon stands for its windows, not for Pulse.** It is there
-/// only while Settings or a recap is open (`DockPresence`), so its menu's
-/// Quit reads as "close this" — and quitting the whole app from it took the
-/// panel and every reading away from someone who meant to close Settings.
+/// while a tracked window is open (`DockPresence`), or the whole time when
+/// Always show Dock icon is on, so its menu's Quit reads as "close this" —
+/// and quitting the whole app from it took the panel and every reading away
+/// from someone who meant to close the main window.
 /// So the Dock's Quit closes the windows, and Pulse stays in the menu bar.
 /// Pulse's own Quit — ⌘Q, the app menu, the menu bar icon's — still quits.
 ///

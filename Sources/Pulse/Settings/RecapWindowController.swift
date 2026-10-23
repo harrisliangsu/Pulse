@@ -21,6 +21,13 @@ final class RecapWindowController {
     private var window: RecapWindow?
     private var titleGeneration = 0
 
+    /// Visible or minimised. A reopen treats a recap with no main window as
+    /// its own case: the recap stays, and the main window still opens.
+    var isOnScreen: Bool {
+        guard let window else { return false }
+        return window.isVisible || window.isMiniaturized
+    }
+
     init(settings: AppSettings, dock: DockPresence, openTokenSpend: @escaping @MainActor () -> Void) {
         self.settings = settings
         self.dock = dock

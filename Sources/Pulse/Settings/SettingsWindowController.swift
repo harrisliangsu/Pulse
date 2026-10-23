@@ -23,6 +23,13 @@ final class SettingsWindowController {
     private var window: NSWindow?
     private let navigation = SettingsNavigation()
 
+    /// Visible or minimised. A reopen uses this to tell an open main window
+    /// from a recap that is the only window up.
+    var isOnScreen: Bool {
+        guard let window else { return false }
+        return window.isVisible || window.isMiniaturized
+    }
+
     init(
         store: UsageStore,
         settings: AppSettings,
@@ -83,8 +90,9 @@ final class SettingsWindowController {
             defer: false
         )
         // **The window's title bar and toolbar are SwiftUI's**
-        // (`sceneBridgingOptions = [.toolbars, .title]` below): the pane's
-        // name as the title, back and forward as its items. That is what
+        // (`sceneBridgingOptions = [.toolbars, .title]` below): the title is
+        // Blinky, and back and forward are the toolbar's items. The open
+        // pane's name stays in the sidebar. That is what
         // gives the window System Settings' look on macOS 26 — the sidebar
         // running up behind the traffic lights, and content fading softly
         // out under the title as it scrolls. Measured in a harness, each of
@@ -95,6 +103,7 @@ final class SettingsWindowController {
         // sidebar stopped under the title bar. A transparent title bar turns
         // the fade off altogether and prints scrolled content over the title.
         window.toolbarStyle = .unified
+        window.title = String.localized("Blinky")
         window.isReleasedWhenClosed = false
         dock.track(window)
         window.onClose = { [weak self, weak window] in

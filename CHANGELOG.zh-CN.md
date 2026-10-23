@@ -6,6 +6,12 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.5.9
+
+- **打开 Blinky 会显示主窗口。** 从访达、Spotlight、启动台或 Dock 打开时，会打开标题为 Blinky 的窗口并停在「外观」；开机自启默认只留在菜单栏，要一并打开主窗口，可在「设置 → 通用 → 启动与窗口」打开「开机自启时显示主窗口」。[Docs/architecture.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/architecture.md#login-item)
+- **Dock 图标可以一直留着。** 同一组里的「始终显示 Dock 图标」会让 Blinky 留在 Dock 和 ⌘-Tab 中；「打开窗口时显示 Dock 图标」在该开关关闭时仍然有效，主窗口、用量报告和选择服务的窗口都算在内。
+- **开机自启时先不询问。** 选择服务的窗口和初次提问会等到下一次手动打开，若菜单栏图标因为没有其他入口而被重新打开，「通用」里会写明原因。
+
 ## 1.5.8
 
 - **定时检查会先通知，再打开更新窗口。** 在「设置 → 关于」里，「自动检查」下面有「发现更新时」，默认是「先通知」：点击通知后才打开更新窗口。选「直接打开窗口」则会立刻打开。菜单里的「检查更新」和关于里的「检查更新」仍会直接打开窗口。若系统拒绝了通知权限，窗口会直接打开，以免漏掉这次更新。[#65](https://github.com/harrisliangsu/blinky-mac/pull/65)

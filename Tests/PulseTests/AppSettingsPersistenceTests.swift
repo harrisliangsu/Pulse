@@ -37,6 +37,9 @@ struct AppSettingsPersistenceTests {
             ("settings.panelVisible", \.isPanelVisible, false),
             ("settings.hidesMenuBarIcon", \.hidesMenuBarIcon, true),
             ("settings.showsDockIconInSettings", \.showsDockIconInSettings, false),
+            ("settings.showMainWindowAtLogin", \.showMainWindowAtLogin, true),
+            ("settings.alwaysShowsDockIcon", \.alwaysShowsDockIcon, true),
+            ("settings.menuBarIconRestoreNote", \.menuBarIconRestoreNote, true),
             ("settings.showsUsageInMenuBar", \.showsUsageInMenuBar, true),
             ("settings.showsMenuDashboard", \.showsMenuDashboard, true),
             ("settings.hidesInFullScreen", \.hidesInFullScreen, false),
@@ -223,6 +226,9 @@ struct AppSettingsPersistenceTests {
         first.isPanelVisible = false
         first.hidesMenuBarIcon = true
         first.showsDockIconInSettings = false
+        first.showMainWindowAtLogin = true
+        first.alwaysShowsDockIcon = true
+        first.menuBarIconRestoreNote = true
         first.showsUsageInMenuBar = true
         first.showsMenuDashboard = true
         first.menuBarAccount = "codex"
@@ -312,6 +318,9 @@ struct AppSettingsPersistenceTests {
         #expect(back.isPanelVisible == false)
         #expect(back.hidesMenuBarIcon)
         #expect(back.showsDockIconInSettings == false)
+        #expect(back.showMainWindowAtLogin)
+        #expect(back.alwaysShowsDockIcon)
+        #expect(back.menuBarIconRestoreNote)
         #expect(back.showsUsageInMenuBar)
         #expect(back.showsMenuDashboard)
         #expect(back.menuBarAccount == "codex")
@@ -413,6 +422,10 @@ struct AppSettingsPersistenceTests {
         #expect(back.isPanelVisible == fresh.isPanelVisible)
         #expect(back.hidesMenuBarIcon == false)
         #expect(back.showsDockIconInSettings)
+        #expect(back.showMainWindowAtLogin == false)
+        #expect(back.alwaysShowsDockIcon == false)
+        #expect(back.menuBarIconRestoreNote == false)
+        #expect(back.isPanelVisible)
         #expect(back.hidesInFullScreen)
         #expect(back.followsActiveDisplay == false)
         #expect(back.qoderSite == fresh.qoderSite)

@@ -11,6 +11,7 @@ struct UpdateOfferActivationTests {
     func policy() {
         #expect(
             DockPresence.activationPolicy(
+                alwaysShowsDockIcon: false,
                 trackedWindowOpen: false,
                 showsDockIconInSettings: true,
                 updateOfferVisible: false
@@ -18,6 +19,7 @@ struct UpdateOfferActivationTests {
         )
         #expect(
             DockPresence.activationPolicy(
+                alwaysShowsDockIcon: false,
                 trackedWindowOpen: false,
                 showsDockIconInSettings: false,
                 updateOfferVisible: true
@@ -25,6 +27,7 @@ struct UpdateOfferActivationTests {
         )
         #expect(
             DockPresence.activationPolicy(
+                alwaysShowsDockIcon: false,
                 trackedWindowOpen: true,
                 showsDockIconInSettings: true,
                 updateOfferVisible: false
@@ -32,6 +35,7 @@ struct UpdateOfferActivationTests {
         )
         #expect(
             DockPresence.activationPolicy(
+                alwaysShowsDockIcon: false,
                 trackedWindowOpen: true,
                 showsDockIconInSettings: false,
                 updateOfferVisible: false
@@ -39,6 +43,7 @@ struct UpdateOfferActivationTests {
         )
         #expect(
             DockPresence.activationPolicy(
+                alwaysShowsDockIcon: false,
                 trackedWindowOpen: true,
                 showsDockIconInSettings: false,
                 updateOfferVisible: true

@@ -378,4 +378,20 @@ extension AppSettings {
         extensions = scan.extensions
         extensionProblems = scan.problems
     }
+
+    /// Puts the offered-provider list back to what was stored before this
+    /// launch stamped it. No-op when there was no list to put back: an absent
+    /// key means "every current provider is already known", which would drop
+    /// a suggestion rather than keep it.
+    func withholdUpgradeOfferStamp() {
+        guard let prior = offeredProvidersBeforeStamp else { return }
+        defaults.set(prior, forKey: ProviderSelection.offeredKey)
+    }
+
+    /// Marks every built-in provider offered, which is what restoration does
+    /// on a launch that shows the upgrade chooser. The same write, so a
+    /// deferred login and an ordinary launch do not store the list differently.
+    func stampOfferedProviders() {
+        defaults.set(Provider.builtIn.map(\.rawValue), forKey: ProviderSelection.offeredKey)
+    }
 }

@@ -183,7 +183,7 @@ A line under the buttons says "Saved", "Copied" or "Couldn't make the image." fo
 
 ### The Dock icon
 
-Shared with Settings through one owner, `DockPresence` (`App/DockPresence.swift`): Pulse shows a Dock icon while **any** of its windows is on screen and `AppSettings.showsDockIconInSettings` allows it (one controller per window let closing Settings remove the icon from an open recap). Label: "Show Dock icon while Settings or a recap is open". See [architecture.md](architecture.md).
+Shared with the main window and the service chooser through one owner, `DockPresence` (`App/DockPresence.swift`): Pulse shows a Dock icon while **any** tracked window is on screen and `AppSettings.showsDockIconInSettings` allows it, or the whole time when Always show Dock icon is on (one controller per window let closing the main window remove the icon from an open recap). Label: "Show Dock icon while a window is open". See [architecture.md](architecture.md).
 
 ## Before the first record
 
