@@ -119,7 +119,6 @@ struct UpdateAnnouncementTests {
     func aGrantedScheduledCheckNotifies() {
         #expect(UpdateAnnouncement.permission(.authorized) == .authorized)
         #expect(UpdateAnnouncement.permission(.provisional) == .authorized)
-        #expect(UpdateAnnouncement.permission(.ephemeral) == .authorized)
         #expect(UpdateAnnouncement.action(
             origin: .scheduled,
             discovery: .notifyFirst,

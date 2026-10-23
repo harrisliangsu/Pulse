@@ -34,10 +34,10 @@ enum UpdateAnnouncement {
 
     /// What the system has said about posting a notification.
     ///
-    /// A provisional or ephemeral grant can still deliver one, so it counts
-    /// as authorized. Only an explicit denial falls straight through to the
-    /// window. Not determined means nobody has been asked, which is its own
-    /// step rather than a silent loss.
+    /// A provisional grant can still deliver one, so it counts as authorized.
+    /// Only an explicit denial falls straight through to the window. Not
+    /// determined means nobody has been asked, which is its own step rather
+    /// than a silent loss.
     enum Permission: Equatable, CaseIterable, Sendable {
         case notDetermined
         case authorized
@@ -74,7 +74,7 @@ enum UpdateAnnouncement {
 
     static func permission(_ status: UNAuthorizationStatus) -> Permission {
         switch status {
-        case .authorized, .provisional, .ephemeral:
+        case .authorized, .provisional:
             .authorized
         case .denied:
             .denied
