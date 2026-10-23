@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Outlines only, no strokes: Icon Composer takes an open stroked path as
-       enclosing the area its chord closes. One layer, two fills — an off-white
-       eye and a lime slit — so the glass treats the blink as one disc. The
-       same geometry is blinky-mark.svg. Circle radius 320 at (512, 512); the
-       slit is a 448×88 capsule centred on the same point. -->
-  <path fill="#F5F5F1" d="M192 512 A320 320 0 1 1 832 512 A320 320 0 1 1 192 512 Z" />
-  <path fill="#C8F03C" d="M288 468 A44 44 0 0 0 288 556 H736 A44 44 0 0 0 736 468 Z" />
-</svg>

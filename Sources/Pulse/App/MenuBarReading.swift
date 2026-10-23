@@ -159,7 +159,7 @@ extension MenuBarReading {
         on button: NSStatusBarButton
     ) {
         guard let reading else {
-            button.image = blinkMark(height: 16)
+            button.image = mascotMark(height: 18)
             button.attributedTitle = NSAttributedString()
             button.imagePosition = .imageOnly
             button.toolTip = "Blinky"
@@ -213,34 +213,20 @@ extension MenuBarReading {
         button.attributedTitle = NSAttributedString(string: " " + reading.text(remaining: remaining), attributes: attributes)
     }
 
-    /// Blinky's mark — the app icon's eye, with the slit punched out — as a
-    /// template, so the menu bar colours it like every other item there.
-    /// The same circle and capsule as `AppIcon/blinky-mark.svg` (radius 320
-    /// in a 1024 square, slit 448×88). One colour here: the slit is a hole,
-    /// because a template cannot carry the icon's lime.
+    /// The app icon's mascot, in colour. A template would flatten the drawing
+    /// to one colour. The picture is `blinky-mascot.png` in the resource bundle,
+    /// the same illustration Icon Composer compiles as the app icon.
     @MainActor
-    static func blinkMark(height: CGFloat) -> NSImage {
-        let image = NSImage(size: NSSize(width: height, height: height), flipped: false) { rect in
-            let circle = NSBezierPath(ovalIn: rect)
-            let slitWidth = rect.width * 448 / 640
-            let slitHeight = rect.height * 88 / 640
-            let slit = NSBezierPath(
-                roundedRect: NSRect(
-                    x: rect.midX - slitWidth / 2,
-                    y: rect.midY - slitHeight / 2,
-                    width: slitWidth,
-                    height: slitHeight
-                ),
-                xRadius: slitHeight / 2,
-                yRadius: slitHeight / 2
-            )
-            circle.append(slit)
-            circle.windingRule = .evenOdd
-            NSColor.black.setFill()
-            circle.fill()
-            return true
+    static func mascotMark(height: CGFloat) -> NSImage {
+        let image: NSImage
+        if let url = Bundle.module.url(forResource: "blinky-mascot", withExtension: "png"),
+           let loaded = NSImage(contentsOf: url) {
+            image = loaded
+        } else {
+            image = NSImage(size: NSSize(width: height, height: height))
         }
-        image.isTemplate = true
+        image.size = NSSize(width: height, height: height)
+        image.isTemplate = false
         image.accessibilityDescription = "Blinky"
         return image
     }

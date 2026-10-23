@@ -291,33 +291,16 @@ struct RecapStoryPage<Content: View>: View {
 
 // MARK: - Marks and glyphs
 
-/// The Blinky mark on its ink tile: an off-white eye and a lime slit, the
-/// same circle and capsule as `AppIcon/blinky-mark.svg`.
+/// The Blinky mascot, the same picture as the app icon.
 struct RecapMark: View {
     let side: CGFloat
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: side * 12 / 46, style: .continuous).fill(RecapColor.ink)
-            Canvas { context, size in
-                // mark.svg: circle radius 320 in a 1024 square (diameter 640),
-                // slit 448×88, both centred.
-                let diameter = min(size.width, size.height) * 0.78
-                let origin = CGPoint(x: (size.width - diameter) / 2, y: (size.height - diameter) / 2)
-                let circle = Path(ellipseIn: CGRect(origin: origin, size: CGSize(width: diameter, height: diameter)))
-                context.fill(circle, with: .color(RecapColor.paper))
-                let slitWidth = diameter * 448 / 640
-                let slitHeight = diameter * 88 / 640
-                let slit = Path(roundedRect: CGRect(
-                    x: (size.width - slitWidth) / 2,
-                    y: (size.height - slitHeight) / 2,
-                    width: slitWidth,
-                    height: slitHeight
-                ), cornerRadius: slitHeight / 2)
-                context.fill(slit, with: .color(RecapColor.lime))
-            }
-        }
-        .frame(width: side, height: side)
+        Image("blinky-mascot", bundle: .module)
+            .resizable()
+            .interpolation(.high)
+            .frame(width: side, height: side)
+            .accessibilityLabel(Text(verbatim: "Blinky"))
     }
 }
 

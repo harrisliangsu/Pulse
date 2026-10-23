@@ -91,7 +91,7 @@ Opener, calendar, timetable and payback follow the approved mockups (lineup, dia
 
 ## Drawing
 
-Flat colour and type only: paper `#F5F5F1`, white cards with a hairline, ink `#1B1B1E`, lime `#C8F03C` (the icon's accent). **Lime is a fill, never text on paper.** No gradient, blur, shadow, material or emoji, and nothing `ImageRenderer` cannot draw. System face with its CJK fallback; labels and digits monospaced. The Blinky mark is `AppIcon/blinky-mark.svg`'s eye and slit.
+Flat colour and type only: paper `#F5F5F1`, white cards with a hairline, ink `#1B1B1E`, lime `#C8F03C` (the icon's accent). **Lime is a fill, never text on paper.** No gradient, blur, shadow, material or emoji, and nothing `ImageRenderer` cannot draw. System face with its CJK fallback; labels and digits monospaced. The Blinky mark on the poster and the scorecard is the mascot, `blinky-mascot.png`.
 
 Hero numbers are set tight and trimmed to their digits (`RecapFigureText.trimmed`; ascender and descender fractions measured against the system font). **Use `Text(tight:tracking:)`, never a negative `.tracking`**: SwiftUI tracks after the last glyph too, which clipped the last digit's right edge; `Text(tight:)` tracks all but the last character. `minimumScaleFactor` on a `Text` in an `HStack` with a `Spacer` can collapse to its floor; give the row a fixed frame or drop the factor.
 

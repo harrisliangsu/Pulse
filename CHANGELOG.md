@@ -12,7 +12,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.5.2
 
-- **A new download is Blinky.app.** Finder and the disk image show that name, and the icon is an off-white eye with a lime slit. [Docs/releasing.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/releasing.md) [#56](https://github.com/harrisliangsu/blinky-mac/pull/56)
+- **A new download is Blinky.app.** Finder and the disk image show that name, and the icon is the Blinky mascot. [Docs/releasing.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/releasing.md) [#56](https://github.com/harrisliangsu/blinky-mac/pull/56)
 
 ## 1.5.1
 
