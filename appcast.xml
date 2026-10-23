@@ -6,34 +6,34 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.6</title>
-            <pubDate>Fri, 23 Oct 2026 11:24:07 -0000</pubDate>
-            <sparkle:version>1.5.6</sparkle:version>
-            <sparkle:shortVersionString>1.5.6</sparkle:shortVersionString>
+            <title>1.5.7</title>
+            <pubDate>Fri, 23 Oct 2026 11:57:57 -0000</pubDate>
+            <sparkle:version>1.5.7</sparkle:version>
+            <sparkle:shortVersionString>1.5.7</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.7</link>
             <description xml:lang="zh-Hans"><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.6</h2><ul><li><strong>设置里，相关的选项收在一起，倒计时会显示小时数。</strong> 开关关闭时，它下面的选项会收起；「设置 → 通知」里的用尽预测分成卡片、通知和账号三组，具体倒计时默认显示 6 小时，撑不到下次重置时的另外一条通知默认关闭。<a href="https://github.com/harrisliangsu/blinky-mac/pull/66">#66</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6">在 GitHub 查看更新说明</a></p>]]></description>
+</style><h2>Blinky 1.5.7</h2><ul><li><strong>Token 消耗可以在悬浮面板旁边打开。</strong> 打开 Token 消耗后，用量卡片标题栏上的按钮会打开与设置里相同统计区间的摘要，分享会把这份摘要复制成图片。完整的 Token 消耗页面仍在设置中。<a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md">Docs/token-spend.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/62">#62</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.7">在 GitHub 查看更新说明</a></p>]]></description>
             <description xml:lang="zh-Hant"><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.6</h2><ul><li><strong>设置里，相关的选项收在一起，倒计时会显示小时数。</strong> 开关关闭时，它下面的选项会收起；「设置 → 通知」里的用尽预测分成卡片、通知和账号三组，具体倒计时默认显示 6 小时，撑不到下次重置时的另外一条通知默认关闭。<a href="https://github.com/harrisliangsu/blinky-mac/pull/66">#66</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6">在 GitHub 查看更新说明</a></p>]]></description>
+</style><h2>Blinky 1.5.7</h2><ul><li><strong>Token 消耗可以在悬浮面板旁边打开。</strong> 打开 Token 消耗后，用量卡片标题栏上的按钮会打开与设置里相同统计区间的摘要，分享会把这份摘要复制成图片。完整的 Token 消耗页面仍在设置中。<a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md">Docs/token-spend.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/62">#62</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.7">在 GitHub 查看更新说明</a></p>]]></description>
             <description xml:lang="en"><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.6</h2><ul><li><strong>Settings groups a control with the choices that belong to it.</strong> In Settings, a child row hides while its switch is off, and Notifications shows the countdown hours, starting at 6. A separate notice before the reset stays off until it is turned on. <a href="https://github.com/harrisliangsu/blinky-mac/pull/66">#66</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.6">Release notes on GitHub</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.6/Blinky-1.5.6.zip"
-                       length="22245160"
+</style><h2>Blinky 1.5.7</h2><ul><li><strong>Token spend can open beside the floating panel.</strong> With Token spend on, the button on the usage card&#x27;s header opens a summary for the same span as Settings, and Share copies that summary as an image. The full Token spend page stays in Settings. <a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md">Docs/token-spend.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/62">#62</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.7">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.7/Blinky-1.5.7.zip"
+                       length="22450851"
                        type="application/octet-stream"
-                       sparkle:edSignature="GNLkWP/IiGzCYQWBfzlpP64cIm2LUvW97Ps+Yql4y/jqSQXZm81OSIkes5Yh+9ty1TJCX/68Xhzuif/RDMg7Dw==" />
+                       sparkle:edSignature="nH2pz32UQTSpieUUFKqzfmDGFFDN7K5YH6FOEiQgEaHwj/TsEY+hj4gNPOWiHG+Xq3fpzoAnGrq2x8mPA8o3Dg==" />
         </item>
     </channel>
 </rss>
