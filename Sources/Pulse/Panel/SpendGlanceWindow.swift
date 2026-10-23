@@ -4,8 +4,9 @@ import SwiftUI
 
 /// The summary window beside the floating panel.
 ///
-/// A normal window, so Escape and a click outside can dismiss it. The usage
-/// panel cannot become key, which is why this is not drawn inside that panel.
+/// A normal window, so Escape, the close button, and a click outside can
+/// dismiss it. The usage panel cannot become key, which is why this is not
+/// drawn inside that panel.
 @MainActor
 final class SpendGlanceController {
     private let settings: AppSettings
@@ -57,15 +58,42 @@ final class SpendGlanceController {
             window.setFrame(frame, display: false)
         }
         window.title = String.localized("Token spend")
+        // The button is created with the titled window. A panel that is not key
+        // can leave it disabled, and a disabled close button ignores the click.
+        window.standardWindowButton(.closeButton)?.isEnabled = true
         installMonitors()
-        window.makeKeyAndOrderFront(nil)
+        // Activate before making key. On an accessory app, `makeKey` in the
+        // same turn as the order can leave the window in front but not key,
+        // and then Escape is delivered to nobody. One more attempt next turn
+        // covers that, and does nothing once the window is already key or gone.
         NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        DispatchQueue.main.async { [weak window] in
+            MainActor.assumeIsolated {
+                guard let window, window.isVisible else { return }
+                window.standardWindowButton(.closeButton)?.isEnabled = true
+                guard !window.isKeyWindow else { return }
+                NSApp.activate(ignoringOtherApps: true)
+                window.makeKey()
+            }
+        }
     }
 
     func close() {
         model.isOpen = false
-        removeMonitors()
         window?.orderOut(nil)
+        // `NSEvent.removeMonitor` must not run inside the monitor's own
+        // handler. Escape and a click outside both come through that handler,
+        // so the removal waits until this call has returned.
+        let local = localMonitor
+        let global = globalMonitor
+        guard local != nil || global != nil else { return }
+        localMonitor = nil
+        globalMonitor = nil
+        DispatchQueue.main.async {
+            if let local { NSEvent.removeMonitor(local) }
+            if let global { NSEvent.removeMonitor(global) }
+        }
     }
 
     private func share() {
@@ -86,9 +114,13 @@ final class SpendGlanceController {
         window.isMovableByWindowBackground = false
         window.backgroundColor = .windowBackgroundColor
         window.hidesOnDeactivate = false
+        // The default is yes, so a click that does not land in a field never
+        // makes the panel key, and Escape then has no window. The close button
+        // is taken in `sendEvent` either way.
+        window.becomesKeyOnlyIfNeeded = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
         window.onDismiss = { [weak self] in self?.close() }
-        window.contentView = NSHostingView(rootView: SpendGlanceView(
+        window.contentView = SpendGlanceHostingView(rootView: SpendGlanceView(
             model: model,
             settings: settings,
             onShare: { [weak self] in self?.share() },
@@ -101,39 +133,41 @@ final class SpendGlanceController {
         guard localMonitor == nil else { return }
         // Monitors run on the main thread. The handler is not annotated with
         // the main actor, and an `NSEvent` cannot cross into that body — a
-        // key code and a window identity can. Same split as the shortcut recorder.
+        // key code, whether a modifier is held, and a window identity can.
+        // Same split as the shortcut recorder.
         localMonitor = NSEvent.addLocalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown, .keyDown]
         ) { [weak self] event in
             let type = event.type
             let keyCode = event.keyCode
+            let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
             let eventWindow = event.window.map { ObjectIdentifier($0) }
             let point = NSEvent.mouseLocation
-            let swallow = MainActor.assumeIsolated { () -> Bool in
+            let swallowEscape = MainActor.assumeIsolated { () -> Bool in
                 guard let self, let window = self.window, window.isVisible else { return false }
                 if type == .keyDown {
-                    if keyCode == 53, eventWindow == ObjectIdentifier(window) {
-                        self.close()
-                        return true
-                    }
-                    return false
+                    // Escape often arrives here with no window, so comparing
+                    // the event's window to this one used to drop it. A menu
+                    // or a date popover names its own window and keeps the key.
+                    // The panel's `close()` is the same path as the traffic light.
+                    guard SpendGlanceDismissal.shouldCloseOnEscape(
+                        keyCode: keyCode,
+                        hasModifiers: hasModifiers,
+                        eventWindow: eventWindow,
+                        glanceWindow: ObjectIdentifier(window)
+                    ) else { return false }
+                    window.close()
+                    return true
                 }
                 if window.frame.contains(point) || self.entryRect.contains(point) { return false }
                 self.close()
                 return false
             }
-            return swallow ? nil : event
+            return swallowEscape ? nil : event
         }
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             MainActor.assumeIsolated { self?.close() }
         }
-    }
-
-    private func removeMonitors() {
-        if let localMonitor { NSEvent.removeMonitor(localMonitor) }
-        if let globalMonitor { NSEvent.removeMonitor(globalMonitor) }
-        localMonitor = nil
-        globalMonitor = nil
     }
 }
 
@@ -145,28 +179,116 @@ struct SpendGlanceAnchor {
     var level: NSWindow.Level
 }
 
+/// What closes the glance window, without a window server: plain Escape, and
+/// a click that lands inside the close button. The panel and its monitor both
+/// ask this. A modified Escape is a different shortcut. An empty button is
+/// one that has not been laid out, and a click there is not a close.
+enum SpendGlanceDismissal {
+    static let escapeKeyCode: UInt16 = 53
+
+    static func shouldCloseOnEscape(keyCode: UInt16, hasModifiers: Bool) -> Bool {
+        keyCode == escapeKeyCode && !hasModifiers
+    }
+
+    /// Escape dismisses this window unless the event is already aimed at a
+    /// different one. A key event that has not been given a window yet still
+    /// belongs here.
+    static func shouldCloseOnEscape(
+        keyCode: UInt16,
+        hasModifiers: Bool,
+        eventWindow: ObjectIdentifier?,
+        glanceWindow: ObjectIdentifier
+    ) -> Bool {
+        guard shouldCloseOnEscape(keyCode: keyCode, hasModifiers: hasModifiers) else { return false }
+        if let eventWindow, eventWindow != glanceWindow { return false }
+        return true
+    }
+
+    static func claimsCloseClick(buttonBounds: CGRect, pointInButton: CGPoint) -> Bool {
+        !buttonBounds.isEmpty && buttonBounds.contains(pointInButton)
+    }
+}
+
 /// Escape and the close button both dismiss. Clicks outside are the controller's monitors.
+///
+/// The content view fills the title bar (`fullSizeContentView`), so a click
+/// on the traffic light hits the hosting view and the button's action never
+/// runs. `sendEvent` sees that click first and closes. `performClose` closes
+/// as well: an `NSPanel` can ignore the button while the panel is not key.
+/// Escape is taken here while this window is key, the same way the recap
+/// window takes its own keys, and again by the monitor when the event has
+/// not been aimed at some other window.
 final class SpendGlancePanel: NSPanel {
     var onDismiss: (() -> Void)?
+    private var closing = false
 
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 
     override func close() {
+        // `onDismiss` orders the window out, which can re-enter `close` while
+        // a click or Escape is still being delivered.
+        guard !closing else { return }
+        closing = true
+        defer { closing = false }
         onDismiss?()
         super.close()
     }
 
+    /// The button's action, and ⌘W. Closing directly skips the panel's
+    /// refusal when it is not the key window.
+    override func performClose(_ sender: Any?) {
+        close()
+    }
+
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .leftMouseDown, let button = standardWindowButton(.closeButton) {
+            let point = button.convert(event.locationInWindow, from: nil)
+            if SpendGlanceDismissal.claimsCloseClick(buttonBounds: button.bounds, pointInButton: point) {
+                close()
+                return
+            }
+        }
+        if event.type == .keyDown, isKeyWindow,
+           SpendGlanceDismissal.shouldCloseOnEscape(
+               keyCode: event.keyCode,
+               hasModifiers: !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+           ) {
+            close()
+            return
+        }
+        super.sendEvent(event)
+    }
+
     override func cancelOperation(_ sender: Any?) {
-        onDismiss?()
+        close()
     }
 
     override func keyDown(with event: NSEvent) {
-        if event.keyCode == 53 {
-            onDismiss?()
+        if SpendGlanceDismissal.shouldCloseOnEscape(
+            keyCode: event.keyCode,
+            hasModifiers: !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+        ) {
+            close()
             return
         }
         super.keyDown(with: event)
+    }
+}
+
+/// The hosted summary. A click on the close button is not for this view: the
+/// title bar draws the button, and this view covers it. Handing back the
+/// button gives the click a target instead of letting it fall through the
+/// window. `sendEvent` closes even when the click still lands here.
+final class SpendGlanceHostingView<Content: View>: NSHostingView<Content> {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        if let button = window?.standardWindowButton(.closeButton) {
+            let inButton = button.convert(point, from: self)
+            if SpendGlanceDismissal.claimsCloseClick(buttonBounds: button.bounds, pointInButton: inButton) {
+                return button
+            }
+        }
+        return super.hitTest(point)
     }
 }
 

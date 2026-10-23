@@ -12,6 +12,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 - **定时检查可以在下次退出时安装更新。** 「设置 → 关于 → 发现更新时」增加「自动安装」。定时检查会下载更新，并在下次退出 Blinky 时安装，不发通知，也不打开更新窗口。默认仍是先通知。现在检查仍会打开窗口。[#71](https://github.com/harrisliangsu/blinky-mac/pull/71)
 - **Token 消耗面板以 token 为主。** 用量卡片旁的窗口使用与设置相同的时间范围，包括自定义范围，并可在模型、Agent、项目和会话之间切换。token 是大字，金额估算是小字。图表跟随所选范围，分享后会写明图片已在剪贴板。[#71](https://github.com/harrisliangsu/blinky-mac/pull/71)
 - **打开设置后，菜单栏会显示 Blinky。** 用量卡片上的齿轮、「设置…」、⌘,、再次打开，以及设置链接，都会在窗口的 Dock 策略生效后再激活 Blinky，菜单栏因此显示 Blinky。[#71](https://github.com/harrisliangsu/blinky-mac/pull/71)
+- **Token 消耗窗口的关闭按钮和 Esc 都会关闭这扇窗口。** 从用量卡片打开的摘要窗口，点击红色关闭按钮或按下 Esc 后会关闭。[#71](https://github.com/harrisliangsu/blinky-mac/pull/71)
 
 ## 1.5.9
 

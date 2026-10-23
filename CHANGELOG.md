@@ -16,6 +16,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 - **A scheduled update can install the next time Blinky quits.** Settings → About → When an update is found adds Install silently. A scheduled check downloads the update and installs it on quit, with no notification and no update window. Notify first stays the default. Check now still opens the window. [#71](https://github.com/harrisliangsu/blinky-mac/pull/71)
 - **The Token spend panel leads with tokens.** The window beside the usage card uses the same time range as Settings, including a custom range, and switches among model, agent, project, and session. Tokens are the large figure and the estimate is smaller. The chart follows that range, and Share says when the image is on the clipboard. [#71](https://github.com/harrisliangsu/blinky-mac/pull/71)
 - **Opening Settings names Blinky in the menu bar.** The gear, Settings…, ⌘,, a reopen, and a settings link activate Blinky after the window's Dock policy is applied, so the menu bar shows Blinky. [#71](https://github.com/harrisliangsu/blinky-mac/pull/71)
+- **The Token spend window closes from its close button and from Escape.** The red close button and Escape hide the summary opened from the usage card. [#71](https://github.com/harrisliangsu/blinky-mac/pull/71)
 
 ## 1.5.9
 

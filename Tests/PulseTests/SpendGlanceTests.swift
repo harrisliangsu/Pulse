@@ -590,6 +590,41 @@ struct SpendGlanceTests {
         #expect(!model.didCopy)
     }
 
+    @Test("Escape and the close button dismiss the glance window")
+    func dismissal() {
+        #expect(SpendGlanceDismissal.escapeKeyCode == 53)
+        #expect(SpendGlanceDismissal.shouldCloseOnEscape(keyCode: 53, hasModifiers: false))
+        #expect(!SpendGlanceDismissal.shouldCloseOnEscape(keyCode: 53, hasModifiers: true))
+        #expect(!SpendGlanceDismissal.shouldCloseOnEscape(keyCode: 36, hasModifiers: false))
+
+        final class Marker {}
+        let glance = ObjectIdentifier(Marker())
+        let other = ObjectIdentifier(Marker())
+        #expect(SpendGlanceDismissal.shouldCloseOnEscape(
+            keyCode: 53, hasModifiers: false, eventWindow: nil, glanceWindow: glance
+        ))
+        #expect(SpendGlanceDismissal.shouldCloseOnEscape(
+            keyCode: 53, hasModifiers: false, eventWindow: glance, glanceWindow: glance
+        ))
+        #expect(!SpendGlanceDismissal.shouldCloseOnEscape(
+            keyCode: 53, hasModifiers: false, eventWindow: other, glanceWindow: glance
+        ))
+        #expect(!SpendGlanceDismissal.shouldCloseOnEscape(
+            keyCode: 53, hasModifiers: true, eventWindow: nil, glanceWindow: glance
+        ))
+        #expect(!SpendGlanceDismissal.shouldCloseOnEscape(
+            keyCode: 36, hasModifiers: false, eventWindow: glance, glanceWindow: glance
+        ))
+
+        let button = CGRect(x: 0, y: 0, width: 14, height: 14)
+        #expect(SpendGlanceDismissal.claimsCloseClick(buttonBounds: button, pointInButton: CGPoint(x: 7, y: 7)))
+        #expect(SpendGlanceDismissal.claimsCloseClick(buttonBounds: button, pointInButton: CGPoint(x: 0, y: 0)))
+        #expect(!SpendGlanceDismissal.claimsCloseClick(buttonBounds: button, pointInButton: CGPoint(x: 14, y: 7)))
+        #expect(!SpendGlanceDismissal.claimsCloseClick(buttonBounds: button, pointInButton: CGPoint(x: 30, y: 7)))
+        #expect(!SpendGlanceDismissal.claimsCloseClick(buttonBounds: .zero, pointInButton: .zero))
+        #expect(!SpendGlanceDismissal.claimsCloseClick(buttonBounds: .null, pointInButton: CGPoint(x: 1, y: 1)))
+    }
+
     private static func picture(
         summary: SpendSummary = SpendSummary(),
         activity: SpendGlanceActivity = SpendGlanceActivity(),
