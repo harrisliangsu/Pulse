@@ -12,11 +12,11 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.5.11
 
-- **Notifications gathers every notice.** Settings → Notifications holds Limit reminders, Running out, Service status, and Monthly recap, and Usage under Panel holds the figures and the exhaustion estimate.
-- **Providers is one row in Application.** Opening an account keeps Providers selected, with the account's title and Back inside the page, while the toolbar's back and forward still move between panes.
-- **The exhaustion estimate follows the weekly limit.** The card line and the remaining-hours and will-not-last notices use the weekly limit, or the longest other limit when there is none, and a five-hour limit is left out.
-- **The Token spend window's controls respond.** The time range, the breakdown, Refresh, Share, the close button, and Escape all do what they say, and Share says when the image was copied.
-- **The usage card opens Blinky from its own icon.** The icon in the card's header opens the main window on the pane last shown.
+- **Notifications gathers every notice.** Settings → Notifications holds Limit reminders, Running out, Service status, and Monthly recap, and Usage under Panel holds the figures and the exhaustion estimate. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
+- **Providers is one row in Application.** Opening an account keeps Providers selected, with the account's title and Back inside the page, while the toolbar's back and forward still move between panes. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
+- **The exhaustion estimate follows the weekly limit.** The card line and the remaining-hours and will-not-last notices use the weekly limit, or the longest other limit when there is none, and a five-hour limit is left out. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
+- **The Token spend window's controls respond.** The time range, the breakdown, Refresh, Share, the close button, and Escape all do what they say, and Share says when the image was copied. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
+- **The usage card opens Blinky from its own icon.** The icon in the card's header opens the main window on the pane last shown. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
 
 ## 1.5.10
 
