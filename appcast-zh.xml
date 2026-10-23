@@ -6,6 +6,24 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.5.1</title>
+            <pubDate>Fri, 23 Oct 2026 04:54:45 -0000</pubDate>
+            <sparkle:version>1.5.1</sparkle:version>
+            <sparkle:shortVersionString>1.5.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.1</link>
+            <description><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Blinky 1.5.1</h2><ul><li><strong>安装包改名为 Blinky。</strong> 发布页上的文件是 <code>Blinky-1.5.1.dmg</code> 和 <code>Blinky-1.5.1.zip</code>，磁盘上的应用仍是 <code>Pulse.app</code>，套件标识符不变，已经发布的 1.5.0 仍使用 <code>Pulse-1.5.0.dmg</code> 和 <code>Pulse-1.5.0.zip</code>。<a href="https://github.com/harrisliangsu/blinky-mac/pull/54">#54</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.1">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.1/Blinky-1.5.1.zip"
+                       length="16890110"
+                       type="application/octet-stream"
+                       sparkle:edSignature="vcEUtnbnKA8yDSM59cQgx1Wgc2g760bcFfVxOpuKejwzCi9n2x4/rclM1iAT4b39M8gpvk3DgVoQ3TlU0Y0AAA==" />
+        </item>
+        <item>
             <title>1.5.0</title>
             <pubDate>Fri, 23 Oct 2026 03:54:02 -0000</pubDate>
             <sparkle:version>1.5.0</sparkle:version>
