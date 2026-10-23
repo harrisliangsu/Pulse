@@ -73,7 +73,8 @@ final class SpendGlanceModel {
             summary: summary,
             activity: activity,
             observedAt: observedAt,
-            hasReadLimitations: hasReadLimitations
+            hasReadLimitations: hasReadLimitations,
+            dimension: settings.spendGlanceDimension
         )
     }
 
@@ -131,14 +132,19 @@ final class SpendGlanceModel {
         guard let result = try? await cache.summaries(for: request, ledgers: read.snapshot?.ledgers ?? [:]),
               !Task.isCancelled, summaryRequest == request else { return }
         summary = result.overview
+        activity = SpendGlanceActivity.covering(
+            summary: result.overview,
+            span: settings.spendSpan,
+            custom: settings.spendCustomDays
+        )
         displayedRequest = request
     }
 
-    func noteCopied() {
+    func noteCopied(hold: Duration = SpendGlanceCopy.hold) {
         didCopy = true
         copyClear?.cancel()
         copyClear = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(1.6))
+            try? await Task.sleep(for: hold)
             guard !Task.isCancelled else { return }
             self?.didCopy = false
         }
@@ -147,7 +153,6 @@ final class SpendGlanceModel {
     private func adopt(_ snapshot: AgentLedgers.Snapshot, at date: Date) {
         observedAt = date
         hasReadLimitations = !snapshot.notes.isEmpty
-        activity = SpendGlanceActivity.of(snapshot.ledgers)
     }
 
     private func clearFigures() {

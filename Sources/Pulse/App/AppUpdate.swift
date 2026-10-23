@@ -27,11 +27,13 @@ import UserNotifications
 /// all, whether one is running, and whether a newer version was found — which
 /// is what the menu bar shows. A scheduled find follows `UpdateDiscovery`:
 /// notify first posts a notification and leaves the window hidden until that
-/// notification is clicked; show the window is Sparkle's offer immediately.
-/// The decision is `UpdateAnnouncement`, which does not touch Sparkle. The
-/// one extra step when the offer window does show is activation: this process
-/// is an `.accessory` app, and Sparkle's own driver shows a found update
-/// behind every other app unless something has made this one `.regular` first.
+/// notification is clicked; show the window is Sparkle's offer immediately;
+/// install silently downloads and installs the next time Blinky quits, with
+/// no notification and no window. The decision is `UpdateAnnouncement`, which
+/// does not touch Sparkle. The one extra step when the offer window does show
+/// is activation: this process is an `.accessory` app, and Sparkle's own
+/// driver shows a found update behind every other app unless something has
+/// made this one `.regular` first.
 ///
 /// **The installed file name is not changed from this delegate.** Sparkle
 /// writes the update over `host.bundlePath` because
@@ -65,7 +67,12 @@ final class AppUpdate {
     /// so it can't drift from what the updater is actually doing.
     var checksAutomatically: Bool {
         get { controller?.updater.automaticallyChecksForUpdates ?? false }
-        set { controller?.updater.automaticallyChecksForUpdates = newValue }
+        set {
+            controller?.updater.automaticallyChecksForUpdates = newValue
+            // Sparkle allows automatic downloads only while checks are on.
+            // Turning checks back on has to put Install silently back.
+            applyAutomaticDownloads()
+        }
     }
 
     private let settings: AppSettings
@@ -105,7 +112,26 @@ final class AppUpdate {
             updaterDelegate: relay,
             userDriverDelegate: relay
         )
+        applyAutomaticDownloads()
         Task { await refreshNotificationPermission() }
+    }
+
+    /// Blinky's About picker is the only automatic-install control.
+    ///
+    /// `SUAutomaticallyUpdate` stays false, so a fresh install does not
+    /// download on its own. Install silently sets
+    /// `automaticallyDownloadsUpdates`, which is what selects Sparkle's
+    /// automatic driver for a scheduled check. That value is also stored by
+    /// Sparkle, so it is written again whenever the choice or the check
+    /// switch changes, and a stored Sparkle value cannot disagree.
+    /// `SUAllowsAutomaticUpdates` is left unset: Sparkle 2.9 treats an
+    /// explicit false as a ban, and `setAutomaticallyDownloadsUpdates` then
+    /// returns without writing. The checkbox that key would show is hidden
+    /// by `SparkleAutomaticCheckbox` when the offer window is on screen.
+    func applyAutomaticDownloads() {
+        controller?.updater.automaticallyDownloadsUpdates = UpdateAnnouncement.automaticallyDownloadsUpdates(
+            for: settings.updateDiscovery
+        )
     }
 
     /// This fork's update files on GitHub. Upstream's `update.qunqin.org`
@@ -237,6 +263,16 @@ final class AppUpdate {
         revealDeferredUpdate()
     }
 
+    /// The reader chose Install silently. A notice already posted is
+    /// withdrawn, and a held offer is not brought forward. A session Sparkle
+    /// has already started keeps going; the next scheduled check uses the
+    /// automatic driver.
+    func suppressScheduledOffer() {
+        offerGeneration += 1
+        holdingScheduledOffer = false
+        withdrawUpdateNotification()
+    }
+
     func noteNotificationPermission(_ permission: UpdateAnnouncement.Permission) {
         notificationPermission = permission
     }
@@ -283,6 +319,9 @@ final class AppUpdate {
             revealDeferredUpdate()
         case .askPermission:
             await askThenOffer(version: version, generation: generation)
+        case .installSilently:
+            holdingScheduledOffer = false
+            withdrawUpdateNotification()
         }
     }
 
@@ -302,6 +341,10 @@ final class AppUpdate {
             await refreshNotificationPermission()
             guard generation == offerGeneration, holdingScheduledOffer else { return }
             postUpdateNotification(version: version)
+        case .installSilently:
+            hideUpdateOffer()
+            holdingScheduledOffer = false
+            withdrawUpdateNotification()
         case .showOffer, .askPermission:
             revealDeferredUpdate()
         }
@@ -404,11 +447,40 @@ final class AppUpdate {
     /// controller class is the same window when the frame name is missing.
     fileprivate func focusUpdateOffer() {
         NSApp.activate(ignoringOtherApps: true)
+        hideSparkleAutomaticCheckboxes()
         for window in NSApp.windows where Self.isSparkleUpdateOffer(
             frameAutosaveName: window.frameAutosaveName,
             windowControllerClassName: window.windowController.map { String(describing: type(of: $0)) }
         ) {
             window.makeKeyAndOrderFront(nil)
+        }
+        // `SUUpdateAlert.windowDidLoad` may run after this return and add the
+        // checkbox then. Hide it again on the next turn.
+        Task { @MainActor in
+            self.hideSparkleAutomaticCheckboxes()
+        }
+    }
+
+    private func hideSparkleAutomaticCheckboxes() {
+        for window in NSApp.windows where Self.isSparkleUpdateOffer(
+            frameAutosaveName: window.frameAutosaveName,
+            windowControllerClassName: window.windowController.map { String(describing: type(of: $0)) }
+        ) {
+            hideSparkleAutomaticCheckboxes(in: window.contentView)
+        }
+    }
+
+    private func hideSparkleAutomaticCheckboxes(in view: NSView?) {
+        guard let view else { return }
+        if let button = view as? NSButton,
+           SparkleAutomaticCheckbox.shouldHide(
+               buttonType: SparkleAutomaticCheckbox.buttonType(isBordered: button.isBordered),
+               title: button.title
+           ) {
+            button.isHidden = true
+        }
+        for subview in view.subviews {
+            hideSparkleAutomaticCheckboxes(in: subview)
         }
     }
 
@@ -530,5 +602,42 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate, SPUStandardUserD
     /// is withdrawn with the session.
     nonisolated func standardUserDriverWillFinishUpdateSession() {
         MainActor.assumeIsolated { owner?.endUpdateSession() }
+    }
+
+    /// Install silently finishes the next time Blinky quits. Returning true
+    /// would relaunch immediately, which a menu-bar app must not do.
+    nonisolated func updater(
+        _: SPUUpdater,
+        willInstallUpdateOnQuit _: SUAppcastItem,
+        immediateInstallationBlock _: @escaping () -> Void
+    ) -> Bool {
+        false
+    }
+}
+
+/// Sparkle's own "automatically download and install" checkbox stays off the
+/// offer window. Blinky's About picker is the control for that choice.
+///
+/// `SUAllowsAutomaticUpdates` is not set in the bundle. An explicit false
+/// would hide the checkbox and also make `setAutomaticallyDownloadsUpdates`
+/// a no-op (Sparkle 2.9, `SPUUpdaterSettings`), so Install silently could
+/// not turn the download on. The checkbox is hidden here instead, inside the
+/// offer window `AppUpdate.isSparkleUpdateOffer` matches.
+enum SparkleAutomaticCheckbox {
+    static let allowsSparkleAutomaticCheckbox = false
+    /// The English title Sparkle sets in `SUUpdateAlert.windowDidLoad`.
+    static let englishTitle = "Automatically download and install updates in the future"
+
+    /// `NSButton` has `setButtonType` and no getter. Sparkle's checkbox
+    /// (`SUUpdateAlert.xib`, `type="check"`) is not bordered. Install, Later,
+    /// and Skip are bordered push buttons.
+    static func buttonType(isBordered: Bool) -> NSButton.ButtonType {
+        isBordered ? .momentaryPushIn : .switch
+    }
+
+    static func shouldHide(buttonType: NSButton.ButtonType, title: String = "") -> Bool {
+        guard !allowsSparkleAutomaticCheckbox else { return false }
+        if buttonType == .switch { return true }
+        return title == englishTitle
     }
 }

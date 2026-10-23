@@ -209,12 +209,19 @@ cat > "$APP/Contents/Info.plist" <<PLIST
          hear about it. Sparkle clamps anything under an hour, and the check
          is measured from the last one rather than from launch, so this is at
          most twelve requests a day and usually fewer.
-         Still only an offer: SUAutomaticallyUpdate stays false below. -->
+         SUAutomaticallyUpdate stays false below, so a fresh install does not
+         download until the reader picks Install silently in Settings → About.
+         That choice sets automaticallyDownloadsUpdates at runtime. -->
     <key>SUScheduledCheckInterval</key><integer>7200</integer>
-    <!-- Downloading and installing on its own stays off: an update is offered,
-         not applied behind the user's back. The offer is brought forward by
-         UpdaterRelay (AppUpdate.swift). Leaving this false is what keeps the
-         install inside that window. -->
+    <!-- The plist default stays false, so a new install offers an update and
+         does not install it. Install silently (UpdateDiscovery) turns
+         Sparkle's automaticallyDownloadsUpdates on, and the install finishes
+         the next time Blinky quits.
+         SUAllowsAutomaticUpdates is omitted on purpose. Sparkle 2.9 treats an
+         explicit false as a ban: setAutomaticallyDownloadsUpdates returns
+         without writing, so Install silently could not download. Leaving the
+         key unset lets that setter work while checks are on. Sparkle's own
+         checkbox is hidden by SparkleAutomaticCheckbox (AppUpdate.swift). -->
     <key>SUAutomaticallyUpdate</key><false/>
 </dict>
 </plist>

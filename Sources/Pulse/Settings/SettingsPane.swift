@@ -16,7 +16,10 @@ enum SettingsPane: Hashable {
     /// "General" pane of thirty-odd rows until that was too long to find
     /// anything in.
     case appearance
-    case rings
+    /// What the usage card shows: figures, the second ring, the reset clock,
+    /// the exhaustion forecast on the card, and which accounts that forecast
+    /// shares with the exhaustion notifications.
+    case usageCard
     case placement
     /// Pulse as an app: launch, menu bar, shortcuts, language.
     case general
@@ -39,7 +42,7 @@ enum SettingsPane: Hashable {
     /// The sidebar's fixed rows, section by section. `panel` and
     /// `application` sit above Providers. `bottom` is the Other section:
     /// extensions, then integrations, then About.
-    static let panel: [SettingsPane] = [.appearance, .rings, .placement]
+    static let panel: [SettingsPane] = [.appearance, .usageCard, .placement]
     static let application: [SettingsPane] = [.general, .notifications, .network]
     static let bottom: [SettingsPane] = [.extensions, .integrations, .about]
 
@@ -51,10 +54,12 @@ enum SettingsPane: Hashable {
     var title: String {
         switch self {
         case .appearance: .localized("Appearance")
-        case .rings: .localized("Rings and figures")
+        case .usageCard: .localized("Usage card")
         case .placement: .localized("Position and behavior")
         case .general: .localized("General")
-        case .notifications: .localized("Notifications")
+        // "Notifications" stays the account pane's group title. This pane is
+        // the exhaustion notices, the reset reminders, and the celebrations.
+        case .notifications: .localized("Exhaustion and reminders")
         case .network: .localized("Network and refresh")
         // Not "Usage history", which is what a provider's own card is called.
         // Two panes with one name is two places to look for one thing.
@@ -74,7 +79,7 @@ enum SettingsPane: Hashable {
     var symbol: String {
         switch self {
         case .appearance: "paintpalette"
-        case .rings: "circle.dashed"
+        case .usageCard: "square.text.square"
         case .placement: "rectangle.righthalf.inset.filled"
         case .general: "slider.horizontal.3"
         case .notifications: "bell"
@@ -96,13 +101,16 @@ enum SettingsPane: Hashable {
         case .appearance:
             [.localized("Size and spacing"), .localized("Size"), .localized("Spacing"), .localized("Round ends"),
              .localized("Look"), .localized("Progress bars"),
-             .localized("Appearance"), .localized("Transparency"), .localized("Ring activity animation")]
-        case .rings:
-            [.localized("Percentages at the side"), .localized("Percentages across"), .localized("Figures beside the rings"),
-             .localized("Figure above the ring"), .localized("Show what's left"),
-             .localized("Second limit inside the ring"), .localized("Time until reset"),
-             .localized("Time ring direction"), .localized("Ring colour scheme"),
-             .localized("Turn red at"), .localized("Alert colour when docked")]
+             .localized("Appearance"), .localized("Transparency"), .localized("Ring activity animation"),
+             .localized("Colour"), .localized("Ring colour scheme"), .localized("Turn red at"),
+             .localized("Alert colour when docked")]
+        case .usageCard:
+            [.localized("Figures"), .localized("Percentages at the side"), .localized("Percentages across"),
+             .localized("Figures beside the rings"), .localized("Figure above the ring"), .localized("Show what's left"),
+             .localized("Second limit inside the ring"), .localized("Time until reset"), .localized("Time ring direction"),
+             .localized("Exhaustion on the card"), .localized("Exhaustion forecast"), .localized("What the card shows"),
+             .localized("On the card"), .localized("Countdown up to"), .localized("May run out before reset"),
+             .localized("Say roughly when"), .localized("Which accounts"), .localized("Accounts")]
         case .placement:
             [.localized("Panel"), .localized("Show floating panel"), .localized("Hide in full screen"),
              .localized("Hide from screenshots"), .localized("Hide until pointed at"), .localized("Position"),
@@ -117,10 +125,9 @@ enum SettingsPane: Hashable {
             [.localized("Limits and outages"), .localized("Warn at"), .localized("When a limit comes back"),
              .localized("How early"), .localized("When a reading stops arriving"),
              .localized("When a service is down"), .localized("When a recap is ready"),
-             .localized("Exhaustion forecast"), .localized("What the card shows"), .localized("On the card"),
-             .localized("Countdown up to"), .localized("May run out before reset"), .localized("Say roughly when"),
-             .localized("Notices"), .localized("Notify by time left"), .localized("Reminder times"),
-             .localized("Add a stage"), .localized("Notify before the reset"), .localized("Which accounts"),
+             .localized("Exhaustion notifications"), .localized("Notify when a limit is running out"),
+             .localized("Hours left to notify"), .localized("Add a stage"),
+             .localized("Notify if it will not last until the reset"),
              .localized("Reset reminders"), .localized("Predicted reset"), .localized("Regular resets"),
              .localized("Celebrate a reset"), .localized("Also celebrate hourly quota resets")]
         case .network:

@@ -1,4 +1,5 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
+import AppKit
 import Foundation
 import Testing
 import UserNotifications
@@ -243,6 +244,70 @@ struct UpdateAnnouncementTests {
         #expect(UpdateAnnouncement.actionAfterPermission(granted: true, discovery: settings.updateDiscovery) == .showOffer)
     }
 
+    @Test("Install silently downloads on a scheduled check and never opens the window")
+    func installSilentlyDoesNotAnnounce() {
+        for permission in UpdateAnnouncement.Permission.allCases {
+            #expect(UpdateAnnouncement.action(
+                origin: .scheduled,
+                discovery: .installSilently,
+                permission: permission
+            ) == .installSilently)
+            #expect(!UpdateAnnouncement.sparkleShowsScheduledUpdate(
+                discovery: .installSilently,
+                permission: permission,
+                immediateFocus: false
+            ))
+            #expect(!UpdateAnnouncement.sparkleShowsScheduledUpdate(
+                discovery: .installSilently,
+                permission: permission,
+                immediateFocus: true
+            ))
+        }
+        #expect(UpdateAnnouncement.actionAfterPermission(granted: true, discovery: .installSilently) == .installSilently)
+        #expect(UpdateAnnouncement.actionAfterPermission(granted: false, discovery: .installSilently) == .installSilently)
+        #expect(UpdateAnnouncement.automaticallyDownloadsUpdates(for: .installSilently))
+        #expect(!UpdateAnnouncement.automaticallyDownloadsUpdates(for: .notifyFirst))
+        #expect(!UpdateAnnouncement.automaticallyDownloadsUpdates(for: .showWindow))
+        #expect(!SparkleAutomaticCheckbox.allowsSparkleAutomaticCheckbox)
+        #expect(SparkleAutomaticCheckbox.buttonType(isBordered: false) == .switch)
+        #expect(SparkleAutomaticCheckbox.buttonType(isBordered: true) == .momentaryPushIn)
+        #expect(SparkleAutomaticCheckbox.shouldHide(buttonType: .switch))
+        #expect(SparkleAutomaticCheckbox.shouldHide(
+            buttonType: .momentaryPushIn,
+            title: SparkleAutomaticCheckbox.englishTitle
+        ))
+        #expect(!SparkleAutomaticCheckbox.shouldHide(buttonType: .momentaryPushIn, title: "Install"))
+    }
+
+    @Test("Install silently does not ask for notification permission")
+    func installSilentlyDoesNotAsk() async {
+        let (alerts, settings, cleanup) = scratch()
+        defer { cleanup() }
+        settings.updateDiscovery = .installSilently
+        var called = false
+
+        let granted = await alerts.requestUpdateNoticeAuthorization {
+            called = true
+            return true
+        }
+
+        #expect(!called)
+        #expect(!granted)
+        #expect(settings.updateDiscovery == .installSilently)
+    }
+
+    @Test("The bundle leaves Sparkle's automatic-install checkbox unset")
+    func bundleOmitsSparklesAutomaticCheckbox() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let script = try String(contentsOf: root.appendingPathComponent("Scripts/bundle.sh"), encoding: .utf8)
+        #expect(script.contains("<key>SUAutomaticallyUpdate</key><false/>"))
+        #expect(!script.contains("<key>SUAllowsAutomaticUpdates</key>"))
+        #expect(script.contains("SparkleAutomaticCheckbox"))
+    }
+
     @Test("The About control has English and simplified Chinese copy, and the other languages too")
     func aboutControlHasCopy() throws {
         let root = URL(fileURLWithPath: #filePath)
@@ -255,6 +320,9 @@ struct UpdateAnnouncementTests {
             "Show the window",
             "A scheduled check posts a notification, and the update window opens when that notification is clicked. Check now still opens the window.",
             "A scheduled check opens the update window.",
+            "Install silently",
+            "A scheduled check downloads the update and installs it the next time Blinky quits, with no notification and no update window. Check now still opens the window.",
+            "Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking.",
             "Open this notification to review and install it.",
         ]
         for language in ["en", "zh-Hans", "zh-Hant", "ja", "ko", "ru"] {
@@ -272,6 +340,7 @@ struct UpdateAnnouncementTests {
         #expect(chinese["When an update is found"] == "发现更新时")
         #expect(chinese["Notify first"] == "先通知")
         #expect(chinese["Show the window"] == "直接打开窗口")
+        #expect(chinese["Install silently"] == "自动安装")
     }
 
     private static func pairs(in file: URL) throws -> [String: String] {

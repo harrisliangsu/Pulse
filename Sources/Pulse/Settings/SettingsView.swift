@@ -132,7 +132,7 @@ struct SettingsView: View {
 
                         switch pane {
                         case .appearance: AppearancePane(settings: settings)
-                        case .rings: RingsPane(settings: settings)
+                        case .usageCard: UsageCardPane(settings: settings)
                         case .placement: PlacementPane(settings: settings, placement: placement)
                         case .general: GeneralPane(settings: settings, shortcuts: shortcuts)
                         case .notifications: NotificationsPane(store: store, settings: settings, alerts: alerts)

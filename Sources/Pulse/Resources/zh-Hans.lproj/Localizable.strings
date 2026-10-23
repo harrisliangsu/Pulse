@@ -11,7 +11,7 @@
 "Rings and figures" = "圆环与数字";
 "Position and behavior" = "位置与行为";
 "Network and refresh" = "网络与刷新";
-"Figures" = "数字";
+"Figures" = "数字与内容";
 "Rings" = "圆环";
 "Providers" = "供应商";
 "About" = "关于";
@@ -1391,3 +1391,17 @@
 "Notify before the reset" = "重置前通知";
 "Sends a separate notice when the current pace will not last until the reset." = "按当前速度撑不到下次重置时，另外通知一次。";
 "Every account shown on the panel, or only the ones you pick." = "面板上显示的每个账号，或只包括选定的账号。";
+
+"Usage card" = "用量卡片";
+"Exhaustion and reminders" = "用尽与提醒";
+"Exhaustion on the card" = "卡片上的用尽预估";
+"Exhaustion notifications" = "用尽系统通知";
+"Notify when a limit is running out" = "额度将用尽时通知";
+"Hours left to notify" = "按剩余小时通知";
+"Notify if it will not last until the reset" = "撑不到重置时通知";
+"The card's forecast and the exhaustion notifications both use this list." = "卡片上的用尽预估和用尽通知都按这份名单。";
+"Install silently" = "自动安装";
+"A scheduled check downloads the update and installs it the next time Blinky quits, with no notification and no update window. Check now still opens the window." = "定时检查会下载更新，并在下次退出 Blinky 时安装，不发通知，也不打开更新窗口。现在检查仍会打开窗口。";
+"Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking." = "每两小时一次。下面的选项决定是通知、打开更新窗口，还是直接安装。";
+"By hour" = "按小时";
+"Copied to the clipboard." = "已复制到剪贴板。";

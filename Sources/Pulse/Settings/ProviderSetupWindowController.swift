@@ -43,10 +43,11 @@ final class ProviderSetupWindowController: NSObject, NSWindowDelegate {
     }
 
     func show() {
-        NSApp.activate(ignoringOtherApps: true)
         window.center()
         window.makeKeyAndOrderFront(nil)
-        dock.apply()
+        // Policy first, then activation. Activating before the app is
+        // `.regular` leaves the previous app's name in the menu bar.
+        dock.apply(showingWindow: window)
     }
 
     func close() { window.close() }

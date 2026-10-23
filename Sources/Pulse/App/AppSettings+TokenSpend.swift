@@ -12,6 +12,7 @@ extension AppSettings.Key {
     static let spendSpan = "settings.spendSpan"
     static let spendCustomDays = "settings.spendCustomDays"
     static let spendActivityView = "settings.spendActivityView"
+    static let spendGlanceDimension = "settings.spendGlanceDimension"
     static let readsTokenSpend = "settings.readsTokenSpend"
 }
 
@@ -38,6 +39,11 @@ extension AppSettings {
     func spendActivityViewChanged(from old: ActivityView) {
         guard spendActivityView != old else { return }
         Self.storeSpendActivityView(spendActivityView, in: defaults)
+    }
+
+    func spendGlanceDimensionChanged(from old: SpendGlanceDimension) {
+        guard spendGlanceDimension != old else { return }
+        Self.storeSpendGlanceDimension(spendGlanceDimension, in: defaults)
     }
 
     func readsTokenSpendChanged(from old: Bool) {
@@ -101,6 +107,19 @@ extension AppSettings {
     }
 
     static var spendActivityViewDefaultsKey: String { Key.spendActivityView }
+
+    /// The glance's breakdown, or By agent when nothing is stored or what is
+    /// stored no longer names one of the four.
+    static func storedSpendGlanceDimension(in defaults: UserDefaults) -> SpendGlanceDimension {
+        defaults.string(forKey: Key.spendGlanceDimension)
+            .flatMap(SpendGlanceDimension.init(rawValue:)) ?? .default
+    }
+
+    static func storeSpendGlanceDimension(_ dimension: SpendGlanceDimension, in defaults: UserDefaults) {
+        defaults.set(dimension.rawValue, forKey: Key.spendGlanceDimension)
+    }
+
+    static var spendGlanceDimensionDefaultsKey: String { Key.spendGlanceDimension }
 
     static func storedReadsTokenSpend(in defaults: UserDefaults) -> Bool {
         defaults.settingsFlag(Key.readsTokenSpend, default: Default.readsTokenSpend)

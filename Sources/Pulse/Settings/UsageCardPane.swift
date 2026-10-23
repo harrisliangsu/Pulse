@@ -1,8 +1,10 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import SwiftUI
 
-/// What each ring and the card say, and when they turn red.
-struct RingsPane: View {
+/// What the floating usage card shows: the figures, the second ring, the
+/// reset clock, the exhaustion forecast, and which accounts that forecast
+/// shares with the exhaustion notifications.
+struct UsageCardPane: View {
     let settings: AppSettings
 
     var body: some View {
@@ -90,9 +92,8 @@ struct RingsPane: View {
                     .disabled(!settings.isPanelVisible)
                 }
 
-            }
+                SettingsRowDivider()
 
-            SettingsGroup(String.localized("Rings")) {
                 SettingsRow(
                     String.localized("Second limit inside the ring"),
                     subtitle: String.localized("A thinner ring for the next-fullest limit, where a provider has one.")
@@ -143,65 +144,112 @@ struct RingsPane: View {
                         .disabled(!settings.isPanelVisible)
                     }
                 }
+            }
 
+            exhaustionCardGroup
+            exhaustionAccountGroup
+        }
+    }
+
+    /// The forecast line on the card. Usable without a notification grant.
+    private var exhaustionCardGroup: some View {
+        SettingsGroup(ExhaustionSettingsSections.card) {
+            SettingsRow(
+                String.localized("On the card"),
+                subtitle: String.localized("Under each limit that has a length and a reset, the card adds a line about how long it may last.")
+            ) {
+                Toggle("", isOn: Binding(
+                    get: { settings.showsForecast },
+                    set: { settings.showsForecast = $0 }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .disabled(!settings.isPanelVisible)
+            }
+
+            if SettingsChildRows.showsForecastDetails(onCard: settings.showsForecast) {
                 SettingsRowDivider()
 
                 SettingsRow(
-                    String.localized("Ring colour scheme"),
-                    subtitle: String.localized("The colours rings and figures use as a limit fills.")
+                    String.localized("Countdown up to"),
+                    subtitle: String.localized("The furthest time, in hours, at which the card writes a countdown."),
+                    nested: true
                 ) {
-                    Picker(String.localized("Ring colour scheme"), selection: Binding(
-                        get: { settings.ringColourScheme },
-                        set: { settings.ringColourScheme = $0 }
-                    )) {
-                        ForEach(RingColourScheme.allCases) { scheme in
-                            Text(scheme.title).tag(scheme)
-                        }
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
-                    .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
-                    .disabled(!settings.isPanelVisible)
-                }
-
-                if SettingsChildRows.showsWarningThreshold(settings.ringColourScheme) {
-                    SettingsRowDivider()
-
-                    SettingsRow(
-                        String.localized("Turn red at"),
-                        subtitle: settings.ringColourScheme == .quiet
-                            ? String.localized("Where a ring turns from green to muted grey.")
-                            : String.localized("Where a ring turns from green to red."),
-                        nested: true
-                    ) {
-                        Picker(String.localized("Turn red at"), selection: Binding(
-                            get: { settings.warningThreshold },
-                            set: { settings.warningThreshold = $0 }
-                        )) {
-                            ForEach(WarningThreshold.allCases) { threshold in
-                                Text(threshold.title).tag(threshold)
-                            }
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                        .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
-                        .disabled(!settings.isPanelVisible)
-                    }
+                    ExhaustionHoursStepper(
+                        hours: settings.exhaustionCardHours,
+                        enabled: settings.isPanelVisible,
+                        value: Binding(
+                            get: { settings.exhaustionCardHours },
+                            set: { settings.exhaustionCardHours = ExhaustionHoursControl.applied($0) }
+                        )
+                    )
                 }
 
                 SettingsRowDivider()
 
                 SettingsRow(
-                    String.localized("Alert colour when docked"),
-                    subtitle: String.localized("Off keeps the collapsed rail neutral even when a limit needs attention.")
+                    String.localized("May run out before reset"),
+                    subtitle: String.localized("Further out, the card says it may not last until the reset, and does not write a time."),
+                    nested: true
                 ) {
                     Toggle("", isOn: Binding(
-                        get: { settings.dockShowsAlertColor },
-                        set: { settings.dockShowsAlertColor = $0 }
+                        get: { settings.exhaustionSoftHint },
+                        set: { settings.exhaustionSoftHint = $0 }
                     ))
                     .labelsHidden()
                     .toggleStyle(.switch)
                     .disabled(!settings.isPanelVisible)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Say roughly when"),
+                    subtitle: String.localized("When the pace will not last until the reset, the card writes roughly how long is left."),
+                    nested: true
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.exhaustionBeforeReset },
+                        set: { settings.exhaustionBeforeReset = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible)
+                }
+            }
+        }
+    }
+
+    /// One list for the card's forecast and the exhaustion notifications.
+    private var exhaustionAccountGroup: some View {
+        SettingsGroup(ExhaustionSettingsSections.accounts) {
+            SettingsRow(
+                String.localized("Accounts"),
+                subtitle: String.localized("The card's forecast and the exhaustion notifications both use this list.")
+            ) {
+                Picker("", selection: Binding(
+                    get: { settings.exhaustionAllAccounts },
+                    set: { settings.setExhaustionAllAccounts($0) }
+                )) {
+                    Text(localized: "All shown accounts").tag(true)
+                    Text(localized: "Selected accounts").tag(false)
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+            }
+
+            if SettingsChildRows.showsExhaustionAccountList(allAccounts: settings.exhaustionAllAccounts) {
+                ForEach(settings.shownAccounts, id: \.id) { account in
+                    SettingsRowDivider()
+                    SettingsRow(settings.label(for: account), nested: true) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.forecastsExhaustion(for: account) },
+                            set: { settings.setForecastsExhaustion($0, for: account) }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
                 }
             }
         }

@@ -7,11 +7,81 @@ import Foundation
 /// Arithmetic over a snapshot the pane already holds. Nothing here opens a
 /// store: the window asks `AgentLedgers` for the scan it kept, and only
 /// Refresh reads again.
+/// Which breakdown the glance lists under the total. The Settings page shows
+/// all four at once; this window switches. Agent is the shipped list.
+enum SpendGlanceDimension: String, CaseIterable, Identifiable, Sendable {
+    case model
+    case agent
+    case project
+    case session
+
+    static let `default` = SpendGlanceDimension.agent
+
+    var id: String { rawValue }
+
+    var title: String { title(in: LocalizationSource.bundle) }
+
+    func title(in bundle: Bundle) -> String {
+        switch self {
+        case .model: String(localized: "By model", bundle: bundle)
+        case .agent: String(localized: "By agent", bundle: bundle)
+        case .project: String(localized: "By project", bundle: bundle)
+        case .session: String(localized: "By session", bundle: bundle)
+        }
+    }
+}
+
+/// How large the glance writes the two headline figures. Tokens stay the
+/// large one whether or not a cost was priced.
+enum SpendGlanceHeadline {
+    static let tokenPointSize: CGFloat = 28
+    static let moneyPointSize: CGFloat = 15
+    static let posterTokenPointSize: CGFloat = 40
+    static let posterMoneyPointSize: CGFloat = 22
+}
+
+/// How long the copied confirmation stays up. A test can pass a shorter one.
+enum SpendGlanceCopy {
+    static let hold: Duration = .seconds(6)
+}
+
+/// Saturated colours for the glance bars. Not the accent colour: the share
+/// image is rendered on a dark ground, where an accent may not resolve, and
+/// a grey `Color.primary` read as one bar.
+struct SpendGlanceSwatch: Equatable, Sendable {
+    var red: Double
+    var green: Double
+    var blue: Double
+
+    var isGrayscale: Bool { red == green && green == blue }
+}
+
+enum SpendGlancePalette {
+    static let swatches: [SpendGlanceSwatch] = [
+        SpendGlanceSwatch(red: 0.36, green: 0.62, blue: 0.98),
+        SpendGlanceSwatch(red: 0.18, green: 0.74, blue: 0.52),
+        SpendGlanceSwatch(red: 0.95, green: 0.55, blue: 0.22),
+        SpendGlanceSwatch(red: 0.62, green: 0.42, blue: 0.92),
+        SpendGlanceSwatch(red: 0.92, green: 0.32, blue: 0.45),
+        SpendGlanceSwatch(red: 0.20, green: 0.68, blue: 0.82),
+        SpendGlanceSwatch(red: 0.86, green: 0.72, blue: 0.22),
+        SpendGlanceSwatch(red: 0.45, green: 0.48, blue: 0.92),
+    ]
+
+    static func swatch(at index: Int) -> SpendGlanceSwatch {
+        swatches[index % swatches.count]
+    }
+}
+
 enum SpendGlance {
-    /// How many agents the summary lists. The rest stay on the Settings page.
+    /// How many rows the summary lists. The rest stay on the Settings page.
     static let agentLimit = 8
-    /// The mini chart's length. The year-long Token activity chart stays in Settings.
+    /// The mini chart's length when it is the fixed recent window (`of`).
+    /// The year-long Token activity chart stays in Settings.
     static let activityDays = 14
+    /// The most bars the span chart draws. A longer span is folded into this
+    /// many equal buckets so a year is still one chart.
+    static let maximumBars = 42
 
     /// The chart button on the usage card. Reading has to be on, and something
     /// has to be able to open the window. Otherwise there is no button, and
@@ -67,6 +137,72 @@ enum SpendGlance {
         }
     }
 
+    /// The rows under the total, for the dimension the glance is showing.
+    ///
+    /// Agents, models, and projects are sorted heaviest first here, ties by
+    /// name, and then capped, so the cap is the heaviest rows rather than
+    /// whichever eight the summary happened to list first. Sessions stay in
+    /// the summary's newest-first order, and then the cap. The share is of
+    /// the heaviest row in that list, so the longest bar fills. A model has
+    /// no cost: the summary does not price one.
+    static func rows(
+        _ summary: SpendSummary,
+        dimension: SpendGlanceDimension,
+        limit: Int = agentLimit
+    ) -> [AgentRow] {
+        switch dimension {
+        case .agent:
+            return topAgents(summary, limit: limit)
+        case .model:
+            let ranked = summary.models
+                .filter { $0.tokens > 0 }
+                .sorted { lhs, rhs in
+                    if lhs.tokens != rhs.tokens { return lhs.tokens > rhs.tokens }
+                    return lhs.name < rhs.name
+                }
+            return shared(ranked.prefix(limit).map { model in
+                (model.name, model.tokens, nil, 0)
+            })
+        case .project:
+            let ranked = summary.projects
+                .filter { $0.tokens > 0 }
+                .sorted { lhs, rhs in
+                    if lhs.tokens != rhs.tokens { return lhs.tokens > rhs.tokens }
+                    return lhs.name < rhs.name
+                }
+            return shared(ranked.prefix(limit).map { project in
+                (project.name, project.tokens, project.estimatedCost, project.unpricedTokens)
+            })
+        case .session:
+            return shared(
+                summary.sessions.filter { $0.session.tokens > 0 }.prefix(limit).map { row in
+                    (
+                        row.session.label(projectName: summary.projectName(for: row)),
+                        row.session.tokens,
+                        row.session.estimatedCost,
+                        row.session.unpricedTokens
+                    )
+                }
+            )
+        }
+    }
+
+    private static func shared(
+        _ raw: [(name: String, tokens: Int, cost: Double?, unpriced: Int)]
+    ) -> [AgentRow] {
+        let listed = Array(raw)
+        let heaviest = listed.map(\.tokens).max() ?? 0
+        return listed.map { item in
+            AgentRow(
+                name: item.name,
+                tokens: item.tokens,
+                cost: item.cost,
+                unpricedTokens: item.unpriced,
+                share: heaviest > 0 ? Double(item.tokens) / Double(heaviest) : 0
+            )
+        }
+    }
+
     /// The label in the header. A custom range names its days, because this
     /// window has no date fields under the menu the way Settings does.
     static func spanTitle(
@@ -86,22 +222,35 @@ enum SpendGlance {
     }
 }
 
-/// The last two weeks, one figure per calendar day.
+/// Bars under the glance total.
 ///
-/// Independent of the span picker, the way Token activity is: the headline
-/// follows Settings, and this chart is the recent shape beside it. A day
-/// before the first record is `nil` — not a zero — and a day after that
-/// record with no tokens is a real zero. A provider's own statistics are
-/// left out, the same gate as every Token spend total.
+/// `of` is the fixed last two weeks, kept for the chart that does not follow
+/// a span: a day before the first record is `nil`, and a later quiet day is
+/// zero. `covering` is what the window draws. It follows the span already
+/// summed — one bar an hour, one bar a day, or at most `maximumBars` buckets
+/// when the span is longer — and a quiet day inside that span is zero.
+/// A provider's own statistics are left out, the same gate as every Token
+/// spend total.
 struct SpendGlanceActivity: Equatable, Sendable {
+    /// What the bars are. `recent` is `of`, the fixed last two weeks. The
+    /// others follow the span the glance is showing.
+    enum Coverage: Equatable, Sendable {
+        case recent
+        case hours
+        case span
+        case buckets
+    }
+
     struct Day: Equatable, Sendable {
         let date: Date
-        /// Nil before the first record. A measured quiet day is zero.
+        /// Nil before the first record, and only on `of`. A measured quiet
+        /// day, including one inside a chosen span, is zero.
         let tokens: Int?
     }
 
     var days: [Day] = []
     var hasPartialCounts = false
+    var coverage: Coverage = .recent
 
     var isEmpty: Bool { days.isEmpty }
 
@@ -146,7 +295,56 @@ struct SpendGlanceActivity: Equatable, Sendable {
             guard let next = calendar.date(byAdding: .day, value: 1, to: date) else { break }
             cursor = next
         }
-        return Self(days: days, hasPartialCounts: partial)
+        return Self(days: days, hasPartialCounts: partial, coverage: .recent)
+    }
+
+    /// The chart for the span on screen.
+    ///
+    /// One calendar day with hourly figures is twenty-four bars. A span of at
+    /// most `maximumBars` days is one bar a day, quiet days included as zero.
+    /// A longer span — a year is the one that needs it — is folded into at
+    /// most that many equal buckets covering the whole span. Nothing before
+    /// the first record is invented as a gap here: the summary's days are
+    /// already the span.
+    static func covering(
+        summary: SpendSummary,
+        span: SpendSpan,
+        custom: ClosedRange<Date>,
+        calendar: Calendar = .current,
+        now: Date = Date()
+    ) -> Self {
+        if span.isOneDay(custom: custom, calendar: calendar), !summary.hours.isEmpty {
+            let today = calendar.startOfDay(for: now)
+            let days = (0..<24).map { hour in
+                Day(
+                    date: calendar.date(byAdding: .hour, value: hour, to: today) ?? today,
+                    tokens: summary.hours[hour] ?? 0
+                )
+            }
+            return Self(days: days, hasPartialCounts: summary.hasPartialCounts, coverage: .hours)
+        }
+        let source = summary.days
+        guard !source.isEmpty else {
+            return Self(hasPartialCounts: summary.hasPartialCounts, coverage: .span)
+        }
+        if source.count <= SpendGlance.maximumBars {
+            return Self(
+                days: source.map { Day(date: $0.date, tokens: $0.tokens) },
+                hasPartialCounts: summary.hasPartialCounts,
+                coverage: .span
+            )
+        }
+        let groups = SpendGlance.maximumBars
+        var buckets: [Day] = []
+        buckets.reserveCapacity(groups)
+        for index in 0..<groups {
+            let start = index * source.count / groups
+            let end = (index + 1) * source.count / groups
+            let slice = source[start..<end]
+            let tokens = slice.reduce(0) { $0 + $1.tokens }
+            buckets.append(Day(date: slice.first?.date ?? source[start].date, tokens: tokens))
+        }
+        return Self(days: buckets, hasPartialCounts: summary.hasPartialCounts, coverage: .buckets)
     }
 }
 
@@ -338,6 +536,7 @@ struct SpendGlancePicture: Equatable, Sendable {
         activity: SpendGlanceActivity,
         observedAt: Date?,
         hasReadLimitations: Bool,
+        dimension: SpendGlanceDimension = .agent,
         now: Date = Date(),
         calendar: Calendar = .current,
         locale: Locale = LocalizationSource.locale,
@@ -363,9 +562,9 @@ struct SpendGlancePicture: Equatable, Sendable {
             picture.cost = SpendFormat.money(amount, locale: locale)
             if partial { picture.costNote = String(localized: "Partial estimate", bundle: bundle) }
         }
-        let rows = SpendGlance.topAgents(summary)
+        let rows = SpendGlance.rows(summary, dimension: dimension)
         if !rows.isEmpty {
-            picture.agentsTitle = String(localized: "By agent", bundle: bundle)
+            picture.agentsTitle = dimension.title(in: bundle)
             picture.agents = rows.map { row in
                 Agent(
                     name: row.name,
@@ -379,10 +578,17 @@ struct SpendGlancePicture: Equatable, Sendable {
             }
         }
         if !activity.isEmpty {
-            picture.activityTitle = String(
-                localized: "Last \("\(SpendGlance.activityDays)") days",
-                bundle: bundle
-            )
+            switch activity.coverage {
+            case .recent:
+                picture.activityTitle = String(
+                    localized: "Last \("\(SpendGlance.activityDays)") days",
+                    bundle: bundle
+                )
+            case .hours:
+                picture.activityTitle = String(localized: "By hour", bundle: bundle)
+            case .span, .buckets:
+                picture.activityTitle = picture.span
+            }
             let busiest = activity.days.compactMap(\.tokens).max() ?? 0
             picture.bars = activity.days.map { day in
                 Bar(

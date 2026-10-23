@@ -145,6 +145,8 @@ struct AppSettingsPersistenceTests {
         #expect(defaults.string(forKey: "settings.spendSpan") == "quarter")
         settings.spendActivityView = .weekly
         #expect(defaults.string(forKey: "settings.spendActivityView") == "weekly")
+        settings.spendGlanceDimension = .model
+        #expect(defaults.string(forKey: "settings.spendGlanceDimension") == "model")
 
         settings.alertThreshold = .ninetyFive
         #expect(defaults.object(forKey: "settings.alertThreshold") as? Int == 95)
@@ -288,6 +290,7 @@ struct AppSettingsPersistenceTests {
         first.splitAccounts = ["antigravity"]
         first.spendSpan = .quarter
         first.spendActivityView = .weekly
+        first.spendGlanceDimension = .project
         first.readsTokenSpend = true
         first.alertThreshold = .ninetyFive
         first.alertsOnReset = true
@@ -389,6 +392,7 @@ struct AppSettingsPersistenceTests {
         #expect(back.splitAccounts == ["antigravity"])
         #expect(back.spendSpan == .quarter)
         #expect(back.spendActivityView == .weekly)
+        #expect(back.spendGlanceDimension == .project)
         #expect(back.readsTokenSpend)
         #expect(back.alertThreshold == .ninetyFive)
         #expect(back.alertsOnReset)
