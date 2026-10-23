@@ -327,8 +327,15 @@
 "Start Blinky automatically when you log in." = "Start Blinky automatically when you log in.";
 "Waiting for approval in System Settings › General › Login Items." = "Waiting for approval in System Settings › General › Login Items.";
 
-"Show Dock icon while Settings or a recap is open" = "Show Dock icon while Settings or a recap is open";
-"So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close." = "So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close.";
+"Startup and windows" = "Startup and windows";
+"Show main window when opened at login" = "Show main window when opened at login";
+"The main window opens when Blinky starts at login." = "The main window opens when Blinky starts at login.";
+"Always show Dock icon" = "Always show Dock icon";
+"Blinky stays in the Dock and in ⌘-Tab, including while every window is closed." = "Blinky stays in the Dock and in ⌘-Tab, including while every window is closed.";
+"Show Dock icon while a window is open" = "Show Dock icon while a window is open";
+"The icon is there while the main window, a recap, or the service chooser is open, and it goes when they close." = "The icon is there while the main window, a recap, or the service chooser is open, and it goes when they close.";
+"Blinky turned the menu bar icon back on, because the panel is hidden and no shortcut is registered." = "Blinky turned the menu bar icon back on, because the panel is hidden and no shortcut is registered.";
+"Blinky" = "Blinky";
 
 /* Menu bar icon */
 "Hide menu bar icon" = "Hide menu bar icon";

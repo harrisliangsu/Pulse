@@ -10,6 +10,12 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.9
+
+- **Opening Blinky shows its main window.** Finder, Spotlight, Launchpad, and the Dock open the window titled Blinky on the Appearance pane, and a launch at login stays in the menu bar unless Show main window when opened at login is on under Settings → General → Startup and windows. [Docs/architecture.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/architecture.md#login-item) [#70](https://github.com/harrisliangsu/blinky-mac/pull/70)
+- **The Dock icon can stay on.** Always show Dock icon, in that same section, keeps Blinky in the Dock and in ⌘-Tab, and Show Dock icon while a window is open still covers the main window, a recap, and the service chooser while that switch is off. [#70](https://github.com/harrisliangsu/blinky-mac/pull/70)
+- **A login launch waits to ask.** The service chooser and the first-run questions stay back until Blinky is opened by hand, and General explains it when the menu bar icon had to be turned back on. [#70](https://github.com/harrisliangsu/blinky-mac/pull/70)
+
 ## 1.5.8
 
 - **A scheduled check notifies you before opening the update window.** Settings → About, under Check automatically: When an update is found defaults to Notify first, and the window opens when that notification is clicked. Show the window opens it immediately. Check for Updates… and Check now still open the window. If notification permission is refused, the window opens so the update is not missed. [#65](https://github.com/harrisliangsu/blinky-mac/pull/65)

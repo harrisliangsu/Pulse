@@ -321,8 +321,15 @@
 "Start Blinky automatically when you log in." = "macOS にログインすると Blinky を自動的に起動します。";
 "Waiting for approval in System Settings › General › Login Items." = "「システム設定 › 一般 › ログイン項目」での許可を待っています。";
 
-"Show Dock icon while Settings or a recap is open" = "設定やまとめを開いている間 Dock にアイコンを表示";
-"So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close." = "他のウインドウに隠れても Dock や ⌘-Tab から戻れます。どちらも閉じるとアイコンも消えます。";
+"Startup and windows" = "起動とウインドウ";
+"Show main window when opened at login" = "ログイン時の起動でメインウインドウを表示";
+"The main window opens when Blinky starts at login." = "ログイン時に起動すると、メインウインドウも開きます。";
+"Always show Dock icon" = "Dock にアイコンを常に表示";
+"Blinky stays in the Dock and in ⌘-Tab, including while every window is closed." = "ウインドウをすべて閉じても、Blinky は Dock と ⌘-Tab に残ります。";
+"Show Dock icon while a window is open" = "ウインドウを開いている間 Dock にアイコンを表示";
+"The icon is there while the main window, a recap, or the service chooser is open, and it goes when they close." = "メインウインドウ、使用量のまとめ、またはサービスの選択ウインドウが開いている間表示され、閉じると消えます。";
+"Blinky turned the menu bar icon back on, because the panel is hidden and no shortcut is registered." = "メニューバーのアイコンを再び表示しました。パネルが隠れていて、ショートカットも登録されていないためです。";
+"Blinky" = "Blinky";
 
 /* メニューバーのアイコン */
 "Hide menu bar icon" = "メニューバーのアイコンを隠す";

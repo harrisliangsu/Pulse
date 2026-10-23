@@ -314,8 +314,15 @@
 "Start Blinky automatically when you log in." = "Автоматически запускать Blinky при входе в систему.";
 "Waiting for approval in System Settings › General › Login Items." = "Ожидается разрешение: Системные настройки › Основные › Объекты входа.";
 
-"Show Dock icon while Settings or a recap is open" = "Показывать значок в Dock, когда открыты настройки или итоги";
-"So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close." = "Чтобы к этим окнам можно было вернуться через Dock или ⌘-Tab. После их закрытия значок исчезает.";
+"Startup and windows" = "Запуск и окна";
+"Show main window when opened at login" = "Показывать главное окно при запуске со входом";
+"The main window opens when Blinky starts at login." = "Главное окно открывается, когда Blinky запускается при входе.";
+"Always show Dock icon" = "Всегда показывать значок в Dock";
+"Blinky stays in the Dock and in ⌘-Tab, including while every window is closed." = "Blinky остаётся в Dock и в ⌘-Tab, даже когда все окна закрыты.";
+"Show Dock icon while a window is open" = "Показывать значок в Dock, пока открыто окно";
+"The icon is there while the main window, a recap, or the service chooser is open, and it goes when they close." = "Значок есть, пока открыты главное окно, итоги или окно выбора служб, и исчезает, когда они закрываются.";
+"Blinky turned the menu bar icon back on, because the panel is hidden and no shortcut is registered." = "Значок в строке меню снова показан: панель скрыта, и сочетание клавиш не назначено.";
+"Blinky" = "Blinky";
 
 /* Menu bar icon */
 "Hide menu bar icon" = "Скрывать значок в строке меню";

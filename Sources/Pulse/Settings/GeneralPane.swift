@@ -16,7 +16,7 @@ struct GeneralPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            SettingsGroup(String.localized("Application")) {
+            SettingsGroup(String.localized("Startup and windows")) {
                 SettingsRow(
                     String.localized("Open at login"),
                     subtitle: loginSubtitle
@@ -35,25 +35,59 @@ struct GeneralPane: View {
                     .toggleStyle(.switch)
                 }
 
+                if SettingsChildRows.showsMainWindowAtLogin(openAtLogin: loginItemIsOn) {
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Show main window when opened at login"),
+                        subtitle: String.localized("The main window opens when Blinky starts at login."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.showMainWindowAtLogin },
+                            set: { settings.showMainWindowAtLogin = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
+                }
+
                 SettingsRowDivider()
 
                 SettingsRow(
-                    String.localized("Show Dock icon while Settings or a recap is open"),
-                    subtitle: String.localized("So these windows can be found again with the Dock or ⌘-Tab; the icon goes when they close.")
+                    String.localized("Always show Dock icon"),
+                    subtitle: String.localized("Blinky stays in the Dock and in ⌘-Tab, including while every window is closed.")
                 ) {
                     Toggle("", isOn: Binding(
-                        get: { settings.showsDockIconInSettings },
-                        set: { settings.showsDockIconInSettings = $0 }
+                        get: { settings.alwaysShowsDockIcon },
+                        set: { settings.alwaysShowsDockIcon = $0 }
                     ))
                     .labelsHidden()
                     .toggleStyle(.switch)
+                }
+
+                if SettingsChildRows.showsDockIconWhileWindowOpen(alwaysShowsDockIcon: settings.alwaysShowsDockIcon) {
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Show Dock icon while a window is open"),
+                        subtitle: String.localized("The icon is there while the main window, a recap, or the service chooser is open, and it goes when they close."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.showsDockIconInSettings },
+                            set: { settings.showsDockIconInSettings = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
                 }
 
                 SettingsRowDivider()
 
                 SettingsRow(
                     String.localized("Hide menu bar icon"),
-                    subtitle: String.localized("Remove Blinky from the menu bar; use the panel menu or shortcut to open settings.")
+                    subtitle: menuBarIconSubtitle
                 ) {
                     Toggle("", isOn: Binding(
                         get: { settings.hidesMenuBarIcon },
@@ -80,6 +114,20 @@ struct GeneralPane: View {
 
                 SettingsRowDivider()
 
+                SettingsRow(
+                    String.localized("Show floating panel"),
+                    subtitle: String.localized("The usage rail at the edge of the screen.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.isPanelVisible },
+                        set: { settings.isPanelVisible = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                }
+            }
+
+            SettingsGroup(String.localized("Application")) {
                 // Greyed out rather than hidden while the icon is: it is what
                 // the icon would show, and says so.
                 SettingsRow(
@@ -227,6 +275,22 @@ struct GeneralPane: View {
         shortcuts.unavailable.contains(action)
             ? .localized("Another app is already using this combination.")
             : available
+    }
+
+    /// Open at login, read so the nested row hides with the switch. The
+    /// generation is what redraws this after the system reports a new state.
+    private var loginItemIsOn: Bool {
+        _ = loginGeneration
+        return LoginItem.isEnabled
+    }
+
+    /// The ordinary explanation, or the note left when the icon was turned
+    /// back on because hiding it would have left no way into Blinky.
+    private var menuBarIconSubtitle: String {
+        if settings.menuBarIconRestoreNote {
+            return .localized("Blinky turned the menu bar icon back on, because the panel is hidden and no shortcut is registered.")
+        }
+        return .localized("Remove Blinky from the menu bar; use the panel menu or shortcut to open settings.")
     }
 
     /// The login item's state is the system's to hold, so this says what the

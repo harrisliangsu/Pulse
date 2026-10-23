@@ -124,9 +124,9 @@ struct SettingsView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
-                        // Where a new pane scrolls to. The pane's name is the
-                        // window's title now, in the toolbar, as System
-                        // Settings has it; it used to be drawn here too.
+                        // Where a new pane scrolls to. The window's title is Blinky;
+                        // the pane's name stays in the sidebar. The heading
+                        // used to be drawn here too.
                         Color.clear.frame(height: 0)
                             .id("heading")
 
@@ -173,7 +173,7 @@ struct SettingsView: View {
                 .task(id: spend.summaryRequest) { await spend.recompute() }
                 .onChange(of: navigation.requestID) { proxy.scrollTo("heading", anchor: .top) }
             }
-            .navigationTitle(pane.title(in: settings))
+            .navigationTitle(String.localized("Blinky"))
             .toolbar {
                 // **The toolbar needs an item of its own.** A toolbar with
                 // nothing in it is not drawn, and without one the sidebar
