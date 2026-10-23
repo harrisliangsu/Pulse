@@ -1,0 +1,170 @@
+name: Sign existing feed
+
+# Signs a zip that is already on a GitHub Release and pushes the three appcast
+# files to a branch. It does not build Blinky, does not upload or replace
+# release assets, and does not push main or move tags.
+#
+# The private key is SPARKLE_PRIVATE_KEY, the same secret the Release workflow
+# uses. sign_update is Sparkle 2.9.6, the version this app links.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Published version to offer, without the v prefix"
+        required: true
+        default: "1.5.7"
+      branch:
+        description: "Branch that receives the feed. Never main."
+        required: true
+        default: "cursor/offer-1-5-7-appcast-6ea9"
+
+permissions:
+  contents: write
+
+jobs:
+  sign:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download the published archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          case "$VERSION" in
+            ""|*[!0-9.]*)
+              echo "::error::Refusing version '$VERSION'."
+              exit 1
+              ;;
+          esac
+          mkdir -p build.noindex
+          # --clobber replaces a file in this checkout only. It does not upload.
+          gh release download "v$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "Blinky-$VERSION.zip" \
+            --dir build.noindex \
+            --clobber
+          python3 - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          version = os.environ["VERSION"]
+          path = Path(f"build.noindex/Blinky-{version}.zip")
+          data = path.read_bytes()
+          print(f"zip bytes={len(data)} sha256={hashlib.sha256(data).hexdigest()}")
+          PY
+
+      - name: Sparkle sign_update
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/Sparkle-2.9.6.tar.xz \
+            https://github.com/sparkle-project/Sparkle/releases/download/2.9.6/Sparkle-2.9.6.tar.xz
+          tar -xJf /tmp/Sparkle-2.9.6.tar.xz -C /tmp ./bin/sign_update
+          mkdir -p .build/artifacts
+          cp /tmp/bin/sign_update .build/artifacts/sign_update
+          chmod +x .build/artifacts/sign_update
+
+      - name: Write the feed
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SPARKLE_PRIVATE_KEY}" ]; then
+            echo "::error::SPARKLE_PRIVATE_KEY is not set."
+            exit 1
+          fi
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/Blinky-${VERSION}.zip"
+          python3 Scripts/appcast.py "$VERSION" "build.noindex/Blinky-$VERSION.zip" "$URL"
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          version = os.environ["VERSION"]
+          zip_len = Path(f"build.noindex/Blinky-{version}.zip").stat().st_size
+          for name in ("appcast.xml", "appcast-zh.xml", "appcast-en.xml"):
+              text = Path(name).read_text()
+              versions = re.findall(
+                  r"<sparkle:shortVersionString>([^<]+)</sparkle:shortVersionString>",
+                  text,
+              )
+              titles = re.findall(r"<title>(\d+\.\d+\.\d+)</title>", text)
+              if text.count("<item>") != 1 or versions != [version] or titles != [version]:
+                  raise SystemExit(
+                      f"{name} items={text.count('<item>')} versions={versions} titles={titles}"
+                  )
+              if f'length="{zip_len}"' not in text:
+                  raise SystemExit(f"{name} length is not {zip_len}")
+              if not re.search(r'sparkle:edSignature="[A-Za-z0-9+/=]{80,}"', text):
+                  raise SystemExit(f"{name} has no EdDSA signature")
+              if f"Blinky {version}" not in text:
+                  raise SystemExit(f"{name} notes do not name this version")
+          print(f"feed offers {version} ({zip_len} bytes), one item")
+          PY
+
+      - name: Verify the signature
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          sig="$(python3 - <<'PY'
+          import re
+          from pathlib import Path
+          text = Path("appcast.xml").read_text()
+          match = re.search(r'sparkle:edSignature="([^"]+)"', text)
+          if not match:
+              raise SystemExit("appcast.xml has no signature")
+          print(match.group(1))
+          PY
+          )"
+          # The private key's public half is what the app has baked in.
+          # --verify checks that signature against the zip just downloaded.
+          printf '%s\n' "$SPARKLE_PRIVATE_KEY" | .build/artifacts/sign_update \
+            --verify \
+            --ed-key-file - \
+            "build.noindex/Blinky-$VERSION.zip" \
+            "$sig"
+          echo "signature matches the published zip"
+
+      - name: Push the feed branch
+        env:
+          VERSION: ${{ inputs.version }}
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          set -euo pipefail
+          case "$BRANCH" in
+            main|refs/heads/main|refs/tags/*|v*)
+              echo "::error::Refusing to push the feed to $BRANCH."
+              exit 1
+              ;;
+          esac
+          main_before="$(git rev-parse origin/main)"
+          tag_before="$(git ls-remote origin "refs/tags/v${VERSION}")"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add appcast.xml appcast-zh.xml appcast-en.xml
+          changed="$(git diff --cached --name-only | sort)"
+          expected="$(printf '%s\n' appcast-en.xml appcast-zh.xml appcast.xml | sort)"
+          printf '%s\n' "$changed"
+          if [ "$changed" != "$expected" ]; then
+            echo "::error::The feed commit would contain something other than the three appcast files."
+            exit 1
+          fi
+          git commit -m "Offer ${VERSION} to Sparkle"
+          git push -u origin "HEAD:${BRANCH}"
+          git fetch origin main
+          main_after="$(git rev-parse origin/main)"
+          tag_after="$(git ls-remote origin "refs/tags/v${VERSION}")"
+          if [ "$main_before" != "$main_after" ]; then
+            echo "origin/main moved during this job ($main_before -> $main_after). This job did not push it."
+          fi
+          if [ "$tag_before" != "$tag_after" ]; then
+            echo "::error::Tag v${VERSION} changed during this job."
+            exit 1
+          fi
+          echo "Pushed ${BRANCH}. origin/main is ${main_after}."
