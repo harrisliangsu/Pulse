@@ -139,10 +139,12 @@ enum SpendGlance {
 
     /// The rows under the total, for the dimension the glance is showing.
     ///
-    /// Agents, models and projects keep the summary's heaviest-first order.
-    /// Sessions keep newest-first. Each list stops at `limit`. The share is
-    /// of the heaviest row in that list, so the longest bar fills. A model
-    /// has no cost: the summary does not price one.
+    /// Agents, models, and projects are sorted heaviest first here, ties by
+    /// name, and then capped, so the cap is the heaviest rows rather than
+    /// whichever eight the summary happened to list first. Sessions stay in
+    /// the summary's newest-first order, and then the cap. The share is of
+    /// the heaviest row in that list, so the longest bar fills. A model has
+    /// no cost: the summary does not price one.
     static func rows(
         _ summary: SpendSummary,
         dimension: SpendGlanceDimension,
@@ -152,17 +154,25 @@ enum SpendGlance {
         case .agent:
             return topAgents(summary, limit: limit)
         case .model:
-            return shared(
-                summary.models.filter { $0.tokens > 0 }.prefix(limit).map { model in
-                    (model.name, model.tokens, nil, 0)
+            let ranked = summary.models
+                .filter { $0.tokens > 0 }
+                .sorted { lhs, rhs in
+                    if lhs.tokens != rhs.tokens { return lhs.tokens > rhs.tokens }
+                    return lhs.name < rhs.name
                 }
-            )
+            return shared(ranked.prefix(limit).map { model in
+                (model.name, model.tokens, nil, 0)
+            })
         case .project:
-            return shared(
-                summary.projects.filter { $0.tokens > 0 }.prefix(limit).map { project in
-                    (project.name, project.tokens, project.estimatedCost, project.unpricedTokens)
+            let ranked = summary.projects
+                .filter { $0.tokens > 0 }
+                .sorted { lhs, rhs in
+                    if lhs.tokens != rhs.tokens { return lhs.tokens > rhs.tokens }
+                    return lhs.name < rhs.name
                 }
-            )
+            return shared(ranked.prefix(limit).map { project in
+                (project.name, project.tokens, project.estimatedCost, project.unpricedTokens)
+            })
         case .session:
             return shared(
                 summary.sessions.filter { $0.session.tokens > 0 }.prefix(limit).map { row in

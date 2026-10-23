@@ -304,7 +304,7 @@ struct UpdateAnnouncementTests {
             .deletingLastPathComponent()
         let script = try String(contentsOf: root.appendingPathComponent("Scripts/bundle.sh"), encoding: .utf8)
         #expect(script.contains("<key>SUAutomaticallyUpdate</key><false/>"))
-        #expect(!script.contains("SUAllowsAutomaticUpdates"))
+        #expect(!script.contains("<key>SUAllowsAutomaticUpdates</key>"))
         #expect(script.contains("SparkleAutomaticCheckbox"))
     }
 

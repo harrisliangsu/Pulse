@@ -598,8 +598,13 @@ struct SpendGlanceTests {
         #expect(!SpendGlanceDismissal.shouldCloseOnEscape(keyCode: 36, hasModifiers: false))
 
         final class Marker {}
-        let glance = ObjectIdentifier(Marker())
-        let other = ObjectIdentifier(Marker())
+        // Both have to stay alive. An identifier taken from a temporary can
+        // be reused by the next allocation, and then the two windows compare
+        // equal.
+        let glanceMarker = Marker()
+        let otherMarker = Marker()
+        let glance = ObjectIdentifier(glanceMarker)
+        let other = ObjectIdentifier(otherMarker)
         #expect(SpendGlanceDismissal.shouldCloseOnEscape(
             keyCode: 53, hasModifiers: false, eventWindow: nil, glanceWindow: glance
         ))
