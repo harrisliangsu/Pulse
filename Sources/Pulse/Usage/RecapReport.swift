@@ -55,7 +55,7 @@ enum RecapReport {
     /// Validates the arguments; the exit code of a refusal, or nil to go on.
     static func refusal(arguments: [String]) -> Int32? {
         guard period(from: value(in: arguments)) != nil else {
-            fail("usage: Pulse --recap [YYYY-MM-DD | week-YYYY-MM-DD | YYYY-MM | YYYY]")
+            fail("usage: --recap [YYYY-MM-DD | week-YYYY-MM-DD | YYYY-MM | YYYY]")
             return 2
         }
         guard AppSettings.storedReadsTokenSpend(in: .standard) else {
@@ -98,7 +98,7 @@ enum RecapReport {
     }
 
     private static func fail(_ message: String) {
-        FileHandle.standardError.write(Data("Pulse: \(message)\n".utf8))
+        FileHandle.standardError.write(Data("Blinky: \(message)\n".utf8))
     }
 
     static func encode(_ recap: Recap, calendar: Calendar = Recap.calendar) -> Data? {

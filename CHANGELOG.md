@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.2
+
+- **A new download is Blinky.app.** Finder and the disk image show that name, and the icon is an off-white eye with a lime slit. [Docs/releasing.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/releasing.md)
+
 ## 1.5.1
 
 - **The download is named Blinky.** This release attaches `Blinky-1.5.1.dmg` and `Blinky-1.5.1.zip`, the app on disk stays `Pulse.app` with the same bundle identifier, and 1.5.0 keeps the `Pulse-1.5.0` files already published. [#54](https://github.com/harrisliangsu/blinky-mac/pull/54)

@@ -40,6 +40,7 @@
 "Copy diagnostics" = "診断情報をコピー";
 "Not recorded" = "記録なし";
 "Read cached usage" = "キャッシュされた使用量を読む";
+"Readings as JSON" = "JSON の読み取り結果";
 "Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials." = "Blinky が保存した読み取り結果を出力します。プロバイダの元の応答ではありません。通信や認証情報へのアクセスは行いません。";
 "Copy command" = "コマンドをコピー";
 "Developer kit" = "開発者キット";

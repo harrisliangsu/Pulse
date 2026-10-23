@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="AppIcon/pulse-icon-1024.png" width="112" alt="Blinky">
+  <img src="AppIcon/blinky-icon-1024.png" width="112" alt="Blinky">
 </p>
 
 <h1 align="center">Blinky</h1>
@@ -59,7 +59,7 @@
 ## Installation
 
 1. Download the latest **`Blinky-x.y.z.dmg`** from [Releases](https://github.com/harrisliangsu/blinky-mac/releases/latest).
-2. Open the disk image and drag **Blinky** into your `Applications` folder. The file on disk is still `Pulse.app`, so an update replaces the copy already there.
+2. Open the disk image and drag **Blinky** into your `Applications` folder. The file is `Blinky.app`. If `Pulse.app` is already there, move it to the Trash once Blinky is in place; an in-app update does not rename that older file.
 3. On first launch, choose the services to monitor. All start unchecked; Blinky reads their credentials and checks usage only after you click **Done**. Closing the chooser leaves monitoring off; you can also enable a service in Settings. Upgrades keep your choices and ask once about newly supported services detected on your Mac.
 4. Blinky lives in the menu bar. If your menu bar is crowded, right-click the floating rail — or the collapsed sliver — and choose **Settings…**; you can also assign a global shortcut for it under **Settings › General › Shortcuts**.
 
@@ -69,7 +69,7 @@
 > - **Option 1 (GUI)**: Launch Blinky, dismiss the alert, open **System Settings → Privacy & Security**, and click **Open Anyway**.
 > - **Option 2 (Terminal)**:
 >   ```bash
->   xattr -cr /Applications/Pulse.app
+>   xattr -cr /Applications/Blinky.app
 >   ```
 >   *Updates are offered in-app through Sparkle. macOS may request browser keychain access again after an update.*
 
@@ -104,7 +104,7 @@
 - **Usage recaps** — shareable cards for a day, a week, a month or a year, built from the same records.
 - **Service status** — 44 providers' own status pages, and a notification when one reports an outage.
 - **Connection diagnostics** — where each figure came from, and the servers' own replies.
-- **For power users** — several accounts per provider, extensions for your own sources, `Pulse --json` for scripts.
+- **For power users** — several accounts per provider, extensions for your own sources, and `--json` for scripts.
 
 <p align="center">
   <img src="Docs/images/spend.webp" height="290" alt="Token spend: total, tokens by kind, and the daily pattern">
@@ -147,7 +147,7 @@ cd blinky-mac
 ./Scripts/bundle.sh
 
 # Launch it
-open build.noindex/Pulse.app
+open build.noindex/Blinky.app
 ```
 
 `swift run Pulse` is a quick way to build and run without a bundle, but notifications and in-app updates only work from the bundled app. See [Docs/build-from-source.md](Docs/build-from-source.md) for toolchain setup. Shipping a release: [Docs/releasing.md](Docs/releasing.md).

@@ -146,7 +146,7 @@ struct MenuBarReading: Equatable {
 }
 
 extension MenuBarReading {
-    /// Puts a reading on the status item's button: Pulse's mark alone when
+    /// Puts a reading on the status item's button: Blinky's mark alone when
     /// there is none, else the account's mark and its figure — or a small
     /// ring in its place — red past the warning line. The tooltip names the
     /// account and the limit.
@@ -159,7 +159,7 @@ extension MenuBarReading {
         on button: NSStatusBarButton
     ) {
         guard let reading else {
-            button.image = pulseMark(height: 16)
+            button.image = blinkMark(height: 16)
             button.attributedTitle = NSAttributedString()
             button.imagePosition = .imageOnly
             button.toolTip = "Blinky"
@@ -213,31 +213,31 @@ extension MenuBarReading {
         button.attributedTitle = NSAttributedString(string: " " + reading.text(remaining: remaining), attributes: attributes)
     }
 
-    /// Pulse's own mark — the app icon's P, one stroke — as a template, so
-    /// the menu bar colours it like every other item there. Drawn from
-    /// `AppIcon/pulse-mark.svg`'s path rather than shipped as a file: one
-    /// stroke, a 100-unit pen with round ends, bounds 302–762 × 194–830.
+    /// Blinky's mark — the app icon's eye, with the slit punched out — as a
+    /// template, so the menu bar colours it like every other item there.
+    /// The same circle and capsule as `AppIcon/blinky-mark.svg` (radius 320
+    /// in a 1024 square, slit 448×88). One colour here: the slit is a hole,
+    /// because a template cannot carry the icon's lime.
     @MainActor
-    static func pulseMark(height: CGFloat) -> NSImage {
-        let bounds = NSRect(x: 302, y: 194, width: 460, height: 636)
-        let scale = height / bounds.height
-        let image = NSImage(size: NSSize(width: (bounds.width * scale).rounded(.up), height: height), flipped: false) { _ in
-            let transform = NSAffineTransform()
-            transform.scale(by: scale)
-            transform.translateX(by: -bounds.minX, yBy: -bounds.minY)
-            transform.concat()
-            // The SVG's y runs down; here it runs up, so every y is 1024 − y.
-            let path = NSBezierPath()
-            path.move(to: NSPoint(x: 352, y: 244))
-            path.line(to: NSPoint(x: 352, y: 780))
-            path.line(to: NSPoint(x: 562, y: 780))
-            path.appendArc(withCenter: NSPoint(x: 562, y: 630), radius: 150, startAngle: 90, endAngle: -90, clockwise: true)
-            path.line(to: NSPoint(x: 530, y: 480))
-            path.lineWidth = 100
-            path.lineCapStyle = .round
-            path.lineJoinStyle = .round
-            NSColor.black.setStroke()
-            path.stroke()
+    static func blinkMark(height: CGFloat) -> NSImage {
+        let image = NSImage(size: NSSize(width: height, height: height), flipped: false) { rect in
+            let circle = NSBezierPath(ovalIn: rect)
+            let slitWidth = rect.width * 448 / 640
+            let slitHeight = rect.height * 88 / 640
+            let slit = NSBezierPath(
+                roundedRect: NSRect(
+                    x: rect.midX - slitWidth / 2,
+                    y: rect.midY - slitHeight / 2,
+                    width: slitWidth,
+                    height: slitHeight
+                ),
+                xRadius: slitHeight / 2,
+                yRadius: slitHeight / 2
+            )
+            circle.append(slit)
+            circle.windingRule = .evenOdd
+            NSColor.black.setFill()
+            circle.fill()
             return true
         }
         image.isTemplate = true

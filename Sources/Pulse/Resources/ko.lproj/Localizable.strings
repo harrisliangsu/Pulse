@@ -40,6 +40,7 @@
 "Copy diagnostics" = "진단 정보 복사";
 "Not recorded" = "기록 없음";
 "Read cached usage" = "캐시된 사용량 읽기";
+"Readings as JSON" = "JSON 읽기 결과";
 "Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials." = "Blinky가 저장한 읽기 결과를 출력하며, 제공업체의 원본 응답이 아닙니다. 요청을 보내거나 인증 정보를 열지 않습니다.";
 "Copy command" = "명령 복사";
 "Developer kit" = "개발자 키트";

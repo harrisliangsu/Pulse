@@ -12,7 +12,7 @@ A `.metadata_never_index` marker was tried first and **did not work** — the bu
 
 ## Defaults domain
 
-`UserDefaults.standard` is named after the bundle identifier, or — with no bundle — the process name. Every `swift run` kept settings in a domain called `Pulse`; `Pulse.app` read an empty one: position, providers, language, **and the flag that opening at login was already decided**. It looked like a fresh install and would switch login-at-start back on.
+`UserDefaults.standard` is named after the bundle identifier, or — with no bundle — the process name. Every `swift run` kept settings in a domain called `Pulse`; the bundled app read an empty one: position, providers, language, **and the flag that opening at login was already decided**. It looked like a fresh install and would switch login-at-start back on.
 
 `LegacyDefaults` copies the old domain once, only keys the new domain does not have. After that they diverge: an Xcode build and an installed app should not edit each other’s settings.
 

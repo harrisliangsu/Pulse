@@ -291,8 +291,8 @@ struct RecapStoryPage<Content: View>: View {
 
 // MARK: - Marks and glyphs
 
-/// The Pulse mark on its ink tile: the stem in paper, the bowl in lime, drawn
-/// from `AppIcon/pulse-mark.svg`'s path.
+/// The Blinky mark on its ink tile: an off-white eye and a lime slit, the
+/// same circle and capsule as `AppIcon/blinky-mark.svg`.
 struct RecapMark: View {
     let side: CGFloat
 
@@ -300,28 +300,22 @@ struct RecapMark: View {
         ZStack {
             RoundedRectangle(cornerRadius: side * 12 / 46, style: .continuous).fill(RecapColor.ink)
             Canvas { context, size in
-                // The path lives in 292…772 × 184…840 of the icon's 1024 space.
-                let scale = min(size.width / 480, size.height / 656)
-                func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-                    CGPoint(x: (x - 292) * scale + (size.width - 480 * scale) / 2,
-                            y: (y - 184) * scale + (size.height - 656 * scale) / 2)
-                }
-                let style = StrokeStyle(lineWidth: 100 * scale, lineCap: .round, lineJoin: .round)
-
-                var stem = Path()
-                stem.move(to: point(352, 780))
-                stem.addLine(to: point(352, 244))
-                context.stroke(stem, with: .color(RecapColor.paper), style: style)
-
-                var bowl = Path()
-                bowl.move(to: point(352, 244))
-                bowl.addLine(to: point(562, 244))
-                bowl.addArc(center: point(562, 394), radius: 150 * scale,
-                            startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
-                bowl.addLine(to: point(530, 544))
-                context.stroke(bowl, with: .color(RecapColor.lime), style: style)
+                // mark.svg: circle radius 320 in a 1024 square (diameter 640),
+                // slit 448×88, both centred.
+                let diameter = min(size.width, size.height) * 0.78
+                let origin = CGPoint(x: (size.width - diameter) / 2, y: (size.height - diameter) / 2)
+                let circle = Path(ellipseIn: CGRect(origin: origin, size: CGSize(width: diameter, height: diameter)))
+                context.fill(circle, with: .color(RecapColor.paper))
+                let slitWidth = diameter * 448 / 640
+                let slitHeight = diameter * 88 / 640
+                let slit = Path(roundedRect: CGRect(
+                    x: (size.width - slitWidth) / 2,
+                    y: (size.height - slitHeight) / 2,
+                    width: slitWidth,
+                    height: slitHeight
+                ), cornerRadius: slitHeight / 2)
+                context.fill(slit, with: .color(RecapColor.lime))
             }
-            .frame(width: side * 28 / 46, height: side * 34 / 46)
         }
         .frame(width: side, height: side)
     }

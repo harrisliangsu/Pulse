@@ -37,7 +37,7 @@ FINAL="build.noindex/Blinky-$VERSION.dmg"
 echo "Staging the disk image…"
 rm -rf "$STAGING" "$WRITABLE" "$FINAL"
 mkdir -p "$STAGING/.background"
-cp -R "build.noindex/Pulse.app" "$STAGING/"
+cp -R "build.noindex/Blinky.app" "$STAGING/"
 ln -s /Applications "$STAGING/Applications"
 cp Scripts/dmg-background.tiff "$STAGING/.background/background.tiff"
 
@@ -71,7 +71,7 @@ tell application "Finder"
         set arrangement of options to not arranged
         set icon size of options to 96
         set background picture of options to file ".background:background.tiff"
-        set position of item "Pulse.app" of container window to {170, 205}
+        set position of item "Blinky.app" of container window to {170, 205}
         set position of item "Applications" of container window to {490, 205}
         close
         open

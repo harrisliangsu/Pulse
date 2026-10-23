@@ -6,7 +6,7 @@ import Foundation
 /// `UserDefaults.standard` writes to a domain named after the bundle
 /// identifier — and, when there is no bundle, after the process name. So a
 /// loose `swift run Pulse` build has been keeping everything in a domain called
-/// `Pulse`, and the moment the same app runs from `Pulse.app` it reads a
+/// `Pulse`, and the moment the same app runs from `Blinky.app` it reads a
 /// different, empty one: every setting, the panel's position, which providers
 /// are on, whether login-at-start was already decided. All of it would look
 /// like a fresh install, and turning login-at-start back on would fight a user
@@ -17,7 +17,7 @@ import Foundation
 /// never overwritten by a stale value.
 ///
 /// After this the two diverge, which is correct: a build running from Xcode and
-/// an installed `Pulse.app` are two copies of the app and should not be editing
+/// an installed `Blinky.app` are two copies of the app and should not be editing
 /// each other's settings.
 enum LegacyDefaults {
     /// What `UserDefaults.standard` resolves to for a bare executable.

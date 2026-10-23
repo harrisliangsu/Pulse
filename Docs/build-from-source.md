@@ -2,14 +2,14 @@
 
 Pulse is a Swift package (`Package.swift`), macOS 14+, Swift tools 6.0. No linter; `swift test` covers rules and parsing ([testing.md](testing.md)). Open the package in Xcode or use the CLI.
 
-The bundled app's display name is **Blinky**. `swift run Pulse` and `Pulse.app` keep those file names, so an update replaces the copy already installed. The disk image and the update archive are `Blinky-<version>.dmg` and `Blinky-<version>.zip`.
+The bundled app is **Blinky.app**. `swift run Pulse` still builds the loose executable named `Pulse`. An in-app update replaces the copy already installed and does not rename a `Pulse.app` left from an older install. The disk image and the update archive are `Blinky-<version>.dmg` and `Blinky-<version>.zip`.
 
 User-facing clone-and-run stays in the README. **This file is the toolchain contract.** Shipping a tagged build, Sparkle, and the DMG: [releasing.md](releasing.md).
 
 ```bash
 swift run Pulse              # build and run (no app bundle, no Sparkle, no SMAppService)
 swift build                  # type-check, including #Preview
-./Scripts/bundle.sh          # → build.noindex/Pulse.app
+./Scripts/bundle.sh          # → build.noindex/Blinky.app
 ./Scripts/dmg.sh             # → build.noindex/Blinky-<version>.dmg
 ./Scripts/check-localization.sh
 ```
@@ -47,7 +47,7 @@ macOS also draws an app's controls to the SDK recorded in its binary, not to the
 
 ## What `swift run` is not
 
-A loose executable is a different app from `Pulse.app`:
+A loose executable is a different app from `Blinky.app`:
 
 - Different `UserDefaults` domain ([architecture.md](architecture.md))
 - Launch-agent login item instead of `SMAppService`

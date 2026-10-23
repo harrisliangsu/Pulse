@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Assembles Pulse.app from the SwiftPM build.
+# Assembles Blinky.app from the SwiftPM build.
 #
 # Pulse has no Xcode project on purpose — it is a plain package, and this is
 # what turns the package's bare executable into something macOS treats as an
@@ -8,7 +8,7 @@
 # version number to compare against (so no update check), `SMAppService` cannot
 # register a login item, and there is nothing to hand anyone but a build folder.
 #
-#   ./Scripts/bundle.sh            → build.noindex/Pulse.app
+#   ./Scripts/bundle.sh            → build.noindex/Blinky.app
 #   ./Scripts/bundle.sh --zip      → and build.noindex/Blinky-<version>.zip to attach
 #                                    to the release
 #   ./Scripts/bundle.sh --open     → and reveal it in Finder
@@ -22,7 +22,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="$(tr -d '[:space:]' < VERSION)"
-APP="build.noindex/Pulse.app"
+APP="build.noindex/Blinky.app"
 BUNDLE_ID="io.github.qunqin24.Pulse"
 
 # CI sets GITHUB_REPOSITORY; a local build reads origin. That is what makes
@@ -95,7 +95,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 # Spotlight indexes an .app wherever it finds one, so a build sitting in the
 # project folder turns up in Launchpad and search beside the installed copy —
-# two identical Pulses, and no way to tell which is which. It is the directory's
+# two copies of Blinky, and no way to tell which is which. It is the directory's
 # `.noindex` suffix that Spotlight actually honours; this marker was tried on
 # its own and did not work, and is kept only as a second line. Do not rely on
 # it, and do not rename the directory. See Docs/releasing.md.
@@ -117,7 +117,7 @@ xcrun actool AppIcon/AppIcon.icon \
     --platform macosx --target-device mac \
     --minimum-deployment-target 14.0 \
     --app-icon AppIcon \
-    --output-partial-info-plist "$(mktemp -t pulse-icon)" \
+    --output-partial-info-plist "$(mktemp -t blinky-icon)" \
     --errors --warnings >/dev/null
 
 # A ready-to-copy developer kit. Never ship local npm dependencies or build output.
@@ -148,6 +148,12 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <dict>
     <key>CFBundleName</key><string>Blinky</string>
     <key>CFBundleDisplayName</key><string>Blinky</string>
+    <!-- The name Sparkle looks for inside an update archive (SUHost.name).
+         The Sparkle this package builds leaves
+         SPARKLE_NORMALIZE_INSTALLED_APPLICATION_NAME off, so an update still
+         replaces the bundle at its current path: an installed Pulse.app stays
+         Pulse.app. A new download is Blinky.app. See Docs/releasing.md. -->
+    <key>SUBundleName</key><string>Blinky</string>
     <key>CFBundleExecutable</key><string>Pulse</string>
     <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>

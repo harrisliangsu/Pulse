@@ -95,12 +95,12 @@ jobs:
 
       # Proves the thing that actually ships can be assembled, not just that
       # the sources compile.
-      - name: Assemble Pulse.app
+      - name: Assemble Blinky.app
         run: ./Scripts/bundle.sh
 
       - name: Check the bundle
         run: |
-          APP="build.noindex/Pulse.app"
+          APP="build.noindex/Blinky.app"
           test -x "$APP/Contents/MacOS/Pulse"
           test -d "$APP/Contents/Resources/Pulse_Pulse.bundle"
           test -f "$APP/Contents/Resources/AppIcon.icns"
@@ -118,5 +118,8 @@ jobs:
             # went is not what this is checking.
             find "$APP/Contents/Resources/Pulse_Pulse.bundle/Contents/Resources" -iname "$language.lproj" | grep -q .
           done
+          test "$(defaults read "$PWD/$APP/Contents/Info.plist" CFBundleName)" = "Blinky"
+          test "$(defaults read "$PWD/$APP/Contents/Info.plist" CFBundleDisplayName)" = "Blinky"
+          test "$(defaults read "$PWD/$APP/Contents/Info.plist" CFBundleIdentifier)" = "io.github.qunqin24.Pulse"
           echo "Version: $(defaults read "$PWD/$APP/Contents/Info.plist" CFBundleShortVersionString)"
           echo "Architectures: $(lipo -archs "$APP/Contents/MacOS/Pulse")"

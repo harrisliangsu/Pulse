@@ -40,6 +40,7 @@
 "Copy diagnostics" = "Скопировать диагностику";
 "Not recorded" = "Не записано";
 "Read cached usage" = "Расход из кэша";
+"Readings as JSON" = "Показания в JSON";
 "Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials." = "Выводит сохранённые показания Blinky, а не исходный ответ сервиса, не обращаясь к сервисам и учётным данным.";
 "Copy command" = "Скопировать команду";
 "Developer kit" = "Набор для разработчиков";

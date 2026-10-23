@@ -187,7 +187,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # The main feed and its one-language copies (appcast-zh.xml,
-          # appcast-en.xml), which a Pulse set to a language reads.
+          # appcast-en.xml), which Blinky reads when it is set to a language.
           git add appcast.xml appcast-zh.xml appcast-en.xml
 
           # Staged first, and compared against the index rather than the

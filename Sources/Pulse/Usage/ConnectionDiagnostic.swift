@@ -54,7 +54,7 @@ struct ConnectionDiagnostic: Equatable, Sendable {
         let formatter = ISO8601DateFormatter()
         func stamp(_ date: Date?) -> String { date.map(formatter.string) ?? "unknown" }
         var lines = [
-            "Pulse connection diagnostic (v1)",
+            "Blinky connection diagnostic (v1)",
             "version: \(version)",
             "generatedAt: \(stamp(now))",
             "provider: \(account.provider.rawValue)",
