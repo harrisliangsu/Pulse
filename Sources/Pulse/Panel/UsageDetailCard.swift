@@ -1183,6 +1183,7 @@ private struct ScreenRectReporter: NSViewRepresentable {
 /// Blinky's own icon, for the control that opens the main window. The
 /// application icon when the bundle has one, and the named asset otherwise.
 /// A gear here used to read as Settings; the window it opens is the app.
+@MainActor
 enum BlinkyMark {
     static var image: NSImage {
         if let application = NSApp.applicationIconImage, application.size.width > 1 {

@@ -198,7 +198,11 @@ enum SpendGlanceWindowLevel {
     }
 
     static func isAuxiliary(_ window: NSWindow) -> Bool {
-        isAuxiliary(level: window.level, className: String(describing: type(of: window)))
+        // The monitor that calls this runs on the main thread, and a window's
+        // level is isolated to that actor. The call is not in a main-actor
+        // function: the event itself cannot cross into one.
+        let level = MainActor.assumeIsolated { window.level }
+        return isAuxiliary(level: level, className: String(describing: type(of: window)))
     }
 
     /// A menu, a popover, or a date picker. A click there is part of a control
