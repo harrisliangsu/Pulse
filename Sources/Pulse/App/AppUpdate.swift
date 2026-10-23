@@ -474,9 +474,7 @@ final class AppUpdate {
         guard let view else { return }
         if let button = view as? NSButton,
            SparkleAutomaticCheckbox.shouldHide(
-               buttonType: SparkleAutomaticCheckbox.buttonType(
-                   showsStateBy: button.cell?.showsStateBy ?? NSCell.StyleMask()
-               ),
+               buttonType: SparkleAutomaticCheckbox.buttonType(isBordered: button.isBordered),
                title: button.title
            ) {
             button.isHidden = true
@@ -629,14 +627,12 @@ enum SparkleAutomaticCheckbox {
     static let allowsSparkleAutomaticCheckbox = false
     /// The English title Sparkle sets in `SUUpdateAlert.windowDidLoad`.
     static let englishTitle = "Automatically download and install updates in the future"
-    /// `NSContentsCellMask`. A checkbox shows its state by changing contents.
-    private static let contentsCell = NSCell.StyleMask(rawValue: 1)
 
     /// `NSButton` has `setButtonType` and no getter. Sparkle's checkbox
-    /// (`SUUpdateAlert.xib`, `type="check"`, `changeContents`) shows its state
-    /// by contents. The Install, Later, and Skip buttons do not.
-    static func buttonType(showsStateBy: NSCell.StyleMask) -> NSButton.ButtonType {
-        showsStateBy.contains(contentsCell) ? .switch : .momentaryPushIn
+    /// (`SUUpdateAlert.xib`, `type="check"`) is not bordered. Install, Later,
+    /// and Skip are bordered push buttons.
+    static func buttonType(isBordered: Bool) -> NSButton.ButtonType {
+        isBordered ? .momentaryPushIn : .switch
     }
 
     static func shouldHide(buttonType: NSButton.ButtonType, title: String = "") -> Bool {
