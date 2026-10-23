@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.5
+
+- **The card says when a limit may run out.** Settings → Notifications → Exhaustion forecast. Within six hours it names the window and a rough time, for example “Weekly · may run out in about 4 hours”; further out it can say the pace may not last until the reset. Notifications start with one warning at 24 hours left, and more stages can be added. Codex’s 5-hour and weekly windows are included when the reply states a length and a reset. [#61](https://github.com/harrisliangsu/blinky-mac/pull/61)
+
 ## 1.5.4
 
 - **Settings lists every provider under Providers.** Open Settings and choose Providers; search still finds an account by its name or the name you gave it. [#60](https://github.com/harrisliangsu/blinky-mac/pull/60)

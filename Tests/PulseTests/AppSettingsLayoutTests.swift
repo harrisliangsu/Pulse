@@ -46,7 +46,7 @@ struct AppSettingsLayoutTests {
         ("freeAcrossFiguresBeside", { $0.freeAcrossFiguresBeside = true }),
         ("usesRoundEnds", { $0.usesRoundEnds = true }),
         ("showsWindowClock", { $0.showsWindowClock = true }),
-        ("showsForecast", { $0.showsForecast = true }),
+        ("showsForecast", { $0.showsForecast = false }),
         ("detailedCards", { $0.setShowsDetailedCard(true, for: AccountKey(.codex)) }),
         ("usesGlass", { $0.usesGlass = true }),
         ("panelAppearance", { $0.panelAppearance = .light }),
@@ -146,6 +146,12 @@ struct AppSettingsLayoutTests {
         settings.readsTokenSpend = true
         settings.alertThreshold = .ninety
         settings.alertsOnReset = true
+        settings.exhaustionCardHours = 8
+        settings.exhaustionSoftHint = false
+        settings.exhaustionBeforeReset = false
+        settings.exhaustionAlerts = false
+        settings.exhaustionNotifyBeforeReset = true
+        settings.addExhaustionStage()
         settings.resetOrder()
         settings.providerOrder = ["codex"]
 

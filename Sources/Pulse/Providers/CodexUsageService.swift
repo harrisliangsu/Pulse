@@ -156,7 +156,11 @@ struct CodexUsageService: Sendable {
     }
 
     /// The shape `wham/usage` returns.
-    static func parseUsageResponse(_ root: [String: Any], for account: AccountKey) -> ProviderUsage {
+    static func parseUsageResponse(
+        _ root: [String: Any],
+        for account: AccountKey,
+        now: Date = Date()
+    ) -> ProviderUsage {
         var windows: [UsageWindow] = []
 
         // Account-wide limits, which the server leaves unnamed.
@@ -164,7 +168,7 @@ struct CodexUsageService: Sendable {
 
         if let limit = root["rate_limit"] as? [String: Any] {
             windows += Self.markingSpent(
-                httpWindows(from: limit, idPrefix: "codex", scope: nil),
+                httpWindows(from: limit, idPrefix: "codex", scope: nil, now: now),
                 // These flags describe the *group*, so they are pinned to the
                 // window actually up against its limit rather than smeared
                 // across every window in the group.
@@ -180,7 +184,7 @@ struct CodexUsageService: Sendable {
             let label = extra["limit_name"] as? String
             let key = extra["metered_feature"] as? String ?? label ?? "extra"
             windows += Self.markingSpent(
-                httpWindows(from: limit, idPrefix: key, scope: label),
+                httpWindows(from: limit, idPrefix: key, scope: label, now: now),
                 if: Self.isGroupSpent(limit)
             )
         }
@@ -199,7 +203,8 @@ struct CodexUsageService: Sendable {
     private static func httpWindows(
         from limit: [String: Any],
         idPrefix: String,
-        scope: String?
+        scope: String?,
+        now: Date
     ) -> [UsageWindow] {
         // `primary_window` and `secondary_window` are not tied to particular
         // durations, and which windows exist depends on the plan — ChatGPT Pro
@@ -215,8 +220,13 @@ struct CodexUsageService: Sendable {
                 let percent = number(node["used_percent"])
             else { return nil }
 
-            let seconds = number(node["limit_window_seconds"]).map { Int($0) }
-            let resets = number(node["reset_at"]).map { Date(timeIntervalSince1970: $0) }
+            // A missing length is not a stated one. Leaving `reportsLength`
+            // at its default made a window with no `limit_window_seconds`
+            // look measurable, and the forecast then had nothing to divide
+            // by — which is why a Codex row could show a percentage and a
+            // reset and still say nothing about pace.
+            let seconds = positiveInt(node["limit_window_seconds"])
+            let resets = resetDate(node["reset_at"], after: node["reset_after_seconds"], now: now)
 
             return UsageWindow(
                 id: "\(idPrefix).\(slot)",
@@ -224,7 +234,8 @@ struct CodexUsageService: Sendable {
                 scope: scope,
                 usedFraction: percent / 100,
                 windowSeconds: seconds ?? 0,
-                resetsAt: resets
+                resetsAt: resets,
+                reportsLength: seconds != nil
             )
         }
     }
@@ -257,7 +268,7 @@ struct CodexUsageService: Sendable {
 
     /// The shape `account/rateLimits/read` returns, which names its fields
     /// differently from the HTTP endpoint.
-    static func parseAppServerResponse(_ result: [String: Any]) -> ProviderUsage {
+    static func parseAppServerResponse(_ result: [String: Any], now: Date = Date()) -> ProviderUsage {
         let groups = result["rateLimitsByLimitId"] as? [String: [String: Any]]
             ?? (result["rateLimits"] as? [String: Any]).map { ["codex": $0] }
             ?? [:]
@@ -298,16 +309,18 @@ struct CodexUsageService: Sendable {
                     let percent = number(node["usedPercent"])
                 else { return nil }
 
-                let minutes = number(node["windowDurationMins"]).map { Int($0) }
-                let resets = number(node["resetsAt"]).map { Date(timeIntervalSince1970: $0) }
+                let minutes = positiveInt(node["windowDurationMins"])
+                let seconds = minutes.map { $0 * 60 }
+                let resets = resetDate(node["resetsAt"], after: node["resetAfterSeconds"], now: now)
 
                 return UsageWindow(
                     id: "\(key).\(slot)",
-                    kind: minutes.map { kind(seconds: $0 * 60) } ?? .other(seconds: 0),
+                    kind: seconds.map { kind(seconds: $0) } ?? .other(seconds: 0),
                     scope: scope,
                     usedFraction: percent / 100,
-                    windowSeconds: (minutes ?? 0) * 60,
-                    resetsAt: resets
+                    windowSeconds: seconds ?? 0,
+                    resetsAt: resets,
+                    reportsLength: seconds != nil
                 )
             }
 
@@ -402,7 +415,46 @@ struct CodexUsageService: Sendable {
         return value.formatted(.number.precision(.fractionLength(0...2)).locale(LocalizationSource.locale))
     }
 
+    /// A positive whole number of seconds or minutes. Strings are read too:
+    /// the fields are numbers in the samples, and a quoted `"18000"` used to
+    /// become a window of length zero, which the forecast cannot divide by.
+    private static func positiveInt(_ value: Any?) -> Int? {
+        guard let number = number(value), number.isFinite, number > 0, number < Double(Int.max) else {
+            return nil
+        }
+        return Int(number)
+    }
+
+    /// When this window resets.
+    ///
+    /// The stamp is unix seconds, or milliseconds once it is past 10^10 — the
+    /// same cut the reset-credit dates use. Read as seconds, a millisecond
+    /// stamp is a date in the year 50000, the window looks unopened, and
+    /// `elapsedFraction` is zero for as long as the account is watched.
+    /// `after` is the delay Codex also sends (`reset_after_seconds`); it is
+    /// the reset when the stamp itself is missing.
+    private static func resetDate(_ stamp: Any?, after: Any?, now: Date) -> Date? {
+        if let raw = number(stamp), raw.isFinite, raw > 0 {
+            let seconds = raw >= 10_000_000_000 ? raw / 1000 : raw
+            return Date(timeIntervalSince1970: seconds)
+        }
+        if let delay = number(after), delay.isFinite, delay > 0 {
+            return now.addingTimeInterval(delay)
+        }
+        return nil
+    }
+
     private static func number(_ value: Any?) -> Double? {
-        (value as? Double) ?? (value as? Int).map(Double.init) ?? (value as? NSNumber)?.doubleValue
+        if let double = value as? Double { return double }
+        if let int = value as? Int { return Double(int) }
+        if let number = value as? NSNumber {
+            // A boolean is an `NSNumber` too, and it is not a quantity.
+            if number === kCFBooleanTrue || number === kCFBooleanFalse { return nil }
+            return number.doubleValue
+        }
+        if let text = value as? String {
+            return Double(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return nil
     }
 }

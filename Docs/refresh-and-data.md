@@ -123,13 +123,13 @@ The arc rides the **empty ring** between icon and usage stroke, in Core Animatio
 
 ## Forecast (`BurnRate`)
 
-Off by default (`showsForecast`). One line under a limit — lasts the window, or a coarse ETA — worded as a **projection**.
+On unless a stored choice says otherwise (`showsForecast`). One line under a limit, worded as a **projection**. The switches live in Settings → Notifications → Exhaustion forecast, next to the notices that use the same pace ([notifications.md](notifications.md#time-to-empty)).
 
 - Rate = spent share / elapsed share from **one** reading (trailing samples were dropped: [decisions/reported-figures.md](decisions/reported-figures.md#ledger-and-burn-rate)).
-- Needs a reported percentage, a reset and `reportsLength`, so sort-key lengths fall out.
-- A time only when it lands before reset **and** within two hours; otherwise the verdict without a time.
-- A floor on elapsed share; a barely-open window is not divided into.
-- The line is inside `DetailCardLayout`'s budget.
+- Needs a reported percentage, a reset and `reportsLength`, so sort-key lengths fall out. Codex's 5-hour and weekly windows state both, including a length sent as text and a reset sent as milliseconds or as `reset_after_seconds` when the stamp is missing. A missing length is not a stated one.
+- `reading` keeps the time whenever the pace runs out before the reset. The card states that time only inside the reader's horizon (6 hours unless moved). Past it, the reset sentence or the quieter hint, as those switches say. A day and some hours is how a weekly span is worded (“1d 13h”), rounded the same way an hour is.
+- A floor on elapsed share (`minimumElapsed`, 3%); a barely-open window is not divided into.
+- The line is inside `DetailCardLayout`'s budget whenever the card switch is on, including for an account left off the list, so the window does not change size from one card to the next.
 
 ## Spending history and the estimate
 

@@ -27,7 +27,10 @@ import Foundation
 /// 1. **The verdict** — "expected to last". An extrapolation, but of the
 ///    coarsest kind: a yes or a no, which survives bursty usage far better
 ///    than any number does.
-/// 2. **When** — "in about an hour". A prediction, and the fragile one.
+/// 2. **When** — "in about an hour", or, on a weekly window, "in 1d 13h".
+///    A prediction, and the fragile one. The card states it only inside the
+///    reader's horizon (`AppSettings.exhaustionCardHours`, six hours unless
+///    they move it). Further out, the verdict can still be said.
 ///
 /// A third was tried and taken out: the pace itself, as a signed figure
 /// against an even burn. It read as a balance — "8% in reserve" under a line
@@ -41,16 +44,12 @@ enum BurnRate {
     /// five-hour window when the guard was missing.
     static let minimumElapsed = 0.03
 
-    /// A prediction further out than this is not shown. It is the least
-    /// certain figure in the app and it stops being actionable long before it
-    /// stops being computable.
-    static let horizon: TimeInterval = 2 * 3600
-
     struct Reading: Equatable, Sendable {
         /// Whether it is on course to run out before the window resets.
         let exhaustsBeforeReset: Bool
-        /// How long until it runs out — **only** when that is before the reset
-        /// and inside the horizon. Nil far more often than not, on purpose.
+        /// How long until it runs out, when that is before the reset.
+        /// Nil when the window lasts, or when nothing may be divided.
+        /// The card, not this value, decides how far out a time is worth showing.
         let timeToExhaustion: TimeInterval?
     }
 
@@ -58,7 +57,8 @@ enum BurnRate {
     static func reading(for window: UsageWindow, now: Date = Date()) -> Reading? {
         // `elapsedFraction` already refuses a window whose length was chosen
         // to sort by rather than reported — which is exactly the length this
-        // would otherwise divide by.
+        // would otherwise divide by. Codex's 5-hour and weekly windows state
+        // both, so they are included; a sort key is not.
         guard let elapsed = window.elapsedFraction(at: now),
               elapsed >= minimumElapsed,
               let resetsAt = window.resetsAt
@@ -82,37 +82,171 @@ enum BurnRate {
 
         return Reading(
             exhaustsBeforeReset: first,
-            // Both filters, and they are the difference between a figure and a
-            // guess: if the window resets first there is no exhaustion to
-            // predict, and past two hours the answer is not actionable.
-            timeToExhaustion: (first && untilEmpty <= horizon) ? untilEmpty : nil
+            timeToExhaustion: first ? untilEmpty : nil
         )
     }
 
-    /// "about an hour", "about 40 minutes" — **rounded, because the precision
-    /// is not real.** "53 minutes" claims a minute's accuracy from a figure
-    /// that moves by a factor of thirteen over one afternoon.
+    /// "about an hour", "about 40 minutes", "1d 13h" — **rounded, because the
+    /// precision is not real.** "53 minutes" claims a minute's accuracy from a
+    /// figure that moves by a factor of thirteen over one afternoon. Past a
+    /// day the same idea is a count of days and hours, which is what a weekly
+    /// window needs: "about 37 hours" is not how anyone says a day and a half.
     static func approximate(_ seconds: TimeInterval) -> String {
-        let minutes = Int((seconds / 60).rounded())
-        if minutes < 15 { return .localized("under 15 minutes") }
-        // Under an hour in quarters; past that in halves of an hour. The cut
-        // is at 68 rather than 75 because five quarters *is* an hour and a
-        // quarter — printing "about 75 minutes" between "about an hour" and
-        // "about 1.5 hours" reads as a different scale for one step.
+        switch rounded(seconds) {
+        case .underQuarter:
+            return .localized("under 15 minutes")
+        case .minutes(let minutes):
+            return .localized("about \("\(minutes)") minutes")
+        case .hour:
+            return .localized("about an hour")
+        case .hours(let text):
+            return .localized("about \("\(text)") hours")
+        case .days(let days, nil):
+            return .localized("about \("\(days)")d")
+        case .days(let days, let hours?):
+            return .localized("about \("\(days)")d \("\(hours)")h")
+        }
+    }
+
+    /// The same rounding, without the word "about". The reset sentence already
+    /// says "about", and saying it twice is how "约 约 1天" gets onto the card.
+    static func span(_ seconds: TimeInterval) -> String {
+        switch rounded(seconds) {
+        case .underQuarter:
+            return .localized("\("15") minutes")
+        case .minutes(let minutes):
+            return .localized("\("\(minutes)") minutes")
+        case .hour:
+            return .localized("1 hour")
+        case .hours(let text):
+            return .localized("\("\(text)") hours")
+        case .days(let days, nil):
+            return .localized("\("\(days)")d")
+        case .days(let days, let hours?):
+            return .localized("\("\(days)")d \("\(hours)")h")
+        }
+    }
+
+    /// What the card draws under one limit, or nil when this setting leaves
+    /// the row quiet.
+    struct CardLine: Equatable, Sendable {
+        enum Tone: Equatable, Sendable {
+            /// Inside the reader's horizon: the window's name and a time.
+            case countdown
+            /// Further out, but before the reset, with the time said once.
+            case beforeReset
+            /// The same fact, without a time.
+            case hint
+            /// On course to last.
+            case lasts
+        }
+
+        var text: String
+        var tone: Tone
+    }
+
+    /// The line under a limit.
+    ///
+    /// A time only inside `horizon` (six hours unless the reader moves it).
+    /// Past that, the reset sentence when they asked for it, otherwise the
+    /// quieter hint, otherwise nothing about an exhaustion that is still only
+    /// a verdict. A window that lasts still says so: the line is either there
+    /// or it is not, and appearing only for bad news makes the card jump.
+    static func cardLine(
+        for window: UsageWindow,
+        reading: Reading,
+        horizon: TimeInterval,
+        softHint: Bool,
+        beforeReset: Bool
+    ) -> CardLine? {
+        if let seconds = reading.timeToExhaustion, seconds <= horizon {
+            let name = window.forecastName
+            let when = approximate(seconds)
+            return CardLine(
+                text: .localized("\(name) · may run out in \(when)"),
+                tone: .countdown
+            )
+        }
+        if reading.exhaustsBeforeReset, beforeReset, let seconds = reading.timeToExhaustion {
+            let when = span(seconds)
+            return CardLine(
+                text: .localized("At the current pace, about \(when) before the next reset."),
+                tone: .beforeReset
+            )
+        }
+        if reading.exhaustsBeforeReset, softHint {
+            let name = window.forecastName
+            return CardLine(
+                text: .localized("\(name) · may run out before the reset"),
+                tone: .hint
+            )
+        }
+        if !reading.exhaustsBeforeReset {
+            return CardLine(text: .localized("Expected to last the window"), tone: .lasts)
+        }
+        return nil
+    }
+
+    private enum Rounded: Equatable {
+        case underQuarter
+        case minutes(Int)
+        case hour
+        case hours(String)
+        case days(Int, Int?)
+    }
+
+    /// Under an hour in quarters; past that in halves of an hour, until a
+    /// day, and then in whole hours beside whole days. The cut under an hour
+    /// is at 68 rather than 75 because five quarters *is* an hour and a
+    /// quarter — printing "about 75 minutes" between "about an hour" and
+    /// "about 1.5 hours" reads as a different scale for one step.
+    private static func rounded(_ seconds: TimeInterval) -> Rounded {
+        let minutes = Int((max(seconds, 0) / 60).rounded())
+        if minutes < 15 { return .underQuarter }
         if minutes < 68 {
             let quarters = max(Int((Double(minutes) / 15).rounded()), 1)
-            return quarters == 4
-                ? .localized("about an hour")
-                : .localized("about \("\(quarters * 15)") minutes")
+            return quarters >= 4 ? .hour : .minutes(quarters * 15)
         }
         let hours = (Double(minutes) / 60 * 2).rounded() / 2
-        // The reader's chosen language, not the machine's: every other
-        // formatted number in the app goes through this, and a comma-decimal
-        // system locale otherwise prints "about 1,5 hours" in English.
-        let text = hours.formatted(
-            .number.precision(.fractionLength(0...1)).locale(LocalizationSource.locale)
-        )
-        return .localized("about \("\(text)") hours")
+        if hours < 24 {
+            let text = hours.formatted(
+                .number.precision(.fractionLength(0...1)).locale(LocalizationSource.locale)
+            )
+            return .hours(text)
+        }
+        let whole = Int(hours.rounded())
+        let days = whole / 24
+        let rest = whole % 24
+        return .days(max(days, 1), rest == 0 ? nil : rest)
+    }
+}
+
+/// One remaining-time notice. Several may be on at once; each fires on its own.
+///
+/// Stored with the notification settings. The id stays put when the hours
+/// change, and the memory key includes the hours, so moving the line asks
+/// again — the same rule as the low-balance figure — while a pace that
+/// wobbles across the old line does not.
+struct ExhaustionStage: Codable, Equatable, Sendable, Identifiable {
+    var id: String
+    /// Whole hours still left when this stage should speak. One hour through
+    /// fourteen days: long enough for a weekly window, short of a made-up month.
+    var hours: Int
+
+    var remaining: TimeInterval { TimeInterval(hours) * 3600 }
+
+    /// What `AlertMemory` records. The hours are part of it, so editing them
+    /// is a new question and a wobble of the estimate is not.
+    var memoryKey: String { "\(id)|\(hours)" }
+
+    static let minimumHours = 1
+    static let maximumHours = 24 * 14
+
+    static func clamped(_ hours: Int) -> Int {
+        min(max(hours, minimumHours), maximumHours)
     }
 
+    /// The stage a fresh install starts with: one notice at 24 hours left.
+    static let defaultStage = ExhaustionStage(id: "24h", hours: 24)
+    static let defaultStages = [defaultStage]
 }

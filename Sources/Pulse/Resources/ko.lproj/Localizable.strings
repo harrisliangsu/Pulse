@@ -1338,3 +1338,37 @@
 "Top tool" = "주력 도구";
 "Tokens · token share" = "토큰 · 토큰 비중";
 "The plan price is the monthly price prorated by the days of this period." = "요금제 가격은 월 요금을 이 기간의 일수로 나눠 계산했습니다.";
+
+/* Exhaustion forecast */
+"about %@d" = "약 %@일";
+"about %@d %@h" = "약 %@일 %@시간";
+"%@d" = "%@일";
+"%@d %@h" = "%@일 %@시간";
+"1 hour" = "1시간";
+"%@ · may run out in %@" = "%@ · %@ 후 소진될 수 있음";
+"%@ · may run out before the reset" = "%@ · 초기화 전에 소진될 수 있음";
+"At the current pace, about %@ before the next reset." = "현재 속도로는 다음 초기화 약 %@ 전에 소진됩니다.";
+"May run out in %@." = "%@ 후 소진될 수 있습니다.";
+"Forecast: 5-hour" = "5시간";
+"Forecast: weekly" = "매주";
+"Forecast: daily" = "매일";
+"Forecast: monthly" = "매월";
+"Exhaustion forecast" = "소진 예측";
+"All shown accounts" = "표시 중인 모든 계정";
+"Selected accounts" = "선택한 계정";
+"On the card" = "카드에 표시";
+"A line under each limit that has a length and a reset." = "길이와 초기화 시각이 있는 한도 아래에 한 줄을 넣습니다.";
+"Countdown within" = "남은 시간을 표시할 범위";
+"Hours. Show the time only this close to running out." = "단위는 시간입니다. 소진까지 이 시간 이내일 때만 시각을 적습니다.";
+"May run out before reset" = "초기화 전에 소진될 수 있음";
+"A quieter line when it is further out than the countdown." = "남은 시간 표시보다 멀면 짧은 문구만 보여 줍니다.";
+"Tie it to the reset" = "초기화와 함께 표시";
+"When it will not last until the reset, say roughly when." = "초기화까지 버티지 못하면 대략적인 시각을 적습니다.";
+"Time remaining" = "남은 시간";
+"One notice per account, limit and stage." = "계정, 한도, 단계마다 한 번만 알립니다.";
+"Stages" = "단계";
+"Each one warns once, at its own remaining time." = "단계마다 그 남은 시간에 한 번만 알립니다.";
+"Add a stage" = "단계 추가";
+"Notify before the reset" = "초기화 전 알림";
+"When the pace will not last until the reset." = "이 속도로는 초기화까지 버티지 못할 때 알립니다.";
+"Every account on the panel, or only the ones you pick." = "패널에 나온 모든 계정이거나, 고른 계정만입니다.";

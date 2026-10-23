@@ -53,7 +53,7 @@ extension AppSettings.Default {
     static let freeAcrossFiguresBeside = false
     static let usesRoundEnds = false
     static let showsWindowClock = false
-    static let showsForecast = false
+    static let showsForecast = true
     static let usesGlass = false
     static let glassTransparency = PanelGlass.defaultTransparency
     static let autoCollapse = true

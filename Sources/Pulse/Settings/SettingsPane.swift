@@ -98,7 +98,7 @@ enum SettingsPane: Hashable {
              .localized("Appearance"), .localized("Transparency"), .localized("Ring activity animation")]
         case .rings:
             [.localized("Percentages at the side"), .localized("Percentages across"), .localized("Figures beside the rings"),
-             .localized("Figure above the ring"), .localized("Show what's left"), .localized("Forecast"),
+             .localized("Figure above the ring"), .localized("Show what's left"),
              .localized("Second limit inside the ring"), .localized("Time until reset"),
              .localized("Time ring direction"), .localized("Ring colour scheme"),
              .localized("Turn red at"), .localized("Alert colour when docked")]
@@ -112,6 +112,9 @@ enum SettingsPane: Hashable {
         case .notifications:
             [.localized("Warn at"), .localized("When a limit comes back"), .localized("When a reading stops arriving"),
              .localized("When a service is down"), .localized("When a recap is ready"),
+             .localized("Exhaustion forecast"), .localized("On the card"), .localized("Countdown within"),
+             .localized("May run out before reset"), .localized("Tie it to the reset"),
+             .localized("Time remaining"), .localized("Add a stage"), .localized("Notify before the reset"),
              .localized("Reset reminders"), .localized("Predicted reset"), .localized("Regular resets"),
              .localized("Celebrate a reset"), .localized("Also celebrate hourly quota resets")]
         case .network:

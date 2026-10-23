@@ -2,11 +2,11 @@
 
 Owns: when Pulse posts a system notification, what it says, and what it refuses to say. Settings copy and layout: [ui/settings.md](ui/settings.md). Where readings come from: [refresh-and-data.md](refresh-and-data.md).
 
-Source: [`Sources/Pulse/Usage/UsageAlerts.swift`](../Sources/Pulse/Usage/UsageAlerts.swift). Settings: `AppSettings.alertThreshold` / `alertsOnReset` / `alertsOnFailure` / `lowBalanceAlerts` / `alertsOnOutage` / `alertsOnRecap`. Every fetch goes through `UsageStore.commit(_:raw:for:)`, which passes both the raw result and the reconciled display reading. An explicit notification-setting change also calls `reconsiderAlerts()` after authorization succeeds. Celebrations (ribbons / Hero sound) are driven from the same `observe` path via `celebratesReset` / `celebratesHourlyReset` and `ResetCelebration`, and are not posted as notifications.
+Source: [`Sources/Pulse/Usage/UsageAlerts.swift`](../Sources/Pulse/Usage/UsageAlerts.swift). Settings: `AppSettings.alertThreshold` / `alertsOnReset` / `alertsOnFailure` / `lowBalanceAlerts` / `alertsOnOutage` / `alertsOnRecap`, plus the time-to-empty group (`exhaustionAlerts`, `exhaustionStages`, `exhaustionNotifyBeforeReset`). Every fetch goes through `UsageStore.commit(_:raw:for:)`, which passes both the raw result and the reconciled display reading. An explicit notification-setting change also calls `reconsiderAlerts()` after authorization succeeds. Celebrations (ribbons / Hero sound) are driven from the same `observe` path via `celebratesReset` / `celebratesHourlyReset` and `ResetCelebration`, and are not posted as notifications.
 
 ## What can be said
 
-Seven things, and nothing else in that list. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card. Advance reminders are a separate list, below: they are scheduled before a time, not spoken after a reading.
+Nine things, and nothing else in that list. Each is something you would want to know *while looking at something else*, which is the test for belonging here rather than on the card. Advance reminders are a separate list, below: they are scheduled before a time, not spoken after a reading. The time-to-empty notices are the same list as the percentage ones: they speak after a reading, and they are not a second system.
 
 | Alert | Fires when | Gated by |
 |---|---|---|
@@ -17,8 +17,20 @@ Seven things, and nothing else in that list. Each is something you would want to
 | `lowBalance(remaining:)` | A prepaid balance falls under the figure set for that account | `lowBalanceAlerts[account]` |
 | Service outage (`OutageMemory`) | A provider's own status page (44 have one) reports a component its account runs on down, worse, or back | `alertsOnOutage`, and the provider switched on |
 | Recap ready (`RecapNoticeRule`) | In the first three days of a month, last month had records in the scan Pulse already holds, and that month has not been announced | `alertsOnRecap`, and Token spend reading on |
+| `exhaustion` | The pace from one reading puts the time left inside a stage the reader set | `exhaustionAlerts`, the account is in the forecast list, and the window has a stated length and `resetsAt` |
+| `exhaustionBeforeReset` | That same pace runs out before the window resets | `exhaustionNotifyBeforeReset`, and the same scope |
 
-All off by default. All ask for the **default sound**; the mute switch is macOS's own per-app "Play sound for notifications".
+The percentage, failure, outage, recap and before-reset switches are off by default. The time-to-empty notice starts **on**, with one stage at 24 hours left. All ask for the **default sound**; the mute switch is macOS's own per-app "Play sound for notifications".
+
+## Time to empty
+
+The card and these notices share one pace (`BurnRate`, [refresh-and-data.md](refresh-and-data.md#forecast-burnrate)). Settings → Notifications → **Exhaustion forecast**. The percentage line above this group is unchanged.
+
+- **Who.** Every account on the panel, unless the reader switches to a list. The first time they do, the list starts as whoever is shown, so the forecast does not go quiet. One scope for the card and the notices.
+- **The card** (`showsForecast`, on unless a stored choice says off). A line under each limit that has a stated length and a reset. A time only inside **Countdown within** (6 hours unless moved): the window's short name and a rounded span, “Weekly · may run out in about 4 hours”, or, once the horizon is far enough, “Weekly · may run out in 1d 13h”. Past that horizon the reset sentence wins when it is on (“At the current pace, about 1d 13h before the next reset.”), otherwise the quieter hint with no time. A window that lasts still says so, so the line does not appear only for bad news. One line, already inside the card's height. Codex's 5-hour and weekly windows are included when the reply states both a length and a reset.
+- **Notices.** One stage at 24 hours left. **Add a stage** appends another, each with its own remaining time (1 hour through 14 days, and two stages cannot share an hour). The memory key is the stage's id plus its hours, so editing the hours asks again and a pace that wobbles across the old line does not. Cleared only when the window's turnover is confirmed, the same evidence as a percentage reset — not on a dip, and not on a pending glitch. A window already spent is the percentage track's word; a time of zero is not a second notice. A limit already inside a stage the first time it is seen is said once.
+- **Before the reset.** The card sentence is on. The notice for the same fact is its own switch, off. If both a stage and that notice match one pass, both may post; the shipped pair does not, because 24 hours left is a stage and the before-reset notice is off.
+- **Permission.** Nothing is asked at launch. Opening this pane asks, because the switch starts on and would otherwise never move from off to on. A grant already decided is not asked again. The card stays usable in an unbundled build; the notice controls do not (`UsageAlerts.isSupported`).
 
 ## Advance reminders
 

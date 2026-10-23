@@ -312,10 +312,10 @@ final class AppSettings {
 
     /// Say on the card whether each limit will last its window.
     ///
-    /// Off by default, and that is the same judgement the window clock gets:
-    /// it is the one line on that card the provider did not report, and a
-    /// projection nobody asked for sitting under a reported figure invites
-    /// being read as one. Someone who wants it turns it on knowing what it is.
+    /// On unless a stored choice says otherwise. The line is still the one
+    /// thing on that card the provider did not report, and the copy says so;
+    /// the horizon, the quieter hint and the reset sentence are the other
+    /// switches in the same group. A reader who turned this off keeps it off.
     /// **A `PanelMetrics` entry, unlike the other two card settings**: this one
     /// adds a fourth line under every limit, and the panel's frame is worked
     /// out from `DetailCardLayout` before SwiftUI lays anything out. The
@@ -961,6 +961,56 @@ final class AppSettings {
     /// This is not the after-the-fact reset notice and not the ribbon.
     var remindsBeforeRegularReset = false {
         didSet { remindsBeforeRegularResetChanged(from: oldValue) }
+    }
+
+    /// Every shown account, or only the ones in `exhaustionAccounts`.
+    ///
+    /// On for every account on the rail unless the reader picks a list.
+    /// The card line and the time-to-empty notices share this: a limit you
+    /// asked not to forecast is quiet in both places.
+    var exhaustionAllAccounts = true {
+        didSet { exhaustionAllAccountsChanged(from: oldValue) }
+    }
+
+    /// Account ids included when `exhaustionAllAccounts` is off. Empty until
+    /// the reader switches to a list, which starts from whoever is shown.
+    var exhaustionAccounts: Set<String> = [] {
+        didSet { exhaustionAccountsChanged(from: oldValue) }
+    }
+
+    /// How close a limit has to be before the card states a time. Six hours
+    /// unless moved. The verdict past this is the other two card switches.
+    var exhaustionCardHours = 6 {
+        didSet { exhaustionCardHoursChanged(from: oldValue) }
+    }
+
+    /// The quieter card line when the time is past the horizon but the pace
+    /// still runs out before the reset.
+    var exhaustionSoftHint = true {
+        didSet { exhaustionSoftHintChanged(from: oldValue) }
+    }
+
+    /// The card sentence that names the time before the next reset.
+    var exhaustionBeforeReset = true {
+        didSet { exhaustionBeforeResetChanged(from: oldValue) }
+    }
+
+    /// System notifications for the remaining-time stages. On by default,
+    /// with one stage at 24 hours. Separate from `alertThreshold`, which is
+    /// a percentage and stays off.
+    var exhaustionAlerts = true {
+        didSet { exhaustionAlertsChanged(from: oldValue) }
+    }
+
+    /// The stages, each its own remaining time. One at 24 hours to start.
+    var exhaustionStages: [ExhaustionStage] = ExhaustionStage.defaultStages {
+        didSet { exhaustionStagesChanged(from: oldValue) }
+    }
+
+    /// A notice when the pace runs out before the reset, whatever the stages
+    /// say. Off by default: the 24-hour stage is the one that speaks unasked.
+    var exhaustionNotifyBeforeReset = false {
+        didSet { exhaustionNotifyBeforeResetChanged(from: oldValue) }
     }
 
     /// How far ahead a regular reset notice fires. 24 hours unless the reader

@@ -21,7 +21,8 @@ struct AlertMemoryTests {
         resetsAt: Date? = nil,
         exhausted: Bool = false,
         kind: UsageWindow.Kind = .weekly,
-        windowSeconds: Int = 7 * 86_400
+        windowSeconds: Int = 7 * 86_400,
+        reportsLength: Bool = true
     ) -> UsageWindow {
         UsageWindow(
             id: id,
@@ -30,6 +31,7 @@ struct AlertMemoryTests {
             usedFraction: used,
             windowSeconds: windowSeconds,
             resetsAt: resetsAt,
+            reportsLength: reportsLength,
             isExhausted: exhausted
         )
     }
@@ -91,6 +93,9 @@ struct AlertMemoryTests {
         celebratesHourlyReset: Bool = false,
         staleMeansFailure: Bool = true,
         lowBalance: Double? = nil,
+        announcesExhaustion: Bool = false,
+        exhaustionStages: [ExhaustionStage] = [],
+        announcesBeforeReset: Bool = false,
         now: Date = AlertMemoryTests.now
     ) -> [UsageAlert] {
         memory.alerts(
@@ -104,6 +109,9 @@ struct AlertMemoryTests {
             celebratesHourlyReset: celebratesHourlyReset,
             lowBalance: lowBalance,
             staleMeansFailure: staleMeansFailure,
+            announcesExhaustion: announcesExhaustion,
+            exhaustionStages: exhaustionStages,
+            announcesBeforeReset: announcesBeforeReset,
             now: now
         )
     }
@@ -971,6 +979,213 @@ struct AlertMemoryTests {
         #expect(alerts.count == 1)
         #expect(alerts.first?.window?.id == "weekly")
     }
+
+    // MARK: - Time to empty
+
+    /// Used share that empties a half-spent weekly window in `remaining` seconds.
+    private static func pace(remaining: TimeInterval, length: Double = 604_800, elapsed: Double = 0.5) -> Double {
+        let elapsedSeconds = length * elapsed
+        return elapsedSeconds / (remaining + elapsedSeconds)
+    }
+
+    private static func weekly(used: Double, resetsAt: Date) -> ProviderUsage {
+        live(window(used: used, resetsAt: resetsAt))
+    }
+
+    private func exhaustion(
+        _ memory: inout AlertMemory,
+        _ reading: ProviderUsage,
+        stages: [ExhaustionStage] = [],
+        beforeReset: Bool = false,
+        on: Bool = true
+    ) -> [UsageAlert.Kind] {
+        run(
+            &memory, reading,
+            threshold: .off, announcesReset: false, announcesFailure: false,
+            announcesExhaustion: on,
+            exhaustionStages: stages,
+            announcesBeforeReset: beforeReset
+        ).map(\.kind)
+    }
+
+    @Test("A 24-hour stage is said once, and a bounce back over it is not said again")
+    func exhaustionStageDoesNotRepeat() {
+        var memory = AlertMemory()
+        let stage = [ExhaustionStage(id: "24h", hours: 24)]
+        let resets = Self.now.addingTimeInterval(302_400)
+        let close = Self.weekly(used: Self.pace(remaining: 20 * 3600), resetsAt: resets)
+
+        let first = exhaustion(&memory, close, stages: stage)
+        #expect(first.count == 1)
+        guard case .exhaustion(let key, _) = first.first else {
+            Issue.record("expected an exhaustion notice")
+            return
+        }
+        #expect(key == "24h|24")
+        #expect(exhaustion(
+            &memory, Self.weekly(used: Self.pace(remaining: 18 * 3600), resetsAt: resets), stages: stage
+        ).isEmpty)
+
+        // Back over the line, then under it again. The stage stays spoken.
+        #expect(exhaustion(
+            &memory, Self.weekly(used: Self.pace(remaining: 30 * 3600), resetsAt: resets), stages: stage
+        ).isEmpty)
+        #expect(exhaustion(&memory, close, stages: stage).isEmpty)
+    }
+
+    @Test("A drop that is not a reset does not re-arm the stage")
+    func exhaustionSurvivesAGlitch() {
+        var memory = AlertMemory()
+        let stage = [ExhaustionStage.defaultStage]
+        let resets = Self.now.addingTimeInterval(302_400)
+        let close = Self.weekly(used: Self.pace(remaining: 20 * 3600), resetsAt: resets)
+
+        #expect(exhaustion(&memory, close, stages: stage).count == 1)
+        #expect(exhaustion(&memory, Self.weekly(used: 0.2, resetsAt: resets), stages: stage).isEmpty)
+        #expect(exhaustion(&memory, close, stages: stage).isEmpty)
+    }
+
+    @Test("A confirmed reset lets the same stage speak for the new window")
+    func exhaustionRearmsOnReset() {
+        var memory = AlertMemory()
+        let stage = [ExhaustionStage.defaultStage]
+        let resets = Self.now.addingTimeInterval(302_400)
+
+        #expect(exhaustion(
+            &memory, Self.weekly(used: Self.pace(remaining: 20 * 3600), resetsAt: resets), stages: stage
+        ).count == 1)
+        // Forty points down, and the clock jumps by more than a quarter of the week.
+        let turned = resets.addingTimeInterval(200_000)
+        #expect(exhaustion(&memory, Self.weekly(used: 0.1, resetsAt: turned), stages: stage).isEmpty)
+        let elapsed = 1 - turned.timeIntervalSince(Self.now) / 604_800
+        let again = Self.pace(remaining: 20 * 3600, elapsed: elapsed)
+        #expect(exhaustion(&memory, Self.weekly(used: again, resetsAt: turned), stages: stage).count == 1)
+    }
+
+    @Test("A later stage speaks when its own time arrives, and not before")
+    func exhaustionStagesAreIndependent() {
+        var memory = AlertMemory()
+        let stages = [
+            ExhaustionStage(id: "24h", hours: 24),
+            ExhaustionStage(id: "6h", hours: 6),
+        ]
+        let resets = Self.now.addingTimeInterval(302_400)
+
+        let early = exhaustion(
+            &memory, Self.weekly(used: Self.pace(remaining: 20 * 3600), resetsAt: resets), stages: stages
+        )
+        #expect(early.count == 1)
+        guard case .exhaustion(let earlyKey, _) = early.first else {
+            Issue.record("expected the 24-hour stage")
+            return
+        }
+        #expect(earlyKey == "24h|24")
+
+        let later = exhaustion(
+            &memory, Self.weekly(used: Self.pace(remaining: 5 * 3600), resetsAt: resets), stages: stages
+        )
+        #expect(later.count == 1)
+        guard case .exhaustion(let laterKey, _) = later.first else {
+            Issue.record("expected the 6-hour stage")
+            return
+        }
+        #expect(laterKey == "6h|6")
+    }
+
+    @Test("Moving a stage's hours asks again")
+    func exhaustionStageHoursArePartOfTheMemory() {
+        var memory = AlertMemory()
+        let resets = Self.now.addingTimeInterval(302_400)
+        let reading = Self.weekly(used: Self.pace(remaining: 10 * 3600), resetsAt: resets)
+
+        #expect(exhaustion(
+            &memory, reading, stages: [ExhaustionStage(id: "24h", hours: 24)]
+        ).count == 1)
+        #expect(exhaustion(
+            &memory, reading, stages: [ExhaustionStage(id: "24h", hours: 24)]
+        ).isEmpty)
+        #expect(exhaustion(
+            &memory, reading, stages: [ExhaustionStage(id: "24h", hours: 12)]
+        ).count == 1)
+    }
+
+    @Test("The before-reset notice is separate, once, and quiet when the window is spent")
+    func exhaustionBeforeResetIsOnce() {
+        var memory = AlertMemory()
+        let resets = Self.now.addingTimeInterval(302_400)
+
+        let first = exhaustion(
+            &memory, Self.weekly(used: Self.pace(remaining: 30 * 3600), resetsAt: resets), beforeReset: true
+        )
+        #expect(first.count == 1)
+        guard case .exhaustionBeforeReset = first.first else {
+            Issue.record("expected the before-reset notice")
+            return
+        }
+        #expect(exhaustion(
+            &memory, Self.weekly(used: Self.pace(remaining: 28 * 3600), resetsAt: resets), beforeReset: true
+        ).isEmpty)
+
+        var spent = AlertMemory()
+        let gone = Self.live(Self.window(used: 1, resetsAt: resets, exhausted: true))
+        #expect(run(
+            &spent, gone,
+            threshold: .off, announcesReset: false, announcesFailure: false,
+            announcesExhaustion: true,
+            exhaustionStages: [.defaultStage],
+            announcesBeforeReset: true
+        ).isEmpty)
+    }
+
+    @Test("Time-to-empty stays quiet when it is off, on a stale reading, or without a stated length")
+    func exhaustionStaysQuiet() {
+        var memory = AlertMemory()
+        let resets = Self.now.addingTimeInterval(302_400)
+        let reading = Self.weekly(used: Self.pace(remaining: 20 * 3600), resetsAt: resets)
+        #expect(run(
+            &memory, reading,
+            threshold: .off, announcesReset: false, announcesFailure: false,
+            announcesExhaustion: false,
+            exhaustionStages: [.defaultStage],
+            announcesBeforeReset: true
+        ).isEmpty)
+
+        let stale = ProviderUsage(
+            account: Self.account,
+            windows: [Self.window(used: Self.pace(remaining: 20 * 3600), resetsAt: resets)],
+            observedAt: Self.now,
+            state: .stale,
+            plan: nil,
+            creditBalance: nil
+        )
+        #expect(run(
+            &memory, stale, raw: stale,
+            threshold: .off, announcesReset: false, announcesFailure: false,
+            announcesExhaustion: true, exhaustionStages: [.defaultStage]
+        ).isEmpty)
+
+        let unstated = Self.live(Self.window(
+            used: 0.8, resetsAt: resets, reportsLength: false
+        ))
+        #expect(run(
+            &memory, unstated,
+            threshold: .off, announcesReset: false, announcesFailure: false,
+            announcesExhaustion: true, exhaustionStages: [.defaultStage]
+        ).isEmpty)
+    }
+
+    @Test("An alerts file from before stages still decodes")
+    func legacyAlertMemoryDecodes() throws {
+        let json = """
+        {"accounts":{"claudeCode":{"windows":{"weekly":{"announced":90,"fraction":0.91,"pendingReset":false}},"failures":1,"reportedFailure":false}}}
+        """
+        let decoded = try JSONDecoder().decode(AlertMemory.self, from: Data(json.utf8))
+        let window = try #require(decoded.accounts["claudeCode"]?.windows["weekly"])
+        #expect(window.announced == 90)
+        #expect(window.exhaustionStages.isEmpty)
+        #expect(window.exhaustionBeforeReset == false)
+    }
+
 }
 
 /// The rules as they are actually reached: service → `UsageCache.reconciled` →
@@ -1138,6 +1353,8 @@ struct AlertsThroughTheCacheTests {
         let down = ProviderUsage.unavailable(Self.account, reason: .unreachable)
         #expect(alerts(&memory, shown: await cache.reconciled(down), raw: down).isEmpty)
     }
+
+
 }
 
 @Suite("Notification authorization")

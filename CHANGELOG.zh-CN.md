@@ -6,6 +6,10 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.5.5
+
+- **卡片会说明限额何时可能用尽。** 开关在「设置 → 通知 → 用尽预测」。距离用尽不超过六小时时，会写出窗口名称和大致时间，例如「每周 · 约 4 小时后用尽」；更远时，可以说明按当前速度可能撑不到下次重置。通知默认在剩余 24 小时提醒一次，还可以再加几档。Codex 的 5 小时和每周窗口，在回复写明时长和重置时间时也会计算。[#61](https://github.com/harrisliangsu/blinky-mac/pull/61)
+
 ## 1.5.4
 
 - **设置里的供应商收在「供应商」下。** 打开设置后点侧栏的「供应商」进入各账号；在侧栏搜索仍可按名称找到账号。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)

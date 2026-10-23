@@ -1338,3 +1338,37 @@
 "Top tool" = "主力工具";
 "Tokens · token share" = "Token 數 · 佔比";
 "The plan price is the monthly price prorated by the days of this period." = "訂閱價格按這段時間的天數從月費折算。";
+
+/* Exhaustion forecast */
+"about %@d" = "約 %@天";
+"about %@d %@h" = "約 %@天%@小時";
+"%@d" = "%@天";
+"%@d %@h" = "%@天%@小時";
+"1 hour" = "1 小時";
+"%@ · may run out in %@" = "%@ · %@後用盡";
+"%@ · may run out before the reset" = "%@ · 重設前可能會用盡";
+"At the current pace, about %@ before the next reset." = "按目前速度，重設前約 %@ 會用盡。";
+"May run out in %@." = "%@後會用盡。";
+"Forecast: 5-hour" = "5 小時";
+"Forecast: weekly" = "每週";
+"Forecast: daily" = "每天";
+"Forecast: monthly" = "每月";
+"Exhaustion forecast" = "用盡預測";
+"All shown accounts" = "所有顯示的帳號";
+"Selected accounts" = "選定的帳號";
+"On the card" = "顯示在卡片上";
+"A line under each limit that has a length and a reset." = "在寫明時長和重設時間的限額下方加一行。";
+"Countdown within" = "倒數範圍";
+"Hours. Show the time only this close to running out." = "以小時計。只有離用盡不超過這個時間，才寫出具體時間。";
+"May run out before reset" = "重設前可能用盡";
+"A quieter line when it is further out than the countdown." = "比倒數更遠時，只給一句較輕的提示。";
+"Tie it to the reset" = "結合重設時間";
+"When it will not last until the reset, say roughly when." = "如果撐不到下次重設，寫出大致會在何時用盡。";
+"Time remaining" = "剩餘時間";
+"One notice per account, limit and stage." = "每個帳號、每條限額、每一檔只通知一次。";
+"Stages" = "提醒檔位";
+"Each one warns once, at its own remaining time." = "每一檔按自己的剩餘時間提醒一次。";
+"Add a stage" = "新增一檔";
+"Notify before the reset" = "重設前通知";
+"When the pace will not last until the reset." = "按目前速度撐不到下次重設時通知。";
+"Every account on the panel, or only the ones you pick." = "面板上的每個帳號，或只包括選定的帳號。";
