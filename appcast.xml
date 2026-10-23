@@ -6,34 +6,34 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.3</title>
-            <pubDate>Fri, 23 Oct 2026 09:04:45 -0000</pubDate>
-            <sparkle:version>1.5.3</sparkle:version>
-            <sparkle:shortVersionString>1.5.3</sparkle:shortVersionString>
+            <title>1.5.4</title>
+            <pubDate>Fri, 23 Oct 2026 09:59:10 -0000</pubDate>
+            <sparkle:version>1.5.4</sparkle:version>
+            <sparkle:shortVersionString>1.5.4</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.3</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.4</link>
             <description xml:lang="zh-Hans"><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.3</h2><ul><li><strong>更新之后，访达里显示的是 Blinky。</strong> 文件名仍是 <code>Pulse.app</code> 的那一份，在下次打开时（包括应用内更新后的重新打开）会改名为 <code>Blinky.app</code>，前提是同一文件夹里还没有 <code>Blinky.app</code>；原先开着开机自启的，会按新文件重新登记，开关在「设置 → 通用」。<a href="https://github.com/harrisliangsu/blinky-mac/pull/58">#58</a></li><li><strong>预测重置的倒计时与标题同一行。</strong> Codex 卡片上，倒计时在「预测重置」的右侧，本地的日期和时刻在下一行。<a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/providers/codex.md">Docs/providers/codex.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/59">#59</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.3">在 GitHub 查看更新说明</a></p>]]></description>
+</style><h2>Blinky 1.5.4</h2><ul><li><strong>设置里的供应商收在「供应商」下。</strong> 打开设置后点侧栏的「供应商」进入各账号；在侧栏搜索仍可按名称找到账号。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>Blinky 菜单可以检查更新。</strong> 「检查更新」在「关于 Blinky」下面，打开的窗口与「设置 → 关于」里的检查更新相同。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>管理扩展、开发者集成和关于收在同一组。</strong> 这三项在设置侧栏底部的「其他」里。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>通用里的开机启动登记的是正在运行的这一份。</strong> 开关是「设置 → 通用」的第一行；从 Pulse.app 换成 Blinky.app 之后，若开关本来是开的，下次启动会登记正在运行的 Blinky.app。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>发现新版本时，更新窗口会到前面。</strong> 自动检查或「检查更新」发现新版本时，Blinky 会把 Sparkle 的更新窗口调到最前，并在安装前询问。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>更新窗口只显示正在提供的这一版。</strong> 窗口里的说明是这一版的更新记录，更早的版本不再叠在同一个窗口里。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.4">在 GitHub 查看更新说明</a></p>]]></description>
             <description xml:lang="zh-Hant"><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.3</h2><ul><li><strong>更新之后，访达里显示的是 Blinky。</strong> 文件名仍是 <code>Pulse.app</code> 的那一份，在下次打开时（包括应用内更新后的重新打开）会改名为 <code>Blinky.app</code>，前提是同一文件夹里还没有 <code>Blinky.app</code>；原先开着开机自启的，会按新文件重新登记，开关在「设置 → 通用」。<a href="https://github.com/harrisliangsu/blinky-mac/pull/58">#58</a></li><li><strong>预测重置的倒计时与标题同一行。</strong> Codex 卡片上，倒计时在「预测重置」的右侧，本地的日期和时刻在下一行。<a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/providers/codex.md">Docs/providers/codex.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/59">#59</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.3">在 GitHub 查看更新说明</a></p>]]></description>
+</style><h2>Blinky 1.5.4</h2><ul><li><strong>设置里的供应商收在「供应商」下。</strong> 打开设置后点侧栏的「供应商」进入各账号；在侧栏搜索仍可按名称找到账号。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>Blinky 菜单可以检查更新。</strong> 「检查更新」在「关于 Blinky」下面，打开的窗口与「设置 → 关于」里的检查更新相同。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>管理扩展、开发者集成和关于收在同一组。</strong> 这三项在设置侧栏底部的「其他」里。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>通用里的开机启动登记的是正在运行的这一份。</strong> 开关是「设置 → 通用」的第一行；从 Pulse.app 换成 Blinky.app 之后，若开关本来是开的，下次启动会登记正在运行的 Blinky.app。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>发现新版本时，更新窗口会到前面。</strong> 自动检查或「检查更新」发现新版本时，Blinky 会把 Sparkle 的更新窗口调到最前，并在安装前询问。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>更新窗口只显示正在提供的这一版。</strong> 窗口里的说明是这一版的更新记录，更早的版本不再叠在同一个窗口里。<a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.4">在 GitHub 查看更新说明</a></p>]]></description>
             <description xml:lang="en"><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.3</h2><ul><li><strong>An installed update shows up in Finder as Blinky.</strong> The next time a copy still named <code>Pulse.app</code> opens, including the relaunch after an in-app update, it renames itself to <code>Blinky.app</code> when that folder has no <code>Blinky.app</code> yet, and Open at login is registered again for the new file when it was already on (Settings → General). <a href="https://github.com/harrisliangsu/blinky-mac/pull/58">#58</a></li><li><strong>The predicted-reset countdown shares its title row.</strong> On the Codex card, the time remaining sits beside Predicted reset, and the local date and time are on the line below. <a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/providers/codex.md">Docs/providers/codex.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/59">#59</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.3">Release notes on GitHub</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.3/Blinky-1.5.3.zip"
-                       length="22092374"
+</style><h2>Blinky 1.5.4</h2><ul><li><strong>Settings lists every provider under Providers.</strong> Open Settings and choose Providers; search still finds an account by its name or the name you gave it. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>The Blinky menu checks for updates.</strong> Check for Updates… is under About and opens the same update window as the button in Settings → About. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>Manage extensions, Developer integrations and About share one section.</strong> They sit under Other at the bottom of the Settings sidebar. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>Open at login is the first row under General.</strong> The switch registers the copy that is running, including Blinky.app after a rename from Pulse.app, and simplified Chinese labels the row 开机启动. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>Sparkle&#x27;s update window comes forward.</strong> A check that finds a newer version, on the schedule or from Check for Updates…, brings that window to the front and asks before installing. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li><li><strong>The update window shows only the version being offered.</strong> Its notes are that version&#x27;s changelog entry, and earlier releases are not stacked in the same window. <a href="https://github.com/harrisliangsu/blinky-mac/pull/60">#60</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.4">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.4/Blinky-1.5.4.zip"
+                       length="22131269"
                        type="application/octet-stream"
-                       sparkle:edSignature="SjskviNJjpNbu1VVGSiAeGjqrraeWof8opz4qdtfpR3rRcuNipbMafxh+GTZEq+DjQL5AwbBA3W+KnxRWEWpDw==" />
+                       sparkle:edSignature="I9K7mVzpG2hz+p6Ena02QoiSJKLSjP35rLeucw8zGZ8JE45r2+1yn4r2vSanC2QLQwR95wFm7nj7hILwFh3UCg==" />
         </item>
     </channel>
 </rss>
