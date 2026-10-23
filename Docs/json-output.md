@@ -1,6 +1,6 @@
 # `--json`
 
-The bundled app is Blinky.app. This command is still the `Pulse` executable inside it. An update that replaces an older `Pulse.app` in place leaves that file name.
+The bundled app is Blinky.app. This command is still the `Pulse` executable inside it. A copy that has not opened since an update may still be named `Pulse.app`; the next ordinary launch renames it. This command returns before that rename.
 
 Owns: the JSON contract other people's status lines are built on. Where the figures come from and how often they move: [refresh-and-data.md](refresh-and-data.md).
 

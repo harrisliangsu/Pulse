@@ -2,7 +2,7 @@
 
 Pulse is a Swift package (`Package.swift`), macOS 14+, Swift tools 6.0. No linter; `swift test` covers rules and parsing ([testing.md](testing.md)). Open the package in Xcode or use the CLI.
 
-The bundled app is **Blinky.app**. `swift run Pulse` still builds the loose executable named `Pulse`. An in-app update replaces the copy already installed and does not rename a `Pulse.app` left from an older install. The disk image and the update archive are `Blinky-<version>.dmg` and `Blinky-<version>.zip`.
+The bundled app is **Blinky.app**. `swift run Pulse` still builds the loose executable named `Pulse`. An in-app update replaces the copy already installed; the next time a `Pulse.app` from an older install opens, it renames itself to `Blinky.app` when that folder has no `Blinky.app` yet. The disk image and the update archive are `Blinky-<version>.dmg` and `Blinky-<version>.zip`.
 
 User-facing clone-and-run stays in the README. **This file is the toolchain contract.** Shipping a tagged build, Sparkle, and the DMG: [releasing.md](releasing.md).
 

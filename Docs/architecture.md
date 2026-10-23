@@ -87,6 +87,7 @@ Upgrades preserve the saved enabled account ids, including extra-account-only ra
 - Bundled app: `SMAppService.mainApp` (what System Settings lists).
 - `swift run`: that API reports `notFound`. A launch agent is written to `~/Library/LaunchAgents` instead. No `KeepAlive`.
 - Rebuilding moves the executable; `repairPathIfNeeded` rewrites a stale agent. `LoginItem.adoptBundleIfNeeded` stops a leftover agent and `SMAppService` both launching after an upgrade.
+- `InstalledAppName` moves an installed `Pulse.app` to `Blinky.app` on launch when that name is free in the same folder, then relaunches from the new path. Open at login was path-based, so the relaunched copy registers it again once. The switch, if that register does not stick, is Settings → General → Open at login. [releasing.md](releasing.md)
 
 ## UserDefaults domain
 

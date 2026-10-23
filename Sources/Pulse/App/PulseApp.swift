@@ -46,6 +46,12 @@ enum PulseMain {
         // which `UserDefaults` domain that means.
         LegacyDefaults.migrateIfNeeded()
 
+        // After the defaults domain exists, so the login-item flag is written
+        // where the renamed bundle will read it. A rename replaces this
+        // process; the interface starts in the bundle that is already
+        // `Blinky.app`. `--json` and the status line have already returned.
+        InstalledAppName.adoptLegacyFileNameIfNeeded()
+
         PulseApp.main()
     }
 }

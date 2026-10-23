@@ -63,7 +63,7 @@
 ## Installation
 
 1. Download the latest **`Blinky-x.y.z.dmg`** from [Releases](https://github.com/harrisliangsu/blinky-mac/releases/latest).
-2. Open the disk image and drag **Blinky** into your `Applications` folder. The file is `Blinky.app`. If `Pulse.app` is already there, move it to the Trash once Blinky is in place; an in-app update does not rename that older file.
+2. Open the disk image and drag **Blinky** into your `Applications` folder. The file is `Blinky.app`. If `Pulse.app` is already there, the next time that copy opens it renames itself to `Blinky.app`, unless `Blinky.app` is already in the same folder — that copy stays where it is.
 3. On first launch, choose the services to monitor. All start unchecked; Blinky reads their credentials and checks usage only after you click **Done**. Closing the chooser leaves monitoring off; you can also enable a service in Settings. Upgrades keep your choices and ask once about newly supported services detected on your Mac.
 4. Blinky lives in the menu bar. If your menu bar is crowded, right-click the floating rail — or the collapsed sliver — and choose **Settings…**; you can also assign a global shortcut for it under **Settings › General › Shortcuts**.
 

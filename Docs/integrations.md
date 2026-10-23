@@ -22,7 +22,7 @@ Once Raycast registers the extension, search for **Show AI Usage**. Search by pr
 
 在 Raycast 搜索 **Show AI Usage**，可按服务商或账户名称筛选。回车直达对应账户设置；**⌘R 仅读取最新缓存**，不会强制请求服务商。
 
-If Blinky is installed outside `/Applications`, set the extension's **Blinky Executable** preference to the full path ending in `Blinky.app/Contents/MacOS/Pulse`. A copy that an update left named `Pulse.app` ends in `Pulse.app/Contents/MacOS/Pulse`. Enter a plain path, without shell quotes. An unreadable executable or malformed report shows an error with a retry action; an empty cache offers Blinky Settings.
+If Blinky is installed outside `/Applications`, set the extension's **Blinky Executable** preference to the full path ending in `Blinky.app/Contents/MacOS/Pulse`. A copy that has not opened since an update may still end in `Pulse.app/Contents/MacOS/Pulse`. Enter a plain path, without shell quotes. An unreadable executable or malformed report shows an error with a retry action; an empty cache offers Blinky Settings.
 
 ## Shell and tmux
 
@@ -39,7 +39,7 @@ Environment variables:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `PULSE_BIN` | `/Applications/Blinky.app/Contents/MacOS/Pulse`, then `~/Applications`, then a `Pulse.app` left in place by an update | Executable path, passed as one argument |
+| `PULSE_BIN` | `/Applications/Blinky.app/Contents/MacOS/Pulse`, then `~/Applications`, then a `Pulse.app` that has not opened since an update | Executable path, passed as one argument |
 | `PULSE_ACCOUNT` | All enabled accounts | Exact account id, including an added account's `#slot` |
 | `PULSE_MAX_AGE` | `1800` | Seconds before appending `(old)` |
 

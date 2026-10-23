@@ -150,9 +150,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundleDisplayName</key><string>Blinky</string>
     <!-- The name Sparkle looks for inside an update archive (SUHost.name).
          The Sparkle this package builds leaves
-         SPARKLE_NORMALIZE_INSTALLED_APPLICATION_NAME off, so an update still
-         replaces the bundle at its current path: an installed Pulse.app stays
-         Pulse.app. A new download is Blinky.app. See Docs/releasing.md. -->
+         SPARKLE_NORMALIZE_INSTALLED_APPLICATION_NAME off, so the installer
+         still replaces the bundle at its current path. InstalledAppName
+         renames a Pulse.app to Blinky.app on the next launch when that
+         name is free. A new download is already Blinky.app. See Docs/releasing.md. -->
     <key>SUBundleName</key><string>Blinky</string>
     <key>CFBundleExecutable</key><string>Pulse</string>
     <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
