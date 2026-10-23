@@ -8,9 +8,9 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.5.9
 
-- **打开 Blinky 会显示主窗口。** 从访达、Spotlight、启动台或 Dock 打开时，会打开标题为 Blinky 的窗口并停在「外观」；开机自启默认只留在菜单栏，要一并打开主窗口，可在「设置 → 通用 → 启动与窗口」打开「开机自启时显示主窗口」。[Docs/architecture.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/architecture.md#login-item)
-- **Dock 图标可以一直留着。** 同一组里的「始终显示 Dock 图标」会让 Blinky 留在 Dock 和 ⌘-Tab 中；「打开窗口时显示 Dock 图标」在该开关关闭时仍然有效，主窗口、用量报告和选择服务的窗口都算在内。
-- **开机自启时先不询问。** 选择服务的窗口和初次提问会等到下一次手动打开，若菜单栏图标因为没有其他入口而被重新打开，「通用」里会写明原因。
+- **打开 Blinky 会显示主窗口。** 从访达、Spotlight、启动台或 Dock 打开时，会打开标题为 Blinky 的窗口并停在「外观」；开机自启默认只留在菜单栏，要一并打开主窗口，可在「设置 → 通用 → 启动与窗口」打开「开机自启时显示主窗口」。[Docs/architecture.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/architecture.md#login-item) [#70](https://github.com/harrisliangsu/blinky-mac/pull/70)
+- **Dock 图标可以一直留着。** 同一组里的「始终显示 Dock 图标」会让 Blinky 留在 Dock 和 ⌘-Tab 中；「打开窗口时显示 Dock 图标」在该开关关闭时仍然有效，主窗口、用量报告和选择服务的窗口都算在内。[#70](https://github.com/harrisliangsu/blinky-mac/pull/70)
+- **开机自启时先不询问。** 选择服务的窗口和初次提问会等到下一次手动打开，若菜单栏图标因为没有其他入口而被重新打开，「通用」里会写明原因。[#70](https://github.com/harrisliangsu/blinky-mac/pull/70)
 
 ## 1.5.8
 
