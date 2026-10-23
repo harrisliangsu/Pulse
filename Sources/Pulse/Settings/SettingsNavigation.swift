@@ -10,13 +10,17 @@ final class SettingsNavigation {
         didSet {
             // Every way to a pane — the sidebar, a link, a button in a
             // pane — is a step the back button can undo; going back and
-            // forward is not.
+            // forward is not. Restoring the last pane is not a step either.
             guard pane != oldValue, !isStepping else { return }
             back.append(oldValue)
             if back.count > Self.depth { back.removeFirst() }
             forward.removeAll()
+            remember?(pane)
         }
     }
+    /// Writes the pane so the next launch can open it again. Not called
+    /// while a stored pane is being put back.
+    var remember: ((SettingsPane) -> Void)?
     var isWindowVisible = false
     private(set) var requestID = UUID()
 
@@ -49,6 +53,15 @@ final class SettingsNavigation {
         }
     }
 
+    /// Puts a stored pane back without recording a step and without writing
+    /// it again.
+    func restore(_ pane: SettingsPane) {
+        guard pane != self.pane else { return }
+        isStepping = true
+        self.pane = pane
+        isStepping = false
+    }
+
     /// Goes to a pane, as a link does.
     func open(_ pane: SettingsPane) {
         self.pane = pane
@@ -65,5 +78,59 @@ final class SettingsNavigation {
             pane = .account(account)
         }
         requestID = UUID()
+    }
+}
+
+/// The last settings pane, so the control on the usage card can open it
+/// again. The key is new. Older installs have no value and open Appearance,
+/// which is where the window already opened.
+enum SettingsPaneBookmark {
+    static let key = "settings.lastPane"
+
+    static func write(_ pane: SettingsPane, to defaults: UserDefaults) {
+        defaults.set(token(for: pane), forKey: key)
+    }
+
+    static func read(from defaults: UserDefaults, accounts: [AccountKey]) -> SettingsPane? {
+        guard let raw = defaults.string(forKey: key) else { return nil }
+        return pane(from: raw, accounts: accounts)
+    }
+
+    static func token(for pane: SettingsPane) -> String {
+        switch pane {
+        case .appearance: "appearance"
+        case .usageCard: "usageCard"
+        case .placement: "placement"
+        case .general: "general"
+        case .notifications: "notifications"
+        case .network: "network"
+        case .spend: "spend"
+        case .about: "about"
+        case .integrations: "integrations"
+        case .extensions: "extensions"
+        case .providers: "providers"
+        case .account(let account): "account:\(account.id)"
+        }
+    }
+
+    static func pane(from token: String, accounts: [AccountKey]) -> SettingsPane? {
+        switch token {
+        case "appearance": .appearance
+        case "usageCard": .usageCard
+        case "placement": .placement
+        case "general": .general
+        case "notifications": .notifications
+        case "network": .network
+        case "spend": .spend
+        case "about": .about
+        case "integrations": .integrations
+        case "extensions": .extensions
+        case "providers": .providers
+        default:
+            guard token.hasPrefix("account:") else { return nil }
+            let id = String(token.dropFirst("account:".count))
+            guard let account = AccountKey(id: id) else { return nil }
+            return accounts.contains(account) ? .account(account) : .providers
+        }
     }
 }

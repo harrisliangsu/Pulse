@@ -482,6 +482,14 @@ struct SpendGlanceRead {
         readID = nil
         return true
     }
+
+    /// Shows a snapshot the caller already holds, without a scan. The glance
+    /// window tests use an empty one so Share can be clicked.
+    mutating func install(_ snapshot: AgentLedgers.Snapshot) {
+        self.snapshot = snapshot
+        snapshotID = UUID()
+        readID = nil
+    }
 }
 
 /// The strings the share image draws. Built from the summary on screen, so a

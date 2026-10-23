@@ -15,7 +15,7 @@ struct SettingsSidebar: View {
     let search: String
 
     var body: some View {
-        List(selection: $navigation.pane) {
+        List(selection: selection) {
             if SettingsPane.panel.contains(where: matches) || matches(.spend) {
                 Section(String.localized("Panel")) {
                     ForEach(SettingsPane.panel.filter(matches), id: \.self) { row($0) }
@@ -26,19 +26,6 @@ struct SettingsSidebar: View {
             if SettingsPane.application.contains(where: matches) {
                 Section(String.localized("Application")) {
                     ForEach(SettingsPane.application.filter(matches), id: \.self) { row($0) }
-                }
-            }
-
-            // One row for every built-in account. The open account stays
-            // under it so that row's selection tag is still in the list.
-            if matches(.providers) {
-                Section {
-                    row(.providers)
-                    if !isSearching {
-                        ForEach(listedProviderAccounts) { account in
-                            row(.account(account))
-                        }
-                    }
                 }
             }
 
@@ -102,16 +89,40 @@ struct SettingsSidebar: View {
         matchingAccounts.filter { $0.provider == .pulseExtension }
     }
 
-    private var openAccount: AccountKey? {
-        if case .account(let account) = navigation.pane { return account }
-        return nil
+    private var listedProviderAccounts: [AccountKey] {
+        SettingsProviderListing.accounts(searching: isSearching, matches: matchingProviderAccounts)
     }
 
-    private var listedProviderAccounts: [AccountKey] {
-        SettingsProviderListing.accounts(
-            searching: isSearching,
-            matches: matchingProviderAccounts,
-            open: openAccount
+    /// Every row tag currently in the list. The selection highlight has to
+    /// be one of these: a provider account maps back to Providers.
+    private var listedRows: [SettingsPane] {
+        var rows: [SettingsPane] = []
+        if SettingsPane.panel.contains(where: matches) || matches(.spend) {
+            rows += SettingsPane.panel.filter(matches)
+            if matches(.spend) { rows.append(.spend) }
+        }
+        if SettingsPane.application.contains(where: matches) {
+            rows += SettingsPane.application.filter(matches)
+        }
+        if isSearching {
+            rows += listedProviderAccounts.map(SettingsPane.account)
+        }
+        if showsBottom {
+            if matches(.extensions) { rows.append(.extensions) }
+            rows += matchingExtensionAccounts.map(SettingsPane.account)
+            if matches(.integrations) { rows.append(.integrations) }
+            if matches(.about) { rows.append(.about) }
+        }
+        return rows
+    }
+
+    private var selection: Binding<SettingsPane> {
+        Binding(
+            get: { SettingsPane.sidebarRow(for: navigation.pane, listed: listedRows) },
+            set: { pane in
+                guard navigation.pane != pane else { return }
+                navigation.open(pane)
+            }
         )
     }
 

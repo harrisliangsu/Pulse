@@ -78,7 +78,7 @@ struct AccountPane: View {
             // is per account, because the providers that report a balance do
             // not price in the same currency.
             if flows.fields.reportsBalance(account) {
-                SettingsGroup(String.localized("Notifications")) {
+                SettingsGroup(String.localized("Low balance")) {
                     LowBalanceRow(account: account, fields: flows.fields)
                 }
             }

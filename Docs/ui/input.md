@@ -59,9 +59,9 @@ Taken in `sendEvent` rather than with SwiftUI's `.contextMenu`, for the reason e
 
 ## The Token spend button
 
-It sits on the usage card's header with Settings and Quit, and only while Token spend is on. It is a `HeaderIconButton`: `PointerHand` records the press and fires on mouse-up. Hovering a ring still opens that provider's card; the summary opens only from this click.
+It sits on the usage card's header with Open Blinky and Quit, and only while Token spend is on. It is a `HeaderIconButton`: `PointerHand` records the press and fires on mouse-up. Hovering a ring still opens that provider's card; the summary opens only from this click.
 
-The summary is a separate window that can become key, so Escape, the close button, and a click outside dismiss it. The hosting view covers the traffic light, so the close click is taken in the window's `sendEvent` rather than by the button, and Escape is taken there too while the window is key. The click-outside monitor ignores the button's screen rectangle, so that same click toggles the window closed. A press on the rail is still `FloatingPanel.sendEvent` and is not this button. [../token-spend.md](../token-spend.md#the-glance-window)
+The summary is a separate window that can become key, so Escape, the close button, and a click outside dismiss it. The close button is the window's own, not a click the content view takes in `sendEvent`. The click-outside monitor ignores the button's screen rectangle, and it ignores a menu, so that same click toggles the window closed and choosing a span does not. A press on the rail is still `FloatingPanel.sendEvent` and is not this button. The control that used to be a gear is Blinky's icon, labelled Open Blinky, and it opens the main window on the pane last shown. [../token-spend.md](../token-spend.md#the-glance-window)
 
 ## Global shortcuts
 

@@ -1407,3 +1407,27 @@
 "Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking." = "두 시간마다. 아래 선택에 따라 알리거나, 업데이트 창을 열거나, 묻지 않고 설치합니다.";
 "By hour" = "시간별";
 "Copied to the clipboard." = "클립보드에 복사했습니다.";
+
+/* 1.5.11 */
+"Limit reminders" = "한도 알림";
+"Running out" = "소진";
+"Monthly recap" = "월간 요약";
+"When it is running out" = "소진될 때";
+"Remaining hours" = "남은 시간";
+"Will not last until the reset" = "초기화까지 못 갈 때";
+"Exhaustion estimate" = "소진 예상";
+"Show the estimate" = "예상 표시";
+"When it is ready" = "준비되었을 때";
+"When it is down" = "장애가 있을 때";
+"Open Blinky" = "Blinky 열기";
+"Could not copy." = "복사하지 못했습니다.";
+"Low balance" = "잔액 부족";
+"Writes a line under the weekly limit, or under the longest other limit when there is no weekly one, about how long it may last. A five-hour limit is left out." = "주간 한도 아래에, 현재 속도로 얼마나 더 갈 수 있는지 한 줄을 씁니다. 주간 한도가 없으면 나머지 중 가장 긴 한도에 씁니다. 5시간 한도는 쓰지 않습니다.";
+"Notifies once when the time left reaches a stage, on the weekly limit, or on the longest other limit when there is no weekly one. A five-hour limit is left out." = "남은 시간이 단계에 닿으면 한 번 알립니다. 대상은 주간 한도입니다. 주간 한도가 없으면 나머지 중 가장 긴 한도입니다. 5시간 한도는 알리지 않습니다.";
+"The estimate and the running-out notices both use this list." = "소진 예상과 소진 알림이 이 목록을 함께 씁니다.";
+"The furthest time, in hours, at which a countdown is written." = "카운트다운을 적는 가장 먼 시간(시간)입니다.";
+"Further out, it says the pace may not last until the reset, and does not write a time." = "그보다 멀면, 초기화까지 버티지 못할 수 있다고만 쓰고 시각은 쓰지 않습니다.";
+"When the pace will not last until the reset, it writes roughly how long is left." = "초기화까지 버티지 못할 때는 남은 시간을 대략 씁니다.";
+"Each part also shows the credits, such as 5,843 / 6,000. The rings keep their percentages." = "각 부분의 크레딧도 함께 보여 줍니다. 예: 5,843 / 6,000. 고리는 백분율을 유지합니다.";
+"Sends a separate notice when the current pace will not last until the reset, on that same limit." = "초기화까지 버티지 못할 때, 같은 한도에 대해 따로 한 번 알립니다.";
+"Each stage notifies once, at its own hours left, on that same limit. A new install starts with 24 hours." = "각 단계는 자신의 남은 시간에 한 번씩, 같은 한도에 대해 알립니다. 처음에는 24시간입니다.";

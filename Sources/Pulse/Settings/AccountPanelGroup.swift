@@ -1,8 +1,10 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import SwiftUI
 
-/// An account's Panel card: whether it is on the rail, which limit its ring
-/// follows, its detailed card, and how its mark and ring are drawn.
+/// An account's panel rows, in two groups. What the usage card adds (on the
+/// rail, reset credits, the detailed card) stays under Panel. How that
+/// account's ring and mark are drawn is Appearance, on this page. The
+/// rail's own colours stay on the Appearance pane.
 struct AccountPanelGroup: View {
     let account: AccountKey
     let store: UsageStore
@@ -11,6 +13,14 @@ struct AccountPanelGroup: View {
     private var provider: Provider { account.provider }
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            panelGroup
+            appearanceGroup
+        }
+    }
+
+    /// Whether this account is on the rail, and what its usage card adds.
+    private var panelGroup: some View {
         SettingsGroup(String.localized("Panel")) {
             SettingsRow(String.localized("Show in panel")) {
                 Toggle("", isOn: Binding(
@@ -24,19 +34,6 @@ struct AccountPanelGroup: View {
                 .disabled(settings.isEnabled(account) && settings.enabledAccounts.count == 1)
             }
 
-            SettingsRowDivider()
-
-            ringWindowRow(for: account)
-
-            // Only where there is more than one budget to split. Every
-            // other provider reports one pool, and a switch that promises
-            // a second ring it can never draw is worse than no switch.
-            if provider.splitsByModelGroup {
-                SettingsRowDivider()
-
-                splitRow(for: account)
-            }
-
             // Codex's first account only: the count comes from the app
             // server, which reads the login the CLI saved — not an
             // account Pulse signed in to itself.
@@ -44,7 +41,7 @@ struct AccountPanelGroup: View {
                 SettingsRowDivider()
 
                 SettingsRow(
-                    String.localized("Reset credits on the card"),
+                    String.localized("Limit reset credits"),
                     subtitle: String.localized("How many limit reset credits are left, and when the next one expires. Asks Codex's app server on every refresh.")
                 ) {
                     Toggle("", isOn: Binding(
@@ -81,7 +78,7 @@ struct AccountPanelGroup: View {
                 // On the card only: the rail keeps its percentages.
                 SettingsRow(
                     String.localized("Show credit amounts"),
-                    subtitle: String.localized("Each row on the card also shows the credits, such as 5,843 / 6,000. The rail keeps its percentages.")
+                    subtitle: String.localized("Each part also shows the credits, such as 5,843 / 6,000. The rings keep their percentages.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { settings.qoderShowsAmounts },
@@ -108,6 +105,23 @@ struct AccountPanelGroup: View {
                 ))
                 .labelsHidden()
                 .toggleStyle(.switch)
+            }
+
+        }
+    }
+
+    /// Ring, colour, and the animated mark. Global colour stays on Appearance.
+    private var appearanceGroup: some View {
+        SettingsGroup(String.localized("Appearance")) {
+            ringWindowRow(for: account)
+
+            // Only where there is more than one budget to split. Every
+            // other provider reports one pool, and a switch that promises
+            // a second ring it can never draw is worse than no switch.
+            if provider.splitsByModelGroup {
+                SettingsRowDivider()
+
+                splitRow(for: account)
             }
 
             SettingsRowDivider()

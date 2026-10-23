@@ -1405,3 +1405,27 @@
 "Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking." = "Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking.";
 "By hour" = "By hour";
 "Copied to the clipboard." = "Copied to the clipboard.";
+
+/* 1.5.11 */
+"Limit reminders" = "Limit reminders";
+"Running out" = "Running out";
+"Monthly recap" = "Monthly recap";
+"When it is running out" = "When it is running out";
+"Remaining hours" = "Remaining hours";
+"Will not last until the reset" = "Will not last until the reset";
+"Exhaustion estimate" = "Exhaustion estimate";
+"Show the estimate" = "Show the estimate";
+"When it is ready" = "When it is ready";
+"When it is down" = "When it is down";
+"Open Blinky" = "Open Blinky";
+"Could not copy." = "Could not copy.";
+"Low balance" = "Low balance";
+"Writes a line under the weekly limit, or under the longest other limit when there is no weekly one, about how long it may last. A five-hour limit is left out." = "Writes a line under the weekly limit, or under the longest other limit when there is no weekly one, about how long it may last. A five-hour limit is left out.";
+"Notifies once when the time left reaches a stage, on the weekly limit, or on the longest other limit when there is no weekly one. A five-hour limit is left out." = "Notifies once when the time left reaches a stage, on the weekly limit, or on the longest other limit when there is no weekly one. A five-hour limit is left out.";
+"The estimate and the running-out notices both use this list." = "The estimate and the running-out notices both use this list.";
+"The furthest time, in hours, at which a countdown is written." = "The furthest time, in hours, at which a countdown is written.";
+"Further out, it says the pace may not last until the reset, and does not write a time." = "Further out, it says the pace may not last until the reset, and does not write a time.";
+"When the pace will not last until the reset, it writes roughly how long is left." = "When the pace will not last until the reset, it writes roughly how long is left.";
+"Each part also shows the credits, such as 5,843 / 6,000. The rings keep their percentages." = "Each part also shows the credits, such as 5,843 / 6,000. The rings keep their percentages.";
+"Sends a separate notice when the current pace will not last until the reset, on that same limit." = "Sends a separate notice when the current pace will not last until the reset, on that same limit.";
+"Each stage notifies once, at its own hours left, on that same limit. A new install starts with 24 hours." = "Each stage notifies once, at its own hours left, on that same limit. A new install starts with 24 hours.";

@@ -123,13 +123,13 @@ The arc rides the **empty ring** between icon and usage stroke, in Core Animatio
 
 ## Forecast (`BurnRate`)
 
-On unless a stored choice says otherwise (`showsForecast`). One line under a limit, worded as a **projection**. The card switches live in Settings → Usage card, in Exhaustion on the card and Which accounts. The notices that use the same pace are on Exhaustion and reminders ([notifications.md](notifications.md#time-to-empty)).
+On unless a stored choice says otherwise (`showsForecast`). One line under the weekly limit, worded as a **projection**. A reading with no weekly limit uses its longest other limit that states a length. A five-hour limit is never that line (`ExhaustionEstimate`). The switches live in Settings → Usage, in Exhaustion estimate and Which accounts. The notices that use the same pace are on Notifications, in Running out ([notifications.md](notifications.md#time-to-empty)).
 
 - Rate = spent share / elapsed share from **one** reading (trailing samples were dropped: [decisions/reported-figures.md](decisions/reported-figures.md#ledger-and-burn-rate)).
-- Needs a reported percentage, a reset and `reportsLength`, so sort-key lengths fall out. Codex's 5-hour and weekly windows state both, including a length sent as text and a reset sent as milliseconds or as `reset_after_seconds` when the stamp is missing. A missing length is not a stated one.
+- Needs a reported percentage, a reset and `reportsLength`, so sort-key lengths fall out. Codex's weekly window states both, including a length sent as text and a reset sent as milliseconds or as `reset_after_seconds` when the stamp is missing. A missing length is not a stated one. The five-hour window states them too, and the card still does not estimate it.
 - `reading` keeps the time whenever the pace runs out before the reset. The card states that time only inside the reader's horizon (6 hours unless moved). Past it, the reset sentence or the quieter hint, as those switches say. A day and some hours is how a weekly span is worded (“1d 13h”), rounded the same way an hour is.
-- A floor on elapsed share (`minimumElapsed`, 3%); a barely-open window is not divided into.
-- The line is inside `DetailCardLayout`'s budget whenever the card switch is on, including for an account left off the list, so the window does not change size from one card to the next.
+- A floor on elapsed share (`minimumElapsed`, 3%). Below it, nothing is divided. Little spent (`earlyQuietUsed`, 5%) is said to last the window, which is what a weekly limit at about 99% left was missing for the whole morning after it reset. A window already well spent stays quiet until the floor.
+- The line is inside `DetailCardLayout`'s budget whenever the card switch is on, including for an account left off the list and for a window the estimate does not draw, so the window does not change size from one card to the next.
 
 ## Spending history and the estimate
 

@@ -1,9 +1,9 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import SwiftUI
 
-/// What the floating usage card shows: the figures, the second ring, the
-/// reset clock, the exhaustion forecast, and which accounts that forecast
-/// shares with the exhaustion notifications.
+/// What usage shows: the figures, the second ring, the reset clock, the
+/// exhaustion estimate, and which accounts that estimate shares with the
+/// running-out notices.
 struct UsageCardPane: View {
     let settings: AppSettings
 
@@ -151,12 +151,12 @@ struct UsageCardPane: View {
         }
     }
 
-    /// The forecast line on the card. Usable without a notification grant.
+    /// The estimate under the weekly limit. Usable without a notification grant.
     private var exhaustionCardGroup: some View {
         SettingsGroup(ExhaustionSettingsSections.card) {
             SettingsRow(
-                String.localized("On the card"),
-                subtitle: String.localized("Under each limit that has a length and a reset, the card adds a line about how long it may last.")
+                String.localized("Show the estimate"),
+                subtitle: String.localized("Writes a line under the weekly limit, or under the longest other limit when there is no weekly one, about how long it may last. A five-hour limit is left out.")
             ) {
                 Toggle("", isOn: Binding(
                     get: { settings.showsForecast },
@@ -172,7 +172,7 @@ struct UsageCardPane: View {
 
                 SettingsRow(
                     String.localized("Countdown up to"),
-                    subtitle: String.localized("The furthest time, in hours, at which the card writes a countdown."),
+                    subtitle: String.localized("The furthest time, in hours, at which a countdown is written."),
                     nested: true
                 ) {
                     ExhaustionHoursStepper(
@@ -189,7 +189,7 @@ struct UsageCardPane: View {
 
                 SettingsRow(
                     String.localized("May run out before reset"),
-                    subtitle: String.localized("Further out, the card says it may not last until the reset, and does not write a time."),
+                    subtitle: String.localized("Further out, it says the pace may not last until the reset, and does not write a time."),
                     nested: true
                 ) {
                     Toggle("", isOn: Binding(
@@ -205,7 +205,7 @@ struct UsageCardPane: View {
 
                 SettingsRow(
                     String.localized("Say roughly when"),
-                    subtitle: String.localized("When the pace will not last until the reset, the card writes roughly how long is left."),
+                    subtitle: String.localized("When the pace will not last until the reset, it writes roughly how long is left."),
                     nested: true
                 ) {
                     Toggle("", isOn: Binding(
@@ -225,7 +225,7 @@ struct UsageCardPane: View {
         SettingsGroup(ExhaustionSettingsSections.accounts) {
             SettingsRow(
                 String.localized("Accounts"),
-                subtitle: String.localized("The card's forecast and the exhaustion notifications both use this list.")
+                subtitle: String.localized("The estimate and the running-out notices both use this list.")
             ) {
                 Picker("", selection: Binding(
                     get: { settings.exhaustionAllAccounts },

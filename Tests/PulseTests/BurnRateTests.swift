@@ -60,6 +60,17 @@ struct BurnRateTests {
         let fresh = Self.window(used: 0.9, resetsAt: Self.now.addingTimeInterval(604_800 * 0.99))
         #expect(BurnRate.reading(for: fresh, now: Self.now) == nil)
 
+        let barely = Self.window(used: 0.01, resetsAt: Self.now.addingTimeInterval(604_800 * 0.99))
+        let quiet = BurnRate.reading(for: barely, now: Self.now)
+        #expect(quiet?.exhaustsBeforeReset == false)
+        #expect(quiet?.timeToExhaustion == nil)
+        #expect(BurnRate.cardLine(
+            for: barely, reading: quiet!, horizon: 6 * 3600, softHint: true, beforeReset: true
+        )?.tone == .lasts)
+
+        let burst = Self.window(used: BurnRate.earlyQuietUsed, resetsAt: Self.now.addingTimeInterval(604_800 * 0.99))
+        #expect(BurnRate.reading(for: burst, now: Self.now) == nil)
+
         let unstated = Self.window(used: 0.8, resetsAt: Self.now.addingTimeInterval(302_400), reportsLength: false)
         #expect(BurnRate.reading(for: unstated, now: Self.now) == nil)
 

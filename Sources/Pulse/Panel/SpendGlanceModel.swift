@@ -24,6 +24,7 @@ final class SpendGlanceModel {
     var observedAt: Date?
     var hasReadLimitations = false
     var didCopy = false
+    var copyFailed = false
     /// Set once the span's figures match `summaryRequest`. Share stays off
     /// until then, so a click cannot copy the empty summary still on screen
     /// while the arithmetic is in flight.
@@ -141,6 +142,7 @@ final class SpendGlanceModel {
     }
 
     func noteCopied(hold: Duration = SpendGlanceCopy.hold) {
+        copyFailed = false
         didCopy = true
         copyClear?.cancel()
         copyClear = Task { [weak self] in
@@ -148,6 +150,21 @@ final class SpendGlanceModel {
             guard !Task.isCancelled else { return }
             self?.didCopy = false
         }
+    }
+
+    func noteCopyFailed() {
+        copyClear?.cancel()
+        didCopy = false
+        copyFailed = true
+    }
+
+    /// Shows an empty summary as ready, so Share can be clicked without
+    /// walking the stores. A later open reuses it (`SpendGlanceRead` retains
+    /// a snapshot it already holds).
+    func presentReadySummary() {
+        isOpen = true
+        read.install(AgentLedgers.Snapshot())
+        displayedRequest = summaryRequest
     }
 
     private func adopt(_ snapshot: AgentLedgers.Snapshot, at date: Date) {

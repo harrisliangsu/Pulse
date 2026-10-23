@@ -49,21 +49,90 @@ struct SettingsNavigationTests {
         #expect(navigation.back.isEmpty)
     }
 
-    @Test("The panel lists Usage card, and Rings and figures is not a pane")
+    @Test("Usage and Notifications are the pane names, and the old names still find them")
     func usageCardReplacesRings() {
         LocalizationSource.use(.english)
         defer { LocalizationSource.use(.system) }
 
         #expect(SettingsPane.panel == [.appearance, .usageCard, .placement])
-        #expect(SettingsPane.usageCard.title == "Usage card")
-        #expect(SettingsPane.notifications.title == "Exhaustion and reminders")
+        #expect(SettingsPane.usageCard.title == "Usage")
+        #expect(SettingsPane.notifications.title == "Notifications")
         #expect(SettingsPane.usageCard.searchTerms.contains("Percentages at the side"))
-        #expect(SettingsPane.usageCard.searchTerms.contains("Exhaustion on the card"))
+        #expect(SettingsPane.usageCard.searchTerms.contains("Exhaustion estimate"))
+        #expect(SettingsPane.usageCard.searchTerms.contains("Usage card"))
         #expect(SettingsPane.usageCard.searchTerms.contains("Which accounts"))
         #expect(SettingsPane.appearance.searchTerms.contains("Ring colour scheme"))
         #expect(SettingsPane.appearance.searchTerms.contains("Colour"))
         #expect(!SettingsPane.notifications.searchTerms.contains("What the card shows"))
-        #expect(SettingsPane.notifications.searchTerms.contains("Exhaustion notifications"))
+        #expect(SettingsPane.notifications.searchTerms.contains("Running out"))
+        #expect(SettingsPane.notifications.searchTerms.contains("When it is running out"))
         #expect(SettingsPane.notifications.searchTerms.contains("Notify when a limit is running out"))
+
+        LocalizationSource.use(.chineseSimplified)
+        #expect(SettingsPane.usageCard.title == "用量")
+        #expect(SettingsPane.notifications.title == "通知")
+        #expect(String.localized("Usage card") == "用量卡片")
+        #expect(String.localized("Exhaustion and reminders") == "用尽与提醒")
+    }
+
+    @Test("Opening a provider keeps Providers selected, and an extension stays its own row")
+    func sidebarSelection() {
+        let codex = AccountKey(.codex)
+        let ext = AccountKey(.pulseExtension, slot: "demo")
+        let listed = SettingsPane.fixedPanes
+
+        #expect(SettingsPane.application == [.general, .notifications, .network, .providers])
+        #expect(SettingsPane.fixedPanes.filter { $0 == .providers }.count == 1)
+        #expect(SettingsPane.sidebarRow(for: .account(codex), listed: listed) == .providers)
+        #expect(SettingsPane.sidebarRow(for: .account(ext), listed: listed) == .extensions)
+        #expect(SettingsPane.sidebarRow(for: .account(ext), listed: listed + [.account(ext)]) == .account(ext))
+        #expect(SettingsPane.sidebarRow(for: .account(codex), listed: listed + [.account(codex)]) == .account(codex))
+        #expect(SettingsPane.sidebarRow(for: .notifications, listed: listed) == .notifications)
+    }
+
+    @Test("Back from a provider returns to Providers, and the toolbar can go forward again")
+    func providerBackIsAStep() {
+        let navigation = SettingsNavigation()
+        let codex = AccountKey(.codex)
+        navigation.open(.providers)
+        navigation.open(.account(codex))
+        #expect(navigation.back == [.appearance, .providers])
+
+        // The in-pane Back is a new step, so the toolbar can return to the account.
+        navigation.open(.providers)
+        #expect(navigation.pane == .providers)
+        navigation.goBack(where: always)
+        #expect(navigation.pane == .account(codex))
+        navigation.goForward(where: always)
+        #expect(navigation.pane == .providers)
+    }
+
+    @Test("The last pane is stored, and a removed account opens Providers")
+    func lastPane() {
+        let (defaults, cleanup) = AppSettingsPersistenceTests.isolatedDefaults()
+        defer { cleanup() }
+        let codex = AccountKey(.codex)
+
+        SettingsPaneBookmark.write(.notifications, to: defaults)
+        #expect(defaults.string(forKey: SettingsPaneBookmark.key) == "notifications")
+        #expect(SettingsPaneBookmark.read(from: defaults, accounts: []) == .notifications)
+
+        SettingsPaneBookmark.write(.account(codex), to: defaults)
+        #expect(SettingsPaneBookmark.read(from: defaults, accounts: [codex]) == .account(codex))
+        #expect(SettingsPaneBookmark.read(from: defaults, accounts: []) == .providers)
+
+        defaults.set("nope", forKey: SettingsPaneBookmark.key)
+        #expect(SettingsPaneBookmark.read(from: defaults, accounts: []) == nil)
+
+        let navigation = SettingsNavigation()
+        var remembered: [SettingsPane] = []
+        navigation.remember = { remembered.append($0) }
+        navigation.restore(.usageCard)
+        #expect(navigation.pane == .usageCard)
+        #expect(navigation.back.isEmpty)
+        #expect(remembered.isEmpty)
+        navigation.open(.general)
+        #expect(remembered == [.general])
+        #expect(navigation.back == [.usageCard])
     }
 }

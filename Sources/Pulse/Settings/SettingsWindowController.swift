@@ -48,6 +48,12 @@ final class SettingsWindowController {
         self.shortcuts = shortcuts
         self.dock = dock
         self.openRecap = openRecap
+        navigation.remember = { [defaults = settings.defaults] pane in
+            SettingsPaneBookmark.write(pane, to: defaults)
+        }
+        if let stored = SettingsPaneBookmark.read(from: settings.defaults, accounts: settings.allAccounts) {
+            navigation.restore(stored)
+        }
     }
 
     /// Opens on a pane, or on the one last shown. The Dock icon follows the

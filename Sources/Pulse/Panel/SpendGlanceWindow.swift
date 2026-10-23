@@ -10,7 +10,8 @@ import SwiftUI
 @MainActor
 final class SpendGlanceController {
     private let settings: AppSettings
-    private let model: SpendGlanceModel
+    let model: SpendGlanceModel
+    private let dock: DockPresence?
     private var window: SpendGlancePanel?
     private var localMonitor: Any?
     private var globalMonitor: Any?
@@ -21,8 +22,9 @@ final class SpendGlanceController {
     /// the panel controller, which is created beside this one.
     var anchor: () -> SpendGlanceAnchor? = { nil }
 
-    init(settings: AppSettings) {
+    init(settings: AppSettings, dock: DockPresence? = nil) {
         self.settings = settings
+        self.dock = dock
         model = SpendGlanceModel(settings: settings)
     }
 
@@ -48,7 +50,7 @@ final class SpendGlanceController {
         self.window = window
         model.isOpen = true
         if let anchor = anchor(), !window.isVisible {
-            window.level = anchor.level
+            window.level = SpendGlanceWindowLevel.above(anchor.level)
             let frame = SpendGlancePlacement.frame(
                 rail: anchor.rail,
                 edge: anchor.edge,
@@ -58,30 +60,25 @@ final class SpendGlanceController {
             window.setFrame(frame, display: false)
         }
         window.title = String.localized("Token spend")
-        // The button is created with the titled window. A panel that is not key
-        // can leave it disabled, and a disabled close button ignores the click.
         window.standardWindowButton(.closeButton)?.isEnabled = true
         installMonitors()
-        // Activate before making key. On an accessory app, `makeKey` in the
-        // same turn as the order can leave the window in front but not key,
-        // and then Escape is delivered to nobody. One more attempt next turn
-        // covers that, and does nothing once the window is already key or gone.
-        NSApp.activate(ignoringOtherApps: true)
+        dock?.track(window)
+        // Same activation as the main window. A utility panel at the rail's
+        // level never became key, so menus and the close button received nothing.
         window.makeKeyAndOrderFront(nil)
-        DispatchQueue.main.async { [weak window] in
-            MainActor.assumeIsolated {
-                guard let window, window.isVisible else { return }
-                window.standardWindowButton(.closeButton)?.isEnabled = true
-                guard !window.isKeyWindow else { return }
-                NSApp.activate(ignoringOtherApps: true)
-                window.makeKey()
-            }
+        if let dock {
+            dock.apply(showingWindow: window)
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKey()
         }
     }
 
     func close() {
         model.isOpen = false
+        let closing = window
         window?.orderOut(nil)
+        if let closing { dock?.apply(closing: closing) }
         // `NSEvent.removeMonitor` must not run inside the monitor's own
         // handler. Escape and a click outside both come through that handler,
         // so the removal waits until this call has returned.
@@ -97,27 +94,30 @@ final class SpendGlanceController {
     }
 
     private func share() {
-        guard SpendGlanceExport.copy(model.picture) else { return }
-        model.noteCopied()
+        if SpendGlanceExport.copy(model.picture) {
+            model.noteCopied()
+        } else {
+            model.noteCopyFailed()
+        }
     }
 
     private func makeWindow() -> SpendGlancePanel {
+        // A normal window, not a utility panel. A utility panel at the rail's
+        // level does not become key, and SwiftUI menus and buttons in it
+        // never see the click. The title bar is the system's, so the close
+        // button is not covered by the content view.
         let window = SpendGlancePanel(
             contentRect: NSRect(origin: .zero, size: SpendGlancePlacement.size),
-            styleMask: [.titled, .closable, .fullSizeContentView, .utilityWindow],
+            styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
         window.isReleasedWhenClosed = false
-        window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
-        window.isMovableByWindowBackground = false
+        window.titleVisibility = .visible
+        window.titlebarAppearsTransparent = false
+        window.isMovableByWindowBackground = true
         window.backgroundColor = .windowBackgroundColor
         window.hidesOnDeactivate = false
-        // The default is yes, so a click that does not land in a field never
-        // makes the panel key, and Escape then has no window. The close button
-        // is taken in `sendEvent` either way.
-        window.becomesKeyOnlyIfNeeded = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
         window.onDismiss = { [weak self] in self?.close() }
         window.contentView = SpendGlanceHostingView(rootView: SpendGlanceView(
@@ -143,13 +143,16 @@ final class SpendGlanceController {
             let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
             let eventWindow = event.window.map { ObjectIdentifier($0) }
             let point = NSEvent.mouseLocation
+            let auxiliary = event.window.map { SpendGlanceWindowLevel.isAuxiliary($0) } ?? false
             let swallowEscape = MainActor.assumeIsolated { () -> Bool in
                 guard let self, let window = self.window, window.isVisible else { return false }
                 if type == .keyDown {
-                    // Escape often arrives here with no window, so comparing
-                    // the event's window to this one used to drop it. A menu
-                    // or a date popover names its own window and keeps the key.
-                    // The panel's `close()` is the same path as the traffic light.
+                    // A menu or a date popover owns Escape. Closing the summary
+                    // here used to throw the picker away as it opened.
+                    let menuOpen = NSApp.windows.contains {
+                        $0 !== window && $0.isVisible && SpendGlanceWindowLevel.isAuxiliary($0)
+                    }
+                    guard !menuOpen else { return false }
                     guard SpendGlanceDismissal.shouldCloseOnEscape(
                         keyCode: keyCode,
                         hasModifiers: hasModifiers,
@@ -159,8 +162,10 @@ final class SpendGlanceController {
                     window.close()
                     return true
                 }
-                if window.frame.contains(point) || self.entryRect.contains(point) { return false }
-                self.close()
+                let inside = window.frame.contains(point) || self.entryRect.contains(point)
+                if SpendGlanceWindowLevel.dismisses(inside: inside, auxiliary: auxiliary) {
+                    self.close()
+                }
                 return false
             }
             return swallowEscape ? nil : event
@@ -179,10 +184,41 @@ struct SpendGlanceAnchor {
     var level: NSWindow.Level
 }
 
+/// Where the summary sits relative to the rail and to menus.
+///
+/// The rail can be at `.statusBar`. A window at that same level, or a utility
+/// panel, does not keep a menu in front of it, so a picker looks dead. Stay
+/// one level above the rail and strictly under `.popUpMenu`.
+enum SpendGlanceWindowLevel {
+    static func above(_ rail: NSWindow.Level) -> NSWindow.Level {
+        let menu = NSWindow.Level.popUpMenu.rawValue
+        let next = max(rail.rawValue, NSWindow.Level.floating.rawValue) + 1
+        if next >= menu { return NSWindow.Level(rawValue: menu - 1) }
+        return NSWindow.Level(rawValue: next)
+    }
+
+    static func isAuxiliary(_ window: NSWindow) -> Bool {
+        isAuxiliary(level: window.level, className: String(describing: type(of: window)))
+    }
+
+    /// A menu, a popover, or a date picker. A click there is part of a control
+    /// in this window, not a click outside it.
+    static func isAuxiliary(level: NSWindow.Level, className: String) -> Bool {
+        if level.rawValue >= NSWindow.Level.popUpMenu.rawValue { return true }
+        return className.contains("Menu")
+            || className.contains("Popover")
+            || className.contains("Picker")
+            || className.contains("Date")
+    }
+
+    static func dismisses(inside: Bool, auxiliary: Bool) -> Bool {
+        !inside && !auxiliary
+    }
+}
+
 /// What closes the glance window, without a window server: plain Escape, and
-/// a click that lands inside the close button. The panel and its monitor both
-/// ask this. A modified Escape is a different shortcut. An empty button is
-/// one that has not been laid out, and a click there is not a close.
+/// a click that lands inside the close button. A modified Escape is a
+/// different shortcut. An empty button is one that has not been laid out.
 enum SpendGlanceDismissal {
     static let escapeKeyCode: UInt16 = 53
 
@@ -211,19 +247,18 @@ enum SpendGlanceDismissal {
 
 /// Escape and the close button both dismiss. Clicks outside are the controller's monitors.
 ///
-/// The content view fills the title bar (`fullSizeContentView`), so a click
-/// on the traffic light hits the hosting view and the button's action never
-/// runs. `sendEvent` sees that click first and closes. `performClose` closes
-/// as well: an `NSPanel` can ignore the button while the panel is not key.
-/// Escape is taken here while this window is key, the same way the recap
-/// window takes its own keys, and again by the monitor when the event has
-/// not been aimed at some other window.
-final class SpendGlancePanel: NSPanel {
+/// This is an `NSWindow`, not a panel. A utility panel never became key while
+/// Blinky was an accessory app, and every SwiftUI control in it — the time
+/// range, the dimension, Share — then ignored the click. The title bar is
+/// the system's, so the close button is not under the content view.
+/// `performClose` still closes directly: ⌘W and the button share one path.
+/// Escape is taken here while this window is key. A menu that is key keeps it.
+final class SpendGlancePanel: NSWindow {
     var onDismiss: (() -> Void)?
     private var closing = false
 
     override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { false }
+    override var canBecomeMain: Bool { true }
 
     override func close() {
         // `onDismiss` orders the window out, which can re-enter `close` while
@@ -235,20 +270,15 @@ final class SpendGlancePanel: NSPanel {
         super.close()
     }
 
-    /// The button's action, and ⌘W. Closing directly skips the panel's
-    /// refusal when it is not the key window.
+    /// The button's action, and ⌘W.
     override func performClose(_ sender: Any?) {
         close()
     }
 
     override func sendEvent(_ event: NSEvent) {
-        if event.type == .leftMouseDown, let button = standardWindowButton(.closeButton) {
-            let point = button.convert(event.locationInWindow, from: nil)
-            if SpendGlanceDismissal.claimsCloseClick(buttonBounds: button.bounds, pointInButton: point) {
-                close()
-                return
-            }
-        }
+        // Mouse events are not taken here. The previous override closed on a
+        // geometry test and returned before the content view, which is how a
+        // picker and Share could be clicked and still do nothing.
         if event.type == .keyDown, isKeyWindow,
            SpendGlanceDismissal.shouldCloseOnEscape(
                keyCode: event.keyCode,
@@ -276,20 +306,11 @@ final class SpendGlancePanel: NSPanel {
     }
 }
 
-/// The hosted summary. A click on the close button is not for this view: the
-/// title bar draws the button, and this view covers it. Handing back the
-/// button gives the click a target instead of letting it fall through the
-/// window. `sendEvent` closes even when the click still lands here.
+/// The hosted summary. The first click has to reach the control even when
+/// the window was not yet key: an accessory app's window otherwise eats it
+/// as an activation click and the picker looks dead.
 final class SpendGlanceHostingView<Content: View>: NSHostingView<Content> {
-    override func hitTest(_ point: NSPoint) -> NSView? {
-        if let button = window?.standardWindowButton(.closeButton) {
-            let inButton = button.convert(point, from: self)
-            if SpendGlanceDismissal.claimsCloseClick(buttonBounds: button.bounds, pointInButton: inButton) {
-                return button
-            }
-        }
-        return super.hitTest(point)
-    }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
 
 /// Copies the branded summary. The image is the picture's text and bars;
@@ -331,10 +352,6 @@ struct SpendGlanceView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 header
-                if model.didCopy {
-                    Text(localized: "Copied to the clipboard.")
-                        .font(.system(size: 12, weight: .medium))
-                }
                 if !ready {
                     reading
                 } else {
@@ -349,9 +366,7 @@ struct SpendGlanceView: View {
                     footnotes(picture)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 28)
-            .padding(.bottom, 16)
+            .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(minWidth: 320, minHeight: 280)
@@ -379,11 +394,23 @@ struct SpendGlanceView: View {
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .frame(maxWidth: 180, alignment: .leading)
+                .accessibilityIdentifier("spend-glance-span")
                 Spacer(minLength: 8)
                 Button(String.localized("Refresh")) { model.rescan += 1 }
                     .disabled(model.isScanning)
+                    .accessibilityIdentifier("spend-glance-refresh")
                 Button(shareLabel, action: onShare)
                     .disabled(!model.figuresReady || model.isScanning)
+                    .accessibilityIdentifier("spend-glance-share")
+            }
+            if model.didCopy {
+                Text(localized: "Copied to the clipboard.")
+                    .font(.system(size: 12, weight: .medium))
+                    .accessibilityIdentifier("spend-glance-copy-note")
+            } else if model.copyFailed {
+                Text(localized: "Could not copy.")
+                    .font(.system(size: 12, weight: .medium))
+                    .accessibilityIdentifier("spend-glance-copy-note")
             }
             if settings.spendSpan == .custom {
                 customDatePickers
@@ -435,6 +462,7 @@ struct SpendGlanceView: View {
         .labelsHidden()
         .pickerStyle(.menu)
         .frame(maxWidth: 180, alignment: .leading)
+        .accessibilityIdentifier("spend-glance-dimension")
     }
 
     private var reading: some View {

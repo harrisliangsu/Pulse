@@ -1407,3 +1407,27 @@
 "Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking." = "每兩小時一次。下面的選項決定是通知、打開更新視窗，還是直接安裝。";
 "By hour" = "按小時";
 "Copied to the clipboard." = "已複製到剪貼簿。";
+
+/* 1.5.11 */
+"Limit reminders" = "額度提醒";
+"Running out" = "用量用盡";
+"Monthly recap" = "月報";
+"When it is running out" = "將用盡時";
+"Remaining hours" = "剩餘小時";
+"Will not last until the reset" = "撐不到重設時";
+"Exhaustion estimate" = "用盡預估";
+"Show the estimate" = "顯示預估";
+"When it is ready" = "完成時";
+"When it is down" = "發生故障時";
+"Open Blinky" = "打開 Blinky";
+"Could not copy." = "未能複製。";
+"Low balance" = "餘額偏低";
+"Writes a line under the weekly limit, or under the longest other limit when there is no weekly one, about how long it may last. A five-hour limit is left out." = "在每週限額下寫一行，說明按目前速度還要多久用盡。沒有每週限額時，寫在其餘限額裡最長的那條上。5 小時限額不寫。";
+"Notifies once when the time left reaches a stage, on the weekly limit, or on the longest other limit when there is no weekly one. A five-hour limit is left out." = "剩餘時間到了某一檔時通知一次，只針對每週限額。沒有每週限額時，針對其餘限額裡最長的那條。5 小時限額不通知。";
+"The estimate and the running-out notices both use this list." = "用盡預估和用量用盡都用這份名單。";
+"The furthest time, in hours, at which a countdown is written." = "寫出具體倒數的最遠時間（小時）。";
+"Further out, it says the pace may not last until the reset, and does not write a time." = "再遠一些時，只說明按目前速度可能撐不到重設，不寫具體時間。";
+"When the pace will not last until the reset, it writes roughly how long is left." = "按目前速度撐不到重設時，寫出大約還剩多久。";
+"Each part also shows the credits, such as 5,843 / 6,000. The rings keep their percentages." = "每一部分同時寫出積分數，例如 5,843 / 6,000。圓環仍顯示百分比。";
+"Sends a separate notice when the current pace will not last until the reset, on that same limit." = "按目前速度撐不到重設時，另發一次，並且只針對同一條限額。";
+"Each stage notifies once, at its own hours left, on that same limit. A new install starts with 24 hours." = "每一檔通知一次，按各自的剩餘小時，並且只針對同一條限額。新安裝從 24 小時開始。";
