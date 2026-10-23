@@ -2,7 +2,7 @@
 
 Chrome and why it is AppKit-owned: [../architecture.md](../architecture.md). Localization rules: [../development.md](../development.md).
 
-`SettingsView` / `SettingsRow`: a `NavigationSplitView` source list, panes built from `SettingsGroup` + `SettingsRow` (title and optional subtitle on the left, control on the right; `controlBelow: true` puts the control under the label). **A choice in a settings row is a pop-up menu** (`.pickerStyle(.menu)`), as in System Settings, never a segmented control: one control everywhere, and a menu fits beside its label however many options it has (Position's six segments had to move under the label to fit). Segmented controls are kept for switching what a view shows — Token activity's view, the recap's day / week / month / year. `SettingsPane` includes `.account(AccountKey)`, so every account — each provider's first, plus any added login — has a sidebar row.
+`SettingsView` / `SettingsRow`: a `NavigationSplitView` source list, panes built from `SettingsGroup` + `SettingsRow` (title and optional subtitle on the left, control on the right; `controlBelow: true` puts the control under the label). **A choice in a settings row is a pop-up menu** (`.pickerStyle(.menu)`), as in System Settings, never a segmented control: one control everywhere, and a menu fits beside its label however many options it has (Position's six segments had to move under the label to fit). Segmented controls are kept for switching what a view shows — Token activity's view, the recap's day / week / month / year. `SettingsPane` includes `.account(AccountKey)`, so every account — each provider's first, plus any added login — still has a pane. Built-in accounts are reached from the Providers page (and from a sidebar search); an extension keeps a row under Other.
 
 ## Where the code lives
 
@@ -11,8 +11,10 @@ All of it is in `Sources/Pulse/Settings`. `SettingsView.swift` is the shell only
 | File | Holds |
 |---|---|
 | `SettingsView.swift` | Shell. Owns `search`, `SpendPaneModel`, `AccountHistoryModel`, `AccountFlows`; sets the sidebar column's width and search field (properties of that column); runs the three tasks below. |
-| `SettingsSidebar.swift` | The source list: sections, the search match, the "No matches" line. |
+| `SettingsSidebar.swift` | The source list: sections, the search match, the "No matches" line. Built-in accounts are not rows; Providers is one row. |
 | `SettingsPane.swift` | `SettingsPane` (title, symbol, search terms, the sidebar's fixed sections) and `Provider.Billing.sectionTitle`. |
+| `ProvidersHubPane.swift` | The Providers page: every built-in account, in the groups below, each opening that account's pane. |
+| `ProviderAccountGroups.swift` | Those groups, shared with a sidebar search, and which provider rows the sidebar draws. |
 | `AppearancePane.swift`, `RingsPane.swift`, `PlacementPane.swift`, `GeneralPane.swift`, `NotificationsPane.swift`, `NetworkPane.swift`, `AboutPane.swift` | One fixed pane each, with its own state (the order list's drag target, the login-item nudge, the proxy text fields). |
 | `TokenSpendPane.swift`, `SpendPaneModel.swift` | The Token spend pane (switch, recap buttons, `TokenSpendView`) and its reading: combined and per-agent figures, scan progress, the drilled-in agent and model. |
 | `AccountPane.swift` | One account's pane: the cards in order, and the seed of the typed fields when the account or its switch changes. |
@@ -34,9 +36,9 @@ All of it is in `Sources/Pulse/Settings`. `SettingsView.swift` is the shell only
 
 **A new pane** is a view in its own file, a `SettingsPane` case (`title`, `symbol`, `searchTerms`), and one line in the shell's `switch`.
 
-**Search.** The sidebar is `.searchable(placement: .sidebar)`, **not** `.automatic`: the field belongs at the top of the list, under the traffic lights, as in System Settings; automatic would put it in the window's toolbar, which carries only the title. Accounts match on the provider's name *as well as* the user's label (a second Claude subscription called "工作" is found by typing "claude"); a pane matches by its title **or** any of its rows' titles (`SettingsPane.searchTerms` — keep it in step when a row moves or is added). Matching is `localizedStandardContains` (case- and accent-insensitive, as Finder searches). A section with no matches is omitted; nothing matching leaves a "No matches" line. A search that hides the current selection does not clear it.
+**Search.** The sidebar is `.searchable(placement: .sidebar)`, **not** `.automatic`: the field belongs at the top of the list, under the traffic lights, as in System Settings; automatic would put it in the window's toolbar, which carries only the title. With the field empty, built-in accounts are not sidebar rows; they are on the Providers page. A search lists the matches in the sidebar again, in the same groups as that page, matched on the provider's name *as well as* the user's label (a second Claude subscription called "工作" is found by typing "claude"). A pane matches by its title **or** any of its rows' titles (`SettingsPane.searchTerms` — keep it in step when a row moves or is added). Matching is `localizedStandardContains` (case- and accent-insensitive, as Finder searches). A section with no matches is omitted; nothing matching leaves a "No matches" line. A search that hides the current selection does not clear it. The account whose pane is open stays as a sidebar row when the field is empty, so its selection tag is still in the list.
 
-**Accounts start in name order** (`AppSettings.orderedAccounts`), not declaration order, so seventy-odd rows can be looked up rather than scanned. An arrangement somebody made is kept, with unmentioned accounts after it by name; an added account sorts by its own label.
+**Accounts start in name order** (`AppSettings.orderedAccounts`), not declaration order, so the Providers page can be looked up rather than scanned. An arrangement somebody made is kept, with unmentioned accounts after it by name; an added account sorts by its own label. The page keeps that order inside each group.
 
 ## Provider chooser
 
@@ -56,7 +58,7 @@ While the Appearance picker is on Glass, a **Transparency** slider appears under
 
 ## Panes
 
-The former single General pane is split by subject (`SettingsPane`). Panel and Application sit **above** the accounts because they are what Settings is opened for (under twenty-odd provider rows they were below the fold); Integrations and About are rarely visited and stay below. The window opens on **Appearance**, the first row (`SettingsNavigation.pane`, and the `pulse://settings` link).
+The former single General pane is split by subject (`SettingsPane`). Panel and Application sit at the top. Built-in accounts are one **Providers** row (zh-Hans 供应商), which opens a page of every account; they are not sidebar rows. Manage extensions, Developer integrations and About sit together under **Other** (the existing word, zh-Hans 其他) at the bottom. A parent that hid those three would add a click to the rows the provider list used to push off screen, and the English key `More` is already the token-activity legend (少 / 多), so this is a headed section rather than another page. The window opens on **Appearance**, the first row (`SettingsNavigation.pane`, and the `pulse://settings` link).
 
 | Sidebar section | Pane | Holds |
 |---|---|---|
@@ -64,16 +66,14 @@ The former single General pane is split by subject (`SettingsPane`). Panel and A
 | Panel | **Rings and figures** | *Figures*: percentages at the side / across (*Percentages across*: any rail lying across — docked to the top or bottom, or free), figures beside the rings (free across only, off by default; needs percentages across), figure above the ring, show what's left. *Rings*: second limit, time until reset, time ring direction, ring colour scheme (Red alert / Gradient / Quiet), turn red at (under Red alert and Quiet), alert colour when docked |
 | Panel | **Position and behavior** | Show floating panel, hide in full screen, hide from screenshots, hide until pointed at, position (Left, Top, Bottom, Free across, Free upright, Right — a menu), snap to screen edges, follow the active display; **Order** |
 | Panel | Token spend | Below |
-| Application | **General** | *Application*: open at login, show Dock icon, hide menu bar icon, show usage in the menu bar (+ menu bar shows, menu bar style), usage panel in the menu, currency. *Shortcuts*. *Language* |
+| Application | **General** | *Application*: open at login (zh-Hans 开机启动), show Dock icon, hide menu bar icon, show usage in the menu bar (+ menu bar shows, menu bar style), usage panel in the menu, currency. *Shortcuts*. *Language* |
 | Application | **Notifications** | Warn at, when a limit comes back, when a reading stops arriving, when a service is down, when a recap is ready; **Exhaustion forecast** (card line, countdown horizon, hint, reset sentence, remaining-time stages); Reset reminders (predicted and regular); Celebrations, including the optional five-hour / hourly ribbon |
 | Application | **Network and refresh** | Check every; proxy ([../networking.md](../networking.md)) |
-| Enabled | every account switched on, both kinds, in rail order | What somebody opens Settings for, first. An enabled account is not listed again below — two rows with one selection tag highlight together |
-| Subscriptions | one per subscription account not switched on | Split from API accounts by `Provider.Billing`: a plan with limits that turn over on a clock |
-| API and pay-as-you-go | one per API account not switched on | Money put in and drawn down by the call — DeepSeek, the gateways, the API platforms. A provider with both is filed under the one its buyers mostly pay for |
-| Extensions | **Manage extensions**, then one per extension found | The folder, **Look again**, what was found, and every folder that couldn't be used with the reason. An extension's own pane is an account pane plus an **Extension** group: program, time limit, id. Once it has reported a balance, it also gets **Ring measures** (with no limits beside it) and **Warn below**, as an API account does. [../extensions.md](../extensions.md) |
-| (untitled, last) | Developer integrations, About | Below |
+| (untitled) | **Providers** | Opens the page below. Not a second copy of the account list |
+| Providers page | **Enabled**, then **Subscriptions**, then **API and pay-as-you-go** | Every built-in account, rail order inside each group. An enabled account is listed only under Enabled. A row opens that account's pane. Subscriptions are a plan with limits that turn over on a clock; API and pay-as-you-go is money drawn down by the call (`Provider.Billing`). A provider with both is filed under the one its buyers mostly pay for |
+| Other | **Manage extensions**, then one row per extension found, then **Developer integrations**, **About** | Extensions are programs somebody added, so they stay beside the page that manages them rather than on the Providers page. The folder, **Look again**, what was found, and every folder that couldn't be used with the reason are on Manage extensions. An extension's own pane is an account pane plus an **Extension** group: program, time limit, id. Once it has reported a balance, it also gets **Ring measures** (with no limits beside it) and **Warn below**, as an API account does. [../extensions.md](../extensions.md). Developer integrations and About are below |
 
-**Extensions have a section of their own** because they are programs somebody added, not services Pulse ships. A switched-off extension's pane shows its access description above **Show in panel**, like a disabled provider's. **Manage extensions** rescans the folder when it opens, which runs nothing.
+**Extensions stay in Other**, beside Manage extensions, because they are programs somebody added, not services Blinky ships. A switched-off extension's pane shows its access description above **Show in panel**, like a disabled provider's. **Manage extensions** rescans the folder when it opens, which runs nothing.
 
 ### Appearance
 
@@ -99,7 +99,7 @@ The former single General pane is split by subject (`SettingsPane`). Panel and A
 
 **Application group:**
 
-- **Open at login.**
+- **Open at login** (zh-Hans 开机启动, zh-Hant 開機啟動). The first row under Application. It registers the bundle that is running (`SMAppService.mainApp`, or the launch agent when there is no bundle). After `InstalledAppName` renames `Pulse.app` to `Blinky.app`, the relaunched copy registers that bundle once when the switch was on (`LoginItem.refreshAfterBundleMoved`). [../architecture.md](../architecture.md#login-item), [../releasing.md](../releasing.md).
 - **Show Dock icon while Settings or a recap is open** (`AppSettings.showsDockIconInSettings`, **on by default**): Pulse is a regular app while either window is open and a menu bar app again when the last closes, through `DockPresence`.
 - **Hide menu bar icon** (`AppSettings.hidesMenuBarIcon`, off by default) removes only the AppKit status item; the floating panel's secondary-click menu or a successfully registered global shortcut still opens Settings. If neither remains, hiding the icon shows the panel first; before the initial provider choice, where there is no panel, the request is refused. Hiding that panel later, clearing the last shortcut, a registration conflict, or restoring an unsafe saved combination brings the icon back. Changing it does not refresh provider data.
 - **Show usage in the menu bar** (`AppSettings.showsUsageInMenuBar`, off by default; greyed out while the icon is hidden): the status item shows the fullest ring's mark and figure (following **used / left**), red past the warning line, with the account and limit in its tooltip. While on, two rows follow. **Menu bar shows**: the fullest ring, or one account on the rail (`menuBarAccount`; an account switched off or removed falls back to the fullest). **Menu bar style** (`menuBarStyle`): **Figure**; a small **Ring** beside the mark; or **Split** — the account-wide timed limits side by side with short names, shortest first, at most two (`5h/9%  周/15%`), each red on its own past the warning line. Scoped limits (one model's week) are not split; an account with fewer than two falls back to the figure, and the ring needs a limit, so money and "no reading" stay text.
@@ -139,7 +139,7 @@ Once reading is on, the first group gains a **Usage recaps** row (zh-Hans 用量
 
 ### Developer integrations
 
-In the sidebar's last, untitled section. It copies the actual executable's `--json` command with shell quoting, exports the bundled developer kit into a new `Blinky Integrations` folder, and copies links or `open` commands for any configured account. Exports refuse an existing destination and exclude dependency/build folders. Install instructions: [../integrations.md](../integrations.md).
+In the sidebar's Other section, between Manage extensions and About. It copies the actual executable's `--json` command with shell quoting, exports the bundled developer kit into a new `Blinky Integrations` folder, and copies links or `open` commands for any configured account. Exports refuse an existing destination and exclude dependency/build folders. Install instructions: [../integrations.md](../integrations.md).
 
 ## Controls
 
@@ -161,7 +161,7 @@ In the sidebar's last, untitled section. It copies the actual executable's `--js
 
 Two groups. The first is the app: version and update state, where the usage figures come from, and the **source address**, with the URL itself as the subtitle so it can be typed.
 
-**Opening the pane checks for an update** (`AppUpdate.probe`, Sparkle's `checkForUpdateInformation`), unless a check or update is already running: no Sparkle window, only the Version subtitle changes ("Checking…", then the answer), so "up to date" is current. It runs **even with Check automatically off** — that switch covers Pulse's own schedule; opening About is the reader asking. **Check now** still puts up Sparkle's window.
+**Opening the pane checks for an update** (`AppUpdate.probe`, Sparkle's `checkForUpdateInformation`), unless a check or update is already running: no Sparkle window, only the Version subtitle changes ("Checking…", then the answer), so "up to date" is current. It runs **even with Check automatically off** — that switch covers Pulse's own schedule; opening About is the reader asking. **Check now** still puts up Sparkle's window, and so does a scheduled check that finds a newer version; both bring that window to the front ([../releasing.md](../releasing.md#sparkle)). The Blinky menu's **Check for Updates…** (under About; zh-Hans 检查更新) calls the same `AppUpdate.check`.
 
 The second group is **Credits**: anything shipped here that somebody else made — the design it was built from, the provider marks, and the animated marks' geometry ([../decisions/bot-mark-geometry.md](../decisions/bot-mark-geometry.md)).
 

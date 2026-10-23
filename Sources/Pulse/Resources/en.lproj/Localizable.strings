@@ -367,6 +367,7 @@
 "Refresh" = "Refresh";
 "Blinky %@ is available" = "Blinky %@ is available";
 "Check now" = "Check now";
+"Check for Updates…" = "Check for Updates…";
 "Checking…" = "Checking…";
 "Built from source — no update check." = "Built from source — no update check.";
 "%@ installed · %@ available" = "%@ installed · %@ available";

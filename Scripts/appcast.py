@@ -24,10 +24,12 @@ Every feed URL is this repository's own file on GitHub
 (`raw.githubusercontent.com/<owner>/<repo>/main/`). This fork does not publish
 to, or fall back onto, update.qunqin.org.
 
-The feed is committed rather than generated from scratch each time. Older
-*other* versions are left as they were published: re-signing them would mean
-downloading every archive ever published just to say the same thing about
-them again.
+The feed is committed rather than generated from scratch each time. It keeps
+one item, the newest (`KEPT_ITEMS`). Sparkle shows the `<description>` of
+every item newer than the installed copy, and each description is already
+that version's changelog section, so a longer feed stacks past releases in
+the update window. The archives are full zips, not deltas, so nothing in the
+update needs the older items.
 
 The version being offered is the exception. A tag can be built more than once,
 and a later run can replace the zip after this feed already names that
@@ -282,7 +284,12 @@ def feed_file_url(name: str) -> str:
 
 
 def write_feeds(feed: str) -> None:
-    """appcast.xml and its one-language copies, all on this repository."""
+    """appcast.xml and its one-language copies, all on this repository.
+
+    Each copy keeps `KEPT_ITEMS` items, so a notes rewrite of an old
+    multi-item feed does not put the stack back.
+    """
+    feed = keep_newest(feed)
     feed = re.sub(
         r"<link>https://raw\.githubusercontent\.com/[^<]+/appcast(?:-[a-z]+)?\.xml</link>",
         f"<link>{FEED_URL}</link>",
@@ -374,6 +381,27 @@ def render_described_item(version: str, url: str, signature: str, length: str, n
 # committed feed uses. Non-greedy: a description does not contain `</item>`.
 _ITEM = re.compile(r"        <item>\n.*?\n        </item>\n", re.DOTALL)
 
+# Sparkle concatenates every newer item's notes. One full-archive item is the
+# whole update, so the written feed keeps this many items, newest first.
+KEPT_ITEMS = 1
+
+
+def keep_newest(feed: str, count: int = KEPT_ITEMS) -> str:
+    """The feed with only its first `count` items.
+
+    Items are newest-first. Dropping the rest leaves their enclosures
+    unrewritten, which is the point: a full zip does not need them, and
+    Sparkle would otherwise show their notes under the one being offered.
+    """
+    seen = 0
+
+    def rewrite(match: re.Match[str]) -> str:
+        nonlocal seen
+        seen += 1
+        return match.group(0) if seen <= count else ""
+
+    return _ITEM.sub(rewrite, feed)
+
 # The enclosure as `enclosure()` writes it. A looser match would still update
 # the signature and could also reflow an entry nobody meant to touch.
 _ENCLOSURE = re.compile(
@@ -389,7 +417,8 @@ def version_marker(version: str) -> str:
 
 
 def replace_enclosure(feed: str, version: str, url: str, signature: str, length: str) -> str:
-    """Rewrite the enclosure of `version` and copy every other item through.
+    """Rewrite the enclosure of `version`. Other items are copied through here;
+    `offer` then keeps only the newest.
 
     Notes, the publication date and the release-page link stay. The download
     url is the one passed in, which is the asset this run just published.
@@ -427,7 +456,8 @@ def offer(feed: str, version: str, url: str, signature: str, length: str, notes:
 
     Inserted at the top when the feed has no such item. When it does, only
     that item's enclosure changes — `notes` is ignored, so a second offer
-    cannot wipe release notes that were already served. No other version is
+    cannot wipe release notes that were already served. Either way the result
+    keeps `KEPT_ITEMS` items, the newest first. Older items are omitted, not
     re-signed.
 
     `notes` here is the inside of one description, which is what the tests
@@ -436,7 +466,7 @@ def offer(feed: str, version: str, url: str, signature: str, length: str, notes:
     element.
     """
     if version_marker(version) in feed:
-        return replace_enclosure(feed, version, url, signature, length)
+        return keep_newest(replace_enclosure(feed, version, url, signature, length))
 
     # Newest first, which is the order Sparkle and every feed reader expect.
     # This fork's committed feed says zh-CN, not en.
@@ -444,7 +474,7 @@ def offer(feed: str, version: str, url: str, signature: str, length: str, notes:
     if anchor not in feed:
         sys.exit("appcast.xml is not in the shape this expects — check it by hand.")
     item = render_item(version, url, signature, length, notes)
-    return feed.replace(anchor, anchor + item, 1)
+    return keep_newest(feed.replace(anchor, anchor + item, 1))
 
 
 def insert_described(feed: str, version: str, url: str, signature: str, length: str, notes: str) -> str:
@@ -453,7 +483,7 @@ def insert_described(feed: str, version: str, url: str, signature: str, length: 
     if anchor not in feed:
         sys.exit("appcast.xml is not in the shape this expects — check it by hand.")
     item = render_described_item(version, url, signature, length, notes)
-    return feed.replace(anchor, anchor + item, 1)
+    return keep_newest(feed.replace(anchor, anchor + item, 1))
 
 
 def main() -> None:

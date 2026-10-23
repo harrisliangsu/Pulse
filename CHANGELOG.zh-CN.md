@@ -6,13 +6,23 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
-## 1.5.4
+## 1.5.5
 
 - **卡片会说明限额何时可能用尽。** 开关在「设置 → 通知 → 用尽预测」。距离用尽不超过六小时时，会写出窗口名称和大致时间，例如「每周 · 约 4 小时后用尽」；更远时，可以说明按当前速度可能撑不到下次重置。通知默认在剩余 24 小时提醒一次，还可以再加几档。Codex 的 5 小时和每周窗口，在回复写明时长和重置时间时也会计算。[#61](https://github.com/harrisliangsu/blinky-mac/pull/61)
+
+## 1.5.4
+
+- **设置里的供应商收在「供应商」下。** 打开设置后点侧栏的「供应商」进入各账号；在侧栏搜索仍可按名称找到账号。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **Blinky 菜单可以检查更新。** 「检查更新」在「关于 Blinky」下面，打开的窗口与「设置 → 关于」里的检查更新相同。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **管理扩展、开发者集成和关于收在同一组。** 这三项在设置侧栏底部的「其他」里。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **通用里的开机启动登记的是正在运行的这一份。** 开关是「设置 → 通用」的第一行；从 Pulse.app 换成 Blinky.app 之后，若开关本来是开的，下次启动会登记正在运行的 Blinky.app。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **发现新版本时，更新窗口会到前面。** 自动检查或「检查更新」发现新版本时，Blinky 会把 Sparkle 的更新窗口调到最前，并在安装前询问。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **更新窗口只显示正在提供的这一版。** 窗口里的说明是这一版的更新记录，更早的版本不再叠在同一个窗口里。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
 
 ## 1.5.3
 
 - **更新之后，访达里显示的是 Blinky。** 文件名仍是 `Pulse.app` 的那一份，在下次打开时（包括应用内更新后的重新打开）会改名为 `Blinky.app`，前提是同一文件夹里还没有 `Blinky.app`；原先开着开机自启的，会按新文件重新登记，开关在「设置 → 通用」。[#58](https://github.com/harrisliangsu/blinky-mac/pull/58)
+- **预测重置的倒计时与标题同一行。** Codex 卡片上，倒计时在「预测重置」的右侧，本地的日期和时刻在下一行。[Docs/providers/codex.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/providers/codex.md) [#59](https://github.com/harrisliangsu/blinky-mac/pull/59)
 
 ## 1.5.2
 

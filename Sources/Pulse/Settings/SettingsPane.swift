@@ -32,12 +32,21 @@ enum SettingsPane: Hashable {
     /// Where extensions live and which were found. Each one found is an
     /// `.account` of its own; this is the list.
     case extensions
+    /// Every built-in account, on one page. The sidebar has this one row
+    /// instead of a row per account; search still lists the matches.
+    case providers
 
     /// The sidebar's fixed rows, section by section. `panel` and
-    /// `application` sit above the accounts; `trailing` below them.
+    /// `application` sit above Providers. `bottom` is the Other section:
+    /// extensions, then integrations, then About.
     static let panel: [SettingsPane] = [.appearance, .rings, .placement]
     static let application: [SettingsPane] = [.general, .notifications, .network]
-    static let trailing: [SettingsPane] = [.integrations, .about]
+    static let bottom: [SettingsPane] = [.extensions, .integrations, .about]
+
+    /// Every fixed row, for the sidebar's "No matches" line.
+    static var fixedPanes: [SettingsPane] {
+        panel + [.spend] + application + [.providers] + bottom
+    }
 
     var title: String {
         switch self {
@@ -56,6 +65,7 @@ enum SettingsPane: Hashable {
         case .about: .localized("About")
         case .integrations: .localized("Developer integrations")
         case .extensions: .localized("Manage extensions")
+        case .providers: .localized("Providers")
         }
     }
 
@@ -74,6 +84,7 @@ enum SettingsPane: Hashable {
         case .about: "info.circle"
         case .integrations: "terminal"
         case .extensions: "puzzlepiece.extension"
+        case .providers: "square.grid.2x2"
         }
     }
 
@@ -110,6 +121,8 @@ enum SettingsPane: Hashable {
             [.localized("Check every"), .localized("Proxy")]
         case .extensions:
             [.localized("Extensions"), .localized("Look again")]
+        case .providers:
+            [.localized("Enabled"), .localized("Subscriptions"), .localized("API and pay-as-you-go")]
         case .account, .spend, .about, .integrations:
             []
         }

@@ -84,21 +84,23 @@ enum DetailCardLayout {
     /// are two text lines, shorter than a limit's row.
     static var maximumHeight: CGFloat { height(forWindows: 6, footnote: true) + codexIntelHeight }
 
-    /// Title row (confidence may wrap), a countdown, the local bound (may
-    /// wrap), the latest announcement (one line of relative time, then a
-    /// type-and-clock line that may wrap), and banked credits. The countdown,
-    /// the bound, the type line, and the credits may each take two lines.
-    /// The budget is that tall case — a watch, a latest announcement, and
-    /// reset cards together — even when a given card draws fewer of them.
-    /// The relative time stays on one line. The type's explanation is a
-    /// tooltip on those words, not another row and not an icon. The link to
-    /// the site and the help mark sit on the title row, so neither adds a
-    /// row of its own. The event note is an overlay on that mark, not a line
-    /// and not a system tooltip — unfolding it does not change this height.
+    /// Title row, the local bound (may wrap), the latest announcement (one
+    /// line of relative time, then a type-and-clock line that may wrap), and
+    /// banked credits. The countdown shares the title row — on the right, as
+    /// Last reset places its relative time — and that row may take two lines
+    /// when the countdown wraps. With no countdown, confidence or "no
+    /// prediction yet" may wrap inside the same two lines. The bound, the
+    /// type line, and the credits may each take two lines. The budget is
+    /// that tall case — a watch, a latest announcement, and reset cards
+    /// together — even when a given card draws fewer of them. The relative
+    /// time stays on one line. The type's explanation is a tooltip on those
+    /// words, not another row and not an icon. The link to the site and the
+    /// help mark sit on the title row, so neither adds a row of its own. The
+    /// event note is an overlay on that mark, not a line and not a system
+    /// tooltip — unfolding it does not change this height.
     static var codexIntelHeight: CGFloat {
         contentSpacing
             + rowTextLineHeight * 2
-            + rowInternalSpacing + rowTextLineHeight * 2
             + rowInternalSpacing + rowTextLineHeight * 2
             + rowInternalSpacing + rowTextLineHeight
             + rowInternalSpacing + rowTextLineHeight * 2
@@ -238,6 +240,9 @@ struct UsageDetailCard: View {
     /// the mark or grow the card, or the pointer's own enter and exit would
     /// chase each other.
     @State private var predictionNoteVisible = false
+    /// Height of the Predicted reset title row, so the note starts under it
+    /// whether the countdown stayed on one line or wrapped beside the title.
+    @State private var predictionHeaderHeight: CGFloat = DetailCardLayout.rowTextLineHeight
 
     /// Where Red alert turns red, so the card's bars agree with the rail's rings.
     @Environment(\.usageWarningThreshold) private var warningThreshold
@@ -651,14 +656,16 @@ struct UsageDetailCard: View {
     /// Irregular Codex reset intel, plus banked credits when the app server
     /// has them. Not the 5-hour or weekly `resetsAt` rows above.
     ///
-    /// The title row is the label, the link, the help mark, and the
-    /// confidence. Under it, a countdown and the local bound — the same two
-    /// facts the site's prediction block leads with. The event note is drawn
-    /// over those lines while the mark is held; it is not itself a line. A
-    /// latest announcement is an extra row under that, including when the
-    /// prediction is empty. Account reset cards, when the app server has
-    /// them, stay underneath: they are this login's inventory, not the
-    /// public announcement.
+    /// The title row matches Last reset: the label, the link, and the help
+    /// mark on the left, the countdown on the right. Confidence stays on
+    /// that row and gives way when the countdown needs the trailing edge.
+    /// The local bound is the line under it — the same two facts the site's
+    /// prediction block leads with, in Last reset's rhythm. The event note
+    /// is drawn over the lines under the title while the mark is held; it is
+    /// not itself a line. A latest announcement is an extra row under that,
+    /// including when the prediction is empty. Account reset cards, when the
+    /// app server has them, stay underneath: they are this login's inventory,
+    /// not the public announcement.
     ///
     /// The lines tick on their own. A card left open used to keep "in 22
     /// minutes" after that minute had passed, because nothing else on the
@@ -674,34 +681,14 @@ struct UsageDetailCard: View {
         let lines = CodexResetCardLines.make(resolvedCodexReset, now: now)
         let prediction = lines.prediction
         return VStack(alignment: .leading, spacing: DetailCardLayout.rowInternalSpacing) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(localized: "Predicted reset")
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-
-                HStack(spacing: 2) {
-                    CodexResetsLink()
-                    if let note = prediction.note {
-                        CodexResetNoteButton(note: note, visible: $predictionNoteVisible)
+            predictionHeader(prediction)
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear.onChange(of: proxy.size.height, initial: true) { _, height in
+                            predictionHeaderHeight = height
+                        }
                     }
                 }
-
-                Spacer(minLength: 8)
-
-                if let trailing = prediction.trailing {
-                    Text(verbatim: trailing)
-                        .foregroundStyle(.primary.opacity(0.9))
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(2)
-                }
-            }
-
-            if let countdown = prediction.countdown {
-                Text(verbatim: countdown)
-                    .foregroundStyle(.primary.opacity(0.9))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .lineLimit(2)
-            }
 
             if let bound = prediction.bound {
                 Text(verbatim: bound)
@@ -722,6 +709,55 @@ struct UsageDetailCard: View {
         .overlay(alignment: .top) {
             if predictionNoteVisible, let note = prediction.note {
                 CodexResetNoteCallout(note: note)
+                    .padding(.top, predictionHeaderHeight + DetailCardLayout.rowInternalSpacing)
+            }
+        }
+    }
+
+    /// Label and affordances on the left, countdown on the right — the same
+    /// row Last reset uses for its relative time. A countdown that does not
+    /// fit wraps on that trailing edge, still inside this row; the absolute
+    /// time stays on the line below. With no countdown, confidence or
+    /// 「暂无预测」 keeps the trailing edge.
+    private func predictionHeader(_ prediction: CodexResetCardLines.Prediction) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(localized: "Predicted reset")
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .layoutPriority(2)
+
+            HStack(spacing: 2) {
+                CodexResetsLink()
+                if let note = prediction.note {
+                    CodexResetNoteButton(note: note, visible: $predictionNoteVisible)
+                }
+            }
+            .layoutPriority(2)
+
+            if let trailing = prediction.trailing, prediction.countdown != nil {
+                Text(verbatim: trailing)
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .layoutPriority(-1)
+            }
+
+            Spacer(minLength: 8)
+
+            if let countdown = prediction.countdown {
+                Text(verbatim: countdown)
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .layoutPriority(1)
+            } else if let trailing = prediction.trailing {
+                Text(verbatim: trailing)
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    .layoutPriority(1)
             }
         }
     }
@@ -1008,9 +1044,10 @@ private struct CodexResetNoteButton: View {
     }
 }
 
-/// The event note, laid over the prediction. It does not take part in the
-/// card's height: the mark stays where it is, and a hover cannot resize the
-/// card out from under the pointer.
+/// The event note, laid over the lines under the Predicted reset title. The
+/// caller pads it past that title, whose countdown may wrap. It does not
+/// take part in the card's height: the mark stays where it is, and a hover
+/// cannot resize the card out from under the pointer.
 private struct CodexResetNoteCallout: View {
     let note: String
 
@@ -1031,7 +1068,6 @@ private struct CodexResetNoteCallout: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .strokeBorder(.primary.opacity(0.16), lineWidth: 1)
             }
-            .padding(.top, DetailCardLayout.rowTextLineHeight + DetailCardLayout.rowInternalSpacing)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
     }
