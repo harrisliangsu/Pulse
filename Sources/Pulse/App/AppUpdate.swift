@@ -473,7 +473,12 @@ final class AppUpdate {
     private func hideSparkleAutomaticCheckboxes(in view: NSView?) {
         guard let view else { return }
         if let button = view as? NSButton,
-           SparkleAutomaticCheckbox.shouldHide(buttonType: button.buttonType, title: button.title) {
+           SparkleAutomaticCheckbox.shouldHide(
+               buttonType: SparkleAutomaticCheckbox.buttonType(
+                   showsStateBy: button.cell?.showsStateBy ?? NSCell.StyleMask()
+               ),
+               title: button.title
+           ) {
             button.isHidden = true
         }
         for subview in view.subviews {
@@ -618,12 +623,21 @@ private final class UpdaterRelay: NSObject, SPUUpdaterDelegate, SPUStandardUserD
 /// `SUAllowsAutomaticUpdates` is not set in the bundle. An explicit false
 /// would hide the checkbox and also make `setAutomaticallyDownloadsUpdates`
 /// a no-op (Sparkle 2.9, `SPUUpdaterSettings`), so Install silently could
-/// not turn the download on. The checkbox is hidden here instead, by button
-/// type, inside the offer window `AppUpdate.isSparkleUpdateOffer` matches.
+/// not turn the download on. The checkbox is hidden here instead, inside the
+/// offer window `AppUpdate.isSparkleUpdateOffer` matches.
 enum SparkleAutomaticCheckbox {
     static let allowsSparkleAutomaticCheckbox = false
     /// The English title Sparkle sets in `SUUpdateAlert.windowDidLoad`.
     static let englishTitle = "Automatically download and install updates in the future"
+    /// `NSContentsCellMask`. A checkbox shows its state by changing contents.
+    private static let contentsCell = NSCell.StyleMask(rawValue: 1)
+
+    /// `NSButton` has `setButtonType` and no getter. Sparkle's checkbox
+    /// (`SUUpdateAlert.xib`, `type="check"`, `changeContents`) shows its state
+    /// by contents. The Install, Later, and Skip buttons do not.
+    static func buttonType(showsStateBy: NSCell.StyleMask) -> NSButton.ButtonType {
+        showsStateBy.contains(contentsCell) ? .switch : .momentaryPushIn
+    }
 
     static func shouldHide(buttonType: NSButton.ButtonType, title: String = "") -> Bool {
         guard !allowsSparkleAutomaticCheckbox else { return false }

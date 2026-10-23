@@ -269,6 +269,8 @@ struct UpdateAnnouncementTests {
         #expect(!UpdateAnnouncement.automaticallyDownloadsUpdates(for: .notifyFirst))
         #expect(!UpdateAnnouncement.automaticallyDownloadsUpdates(for: .showWindow))
         #expect(!SparkleAutomaticCheckbox.allowsSparkleAutomaticCheckbox)
+        #expect(SparkleAutomaticCheckbox.buttonType(showsStateBy: NSCell.StyleMask(rawValue: 1)) == .switch)
+        #expect(SparkleAutomaticCheckbox.buttonType(showsStateBy: NSCell.StyleMask()) == .momentaryPushIn)
         #expect(SparkleAutomaticCheckbox.shouldHide(buttonType: .switch))
         #expect(SparkleAutomaticCheckbox.shouldHide(
             buttonType: .momentaryPushIn,
