@@ -28,9 +28,9 @@ struct BurnRateTests {
 
     /// Half a week already gone, unless a test says otherwise.
     private static func weekly(used: Double, elapsed: Double = 0.5) -> UsageWindow {
-        window(
+        Self.window(
             used: used,
-            resetsAt: now.addingTimeInterval(604_800 * (1 - elapsed))
+            resetsAt: Self.now.addingTimeInterval(604_800 * (1 - elapsed))
         )
     }
 
@@ -41,30 +41,30 @@ struct BurnRateTests {
 
     @Test("A time is returned whenever the pace runs out before the reset")
     func readingKeepsTheTimePastSixHours() {
-        let far = BurnRate.reading(for: weekly(used: pace(remaining: 37 * 3600)), now: now)
+        let far = BurnRate.reading(for: Self.weekly(used: Self.pace(remaining: 37 * 3600)), now: Self.now)
         #expect(far?.exhaustsBeforeReset == true)
         let seconds = far?.timeToExhaustion ?? 0
         #expect(abs(seconds - 37 * 3600) < 60)
 
-        let close = BurnRate.reading(for: weekly(used: pace(remaining: 4 * 3600)), now: now)
+        let close = BurnRate.reading(for: Self.weekly(used: Self.pace(remaining: 4 * 3600)), now: Self.now)
         #expect(close?.exhaustsBeforeReset == true)
         #expect(abs((close?.timeToExhaustion ?? 0) - 4 * 3600) < 60)
     }
 
     @Test("A window that lasts, or that has barely opened, says nothing about a time")
     func readingRefusesWhatItCannotDivide() {
-        let lasts = BurnRate.reading(for: weekly(used: 0.2), now: now)
+        let lasts = BurnRate.reading(for: Self.weekly(used: 0.2), now: Self.now)
         #expect(lasts?.exhaustsBeforeReset == false)
         #expect(lasts?.timeToExhaustion == nil)
 
-        let fresh = window(used: 0.9, resetsAt: now.addingTimeInterval(604_800 * 0.99))
-        #expect(BurnRate.reading(for: fresh, now: now) == nil)
+        let fresh = Self.window(used: 0.9, resetsAt: Self.now.addingTimeInterval(604_800 * 0.99))
+        #expect(BurnRate.reading(for: fresh, now: Self.now) == nil)
 
-        let unstated = window(used: 0.8, resetsAt: now.addingTimeInterval(302_400), reportsLength: false)
-        #expect(BurnRate.reading(for: unstated, now: now) == nil)
+        let unstated = Self.window(used: 0.8, resetsAt: Self.now.addingTimeInterval(302_400), reportsLength: false)
+        #expect(BurnRate.reading(for: unstated, now: Self.now) == nil)
 
-        let noReset = window(used: 0.8, resetsAt: nil)
-        #expect(BurnRate.reading(for: noReset, now: now) == nil)
+        let noReset = Self.window(used: 0.8, resetsAt: nil)
+        #expect(BurnRate.reading(for: noReset, now: Self.now) == nil)
     }
 
     @Test("The card states a time only inside the horizon, then the reset sentence, then the hint")
@@ -72,8 +72,8 @@ struct BurnRateTests {
         LocalizationSource.use(.english)
         defer { LocalizationSource.use(.system) }
 
-        let week = weekly(used: pace(remaining: 37 * 3600))
-        let reading = BurnRate.reading(for: week, now: now)!
+        let week = Self.weekly(used: Self.pace(remaining: 37 * 3600))
+        let reading = BurnRate.reading(for: week, now: Self.now)!
         let horizon = 6.0 * 3600
 
         let countdown = BurnRate.cardLine(
@@ -98,28 +98,28 @@ struct BurnRateTests {
             for: week, reading: reading, horizon: horizon, softHint: false, beforeReset: false
         ) == nil)
 
-        let close = weekly(used: pace(remaining: 4 * 3600))
-        let closeReading = BurnRate.reading(for: close, now: now)!
+        let close = Self.weekly(used: Self.pace(remaining: 4 * 3600))
+        let closeReading = BurnRate.reading(for: close, now: Self.now)!
         let soon = BurnRate.cardLine(
             for: close, reading: closeReading, horizon: horizon, softHint: false, beforeReset: false
         )
         #expect(soon?.tone == .countdown)
         #expect(soon?.text == "Weekly · may run out in about 4 hours")
 
-        let steady = weekly(used: 0.2)
-        let steadyReading = BurnRate.reading(for: steady, now: now)!
+        let steady = Self.weekly(used: 0.2)
+        let steadyReading = BurnRate.reading(for: steady, now: Self.now)!
         #expect(BurnRate.cardLine(
             for: steady, reading: steadyReading, horizon: horizon, softHint: true, beforeReset: true
         )?.tone == .lasts)
 
-        let fiveHour = window(
+        let fiveHour = Self.window(
             kind: .fiveHour,
             scope: "GPT",
             used: 0.7,
             seconds: 18_000,
-            resetsAt: now.addingTimeInterval(4 * 3600)
+            resetsAt: Self.now.addingTimeInterval(4 * 3600)
         )
-        let scoped = BurnRate.reading(for: fiveHour, now: now)!
+        let scoped = BurnRate.reading(for: fiveHour, now: Self.now)!
         let named = BurnRate.cardLine(
             for: fiveHour, reading: scoped, horizon: horizon, softHint: true, beforeReset: true
         )
@@ -142,7 +142,7 @@ struct BurnRateTests {
                 "primary_window": [
                     "used_percent": 70,
                     "limit_window_seconds": "18000",
-                    "reset_at": (now.timeIntervalSince1970 + 4 * 3600) * 1000,
+                    "reset_at": (Self.now.timeIntervalSince1970 + 4 * 3600) * 1000,
                 ],
                 "secondary_window": [
                     "used_percent": 40,
@@ -151,39 +151,39 @@ struct BurnRateTests {
                 ],
             ] as [String: Any],
         ]
-        let parsed = CodexUsageService.parseUsageResponse(http, for: AccountKey(.codex), now: now)
+        let parsed = CodexUsageService.parseUsageResponse(http, for: AccountKey(.codex), now: Self.now)
         #expect(parsed.windows.count == 2)
         let fiveHour = parsed.windows.first { $0.kind == .fiveHour }
         let weekly = parsed.windows.first { $0.kind == .weekly }
         #expect(fiveHour?.reportsLength == true)
         #expect(fiveHour?.windowSeconds == 18_000)
-        #expect(fiveHour?.resetsAt == now.addingTimeInterval(4 * 3600))
-        let fiveReading = fiveHour.flatMap { BurnRate.reading(for: $0, now: now) }
+        #expect(fiveHour?.resetsAt == Self.now.addingTimeInterval(4 * 3600))
+        let fiveReading = fiveHour.flatMap { BurnRate.reading(for: $0, now: Self.now) }
         #expect(fiveReading?.exhaustsBeforeReset == true)
         #expect((fiveReading?.timeToExhaustion ?? 0) < 6 * 3600)
 
         #expect(weekly?.reportsLength == true)
-        #expect(weekly?.resetsAt == now.addingTimeInterval(3 * 86_400))
-        #expect(BurnRate.reading(for: weekly!, now: now) != nil)
+        #expect(weekly?.resetsAt == Self.now.addingTimeInterval(3 * 86_400))
+        #expect(BurnRate.reading(for: weekly!, now: Self.now) != nil)
 
         let missing: [String: Any] = [
             "rate_limit": [
                 "primary_window": [
                     "used_percent": 70,
-                    "reset_at": now.timeIntervalSince1970 + 4 * 3600,
+                    "reset_at": Self.now.timeIntervalSince1970 + 4 * 3600,
                 ],
             ],
         ]
-        let quiet = CodexUsageService.parseUsageResponse(missing, for: AccountKey(.codex), now: now)
+        let quiet = CodexUsageService.parseUsageResponse(missing, for: AccountKey(.codex), now: Self.now)
         #expect(quiet.windows.first?.reportsLength == false)
-        #expect(quiet.windows.first.flatMap { BurnRate.reading(for: $0, now: now) } == nil)
+        #expect(quiet.windows.first.flatMap { BurnRate.reading(for: $0, now: Self.now) } == nil)
 
         let flagged: [String: Any] = [
             "rate_limit": [
                 "primary_window": ["used_percent": true, "limit_window_seconds": 18_000],
             ],
         ]
-        #expect(CodexUsageService.parseUsageResponse(flagged, for: AccountKey(.codex), now: now).windows.isEmpty)
+        #expect(CodexUsageService.parseUsageResponse(flagged, for: AccountKey(.codex), now: Self.now).windows.isEmpty)
     }
 
     @Test("The app-server reply uses the same length and reset rules")
@@ -197,11 +197,11 @@ struct BurnRateTests {
                 ] as [String: Any],
             ],
         ]
-        let parsed = CodexUsageService.parseAppServerResponse(server, now: now)
+        let parsed = CodexUsageService.parseAppServerResponse(server, now: Self.now)
         let window = parsed.windows.first
         #expect(window?.kind == .fiveHour)
         #expect(window?.reportsLength == true)
-        #expect(window?.resetsAt == now.addingTimeInterval(4 * 3600))
-        #expect(window.flatMap { BurnRate.reading(for: $0, now: now) }?.exhaustsBeforeReset == true)
+        #expect(window?.resetsAt == Self.now.addingTimeInterval(4 * 3600))
+        #expect(window.flatMap { BurnRate.reading(for: $0, now: Self.now) }?.exhaustsBeforeReset == true)
     }
 }

@@ -1146,55 +1146,6 @@ struct AlertsThroughTheCacheTests {
         let down = ProviderUsage.unavailable(Self.account, reason: .unreachable)
         #expect(alerts(&memory, shown: await cache.reconciled(down), raw: down).isEmpty)
     }
-}
-
-@Suite("Notification authorization")
-@MainActor
-struct NotificationAuthorizationTests {
-    @Test("An in-flight grant does not consume readings, and concurrent requests share it", arguments: [true, false])
-    func pendingAuthorizationDoesNotConsumeWarning(granted: Bool) async throws {
-        let file = FileManager.default.temporaryDirectory.appending(path: "pulse-permission-\(UUID()).json")
-        // Never the real `status-alerts.json`.
-        let outages = FileManager.default.temporaryDirectory.appending(path: "pulse-outages-\(UUID()).json")
-        let settings = AppSettings(alertThreshold: .ninety)
-        let alerts = UsageAlerts(settings: settings, file: file, outageFile: outages)
-        var finish: CheckedContinuation<Bool, Never>?
-        let first = Task {
-            await alerts.requestAuthorizationIfNeeded {
-                await withCheckedContinuation { finish = $0 }
-            }
-        }
-        while finish == nil { await Task.yield() }
-        var joined = false
-        var repeated = false
-        let second = Task {
-            joined = true
-            return await alerts.requestAuthorizationIfNeeded {
-                repeated = true
-                return false
-            }
-        }
-        while !joined { await Task.yield() }
-
-        let account = AccountKey(.claudeCode)
-        let reading = ProviderUsage(
-            account: account,
-            windows: [UsageWindow(id: "weekly", kind: .weekly, scope: nil,
-                                  usedFraction: 0.93, windowSeconds: 604_800, resetsAt: nil)],
-            observedAt: Date(), state: .live, plan: nil, creditBalance: nil
-        )
-        alerts.observe(reading, raw: reading, as: account)
-        #expect(alerts.memory.accounts.isEmpty)
-        #expect(!FileManager.default.fileExists(atPath: file.path))
-        finish?.resume(returning: granted)
-        #expect(await first.value == granted)
-        #expect(await second.value == granted)
-        #expect(!repeated)
-        var memory = alerts.memory
-        #expect(memory.alerts(for: reading, raw: reading.state, as: account,
-                              threshold: .ninety, announcesReset: false, announcesFailure: false,
-                              celebratesReset: false, lowBalance: nil, staleMeansFailure: false, now: Date()).count == 1)
-    }
 
     // MARK: - Time to empty
 
@@ -1400,6 +1351,56 @@ struct NotificationAuthorizationTests {
         #expect(window.announced == 90)
         #expect(window.exhaustionStages.isEmpty)
         #expect(window.exhaustionBeforeReset == false)
+    }
+
+}
+
+@Suite("Notification authorization")
+@MainActor
+struct NotificationAuthorizationTests {
+    @Test("An in-flight grant does not consume readings, and concurrent requests share it", arguments: [true, false])
+    func pendingAuthorizationDoesNotConsumeWarning(granted: Bool) async throws {
+        let file = FileManager.default.temporaryDirectory.appending(path: "pulse-permission-\(UUID()).json")
+        // Never the real `status-alerts.json`.
+        let outages = FileManager.default.temporaryDirectory.appending(path: "pulse-outages-\(UUID()).json")
+        let settings = AppSettings(alertThreshold: .ninety)
+        let alerts = UsageAlerts(settings: settings, file: file, outageFile: outages)
+        var finish: CheckedContinuation<Bool, Never>?
+        let first = Task {
+            await alerts.requestAuthorizationIfNeeded {
+                await withCheckedContinuation { finish = $0 }
+            }
+        }
+        while finish == nil { await Task.yield() }
+        var joined = false
+        var repeated = false
+        let second = Task {
+            joined = true
+            return await alerts.requestAuthorizationIfNeeded {
+                repeated = true
+                return false
+            }
+        }
+        while !joined { await Task.yield() }
+
+        let account = AccountKey(.claudeCode)
+        let reading = ProviderUsage(
+            account: account,
+            windows: [UsageWindow(id: "weekly", kind: .weekly, scope: nil,
+                                  usedFraction: 0.93, windowSeconds: 604_800, resetsAt: nil)],
+            observedAt: Date(), state: .live, plan: nil, creditBalance: nil
+        )
+        alerts.observe(reading, raw: reading, as: account)
+        #expect(alerts.memory.accounts.isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: file.path))
+        finish?.resume(returning: granted)
+        #expect(await first.value == granted)
+        #expect(await second.value == granted)
+        #expect(!repeated)
+        var memory = alerts.memory
+        #expect(memory.alerts(for: reading, raw: reading.state, as: account,
+                              threshold: .ninety, announcesReset: false, announcesFailure: false,
+                              celebratesReset: false, lowBalance: nil, staleMeansFailure: false, now: Date()).count == 1)
     }
 
     @Test("The foreground presentation callback is a real optional protocol method")
