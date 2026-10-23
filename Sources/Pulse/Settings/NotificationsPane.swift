@@ -295,8 +295,10 @@ struct NotificationsPane: View {
                     hoursStepper(
                         hours: settings.exhaustionCardHours,
                         enabled: settings.isPanelVisible,
-                        get: { settings.exhaustionCardHours },
-                        set: { settings.exhaustionCardHours = $0 }
+                        value: Binding(
+                            get: { settings.exhaustionCardHours },
+                            set: { settings.exhaustionCardHours = ExhaustionHoursControl.applied($0) }
+                        )
                     )
                 }
 
@@ -376,11 +378,16 @@ struct NotificationsPane: View {
                             hoursStepper(
                                 hours: liveStageHours(stage),
                                 enabled: UsageAlerts.isSupported,
-                                get: { liveStageHours(stage) },
-                                set: { hours in
-                                    settings.setExhaustionStageHours(id: stage.id, hours: hours)
-                                    commitExhaustionAlerts()
-                                }
+                                value: Binding(
+                                    get: { liveStageHours(stage) },
+                                    set: { hours in
+                                        settings.setExhaustionStageHours(
+                                            id: stage.id,
+                                            hours: ExhaustionHoursControl.applied(hours)
+                                        )
+                                        commitExhaustionAlerts()
+                                    }
+                                )
                             )
                             Button(String.localized("Remove")) {
                                 settings.removeExhaustionStage(id: stage.id)
@@ -457,22 +464,22 @@ struct NotificationsPane: View {
 
     /// Up and down, with the current hours written beside them.
     ///
-    /// `get` is called again after the click. It has to return the setting,
-    /// not a copy from the last time the row was built, or the stepper puts
-    /// the old number back and the click looks dead. The label is that same
+    /// The binding is built in the row, where it reads the setting again
+    /// after the click. A copy taken while the row was last built puts the
+    /// old number back, and the click looks dead. The label is that same
     /// number: hiding it was how the row shipped with bare chevrons.
+    ///
+    /// The binding stays a `Binding` rather than two closures passed in.
+    /// Those closures are not sendable, and the stepper's binding requires
+    /// closures that are.
     private func hoursStepper(
         hours: Int,
         enabled: Bool,
-        get: @escaping () -> Int,
-        set: @escaping (Int) -> Void
+        value: Binding<Int>
     ) -> some View {
         let shown = ExhaustionHoursControl.digits(hours)
         return Stepper(
-            value: Binding(
-                get: get,
-                set: { set(ExhaustionHoursControl.applied($0)) }
-            ),
+            value: value,
             in: ExhaustionStage.minimumHours...ExhaustionStage.maximumHours,
             step: 1
         ) {
