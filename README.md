@@ -48,12 +48,6 @@
 - **Real numbers only** — every usage percentage is the one the service itself reported. The few estimates are marked as such, and where a service reports nothing, Blinky says so instead of guessing.
 - **Native and quiet** — Swift and SwiftUI, Liquid Glass on macOS 26. Dock it left, right, along the top or along the bottom beside the Dock, let it fold to a sliver when idle, or keep it in the menu bar.
 
-**Recently added:** usage in the menu bar with a dashboard for each account, starting usage windows after a reset, and animated bot marks. [What's new](https://github.com/harrisliangsu/blinky-mac/releases/latest).
-
-<p align="center">
-  <img src="Docs/images/bot-mark.gif" width="300" alt="Blinky animated marks: a bot in each ring reacting to what that account is doing">
-</p>
-
 <p align="center">
   <sub>If Blinky has saved you from a surprise rate limit, a ⭐ helps other people find it.</sub>
 </p>
@@ -63,7 +57,7 @@
 ## Installation
 
 1. Download the latest **`Blinky-x.y.z.dmg`** from [Releases](https://github.com/harrisliangsu/blinky-mac/releases/latest).
-2. Open the disk image and drag **Blinky** into your `Applications` folder. The file is `Blinky.app`. If `Pulse.app` is already there, the next time that copy opens it renames itself to `Blinky.app`, unless `Blinky.app` is already in the same folder — that copy stays where it is.
+2. Open the disk image and drag **Blinky** into your `Applications` folder. The file is `Blinky.app`. A copy still named `Pulse.app` renames itself to `Blinky.app` the next time it opens, unless `Blinky.app` is already in that folder, in which case that copy stays where it is.
 3. On first launch, choose the services to monitor. All start unchecked; Blinky reads their credentials and checks usage only after you click **Done**. Closing the chooser leaves monitoring off; you can also enable a service in Settings. Upgrades keep your choices and ask once about newly supported services detected on your Mac.
 4. Blinky lives in the menu bar. If your menu bar is crowded, right-click the floating rail — or the collapsed sliver — and choose **Settings…**; you can also assign a global shortcut for it under **Settings › General › Shortcuts**.
 
@@ -75,21 +69,28 @@
 >   ```bash
 >   xattr -cr /Applications/Blinky.app
 >   ```
->   *Updates are offered in-app through Sparkle. macOS may request browser keychain access again after an update.*
+>   *macOS may request browser keychain access again after an update.*
+
+A scheduled check notifies you first. Click the notification to open the update window. If notification permission is refused, the window opens instead. Under **Settings › About › When an update is found**, **Show the window** opens it immediately. **Check for Updates…** and **Check now** still open the window.
 
 ---
 
 ## Key Features
 
 ### Rings at a glance
-- **Colours that follow usage** — green through amber to red, or a colour of your own for each account.
+- **Colours that follow usage** — Red alert, Gradient, or Quiet. Each account can also have a colour of its own.
 - **Used or left** — `75% used` or `25% left`, with an optional clock arc for how much of the window has passed.
 - **Live activity** — a turning dot while an agent is working, and optional animated bots that react to each account.
+
+<p align="center">
+  <img src="Docs/images/bot-mark.gif" width="300" alt="Blinky animated marks: a bot in each ring reacting to what that account is doing">
+</p>
 
 ### Details when you point at a ring
 - **Every limit and its reset** on one card, in continuous or segmented bars.
 - **Detailed card** — the plan, when it was read, what each limit is worth, and recent usage from this Mac's records.
-- **Burn-rate forecast** — tells you when your pace will run out before the window does.
+- **May run out before reset** — the card says when the current pace may not last until the reset. That line is on by default, and a separate notice fires once at 24 hours left. Further reminders can be added under **Settings › Notifications › Exhaustion forecast**.
+- **Codex resets** — the Codex card shows a predicted reset and the last reset.
 - **In the menu bar** — the fullest ring as a figure, a small ring or split limits, with an optional dashboard.
 
 <p align="center">
@@ -98,17 +99,17 @@
 
 ### Stays out of the way
 - **Any edge** — left, right, top, beside the Dock, or anywhere at all; it folds to a sliver when idle.
-- **Notifications you choose** — a limit crossing a line, spent, reset, failing checks, a low balance, a provider outage.
+- **Notifications you choose** — a limit crossing a line, spent, reset, failing checks, a low balance, or a provider outage. A weekly or monthly limit coming back can show a ribbon.
 - **Six languages** — English, Simplified and Traditional Chinese, Japanese, Korean and Russian.
-- **Optional extras** — global shortcuts, following the active display, hiding from screenshots.
+- **Optional extras** — global shortcuts, following the active display, hiding from screenshots, and starting a usage window after a reset.
 
 ### Spend, status and the rest
-- **Token spend** — what 54 local clients have used, priced at public API rates, by day, model and agent, over any span you choose.
+- **Token spend** — what 54 local clients have used, priced at public API rates, by day, model and agent, over any span you choose. With Token spend on, the button on the usage card's header opens that span beside the panel, and Share copies the summary as an image.
 - **Estimates in your currency** — dollars, yuan, Hong Kong or New Taiwan dollars, yen, won or roubles.
 - **Usage recaps** — shareable cards for a day, a week, a month or a year, built from the same records.
 - **Service status** — 44 providers' own status pages, and a notification when one reports an outage.
 - **Connection diagnostics** — where each figure came from, and the servers' own replies.
-- **For power users** — several accounts per provider, extensions for your own sources, and `--json` for scripts.
+- **For power users** — several accounts per provider, Kimi Code device-code sign-in, a personal token for Qoder, extensions for your own sources, and `--json` for scripts.
 
 <p align="center">
   <img src="Docs/images/spend.webp" height="290" alt="Token spend: total, tokens by kind, and the daily pattern">
@@ -117,8 +118,6 @@
 </p>
 
 **Everything in detail:** [Docs/features.md](Docs/features.md).
-
-**Also in this build:** ring colour schemes (Red alert, Gradient, Quiet); a Codex reset forecast and the latest reset on the card; ribbons when a weekly or monthly limit comes back; Kimi Code device-code sign-in and more than one account; Qoder with a personal token.
 
 ---
 
