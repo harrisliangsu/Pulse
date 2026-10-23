@@ -8,14 +8,14 @@ struct DeveloperIntegrationsView: View {
     @State private var message: String?
 
     private var executable: String {
-        Bundle.main.executableURL?.path ?? "/Applications/Pulse.app/Contents/MacOS/Pulse"
+        Bundle.main.executableURL?.path ?? "/Applications/Blinky.app/Contents/MacOS/Pulse"
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             SettingsGroup(String.localized("Read cached usage")) {
                 SettingsRow(
-                    "Pulse --json",
+                    String.localized("Readings as JSON"),
                     subtitle: String.localized("Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials.")
                 ) {
                     Button(String.localized("Copy command")) { copy(Self.quote(executable) + " --json") }

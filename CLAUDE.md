@@ -15,7 +15,7 @@ swift build
 ./Scripts/dmg.sh
 ./Scripts/check-localization.sh
 swift test
-./build.noindex/Pulse.app/Contents/MacOS/Pulse --json
+./build.noindex/Blinky.app/Contents/MacOS/Pulse --json
 ```
 
 **`xcode-select` 必须指向 Xcode，不能是 CommandLineTools。** `#Preview` 由 Xcode 插件展开，否则每次构建都会报 `PreviewsMacros plugin not found`。用 `xcode-select -p` 检查。临时指定：`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift build`。

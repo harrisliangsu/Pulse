@@ -34,7 +34,7 @@ the morning. What that costs you is stated on the row before you press it:
   from some other browser may be months out of date. Pick a specific one under
   **Browser** if you would rather — naming one means *only* that one is opened.
 - **Safari needs Full Disk Access**, because its cookie file lives inside its
-  container. Only the installed `Pulse.app` can be granted it; a `swift run`
+  container. Only the installed `Blinky.app` can be granted it; a `swift run`
   build cannot.
 - **Chrome, Edge, Brave and Arc keep their key in the login keychain**, so
   macOS will ask once — "Pulse wants to use your confidential information".

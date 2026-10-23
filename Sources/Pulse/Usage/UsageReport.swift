@@ -42,7 +42,7 @@ enum UsageReport {
         done.wait()
 
         guard let data = encode(rail: rail, readings: readings.value, generatedAt: Date()) else {
-            FileHandle.standardError.write(Data("Pulse: could not encode the report\n".utf8))
+            FileHandle.standardError.write(Data("Blinky: could not encode the report\n".utf8))
             return 1
         }
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="AppIcon/pulse-icon-1024.png" width="112" alt="Blinky">
+  <img src="AppIcon/blinky-icon-1024.png" width="112" alt="Blinky">
 </p>
 
 <h1 align="center">Blinky</h1>
@@ -59,7 +59,7 @@
 ## 설치 및 빠른 시작
 
 1. [Releases](https://github.com/harrisliangsu/blinky-mac/releases/latest)에서 최신 **`Blinky-x.y.z.dmg`**를 내려받습니다.
-2. 디스크 이미지를 열고 **Blinky**를 `Applications` 폴더로 끌어다 놓습니다. 디스크의 파일 이름은 그대로 `Pulse.app`이므로, 업데이트는 이미 설치한 복사본을 교체합니다.
+2. 디스크 이미지를 열고 **Blinky**를 응용 프로그램 폴더로 끌어다 놓습니다. 파일 이름은 `Blinky.app`입니다. 이미 `Pulse.app`이 있으면 Blinky를 넣은 뒤 휴지통으로 옮깁니다. 앱 안의 업데이트는 그 옛 파일 이름을 바꾸지 않습니다.
 3. 처음 실행하면 모니터링할 서비스를 선택합니다. 처음에는 모두 선택되지 않으며, **완료**를 누른 뒤에만 선택한 서비스의 인증 정보를 읽고 사용량을 확인합니다. 선택 창을 닫으면 모니터링을 시작하지 않습니다. 설정에서 서비스를 켜도 됩니다. 업데이트 후에도 기존 선택은 유지되며, 새로 지원하는 서비스가 Mac에서 발견되면 한 번만 추가 여부를 묻습니다.
 4. Blinky는 메뉴 막대에 있습니다. 메뉴 막대가 복잡하다면 플로팅 레일——또는 접힌 가느다란 선——을 오른쪽 클릭해 **설정…**을 고르세요. **설정 › 일반 › 단축키**에서 전역 단축키를 지정할 수도 있습니다.
 
@@ -69,7 +69,7 @@
 > - **방법 1(GUI)**: Blinky를 실행하고 경고를 닫은 뒤, **시스템 설정 → 개인정보 보호 및 보안**을 열고 **그래도 열기**를 클릭합니다.
 > - **방법 2(터미널)**:
 >   ```bash
->   xattr -cr /Applications/Pulse.app
+>   xattr -cr /Applications/Blinky.app
 >   ```
 >   *업데이트는 앱 안에서 Sparkle로 제공됩니다. 업데이트 후 macOS가 브라우저 키체인 접근을 다시 요청할 수 있습니다.*
 
@@ -104,7 +104,7 @@
 - **사용량 리포트**——같은 기록으로 만드는 하루, 한 주, 한 달, 한 해의 공유용 카드.
 - **서비스 상태**——44개 제공업체의 공식 상태 페이지, 장애가 나면 알림도.
 - **연결 진단**——각 숫자의 출처와 서버가 보낸 응답 그대로.
-- **깊이 쓰는 분께**——제공업체별 여러 계정, 직접 만든 데이터 원본을 더하는 확장, 스크립트용 `Pulse --json`.
+- **깊이 쓰는 분께**——제공업체별 여러 계정, 직접 만든 데이터 원본을 더하는 확장, 스크립트용 `--json`.
 
 <p align="center">
   <img src="Docs/images/spend.webp" height="290" alt="토큰 사용량: 합계, 종류별 토큰, 일별 패턴">
@@ -147,7 +147,7 @@ cd blinky-mac
 ./Scripts/bundle.sh
 
 # 실행
-open build.noindex/Pulse.app
+open build.noindex/Blinky.app
 ```
 
 `swift run Pulse`는 번들 없이 빠르게 빌드하고 실행하는 방법이지만, 알림과 앱 내 업데이트는 번들 앱에서만 동작합니다. 툴체인 설정은 [Docs/build-from-source.md](Docs/build-from-source.md)를 참고하세요. 릴리스 배포: [Docs/releasing.md](Docs/releasing.md).

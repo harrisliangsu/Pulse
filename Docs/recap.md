@@ -91,7 +91,7 @@ Opener, calendar, timetable and payback follow the approved mockups (lineup, dia
 
 ## Drawing
 
-Flat colour and type only: paper `#F5F5F1`, white cards with a hairline, ink `#1B1B1E`, lime `#C8F03C` (the icon's accent). **Lime is a fill, never text on paper.** No gradient, blur, shadow, material or emoji, and nothing `ImageRenderer` cannot draw. System face with its CJK fallback; labels and digits monospaced. The Pulse mark is `AppIcon/pulse-mark.svg`'s path.
+Flat colour and type only: paper `#F5F5F1`, white cards with a hairline, ink `#1B1B1E`, lime `#C8F03C` (the icon's accent). **Lime is a fill, never text on paper.** No gradient, blur, shadow, material or emoji, and nothing `ImageRenderer` cannot draw. System face with its CJK fallback; labels and digits monospaced. The Blinky mark on the poster and the scorecard is the mascot, `blinky-mascot.png`.
 
 Hero numbers are set tight and trimmed to their digits (`RecapFigureText.trimmed`; ascender and descender fractions measured against the system font). **Use `Text(tight:tracking:)`, never a negative `.tracking`**: SwiftUI tracks after the last glyph too, which clipped the last digit's right edge; `Text(tight:)` tracks all but the last character. `minimumScaleFactor` on a `Text` in an `HStack` with a `Spacer` can collapse to its floor; give the row a fixed frame or drop the factor.
 
@@ -177,7 +177,7 @@ Every export re-renders at full size with `RecapRenderer`, never a screenshot of
 | **Save image** | The card on screen → `NSSavePanel` (window sheet), `pulse-recap-2026-09-02-opener.png` |
 | **Save all** | `NSOpenPanel` for a folder, then every card including the poster as `pulse-recap-<period>-<nn>-<card>.png` in deck order (`<period>` is `Recap.Period.key`: `2026-10-18`, `week-2026-10-12`, `2026-09`, `2026`). **Overwrites** same-named files; nothing else in the folder is touched |
 | **Copy image** | PNG (and TIFF, for apps that read only that) on `NSPasteboard.general`; "Copied" |
-| **Share image** | One PNG in its own temporary folder `…/Pulse Recap/<UUID>/` (a later share never removes an earlier one the receiving app may still read), handed to `NSSharingServicePicker` anchored to the button. The whole `Pulse Recap` folder is deleted when the window closes (`RecapExport.removeShareFolder`) |
+| **Share image** | One PNG in its own temporary folder `…/Blinky Recap/<UUID>/` (a later share never removes an earlier one the receiving app may still read), handed to `NSSharingServicePicker` anchored to the button. The whole `Blinky Recap` folder is deleted when the window closes (`RecapExport.removeShareFolder`) |
 
 A line under the buttons says "Saved", "Copied" or "Couldn't make the image." for three seconds; cancelling a panel or opening the share sheet says nothing.
 

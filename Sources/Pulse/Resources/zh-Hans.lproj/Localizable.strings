@@ -40,6 +40,7 @@
 "Copy diagnostics" = "复制诊断信息";
 "Not recorded" = "尚无记录";
 "Read cached usage" = "读取用量缓存";
+"Readings as JSON" = "JSON 读数";
 "Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials." = "输出 Blinky 已保存的读数，不是服务商的原始回复；不会联网，也不访问凭据。";
 "Copy command" = "复制命令";
 "Developer kit" = "开发者集成包";

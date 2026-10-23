@@ -22,9 +22,9 @@
       "name": "pulsePath",
       "type": "textfield",
       "title": "Blinky executable",
-      "description": "Full path to the executable inside Pulse.app. The app is named Blinky. Spaces are supported; do not add shell quotes.",
+      "description": "Full path to the executable inside Blinky.app. It is still named Pulse. An older copy may be Pulse.app. Spaces are supported; do not add shell quotes.",
       "required": false,
-      "default": "/Applications/Pulse.app/Contents/MacOS/Pulse"
+      "default": "/Applications/Blinky.app/Contents/MacOS/Pulse"
     }
   ],
   "scripts": {

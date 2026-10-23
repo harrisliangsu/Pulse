@@ -11,10 +11,10 @@ import UniformTypeIdentifiers
 /// second, and "Save all" yields between cards so the window keeps answering.
 ///
 /// **Nothing is kept.** A file is written where the person chose. Sharing
-/// writes one PNG into its own folder (a UUID) under `Pulse Recap/` in the
+/// writes one PNG into its own folder (a UUID) under `Blinky Recap/` in the
 /// temporary folder, because the share sheet takes a file and the app it hands
 /// the file to may still be reading it when the next share is made — an earlier
-/// share's folder is never removed by a later one. The whole `Pulse Recap`
+/// share's folder is never removed by a later one. The whole `Blinky Recap`
 /// folder goes when the recap window closes (`removeShareFolder`), and macOS
 /// clears the temporary folder itself.
 ///
@@ -104,7 +104,7 @@ enum RecapExport {
     // MARK: - Share
 
     private static var shareFolder: URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent("Pulse Recap", isDirectory: true)
+        FileManager.default.temporaryDirectory.appendingPathComponent("Blinky Recap", isDirectory: true)
     }
 
     /// Opens the system share sheet on the card's PNG, anchored to `view`.

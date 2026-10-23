@@ -40,6 +40,7 @@
 "Copy diagnostics" = "Copy diagnostics";
 "Not recorded" = "Not recorded";
 "Read cached usage" = "Read cached usage";
+"Readings as JSON" = "Readings as JSON";
 "Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials." = "Prints Blinky's saved readings, not the provider's original reply, without fetching or opening credentials.";
 "Copy command" = "Copy command";
 "Developer kit" = "Developer kit";

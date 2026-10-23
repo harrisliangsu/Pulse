@@ -26,9 +26,21 @@ read_report() {
         jq -c .
         return
     fi
-    local binary="${PULSE_BIN:-/Applications/Pulse.app/Contents/MacOS/Pulse}"
-    if [ -z "${PULSE_BIN:-}" ] && [ ! -x "$binary" ]; then
-        binary="$HOME/Applications/Pulse.app/Contents/MacOS/Pulse"
+    local binary="${PULSE_BIN:-}"
+    if [ -z "$binary" ]; then
+        local candidate
+        for candidate in \
+            "/Applications/Blinky.app/Contents/MacOS/Pulse" \
+            "$HOME/Applications/Blinky.app/Contents/MacOS/Pulse" \
+            "/Applications/Pulse.app/Contents/MacOS/Pulse" \
+            "$HOME/Applications/Pulse.app/Contents/MacOS/Pulse"
+        do
+            if [ -x "$candidate" ]; then
+                binary="$candidate"
+                break
+            fi
+        done
+        binary="${binary:-/Applications/Blinky.app/Contents/MacOS/Pulse}"
     fi
     if [ ! -x "$binary" ]; then
         printf 'Blinky: app not found. Set PULSE_BIN to its executable.\n' >&2

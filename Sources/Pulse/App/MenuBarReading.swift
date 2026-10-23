@@ -146,7 +146,7 @@ struct MenuBarReading: Equatable {
 }
 
 extension MenuBarReading {
-    /// Puts a reading on the status item's button: Pulse's mark alone when
+    /// Puts a reading on the status item's button: Blinky's mark alone when
     /// there is none, else the account's mark and its figure — or a small
     /// ring in its place — red past the warning line. The tooltip names the
     /// account and the limit.
@@ -159,7 +159,7 @@ extension MenuBarReading {
         on button: NSStatusBarButton
     ) {
         guard let reading else {
-            button.image = pulseMark(height: 16)
+            button.image = mascotMark(height: 18)
             button.attributedTitle = NSAttributedString()
             button.imagePosition = .imageOnly
             button.toolTip = "Blinky"
@@ -213,34 +213,20 @@ extension MenuBarReading {
         button.attributedTitle = NSAttributedString(string: " " + reading.text(remaining: remaining), attributes: attributes)
     }
 
-    /// Pulse's own mark — the app icon's P, one stroke — as a template, so
-    /// the menu bar colours it like every other item there. Drawn from
-    /// `AppIcon/pulse-mark.svg`'s path rather than shipped as a file: one
-    /// stroke, a 100-unit pen with round ends, bounds 302–762 × 194–830.
+    /// The app icon's mascot, in colour. A template would flatten the drawing
+    /// to one colour. The picture is `blinky-mascot.png` in the resource bundle,
+    /// the same illustration Icon Composer compiles as the app icon.
     @MainActor
-    static func pulseMark(height: CGFloat) -> NSImage {
-        let bounds = NSRect(x: 302, y: 194, width: 460, height: 636)
-        let scale = height / bounds.height
-        let image = NSImage(size: NSSize(width: (bounds.width * scale).rounded(.up), height: height), flipped: false) { _ in
-            let transform = NSAffineTransform()
-            transform.scale(by: scale)
-            transform.translateX(by: -bounds.minX, yBy: -bounds.minY)
-            transform.concat()
-            // The SVG's y runs down; here it runs up, so every y is 1024 − y.
-            let path = NSBezierPath()
-            path.move(to: NSPoint(x: 352, y: 244))
-            path.line(to: NSPoint(x: 352, y: 780))
-            path.line(to: NSPoint(x: 562, y: 780))
-            path.appendArc(withCenter: NSPoint(x: 562, y: 630), radius: 150, startAngle: 90, endAngle: -90, clockwise: true)
-            path.line(to: NSPoint(x: 530, y: 480))
-            path.lineWidth = 100
-            path.lineCapStyle = .round
-            path.lineJoinStyle = .round
-            NSColor.black.setStroke()
-            path.stroke()
-            return true
+    static func mascotMark(height: CGFloat) -> NSImage {
+        let image: NSImage
+        if let url = Bundle.module.url(forResource: "blinky-mascot", withExtension: "png"),
+           let loaded = NSImage(contentsOf: url) {
+            image = loaded
+        } else {
+            image = NSImage(size: NSSize(width: height, height: height))
         }
-        image.isTemplate = true
+        image.size = NSSize(width: height, height: height)
+        image.isTemplate = false
         image.accessibilityDescription = "Blinky"
         return image
     }

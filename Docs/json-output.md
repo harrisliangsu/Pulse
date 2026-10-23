@@ -1,11 +1,11 @@
-# `Pulse --json`
+# `--json`
 
-The app's name on screen is Blinky. This command is still the `Pulse` executable inside `Pulse.app`.
+The bundled app is Blinky.app. This command is still the `Pulse` executable inside it. An update that replaces an older `Pulse.app` in place leaves that file name.
 
 Owns: the JSON contract other people's status lines are built on. Where the figures come from and how often they move: [refresh-and-data.md](refresh-and-data.md).
 
 ```bash
-/Applications/Pulse.app/Contents/MacOS/Pulse --json
+/Applications/Blinky.app/Contents/MacOS/Pulse --json
 ```
 
 Source: [`Sources/Pulse/Usage/UsageReport.swift`](../Sources/Pulse/Usage/UsageReport.swift). Dispatched in `PulseMain` before `LegacyDefaults.migrateIfNeeded()`, alongside `--statusline`.

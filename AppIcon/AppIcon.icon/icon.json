@@ -1,15 +1,15 @@
 {
   "fill": {
-    "automatic-gradient": "srgb:0.10588,0.10588,0.11765,1.00000"
+    "solid": "srgb:0.11373,0.12549,0.16863,1.00000"
   },
   "groups": [
     {
       "layers": [
         {
-          "glass": true,
+          "glass": false,
           "hidden": false,
-          "image-name": "mark.svg",
-          "name": "mark",
+          "image-name": "mascot.png",
+          "name": "mascot",
           "position": {
             "scale": 1,
             "translation-in-points": [
@@ -20,12 +20,12 @@
         }
       ],
       "shadow": {
-        "kind": "neutral",
-        "opacity": 0.5
+        "kind": "none",
+        "opacity": 0
       },
       "translucency": {
-        "enabled": true,
-        "value": 0.3
+        "enabled": false,
+        "value": 0
       }
     }
   ],

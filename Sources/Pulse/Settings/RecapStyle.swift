@@ -291,39 +291,16 @@ struct RecapStoryPage<Content: View>: View {
 
 // MARK: - Marks and glyphs
 
-/// The Pulse mark on its ink tile: the stem in paper, the bowl in lime, drawn
-/// from `AppIcon/pulse-mark.svg`'s path.
+/// The Blinky mascot, the same picture as the app icon.
 struct RecapMark: View {
     let side: CGFloat
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: side * 12 / 46, style: .continuous).fill(RecapColor.ink)
-            Canvas { context, size in
-                // The path lives in 292…772 × 184…840 of the icon's 1024 space.
-                let scale = min(size.width / 480, size.height / 656)
-                func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-                    CGPoint(x: (x - 292) * scale + (size.width - 480 * scale) / 2,
-                            y: (y - 184) * scale + (size.height - 656 * scale) / 2)
-                }
-                let style = StrokeStyle(lineWidth: 100 * scale, lineCap: .round, lineJoin: .round)
-
-                var stem = Path()
-                stem.move(to: point(352, 780))
-                stem.addLine(to: point(352, 244))
-                context.stroke(stem, with: .color(RecapColor.paper), style: style)
-
-                var bowl = Path()
-                bowl.move(to: point(352, 244))
-                bowl.addLine(to: point(562, 244))
-                bowl.addArc(center: point(562, 394), radius: 150 * scale,
-                            startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
-                bowl.addLine(to: point(530, 544))
-                context.stroke(bowl, with: .color(RecapColor.lime), style: style)
-            }
-            .frame(width: side * 28 / 46, height: side * 34 / 46)
-        }
-        .frame(width: side, height: side)
+        Image("blinky-mascot", bundle: .module)
+            .resizable()
+            .interpolation(.high)
+            .frame(width: side, height: side)
+            .accessibilityLabel(Text(verbatim: "Blinky"))
     }
 }
 

@@ -194,11 +194,11 @@ The pane's first group holds a **Usage recaps** row (reading on only) with one *
 ### `Pulse --recap`
 
 ```bash
-./build.noindex/Pulse.app/Contents/MacOS/Pulse --recap 2026-10-18        # a day
-./build.noindex/Pulse.app/Contents/MacOS/Pulse --recap week-2026-10-12   # the seven days from that date
-./build.noindex/Pulse.app/Contents/MacOS/Pulse --recap 2026-09           # a month
-./build.noindex/Pulse.app/Contents/MacOS/Pulse --recap 2026              # a year
-./build.noindex/Pulse.app/Contents/MacOS/Pulse --recap                   # this month
+./build.noindex/Blinky.app/Contents/MacOS/Pulse --recap 2026-10-18        # a day
+./build.noindex/Blinky.app/Contents/MacOS/Pulse --recap week-2026-10-12   # the seven days from that date
+./build.noindex/Blinky.app/Contents/MacOS/Pulse --recap 2026-09           # a month
+./build.noindex/Blinky.app/Contents/MacOS/Pulse --recap 2026              # a year
+./build.noindex/Blinky.app/Contents/MacOS/Pulse --recap                   # this month
 ```
 
 A week is taken as written: `week-` and the date its seven days start on, not the week holding that date, so the command does not depend on the Mac's first weekday. `period` in the JSON is the same key. A date not on the calendar is refused.
