@@ -353,6 +353,7 @@
 "Refresh" = "Обновить";
 "Blinky %@ is available" = "Доступна версия Blinky %@";
 "Check now" = "Проверить";
+"Check for Updates…" = "Проверить обновления…";
 "Checking…" = "Проверка…";
 "Built from source — no update check." = "Собрано из исходного кода — обновления не проверяются.";
 "%@ installed · %@ available" = "Установлена %@ · доступна %@";

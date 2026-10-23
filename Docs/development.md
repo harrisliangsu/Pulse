@@ -42,7 +42,7 @@ Six languages: English, Simplified Chinese, Traditional Chinese, Japanese, Korea
 - **Mind the register.** *人格* is a psychiatric word; a cartoon face has *性格*, or *個性* in Taiwan.
 - **Do not invent objects the interface has not got.** *不随它在轨道上的位置变化* gave the rail an 轨道 nobody had mentioned.
 - **zh-Hant is not zh-Hans run through a converter.** Vocabulary differs (*個性* / *性格*, *預設* / *默认*), and so does terminology: zh-Hant says *服務商* where zh-Hans says *供应商*.
-- **One term per concept per language.** zh-Hans currently breaks this: *供应商* in the navigation, *服务商* in two strings. Worth settling next time that pane is open.
+- **One term per concept per language.** The settings sidebar's providers row is *供应商* (the key `Providers`). The rest of the zh-Hans copy still says *服务商*. zh-Hant keeps *服務商* for the row and for the sentences.
 `./Scripts/check-localization.sh` compares **every** `.strings` file against English — it globs `*.lproj` rather than naming a pair, so a language added to the app but not to the script cannot go unchecked — **and** every key the source asks for (`Scripts/localization-keys.py` — a scanner, not a regex, because interpolations nest). Comparing only the two files missed a renamed string literal that fell back to English while both files still agreed.
 
 Why implicit `Text` fails, and the scanner’s blind spots: [decisions/localization.md](decisions/localization.md).

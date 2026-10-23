@@ -317,7 +317,7 @@
 "Large" = "大";
 
 /* Launch at login */
-"Open at login" = "登入時啟動";
+"Open at login" = "開機啟動";
 "Start Blinky automatically when you log in." = "登入 macOS 後自動啟動 Blinky。";
 "Waiting for approval in System Settings › General › Login Items." = "等待在「系統設定 › 一般 › 登入項目」中允許。";
 
@@ -361,6 +361,7 @@
 "Refresh" = "重新整理";
 "Blinky %@ is available" = "Blinky %@ 可更新";
 "Check now" = "立即檢查";
+"Check for Updates…" = "檢查更新";
 "Checking…" = "檢查中…";
 "Built from source — no update check." = "由原始碼建置，不檢查更新。";
 "%@ installed · %@ available" = "已安裝 %@ · 可更新到 %@";

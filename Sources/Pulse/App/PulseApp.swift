@@ -74,6 +74,16 @@ struct PulseApp: App {
                     appDelegate.showSettings()
                 }
                 .keyboardShortcut(",", modifiers: .command)
+                .id(appDelegate.settings.language)
+            }
+            // Under About, where a Mac app puts the item that opens the
+            // update window. The same call as Settings → About (`AppUpdate.check`).
+            CommandGroup(after: .appInfo) {
+                Button(String.localized("Check for Updates…")) {
+                    appDelegate.update.check()
+                }
+                .disabled(!appDelegate.update.canCheck)
+                .id(appDelegate.settings.language)
             }
         }
     }

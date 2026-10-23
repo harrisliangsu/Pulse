@@ -28,8 +28,8 @@ struct SettingsView: View {
         nonmutating set { navigation.pane = newValue }
     }
 
-    /// Narrows the sidebar. Sixteen providers plus every added account is a
-    /// list that scrolls on any window worth opening.
+    /// Narrows the sidebar. A search lists matching accounts; with the field
+    /// empty they stay on the Providers page.
     @State private var search = ""
     @State private var spend: SpendPaneModel
     @State private var history: AccountHistoryModel
@@ -103,9 +103,9 @@ struct SettingsView: View {
                 // `GLM Coding Plan` quietly became the longest.
                 //
                 // And moved to 220 when `Alibaba Coding Plan` did: 121.4pt of text
-                // at the sidebar's 13pt against `Xiaomi Coding Plan`'s 117.3, and
-                // with the scroller showing — which it always is now, with
-                // seventy-odd rows — 200 cut it to "Alibaba Coding Pl…".
+                // at the sidebar's 13pt against `Xiaomi Coding Plan`'s 117.3.
+                // Those names live on the Providers page now, and a search still
+                // lists them here, so 200 still cuts one to "Alibaba Coding Pl…".
                 .frame(minWidth: 220)
                 // Still worth setting: these bound what dragging the divider may
                 // do. `ideal` matches the frame so first layout and every rebuild
@@ -144,6 +144,8 @@ struct SettingsView: View {
                             )
                         case .spend:
                             TokenSpendPane(settings: settings, model: spend, openRecap: openRecap, scroll: proxy)
+                        case .providers:
+                            ProvidersHubPane(settings: settings, navigation: navigation)
                         case .about: AboutPane(update: update)
                         case .integrations: DeveloperIntegrationsView(settings: settings)
                         case .extensions:
