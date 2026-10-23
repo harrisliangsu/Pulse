@@ -85,12 +85,19 @@ struct SpendGlanceTests {
         let rescan = try scan(state.prepare(request(rescan: 1)))
         #expect(rescan.refresh)
         #expect(state.snapshot == nil)
-        #expect(!state.complete(.init(ledgers: [.codex: Self.ledger([Self.day(0, tokens: 1)])]), for: first.id))
+        // The expectation macro cannot call a mutating method, so the result is taken first.
+        let staleComplete = state.complete(
+            .init(ledgers: [.codex: Self.ledger([Self.day(0, tokens: 1)])]),
+            for: first.id
+        )
+        #expect(!staleComplete)
         #expect(state.snapshot == nil)
-        #expect(!state.finish(first.id))
+        let staleFinish = state.finish(first.id)
+        #expect(!staleFinish)
 
         state.complete(.init(ledgers: [.claudeCode: Self.ledger([Self.day(0, tokens: 8)])]), for: rescan.id)
-        #expect(state.finish(rescan.id))
+        let finished = state.finish(rescan.id)
+        #expect(finished)
         #expect(state.prepare(request(rescan: 1)) == .retain)
         #expect(state.snapshot?.ledgers[.claudeCode]?.allTime.tokens == 8)
 
@@ -158,7 +165,7 @@ struct SpendGlanceTests {
 
     @Test("Money follows the Settings total: unavailable, partial, or a real zero")
     func estimate() {
-        var empty = SpendSummary()
+        let empty = SpendSummary()
         #expect(SpendGlance.Estimate.of(empty) == .none)
 
         var unpriced = SpendSummary()
