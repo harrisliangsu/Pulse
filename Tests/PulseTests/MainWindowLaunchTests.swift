@@ -327,13 +327,13 @@ struct MainWindowLaunchTests {
         )
         #expect(LaunchSignalReader.flag(in: open) == .absent)
 
-        open.setParamDescriptor(
+        open.setParam(
             NSAppleEventDescriptor(boolean: true),
             forKeyword: LaunchSignalReader.loginItemKeyword
         )
         #expect(LaunchSignalReader.flag(in: open) == .present(true))
 
-        open.setParamDescriptor(
+        open.setParam(
             NSAppleEventDescriptor(boolean: false),
             forKeyword: LaunchSignalReader.loginItemKeyword
         )
