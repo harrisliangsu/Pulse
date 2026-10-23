@@ -10,6 +10,13 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.10
+
+- **Settings splits the usage card from the rings' colours.** Usage card, under Panel, holds the figures, the second ring, the reset clock, the exhaustion forecast on the card, and which accounts that forecast shares with the exhaustion notifications. Appearance gains Colour: the ring scheme, Turn red at, and the alert colour when docked. Rings and figures is no longer a pane. Notifications is now Exhaustion and reminders, and it keeps limits and outages, the exhaustion notifications, reset reminders, and celebrations.
+- **A scheduled update can install the next time Blinky quits.** Settings → About → When an update is found adds Install silently. A scheduled check downloads the update and installs it on quit, with no notification and no update window. Notify first stays the default. Check now still opens the window.
+- **The Token spend panel leads with tokens.** The window beside the usage card uses the same time range as Settings, including a custom range, and switches among model, agent, project, and session. Tokens are the large figure and the estimate is smaller. The chart follows that range, and Share says when the image is on the clipboard.
+- **Opening Settings names Blinky in the menu bar.** The gear, Settings…, ⌘,, a reopen, and a settings link activate Blinky after the window's Dock policy is applied, so the menu bar shows Blinky.
+
 ## 1.5.9
 
 - **Opening Blinky shows its main window.** Finder, Spotlight, Launchpad, and the Dock open the window titled Blinky on the Appearance pane, and a launch at login stays in the menu bar unless Show main window when opened at login is on under Settings → General → Startup and windows. [Docs/architecture.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/architecture.md#login-item) [#70](https://github.com/harrisliangsu/blinky-mac/pull/70)

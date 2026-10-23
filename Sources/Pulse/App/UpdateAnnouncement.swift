@@ -6,8 +6,10 @@ import UserNotifications
 /// Notify first is the shipped default. A scheduled check posts a notification
 /// and leaves Sparkle's window hidden until that notification is clicked.
 /// Show the window is the previous behaviour: the offer comes forward as soon
-/// as the check finds a version. Check for Updates… and About's Check now are
-/// neither of those — the reader asked, so the window opens either way.
+/// as the check finds a version. Install silently downloads on that scheduled
+/// check and installs the next time Blinky quits, with no notification and no
+/// window. Check for Updates… and About's Check now are none of those — the
+/// reader asked, so the window opens either way.
 ///
 /// **This type decides. It does not post, activate, or talk to Sparkle.**
 /// `AppUpdate` performs the action. The cases are the whole of the policy, so
@@ -17,6 +19,9 @@ enum UpdateDiscovery: String, CaseIterable, Identifiable, Sendable {
     case notifyFirst
     /// Sparkle's update window, as soon as a scheduled check finds a version.
     case showWindow
+    /// A scheduled check downloads the update and installs it the next time
+    /// Blinky quits. No notification, and no update window.
+    case installSilently
 
     var id: String { rawValue }
 
@@ -24,6 +29,7 @@ enum UpdateDiscovery: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .notifyFirst: String.localized("Notify first")
         case .showWindow: String.localized("Show the window")
+        case .installSilently: String.localized("Install silently")
         }
     }
 }
@@ -62,6 +68,8 @@ enum UpdateAnnouncement {
         case notify
         /// Ask for notification permission, then `actionAfterPermission`.
         case askPermission
+        /// Download on the scheduled check and install on quit. No notice, no window.
+        case installSilently
     }
 
     /// What `AppUpdate.check` does. Both end at the offer window: a held
@@ -89,9 +97,10 @@ enum UpdateAnnouncement {
     ///
     /// Manual and a notification click ignore the setting and the grant: the
     /// window is what was asked for. A scheduled check under Show the window
-    /// does the same. Notify first posts when it can, asks when it has not
-    /// been allowed to, and shows the window when the grant was refused — a
-    /// refused grant must not swallow the update.
+    /// does the same. Install silently never notifies and never opens the
+    /// window, whatever the grant is. Notify first posts when it can, asks
+    /// when it has not been allowed to, and shows the window when the grant
+    /// was refused — a refused grant must not swallow the update.
     static func action(
         origin: Origin,
         discovery: UpdateDiscovery,
@@ -104,6 +113,8 @@ enum UpdateAnnouncement {
             switch discovery {
             case .showWindow:
                 return .showOffer
+            case .installSilently:
+                return .installSilently
             case .notifyFirst:
                 switch permission {
                 case .authorized: return .notify
@@ -117,11 +128,23 @@ enum UpdateAnnouncement {
     /// The answer to `askPermission`.
     ///
     /// A grant posts the notice only while Notify first is still the choice.
-    /// Anything else — denied, the centre unavailable, or the reader switching
-    /// to Show the window while the prompt was up — shows the offer.
+    /// Install silently stays silent if the reader switches to it while the
+    /// prompt is up. Anything else — denied, the centre unavailable, or the
+    /// reader switching to Show the window — shows the offer.
     static func actionAfterPermission(granted: Bool, discovery: UpdateDiscovery) -> Action {
+        if discovery == .installSilently { return .installSilently }
         if granted, discovery == .notifyFirst { return .notify }
         return .showOffer
+    }
+
+    /// Whether Sparkle should download a scheduled find and install it on quit.
+    ///
+    /// Only Install silently. Notify first and Show the window leave
+    /// `automaticallyDownloadsUpdates` false, so a fresh install stays
+    /// offer-only until the reader picks this case. `SUAutomaticallyUpdate`
+    /// in the plist stays false for the same reason.
+    static func automaticallyDownloadsUpdates(for discovery: UpdateDiscovery) -> Bool {
+        discovery == .installSilently
     }
 
     /// Whether Sparkle's standard driver should present a scheduled find.

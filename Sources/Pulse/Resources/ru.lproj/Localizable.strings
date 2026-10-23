@@ -11,7 +11,7 @@
 "Rings and figures" = "Кольца и значения";
 "Position and behavior" = "Положение и поведение";
 "Network and refresh" = "Сеть и обновление";
-"Figures" = "Значения";
+"Figures" = "Цифры и содержание";
 "Rings" = "Кольца";
 "Providers" = "Сервисы";
 "About" = "О программе";
@@ -1385,3 +1385,17 @@
 "Notify before the reset" = "Уведомить до сброса";
 "Sends a separate notice when the current pace will not last until the reset." = "Отдельное уведомление, когда текущего темпа не хватит до сброса.";
 "Every account shown on the panel, or only the ones you pick." = "Все аккаунты на панели или только выбранные.";
+
+"Usage card" = "Карточка расхода";
+"Exhaustion and reminders" = "Исчерпание и напоминания";
+"Exhaustion on the card" = "Прогноз исчерпания на карточке";
+"Exhaustion notifications" = "Системные уведомления об исчерпании";
+"Notify when a limit is running out" = "Уведомлять, когда лимит на исходе";
+"Hours left to notify" = "За сколько часов уведомлять";
+"Notify if it will not last until the reset" = "Уведомить, если до сброса не хватит";
+"The card's forecast and the exhaustion notifications both use this list." = "Прогноз на карточке и уведомления об исчерпании используют этот список.";
+"Install silently" = "Установить без запроса";
+"A scheduled check downloads the update and installs it the next time Blinky quits, with no notification and no update window. Check now still opens the window." = "Плановая проверка загружает обновление и устанавливает его при следующем выходе из Blinky, без уведомления и без окна. «Проверить сейчас» по-прежнему открывает окно.";
+"Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking." = "Каждые два часа. Выбор ниже решает, уведомить, открыть окно обновления или установить без запроса.";
+"By hour" = "По часам";
+"Copied to the clipboard." = "Скопировано в буфер обмена.";

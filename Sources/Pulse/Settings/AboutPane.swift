@@ -34,7 +34,7 @@ struct AboutPane: View {
 
                     SettingsRow(
                         String.localized("Check automatically"),
-                        subtitle: String.localized("Every two hours. Updates are offered, never installed on their own.")
+                        subtitle: String.localized("Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking.")
                     ) {
                         Toggle("", isOn: Binding(
                             get: { update.checksAutomatically },
@@ -142,6 +142,8 @@ struct AboutPane: View {
             String.localized("A scheduled check posts a notification, and the update window opens when that notification is clicked. Check now still opens the window.")
         case .showWindow:
             String.localized("A scheduled check opens the update window.")
+        case .installSilently:
+            String.localized("A scheduled check downloads the update and installs it the next time Blinky quits, with no notification and no update window. Check now still opens the window.")
         }
     }
 

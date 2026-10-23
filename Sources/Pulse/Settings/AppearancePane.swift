@@ -151,6 +151,66 @@ struct AppearancePane: View {
                     .disabled(!settings.isPanelVisible)
                 }
             }
+
+            SettingsGroup(String.localized("Colour")) {
+                SettingsRow(
+                    String.localized("Ring colour scheme"),
+                    subtitle: String.localized("The colours rings and figures use as a limit fills.")
+                ) {
+                    Picker(String.localized("Ring colour scheme"), selection: Binding(
+                        get: { settings.ringColourScheme },
+                        set: { settings.ringColourScheme = $0 }
+                    )) {
+                        ForEach(RingColourScheme.allCases) { scheme in
+                            Text(scheme.title).tag(scheme)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+                    .disabled(!settings.isPanelVisible)
+                }
+
+                if SettingsChildRows.showsWarningThreshold(settings.ringColourScheme) {
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Turn red at"),
+                        subtitle: settings.ringColourScheme == .quiet
+                            ? String.localized("Where a ring turns from green to muted grey.")
+                            : String.localized("Where a ring turns from green to red."),
+                        nested: true
+                    ) {
+                        Picker(String.localized("Turn red at"), selection: Binding(
+                            get: { settings.warningThreshold },
+                            set: { settings.warningThreshold = $0 }
+                        )) {
+                            ForEach(WarningThreshold.allCases) { threshold in
+                                Text(threshold.title).tag(threshold)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+                        .disabled(!settings.isPanelVisible)
+                    }
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Alert colour when docked"),
+                    subtitle: String.localized("Off keeps the collapsed rail neutral even when a limit needs attention.")
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.dockShowsAlertColor },
+                        set: { settings.dockShowsAlertColor = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible)
+                }
+            }
         }
     }
 }

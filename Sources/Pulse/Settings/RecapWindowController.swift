@@ -47,8 +47,7 @@ final class RecapWindowController {
         let wasVisible = window.isVisible
         window.makeKeyAndOrderFront(nil)
         if !wasVisible { window.center() }
-        dock.apply()
-        NSApp.activate(ignoringOtherApps: true)
+        dock.apply(showingWindow: window)
     }
 
     /// Re-reads the title, which has to follow the language and the kind of

@@ -11,7 +11,7 @@
 "Rings and figures" = "링과 숫자";
 "Position and behavior" = "위치 및 동작";
 "Network and refresh" = "네트워크 및 새로 고침";
-"Figures" = "숫자";
+"Figures" = "숫자와 내용";
 "Rings" = "링";
 "Providers" = "제공업체";
 "About" = "정보";
@@ -1393,3 +1393,17 @@
 "Notify before the reset" = "초기화 전 알림";
 "Sends a separate notice when the current pace will not last until the reset." = "현재 속도로는 초기화까지 버티지 못할 때, 따로 한 번 알립니다.";
 "Every account shown on the panel, or only the ones you pick." = "패널에 표시된 모든 계정이거나, 고른 계정만입니다.";
+
+"Usage card" = "사용량 카드";
+"Exhaustion and reminders" = "소진과 알림";
+"Exhaustion on the card" = "카드의 소진 예측";
+"Exhaustion notifications" = "소진 시스템 알림";
+"Notify when a limit is running out" = "한도가 소진될 때 알림";
+"Hours left to notify" = "남은 시간으로 알릴 시점";
+"Notify if it will not last until the reset" = "초기화까지 버티지 못할 때 알림";
+"The card's forecast and the exhaustion notifications both use this list." = "카드의 소진 예측과 소진 알림이 모두 이 목록을 사용합니다.";
+"Install silently" = "자동으로 설치";
+"A scheduled check downloads the update and installs it the next time Blinky quits, with no notification and no update window. Check now still opens the window." = "예약된 확인은 업데이트를 받아 두고, 다음에 Blinky가 끝날 때 설치합니다. 알림도 업데이트 창도 열지 않습니다. 지금 확인은 창을 엽니다.";
+"Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking." = "두 시간마다. 아래 선택에 따라 알리거나, 업데이트 창을 열거나, 묻지 않고 설치합니다.";
+"By hour" = "시간별";
+"Copied to the clipboard." = "클립보드에 복사했습니다.";

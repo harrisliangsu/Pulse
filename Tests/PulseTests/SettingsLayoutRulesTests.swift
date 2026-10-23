@@ -255,7 +255,7 @@ struct SettingsLayoutRulesTests {
         LocalizationSource.use(.chineseSimplified)
         defer { LocalizationSource.use(.system) }
 
-        #expect(ExhaustionSettingsSections.titles == ["卡片上显示什么", "通知", "作用账号"])
+        #expect(ExhaustionSettingsSections.titles == ["卡片上的用尽预估", "用尽系统通知", "作用账号"])
         #expect(String.localized("The furthest time, in hours, at which the card writes a countdown.")
             == "卡片上写出具体倒计时的最远时间（小时）。")
         #expect(String.localized("Limits and outages") == "故障与额度")
@@ -263,7 +263,7 @@ struct SettingsLayoutRulesTests {
 
         LocalizationSource.use(.english)
         #expect(ExhaustionSettingsSections.titles == [
-            "What the card shows", "Notices", "Which accounts",
+            "Exhaustion on the card", "Exhaustion notifications", "Which accounts",
         ])
         #expect(String.localized("The furthest time, in hours, at which the card writes a countdown.")
             == "The furthest time, in hours, at which the card writes a countdown.")

@@ -87,7 +87,12 @@ final class DockPresence {
 
     /// Re-reads which windows are open. `closing` is a window `close()` is in
     /// the middle of: it still reports visible, so it is left out of the count.
-    func apply(closing: NSWindow? = nil) {
+    ///
+    /// `showingWindow` is a window that was just ordered front. The policy is
+    /// applied first, then activation follows `MainWindowActivation`: a change
+    /// into `.regular` waits until the next turn, or the menu bar keeps the
+    /// name of whichever app was frontmost.
+    func apply(closing: NSWindow? = nil, showingWindow: NSWindow? = nil) {
         let open = windows.allObjects.contains { $0 !== closing && ($0.isVisible || $0.isMiniaturized) }
         let policy = Self.activationPolicy(
             alwaysShowsDockIcon: settings.alwaysShowsDockIcon,
@@ -97,11 +102,75 @@ final class DockPresence {
         )
         let changed = NSApp.activationPolicy() != policy
         if changed { NSApp.setActivationPolicy(policy) }
-        // Changing the policy can drop activation, and a window is what the
-        // person is looking at. An update offer that is already `.regular`
-        // (Settings is open) still has to become the key window.
-        if policy == .regular && (changed || updateOfferVisible) {
+        let timing = MainWindowActivation.timing(
+            policy: policy,
+            policyChanged: changed,
+            wantsAttention: showingWindow != nil || updateOfferVisible
+        )
+        MainWindowActivation.perform(timing) { [weak showingWindow] in
+            showingWindow?.makeKeyAndOrderFront(nil)
+        }
+    }
+}
+
+/// When a tracked window should claim the menu bar.
+///
+/// Blinky starts as an `.accessory` app (`LSUIElement`, no Dock icon). The
+/// menu bar names whichever app is active. Opening Settings, a recap, or the
+/// service chooser has to become `.regular` and then activate, or the menu
+/// bar keeps the previous app's name while the window's own title already
+/// says Blinky.
+///
+/// Activating in the same turn as `setActivationPolicy(.regular)` is too
+/// early: macOS still treats the process as an accessory, and the click that
+/// opened the window often came from the non-activating usage panel. The
+/// activation waits until the next turn. An app that is already `.regular`
+/// (Always show Dock icon, or another tracked window already open) activates
+/// immediately. Staying `.accessory` — the while-open Dock switch is off, and
+/// always-show is off — has no application menu to claim.
+///
+/// Call sites, all through `DockPresence.apply(showingWindow:)`: the main
+/// window (`SettingsWindowController.show` — the usage card's gear, the panel
+/// menu's Settings…, the menu bar item, ⌘,, a reopen, `pulse://settings`, and
+/// a clicked notification), the recap window, and the service chooser. An
+/// update offer uses `apply()` without a window; the offer's own focus runs
+/// on the next turn as well.
+enum MainWindowActivation {
+    enum Timing: Equatable, Sendable {
+        /// Already `.regular`. Activate in this turn.
+        case now
+        /// The policy just became `.regular`. Activate on the next turn.
+        case nextTurn
+        /// Staying `.accessory`, or nothing is asking for attention.
+        case skip
+    }
+
+    static func timing(
+        policy: NSApplication.ActivationPolicy,
+        policyChanged: Bool,
+        wantsAttention: Bool
+    ) -> Timing {
+        guard policy == .regular else { return .skip }
+        if policyChanged { return .nextTurn }
+        return wantsAttention ? .now : .skip
+    }
+
+    /// Activates, then runs `after` (the window being made key again).
+    @MainActor
+    static func perform(_ timing: Timing, after: (@MainActor () -> Void)? = nil) {
+        switch timing {
+        case .skip:
+            break
+        case .now:
             NSApp.activate(ignoringOtherApps: true)
+            after?()
+        case .nextTurn:
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    NSApp.activate(ignoringOtherApps: true)
+                    after?()
+                }
+            }
         }
     }
 }

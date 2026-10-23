@@ -684,12 +684,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Notify first asks when it is chosen. Show the window opens an offer
     /// that was waiting on a notification, so the switch is not a silent loss.
+    /// Install silently withdraws that notice and does not open the window.
     private func updateDiscoveryChanged() {
+        update.applyAutomaticDownloads()
         switch settings.updateDiscovery {
         case .notifyFirst:
             Task { _ = await alerts.requestUpdateNoticeAuthorization() }
         case .showWindow:
             update.showPendingOfferIfNeeded()
+        case .installSilently:
+            update.suppressScheduledOffer()
         }
     }
 

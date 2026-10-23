@@ -425,6 +425,171 @@ struct SpendGlanceTests {
         #expect(!controller.isOpen)
     }
 
+    @Test("Tokens stay larger than the estimate, on the window and on the poster")
+    func tokensLead() {
+        #expect(SpendGlanceHeadline.tokenPointSize == 28)
+        #expect(SpendGlanceHeadline.moneyPointSize == 15)
+        #expect(SpendGlanceHeadline.tokenPointSize > SpendGlanceHeadline.moneyPointSize)
+        #expect(SpendGlanceHeadline.posterTokenPointSize == 40)
+        #expect(SpendGlanceHeadline.posterMoneyPointSize == 22)
+        #expect(SpendGlanceHeadline.posterTokenPointSize > SpendGlanceHeadline.posterMoneyPointSize)
+        #expect(SpendGlanceCopy.hold >= .seconds(4))
+    }
+
+    @Test("The palette is saturated and not one grey")
+    func paletteIsColoured() {
+        #expect(SpendGlancePalette.swatches.count >= 4)
+        for swatch in SpendGlancePalette.swatches {
+            #expect(!swatch.isGrayscale)
+            #expect(swatch.red != swatch.green || swatch.green != swatch.blue)
+        }
+        #expect(Set(SpendGlancePalette.swatches.map { "\($0.red),\($0.green),\($0.blue)" }).count == SpendGlancePalette.swatches.count)
+    }
+
+    @Test("The glance can list models, projects, and sessions, and agent stays the default")
+    func dimensions() {
+        LocalizationSource.use(.english)
+        defer { LocalizationSource.use(.system) }
+        var summary = SpendSummary()
+        summary.models = [
+            .init(name: "small", tokens: 2, agents: [.codex]),
+            .init(name: "large", tokens: 8, agents: [.codex]),
+        ]
+        summary.projects = [
+            .init(
+                id: .init(UsageProject("Quiet")!, agent: .codex),
+                name: "Quiet",
+                tokens: 1,
+                cost: 0,
+                sessions: 1,
+                lastUsed: Self.today
+            ),
+            .init(
+                id: .init(UsageProject("Busy")!, agent: .codex),
+                name: "Busy",
+                tokens: 4,
+                cost: 1,
+                sessions: 2,
+                lastUsed: Self.today
+            ),
+        ]
+        summary.sessions = [
+            .init(agent: .codex, session: UsageLedger.Session(
+                id: "newer", name: "file", title: "Newer chat", project: nil,
+                start: Self.today, end: Self.today, tokens: 3, cost: 1
+            )),
+            .init(agent: .codex, session: UsageLedger.Session(
+                id: "older", name: "file", title: nil, project: nil,
+                start: Self.today, end: Self.today.addingTimeInterval(-100), tokens: 9, cost: 1
+            )),
+        ]
+
+        let models = SpendGlance.rows(summary, dimension: .model)
+        #expect(models.map(\.name) == ["large", "small"])
+        #expect(models[0].cost == nil)
+        #expect(models[0].share == 1)
+
+        let projects = SpendGlance.rows(summary, dimension: .project)
+        #expect(projects.map(\.name) == ["Busy", "Quiet"])
+        #expect(projects[0].share == 1)
+
+        let sessions = SpendGlance.rows(summary, dimension: .session)
+        #expect(sessions.map(\.name) == ["Newer chat", "Untitled conversation"])
+        #expect(sessions.map(\.share).contains(1))
+        #expect(SpendGlanceDimension.default == .agent)
+
+        let picture = SpendGlancePicture.make(
+            span: .week,
+            custom: Self.today...Self.today,
+            summary: summary,
+            activity: SpendGlanceActivity(),
+            observedAt: nil,
+            hasReadLimitations: false,
+            dimension: .model,
+            locale: Self.englishLocale,
+            bundle: Self.english
+        )
+        #expect(picture.agentsTitle == "By model")
+        #expect(picture.agents.map(\.name) == ["large", "small"])
+    }
+
+    @Test("The chart follows the span, by the hour, by the day, or in buckets")
+    func chartFollowsTheSpan() {
+        var oneDay = SpendSummary()
+        oneDay.hours = [9: 4, 15: 0]
+        oneDay.days = [SpendSummary.Day(date: Self.today, tokens: 4, cost: 0)]
+        let hours = SpendGlanceActivity.covering(
+            summary: oneDay, span: .today, custom: Self.today...Self.today,
+            calendar: Self.calendar, now: Self.today
+        )
+        #expect(hours.coverage == .hours)
+        #expect(hours.days.count == 24)
+        #expect(hours.days.allSatisfy { $0.tokens != nil })
+        #expect(hours.days[9].tokens == 4)
+        #expect(hours.days[15].tokens == 0)
+
+        var week = SpendSummary()
+        week.days = (0..<7).map { offset in
+            SpendSummary.Day(
+                date: Self.calendar.date(byAdding: .day, value: -offset, to: Self.today)!,
+                tokens: offset == 3 ? 0 : 2,
+                cost: 0
+            )
+        }
+        let days = SpendGlanceActivity.covering(
+            summary: week, span: .week, custom: Self.today...Self.today, calendar: Self.calendar, now: Self.today
+        )
+        #expect(days.coverage == .span)
+        #expect(days.days.count == 7)
+        #expect(days.days.contains { $0.tokens == 0 })
+
+        var year = SpendSummary()
+        year.days = (0..<100).map { offset in
+            SpendSummary.Day(
+                date: Self.calendar.date(byAdding: .day, value: -offset, to: Self.today)!,
+                tokens: 1,
+                cost: 0
+            )
+        }
+        let buckets = SpendGlanceActivity.covering(
+            summary: year, span: .thisYear, custom: Self.today...Self.today, calendar: Self.calendar, now: Self.today
+        )
+        #expect(buckets.coverage == .buckets)
+        #expect(buckets.days.count == SpendGlance.maximumBars)
+        #expect(buckets.days.compactMap(\.tokens).reduce(0, +) == 100)
+
+        let titled = SpendGlancePicture.make(
+            span: .today,
+            custom: Self.today...Self.today,
+            summary: oneDay,
+            activity: hours,
+            observedAt: nil,
+            hasReadLimitations: false,
+            locale: Self.englishLocale,
+            bundle: Self.english
+        )
+        #expect(titled.activityTitle == "By hour")
+        #expect(titled.bars.count == 24)
+    }
+
+    @MainActor
+    @Test("Share stays copied long enough to read, then clears")
+    func copiedConfirmation() async {
+        let name = "pulse-spend-glance-copy-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.spendGlanceDimension == .agent)
+        defaults.set("nope", forKey: "settings.spendGlanceDimension")
+        let back = AppSettings.restoredSettings(from: defaults, detected: [], scan: ExtensionCatalog.Scan())
+        #expect(back.spendGlanceDimension == .agent)
+        let model = SpendGlanceModel(settings: settings)
+        model.noteCopied(hold: .milliseconds(30))
+        #expect(model.didCopy)
+        try? await Task.sleep(for: .milliseconds(120))
+        #expect(!model.didCopy)
+    }
+
     private static func picture(
         summary: SpendSummary = SpendSummary(),
         activity: SpendGlanceActivity = SpendGlanceActivity(),

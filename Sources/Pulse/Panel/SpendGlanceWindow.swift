@@ -209,10 +209,15 @@ struct SpendGlanceView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 header
+                if model.didCopy {
+                    Text(localized: "Copied to the clipboard.")
+                        .font(.system(size: 12, weight: .medium))
+                }
                 if !ready {
                     reading
                 } else {
                     overview(picture)
+                    dimensionPicker
                     if !picture.agents.isEmpty {
                         agents(picture)
                     }
@@ -239,17 +244,75 @@ struct SpendGlanceView: View {
         let shareLabel = model.didCopy
             ? String.localized("Copied")
             : String.localized("Share this summary")
-        return HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(verbatim: SpendGlance.spanTitle(settings.spendSpan, custom: settings.spendCustomDays))
-                .font(.system(size: 13, weight: .semibold))
-                .lineLimit(1)
-            Spacer(minLength: 8)
-            Button(String.localized("Refresh")) { model.rescan += 1 }
-                .disabled(model.isScanning)
-            Button(shareLabel, action: onShare)
-                .disabled(!model.figuresReady || model.isScanning)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Picker("", selection: Binding(
+                    get: { settings.spendSpan },
+                    set: { settings.spendSpan = $0 }
+                )) {
+                    ForEach(SpendSpan.allCases) { span in
+                        Text(span.title).tag(span)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(maxWidth: 180, alignment: .leading)
+                Spacer(minLength: 8)
+                Button(String.localized("Refresh")) { model.rescan += 1 }
+                    .disabled(model.isScanning)
+                Button(shareLabel, action: onShare)
+                    .disabled(!model.figuresReady || model.isScanning)
+            }
+            if settings.spendSpan == .custom {
+                customDatePickers
+            }
         }
         .controlSize(.small)
+    }
+
+    /// The same two days as Settings, neither after today, the first never after the last.
+    private var customDatePickers: some View {
+        let today = Calendar.current.startOfDay(for: Date())
+        return HStack(spacing: 6) {
+            DatePicker("", selection: Binding(
+                get: { settings.spendCustomDays.lowerBound },
+                set: {
+                    let first = Calendar.current.startOfDay(for: $0)
+                    settings.spendCustomDays = first...max(settings.spendCustomDays.upperBound, first)
+                }
+            ), in: ...today, displayedComponents: .date)
+            .labelsHidden()
+            .datePickerStyle(.field)
+            .accessibilityLabel(String.localized("First day"))
+
+            Text(verbatim: "–")
+                .foregroundStyle(.secondary)
+
+            DatePicker("", selection: Binding(
+                get: { settings.spendCustomDays.upperBound },
+                set: {
+                    let last = Calendar.current.startOfDay(for: $0)
+                    settings.spendCustomDays = min(settings.spendCustomDays.lowerBound, last)...last
+                }
+            ), in: ...today, displayedComponents: .date)
+            .labelsHidden()
+            .datePickerStyle(.field)
+            .accessibilityLabel(String.localized("Last day"))
+        }
+    }
+
+    private var dimensionPicker: some View {
+        Picker("", selection: Binding(
+            get: { settings.spendGlanceDimension },
+            set: { settings.spendGlanceDimension = $0 }
+        )) {
+            ForEach(SpendGlanceDimension.allCases) { dimension in
+                Text(dimension.title).tag(dimension)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .frame(maxWidth: 180, alignment: .leading)
     }
 
     private var reading: some View {
@@ -271,12 +334,13 @@ struct SpendGlanceView: View {
     private func overview(_ picture: SpendGlancePicture) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: picture.tokens)
-                .font(.system(size: picture.cost == nil && picture.costNote == nil ? 15 : 13, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(.system(size: SpendGlanceHeadline.tokenPointSize, weight: .semibold))
+                .monospacedDigit()
             if let cost = picture.cost {
                 Text(verbatim: cost)
-                    .font(.system(size: 28, weight: .semibold))
+                    .font(.system(size: SpendGlanceHeadline.moneyPointSize, weight: .medium))
                     .monospacedDigit()
+                    .foregroundStyle(.secondary)
             }
             if let note = picture.costNote {
                 Text(verbatim: note)
@@ -291,7 +355,7 @@ struct SpendGlanceView: View {
             Text(verbatim: picture.agentsTitle)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
-            ForEach(Array(picture.agents.enumerated()), id: \.offset) { _, agent in
+            ForEach(Array(picture.agents.enumerated()), id: \.offset) { index, agent in
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(alignment: .firstTextBaseline) {
                         Text(verbatim: agent.name)
@@ -310,7 +374,7 @@ struct SpendGlanceView: View {
                     }
                     GeometryReader { proxy in
                         Capsule()
-                            .fill(Color.primary.opacity(0.85))
+                            .fill(SpendGlancePalette.color(at: index))
                             .frame(width: max(proxy.size.width * agent.share, agent.share > 0 ? 2 : 0), height: 4)
                     }
                     .frame(height: 4)
@@ -324,7 +388,7 @@ struct SpendGlanceView: View {
             Text(verbatim: picture.activityTitle)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
-            SpendGlanceBars(bars: picture.bars, quiet: Color.primary.opacity(0.2), ink: Color.primary.opacity(0.85))
+            SpendGlanceBars(bars: picture.bars)
                 .frame(height: 56)
         }
     }
@@ -344,28 +408,33 @@ struct SpendGlanceView: View {
 /// Fourteen days as bars. A missing day is a gap; a quiet day is a hairline.
 struct SpendGlanceBars: View {
     let bars: [SpendGlancePicture.Bar]
-    let quiet: Color
-    let ink: Color
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 3) {
-            ForEach(Array(bars.enumerated()), id: \.offset) { _, bar in
-                barMark(bar)
+            ForEach(Array(bars.enumerated()), id: \.offset) { index, bar in
+                barMark(bar, index: index)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
         }
     }
 
     @ViewBuilder
-    private func barMark(_ bar: SpendGlancePicture.Bar) -> some View {
+    private func barMark(_ bar: SpendGlancePicture.Bar, index: Int) -> some View {
         if let tokens = bar.tokens {
             Capsule()
-                .fill(tokens > 0 ? ink : quiet)
+                .fill(SpendGlancePalette.color(at: index).opacity(tokens > 0 ? 1 : 0.28))
                 .frame(height: tokens > 0 ? max(4, 56 * bar.share) : 2)
                 .frame(maxHeight: .infinity, alignment: .bottom)
         } else {
             Color.clear
         }
+    }
+}
+
+extension SpendGlancePalette {
+    static func color(at index: Int) -> Color {
+        let swatch = swatch(at: index)
+        return Color(red: swatch.red, green: swatch.green, blue: swatch.blue)
     }
 }
 
@@ -393,11 +462,12 @@ struct SpendGlancePoster: View {
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(secondary)
                 Text(verbatim: picture.tokens)
-                    .font(.system(size: 28, weight: .semibold, design: .rounded))
+                    .font(.system(size: SpendGlanceHeadline.posterTokenPointSize, weight: .semibold, design: .rounded))
                 if let cost = picture.cost {
                     Text(verbatim: cost)
-                        .font(.system(size: 40, weight: .semibold, design: .rounded))
+                        .font(.system(size: SpendGlanceHeadline.posterMoneyPointSize, weight: .medium, design: .rounded))
                         .monospacedDigit()
+                        .foregroundStyle(secondary)
                 }
                 if let note = picture.costNote {
                     Text(verbatim: note)
@@ -410,7 +480,7 @@ struct SpendGlancePoster: View {
                     Text(verbatim: picture.agentsTitle)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(secondary)
-                    ForEach(Array(picture.agents.enumerated()), id: \.offset) { _, agent in
+                    ForEach(Array(picture.agents.enumerated()), id: \.offset) { index, agent in
                         VStack(alignment: .leading, spacing: 5) {
                             HStack(alignment: .firstTextBaseline) {
                                 Text(verbatim: agent.name)
@@ -428,7 +498,7 @@ struct SpendGlancePoster: View {
                                 }
                             }
                             Capsule()
-                                .fill(ink.opacity(0.92))
+                                .fill(SpendGlancePalette.color(at: index))
                                 .frame(width: 560 * agent.share, height: 6)
                         }
                     }
@@ -439,7 +509,7 @@ struct SpendGlancePoster: View {
                     Text(verbatim: picture.activityTitle)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(secondary)
-                    SpendGlanceBars(bars: picture.bars, quiet: ink.opacity(0.22), ink: ink.opacity(0.92))
+                    SpendGlanceBars(bars: picture.bars)
                         .frame(height: 88)
                 }
             }

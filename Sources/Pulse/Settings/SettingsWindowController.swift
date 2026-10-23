@@ -65,11 +65,13 @@ final class SettingsWindowController {
 
         // Centred when it comes up, not when it is already on screen: the
         // recap's "Open Token spend" reaches an open window, which stays put.
+        // The Dock policy is applied before activation. A change out of
+        // `.accessory` activates on the next turn (`MainWindowActivation`),
+        // so the menu bar names Blinky rather than the app that was frontmost.
         let wasVisible = window.isVisible
         window.makeKeyAndOrderFront(nil)
         if !wasVisible { window.center() }
-        dock.apply()
-        NSApp.activate(ignoringOtherApps: true)
+        dock.apply(showingWindow: window)
     }
 
     private func makeWindow() -> NSWindow {

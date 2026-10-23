@@ -11,7 +11,7 @@
 "Rings and figures" = "リングと数値";
 "Position and behavior" = "位置と動作";
 "Network and refresh" = "ネットワークと更新";
-"Figures" = "数値";
+"Figures" = "数値と内容";
 "Rings" = "リング";
 "Providers" = "プロバイダ";
 "About" = "このアプリについて";
@@ -1393,3 +1393,17 @@
 "Notify before the reset" = "リセット前に通知";
 "Sends a separate notice when the current pace will not last until the reset." = "このペースではリセットまで保たないとき、別に一度通知します。";
 "Every account shown on the panel, or only the ones you pick." = "パネルに表示しているすべてのアカウントか、選んだアカウントだけです。";
+
+"Usage card" = "使用量カード";
+"Exhaustion and reminders" = "使い切りとリマインダー";
+"Exhaustion on the card" = "カード上の使い切り予測";
+"Exhaustion notifications" = "使い切りのシステム通知";
+"Notify when a limit is running out" = "上限が尽きそうなときに通知";
+"Hours left to notify" = "残り時間で通知する時点";
+"Notify if it will not last until the reset" = "リセットまで保たないときに通知";
+"The card's forecast and the exhaustion notifications both use this list." = "カードの予測と使い切りの通知は、どちらもこの一覧を使います。";
+"Install silently" = "自動でインストール";
+"A scheduled check downloads the update and installs it the next time Blinky quits, with no notification and no update window. Check now still opens the window." = "定期的な確認は更新をダウンロードし、次回 Blinky を終了するときにインストールします。通知も更新ウィンドウも出しません。今すぐ確認はウィンドウを開きます。";
+"Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking." = "2時間ごと。下の選択で、通知するか、更新ウィンドウを開くか、確認せずにインストールするかを決めます。";
+"By hour" = "時間ごと";
+"Copied to the clipboard." = "クリップボードにコピーしました。";

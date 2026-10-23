@@ -129,11 +129,7 @@ struct NotificationsPane: View {
                 }
             }
 
-            exhaustionCardGroup
-
             exhaustionNoticeGroup
-
-            exhaustionAccountGroup
 
             SettingsGroup(String.localized("Reset reminders")) {
                 SettingsRow(
@@ -267,81 +263,11 @@ struct NotificationsPane: View {
         }
     }
 
-    /// What the card writes. Usable without a notification grant: it only
-    /// changes a line. Percent thresholds stay in the group above.
-    private var exhaustionCardGroup: some View {
-        SettingsGroup(ExhaustionSettingsSections.card) {
-            SettingsRow(
-                String.localized("On the card"),
-                subtitle: String.localized("Under each limit that has a length and a reset, the card adds a line about how long it may last.")
-            ) {
-                Toggle("", isOn: Binding(
-                    get: { settings.showsForecast },
-                    set: { settings.showsForecast = $0 }
-                ))
-                .labelsHidden()
-                .toggleStyle(.switch)
-                .disabled(!settings.isPanelVisible)
-            }
-
-            if SettingsChildRows.showsForecastDetails(onCard: settings.showsForecast) {
-                SettingsRowDivider()
-
-                SettingsRow(
-                    String.localized("Countdown up to"),
-                    subtitle: String.localized("The furthest time, in hours, at which the card writes a countdown."),
-                    nested: true
-                ) {
-                    hoursStepper(
-                        hours: settings.exhaustionCardHours,
-                        enabled: settings.isPanelVisible,
-                        value: Binding(
-                            get: { settings.exhaustionCardHours },
-                            set: { settings.exhaustionCardHours = ExhaustionHoursControl.applied($0) }
-                        )
-                    )
-                }
-
-                SettingsRowDivider()
-
-                SettingsRow(
-                    String.localized("May run out before reset"),
-                    subtitle: String.localized("Further out, the card says it may not last until the reset, and does not write a time."),
-                    nested: true
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.exhaustionSoftHint },
-                        set: { settings.exhaustionSoftHint = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!settings.isPanelVisible)
-                }
-
-                SettingsRowDivider()
-
-                SettingsRow(
-                    String.localized("Say roughly when"),
-                    subtitle: String.localized("When the pace will not last until the reset, the card writes roughly how long is left."),
-                    nested: true
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.exhaustionBeforeReset },
-                        set: { settings.exhaustionBeforeReset = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!settings.isPanelVisible)
-                }
-            }
-        }
-    }
-
     /// Remaining-time notices. Greyed out where there is no app bundle to post from.
     private var exhaustionNoticeGroup: some View {
         SettingsGroup(ExhaustionSettingsSections.notices) {
             SettingsRow(
-                String.localized("Notify by time left"),
+                String.localized("Notify when a limit is running out"),
                 subtitle: exhaustionAlertsSubtitle
             ) {
                 Toggle("", isOn: Binding(
@@ -359,11 +285,11 @@ struct NotificationsPane: View {
             if SettingsChildRows.showsExhaustionStages(alertsOn: settings.exhaustionAlerts) {
                 SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("Reminder times"),
-                    subtitle: String.localized("Each stage notifies once, at its own hours left. A new install starts with 24 hours."),
-                    nested: true
-                ) {
+                    SettingsRow(
+                        String.localized("Hours left to notify"),
+                        subtitle: String.localized("Each stage notifies once, at its own hours left. A new install starts with 24 hours."),
+                        nested: true
+                    ) {
                     Button(String.localized("Add a stage")) {
                         settings.addExhaustionStage()
                         commitExhaustionAlerts()
@@ -375,7 +301,7 @@ struct NotificationsPane: View {
                     SettingsRowDivider()
                     SettingsRow(String.localized("\("\(liveStageHours(stage))") hours"), nested: true) {
                         HStack(spacing: 10) {
-                            hoursStepper(
+                            ExhaustionHoursStepper(
                                 hours: liveStageHours(stage),
                                 enabled: UsageAlerts.isSupported,
                                 value: Binding(
@@ -402,7 +328,7 @@ struct NotificationsPane: View {
             SettingsRowDivider()
 
             SettingsRow(
-                String.localized("Notify before the reset"),
+                String.localized("Notify if it will not last until the reset"),
                 subtitle: String.localized("Sends a separate notice when the current pace will not last until the reset.")
             ) {
                 // The switch is `exhaustionNotifyBeforeReset` itself. On sends
@@ -421,75 +347,10 @@ struct NotificationsPane: View {
         }
     }
 
-    /// Whose windows are forecast, on the card and in the notices together.
-    private var exhaustionAccountGroup: some View {
-        SettingsGroup(ExhaustionSettingsSections.accounts) {
-            SettingsRow(
-                String.localized("Accounts"),
-                subtitle: String.localized("Every account shown on the panel, or only the ones you pick.")
-            ) {
-                Picker("", selection: Binding(
-                    get: { settings.exhaustionAllAccounts },
-                    set: { settings.setExhaustionAllAccounts($0) }
-                )) {
-                    Text(localized: "All shown accounts").tag(true)
-                    Text(localized: "Selected accounts").tag(false)
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
-            }
-
-            if SettingsChildRows.showsExhaustionAccountList(allAccounts: settings.exhaustionAllAccounts) {
-                ForEach(settings.shownAccounts, id: \.id) { account in
-                    SettingsRowDivider()
-                    SettingsRow(settings.label(for: account), nested: true) {
-                        Toggle("", isOn: Binding(
-                            get: { settings.forecastsExhaustion(for: account) },
-                            set: { settings.setForecastsExhaustion($0, for: account) }
-                        ))
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                    }
-                }
-            }
-        }
-    }
-
     /// The hours still stored for this stage. Read while the row is built, so
     /// the stepper's label and the row title follow a click.
     private func liveStageHours(_ stage: ExhaustionStage) -> Int {
         settings.exhaustionStages.first { $0.id == stage.id }?.hours ?? stage.hours
-    }
-
-    /// Up and down, with the current hours written beside them.
-    ///
-    /// The binding is built in the row, where it reads the setting again
-    /// after the click. A copy taken while the row was last built puts the
-    /// old number back, and the click looks dead. The label is that same
-    /// number: hiding it was how the row shipped with bare chevrons.
-    ///
-    /// The binding stays a `Binding` rather than two closures passed in.
-    /// Those closures are not sendable, and the stepper's binding requires
-    /// closures that are.
-    private func hoursStepper(
-        hours: Int,
-        enabled: Bool,
-        value: Binding<Int>
-    ) -> some View {
-        let shown = ExhaustionHoursControl.digits(hours)
-        return Stepper(
-            value: value,
-            in: ExhaustionStage.minimumHours...ExhaustionStage.maximumHours,
-            step: 1
-        ) {
-            Text(verbatim: shown)
-                .font(.system(size: 13).monospacedDigit())
-                .frame(minWidth: 36, alignment: .trailing)
-        }
-        .fixedSize()
-        .accessibilityValue(shown)
-        .disabled(!enabled)
     }
 
     /// Advance reminders are notifications, so they share the grant the other
@@ -553,11 +414,45 @@ struct NotificationsPane: View {
     }
 }
 
-/// The three exhaustion groups, in the order the notifications pane draws them.
+/// The three exhaustion groups. The card and the account list are on Usage
+/// card; the notices are on Exhaustion and reminders. The titles stay in
+/// that order so a test can name them without opening a window.
 enum ExhaustionSettingsSections {
-    static var card: String { String.localized("What the card shows") }
-    static var notices: String { String.localized("Notices") }
+    static var card: String { String.localized("Exhaustion on the card") }
+    static var notices: String { String.localized("Exhaustion notifications") }
     static var accounts: String { String.localized("Which accounts") }
 
     static var titles: [String] { [card, notices, accounts] }
+}
+
+/// Up and down, with the current hours written beside them.
+///
+/// The binding is built in the row, where it reads the setting again after
+/// the click. A copy taken while the row was last built puts the old number
+/// back, and the click looks dead. The label is that same number: hiding it
+/// was how the row shipped with bare chevrons.
+///
+/// The binding stays a `Binding` rather than two closures passed in. Those
+/// closures are not sendable, and the stepper's binding requires closures
+/// that are.
+struct ExhaustionHoursStepper: View {
+    let hours: Int
+    var enabled: Bool
+    @Binding var value: Int
+
+    var body: some View {
+        let shown = ExhaustionHoursControl.digits(hours)
+        Stepper(
+            value: $value,
+            in: ExhaustionStage.minimumHours...ExhaustionStage.maximumHours,
+            step: 1
+        ) {
+            Text(verbatim: shown)
+                .font(.system(size: 13).monospacedDigit())
+                .frame(minWidth: 36, alignment: .trailing)
+        }
+        .fixedSize()
+        .accessibilityValue(shown)
+        .disabled(!enabled)
+    }
 }

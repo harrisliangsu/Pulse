@@ -900,6 +900,13 @@ final class AppSettings {
         didSet { spendActivityViewChanged(from: oldValue) }
     }
 
+    /// Which breakdown the floating Token spend panel lists. Agent until the
+    /// reader picks another, kept like the span. No `onChange?()` — it does
+    /// not refetch providers, and the glance redraws from the summary it has.
+    var spendGlanceDimension: SpendGlanceDimension {
+        didSet { spendGlanceDimensionChanged(from: oldValue) }
+    }
+
     /// Local records are read only after this pane is explicitly enabled.
     /// No onChange: that hook refreshes the quota providers.
     var readsTokenSpend: Bool {
@@ -1190,6 +1197,7 @@ final class AppSettings {
         spendSpan: SpendSpan = .default,
         spendCustomDays: ClosedRange<Date>? = nil,
         spendActivityView: ActivityView = .default,
+        spendGlanceDimension: SpendGlanceDimension = .default,
         readsTokenSpend: Bool = Default.readsTokenSpend,
         alertThreshold: AlertThreshold = .default,
         alertsOnReset: Bool = Default.alertsOnReset,
@@ -1253,6 +1261,7 @@ final class AppSettings {
         self.spendSpan = spendSpan
         self.spendCustomDays = spendCustomDays ?? Self.defaultSpendCustomDays()
         self.spendActivityView = spendActivityView
+        self.spendGlanceDimension = spendGlanceDimension
         self.readsTokenSpend = readsTokenSpend
         self.alertThreshold = alertThreshold
         self.alertsOnReset = alertsOnReset
@@ -1375,6 +1384,7 @@ final class AppSettings {
             spendSpan: Self.storedSpendSpan(in: defaults),
             spendCustomDays: Self.storedSpendCustomDays(in: defaults),
             spendActivityView: Self.storedSpendActivityView(in: defaults),
+            spendGlanceDimension: Self.storedSpendGlanceDimension(in: defaults),
             readsTokenSpend: Self.storedReadsTokenSpend(in: defaults),
             alertThreshold: defaults.settingsIntChoice(Key.alertThreshold) ?? .default,
             alertsOnReset: defaults.settingsFlag(Key.alertsOnReset, default: Default.alertsOnReset),
