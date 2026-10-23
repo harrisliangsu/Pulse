@@ -17,12 +17,19 @@ struct UpdateAnnouncementTests {
         let settings = AppSettings(defaults: defaults)
 
         #expect(settings.updateDiscovery == .notifyFirst)
-        #expect(!settings.wantsNotificationPermission)
         #expect(UpdateAnnouncement.action(
             origin: .scheduled,
             discovery: settings.updateDiscovery,
             permission: .authorized
         ) == .notify)
+        // The time-to-empty notice starts on, so the grant can already be
+        // wanted. Notify first does not add itself to that gate: with every
+        // usage notice off, the grant stays unwanted either way.
+        settings.exhaustionAlerts = false
+        #expect(!settings.wantsNotificationPermission)
+        settings.updateDiscovery = .showWindow
+        #expect(settings.updateDiscovery == .showWindow)
+        #expect(!settings.wantsNotificationPermission)
     }
 
     @Test("An unknown stored choice restores notify first")
@@ -188,6 +195,8 @@ struct UpdateAnnouncementTests {
     func notifyFirstAsksWithoutUsageAlerts() async {
         let (alerts, settings, cleanup) = scratch()
         defer { cleanup() }
+        settings.exhaustionAlerts = false
+        #expect(!settings.wantsNotificationPermission)
         var called = false
 
         let granted = await alerts.requestUpdateNoticeAuthorization {
