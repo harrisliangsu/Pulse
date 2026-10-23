@@ -115,17 +115,17 @@ enum SettingsPaneBookmark {
 
     static func pane(from token: String, accounts: [AccountKey]) -> SettingsPane? {
         switch token {
-        case "appearance": .appearance
-        case "usageCard": .usageCard
-        case "placement": .placement
-        case "general": .general
-        case "notifications": .notifications
-        case "network": .network
-        case "spend": .spend
-        case "about": .about
-        case "integrations": .integrations
-        case "extensions": .extensions
-        case "providers": .providers
+        case "appearance": return .appearance
+        case "usageCard": return .usageCard
+        case "placement": return .placement
+        case "general": return .general
+        case "notifications": return .notifications
+        case "network": return .network
+        case "spend": return .spend
+        case "about": return .about
+        case "integrations": return .integrations
+        case "extensions": return .extensions
+        case "providers": return .providers
         default:
             guard token.hasPrefix("account:") else { return nil }
             let id = String(token.dropFirst("account:".count))

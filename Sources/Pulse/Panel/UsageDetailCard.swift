@@ -1185,9 +1185,10 @@ private struct ScreenRectReporter: NSViewRepresentable {
 /// A gear here used to read as Settings; the window it opens is the app.
 enum BlinkyMark {
     static var image: NSImage {
-        let application = NSApp.applicationIconImage
-        if application.size.width > 1 { return application }
-        return NSImage(named: "AppIcon") ?? application
+        if let application = NSApp.applicationIconImage, application.size.width > 1 {
+            return application
+        }
+        return NSImage(named: "AppIcon") ?? NSImage()
     }
 }
 
