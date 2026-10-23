@@ -6,6 +6,36 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
+            <title>1.5.0</title>
+            <pubDate>Fri, 23 Oct 2026 03:54:02 -0000</pubDate>
+            <sparkle:version>1.5.0</sparkle:version>
+            <sparkle:shortVersionString>1.5.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.0</link>
+            <description xml:lang="zh-Hans"><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Blinky 1.5.0</h2><ul><li><strong>界面上的名称改为 Blinky。</strong> 菜单栏、设置、关于和更新说明都显示 Blinky，与 iOS 版同一个名字，本应用仍是 <a href="https://github.com/qunqin24/Pulse">Pulse</a> 的 macOS 分支。</li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.0">在 GitHub 查看更新说明</a></p>]]></description>
+            <description xml:lang="zh-Hant"><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Blinky 1.5.0</h2><ul><li><strong>界面上的名称改为 Blinky。</strong> 菜单栏、设置、关于和更新说明都显示 Blinky，与 iOS 版同一个名字，本应用仍是 <a href="https://github.com/qunqin24/Pulse">Pulse</a> 的 macOS 分支。</li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.0">在 GitHub 查看更新说明</a></p>]]></description>
+            <description xml:lang="en"><![CDATA[<style>
+  h2 { font-size: 1.05em; margin: 0 0 .5em; }
+  ul { margin: 0; padding-left: 1.2em; }
+  li { margin: .3em 0; }
+  p { margin: .8em 0 0; }
+</style><h2>Blinky 1.5.0</h2><ul><li><strong>The name on screen is Blinky.</strong> The menu bar, Settings, About, and update notes show Blinky, the same name as the iOS app, and this remains a fork of <a href="https://github.com/qunqin24/Pulse">Pulse</a>.</li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.0">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.0/Pulse-1.5.0.zip"
+                       length="16890108"
+                       type="application/octet-stream"
+                       sparkle:edSignature="HpkNouVMGjnknvdbT+Lp6bjJdd5fWI4UCyB0qoZv35vNikk0bWV/1cq2IJZJLEE4xcvTMG8nka5NhZUZRvC9Cw==" />
+        </item>
+        <item>
             <title>1.4.29</title>
             <pubDate>Wed, 21 Oct 2026 10:27:23 -0000</pubDate>
             <sparkle:version>1.4.29</sparkle:version>
