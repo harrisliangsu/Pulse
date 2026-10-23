@@ -7,6 +7,13 @@ name: Sign existing feed
 # The private key is SPARKLE_PRIVATE_KEY, the same secret the Release workflow
 # uses. sign_update is Sparkle 2.9.6, the version this app links.
 on:
+  # Push, not only workflow_dispatch: a workflow that exists solely on a
+  # branch cannot be dispatched until it is on the default branch. A push of
+  # this branch runs this file. The job pushes a different branch, so it does
+  # not retrigger itself.
+  push:
+    branches:
+      - cursor/sign-existing-feed-6ea9
   workflow_dispatch:
     inputs:
       version:
@@ -24,6 +31,9 @@ permissions:
 jobs:
   sign:
     runs-on: macos-26
+    env:
+      VERSION: ${{ github.event.inputs.version || '1.5.7' }}
+      BRANCH: ${{ github.event.inputs.branch || 'cursor/offer-1-5-7-appcast-6ea9' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,7 +43,6 @@ jobs:
       - name: Download the published archive
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
           case "$VERSION" in
@@ -71,7 +80,6 @@ jobs:
       - name: Write the feed
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
-          VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
           if [ -z "${SPARKLE_PRIVATE_KEY}" ]; then
@@ -108,7 +116,6 @@ jobs:
       - name: Verify the signature
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
-          VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
           sig="$(python3 - <<'PY'
@@ -132,8 +139,7 @@ jobs:
 
       - name: Push the feed branch
         env:
-          VERSION: ${{ inputs.version }}
-          BRANCH: ${{ inputs.branch }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           case "$BRANCH" in
