@@ -6,22 +6,22 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.8</title>
-            <pubDate>Fri, 23 Oct 2026 12:37:57 -0000</pubDate>
-            <sparkle:version>1.5.8</sparkle:version>
-            <sparkle:shortVersionString>1.5.8</sparkle:shortVersionString>
+            <title>1.5.9</title>
+            <pubDate>Fri, 23 Oct 2026 14:22:53 -0000</pubDate>
+            <sparkle:version>1.5.9</sparkle:version>
+            <sparkle:shortVersionString>1.5.9</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.8</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.9</link>
             <description><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.8</h2><ul><li><strong>A scheduled check notifies you before opening the update window.</strong> Settings → About, under Check automatically: When an update is found defaults to Notify first, and the window opens when that notification is clicked. Show the window opens it immediately. Check for Updates… and Check now still open the window. If notification permission is refused, the window opens so the update is not missed. <a href="https://github.com/harrisliangsu/blinky-mac/pull/65">#65</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.8">Release notes on GitHub</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.8/Blinky-1.5.8.zip"
-                       length="22506954"
+</style><h2>Blinky 1.5.9</h2><ul><li><strong>Opening Blinky shows its main window.</strong> Finder, Spotlight, Launchpad, and the Dock open the window titled Blinky on the Appearance pane, and a launch at login stays in the menu bar unless Show main window when opened at login is on under Settings → General → Startup and windows. <a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/architecture.md#login-item">Docs/architecture.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/70">#70</a></li><li><strong>The Dock icon can stay on.</strong> Always show Dock icon, in that same section, keeps Blinky in the Dock and in ⌘-Tab, and Show Dock icon while a window is open still covers the main window, a recap, and the service chooser while that switch is off. <a href="https://github.com/harrisliangsu/blinky-mac/pull/70">#70</a></li><li><strong>A login launch waits to ask.</strong> The service chooser and the first-run questions stay back until Blinky is opened by hand, and General explains it when the menu bar icon had to be turned back on. <a href="https://github.com/harrisliangsu/blinky-mac/pull/70">#70</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.9">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.9/Blinky-1.5.9.zip"
+                       length="22538109"
                        type="application/octet-stream"
-                       sparkle:edSignature="lsAdUy6+ySe5fYQUKJ60ON4QOhLUCPpygGeIpq+t5Pru/9VguqNEfGO/k/N+3omjpgstiIxqskWe80NqbQ+6BA==" />
+                       sparkle:edSignature="40WF0cFCzrr3q2DtYSTEGD9QQ/6llYZ7WnOTTd+RnTmWElpJRA9qA0BliJc6OLKC/la3ahLIHwLSZVoay1k8AA==" />
         </item>
     </channel>
 </rss>
