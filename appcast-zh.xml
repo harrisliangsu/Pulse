@@ -23,23 +23,5 @@
                        type="application/octet-stream"
                        sparkle:edSignature="SjskviNJjpNbu1VVGSiAeGjqrraeWof8opz4qdtfpR3rRcuNipbMafxh+GTZEq+DjQL5AwbBA3W+KnxRWEWpDw==" />
         </item>
-        <item>
-            <title>1.5.2</title>
-            <pubDate>Fri, 23 Oct 2026 07:53:36 -0000</pubDate>
-            <sparkle:version>1.5.2</sparkle:version>
-            <sparkle:shortVersionString>1.5.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.2</link>
-            <description><![CDATA[<style>
-  h2 { font-size: 1.05em; margin: 0 0 .5em; }
-  ul { margin: 0; padding-left: 1.2em; }
-  li { margin: .3em 0; }
-  p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.2</h2><ul><li><strong>新下载的应用是 Blinky.app。</strong> 访达和安装镜像都显示这个名字，图标是 Blinky 的吉祥物。<a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/releasing.md">Docs/releasing.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/56">#56</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.2">在 GitHub 查看更新说明</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.2/Blinky-1.5.2.zip"
-                       length="22047314"
-                       type="application/octet-stream"
-                       sparkle:edSignature="S2BayYKU/W4kDnxeV5zLkoqWQER1FgYkY5GTKnLbtLtCc6sNMRIhVpY+yjwNpDAhldE7bAmw8JF6VSUAqm8DCg==" />
-        </item>
     </channel>
 </rss>
