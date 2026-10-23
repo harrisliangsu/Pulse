@@ -1,4 +1,5 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
+import AppKit
 import Foundation
 import Observation
 import Sparkle
