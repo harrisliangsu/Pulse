@@ -88,13 +88,13 @@ body:
       label: What does the service itself say? / 服务方自己显示多少
       description: >
         For a reading that looks wrong: what the provider's own dashboard or
-        CLI reports at the same moment. That tells us whether Pulse is reading
+        CLI reports at the same moment. That tells us whether Blinky is reading
         it wrong or the service is reporting it that way. 如果数字看着不对，
-        同一时刻它的官网控制台或 CLI 报的是多少。这能区分是 Pulse 读错了，
+        同一时刻它的官网控制台或 CLI 报的是多少。这能区分是 Blinky 读错了，
         还是服务方本来就是这么报的。
       placeholder: |
         provider dashboard / CLI value:
-        Pulse value:
+        Blinky value:
         both read at (time):
     validations:
       required: false
@@ -116,7 +116,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: Pulse version / Pulse 版本
+      label: Blinky version / Blinky 版本
       description: Settings › About. 设置 › 关于。
       placeholder: "1.0.6"
     validations:

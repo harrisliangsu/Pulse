@@ -58,7 +58,7 @@
 
 ## 安装与快速上手
 
-1. 前往 [Releases](https://github.com/harrisliangsu/blinky-mac/releases/latest) 下载最新的 **`Pulse-x.y.z.dmg`**。
+1. 前往 [Releases](https://github.com/harrisliangsu/blinky-mac/releases/latest) 下载最新的 **`Blinky-x.y.z.dmg`**。
 2. 打开安装镜像，将 **Blinky** 拖拽至「应用程序（Applications）」文件夹即可。磁盘上的文件名仍是 `Pulse.app`，更新会直接替换已经装好的那一份。
 3. 首次启动先选择要监控的服务，默认都不勾选。点 **「完成」** 后，Blinky 才会读取所选服务的凭据并查询用量。关掉向导会保持未开启监控；也可以在设置里开启任意服务。升级会保留原有选择，对新支持且本机检测到的服务只询问一次。
 4. Blinky 常驻菜单栏。若菜单栏过于拥挤，右键浮动栏（或收起后的细线）并选择 **「设置…」**；也可在 **设置 › 通用 › 快捷键** 中为它分配一个全局快捷键。

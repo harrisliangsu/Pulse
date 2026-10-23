@@ -9,7 +9,7 @@
 # register a login item, and there is nothing to hand anyone but a build folder.
 #
 #   ./Scripts/bundle.sh            → build.noindex/Pulse.app
-#   ./Scripts/bundle.sh --zip      → and build.noindex/Pulse-<version>.zip to attach
+#   ./Scripts/bundle.sh --zip      → and build.noindex/Blinky-<version>.zip to attach
 #                                    to the release
 #   ./Scripts/bundle.sh --open     → and reveal it in Finder
 #
@@ -226,7 +226,7 @@ echo "→ $APP"
 # `ditto`, not `zip`: an app bundle carries symlinks and resource forks that a
 # plain zip quietly flattens, and the unzipped copy then refuses to launch.
 if [ "${1:-}" = "--zip" ]; then
-    ZIP="build.noindex/Pulse-$VERSION.zip"
+    ZIP="build.noindex/Blinky-$VERSION.zip"
     rm -f "$ZIP"
     ditto -c -k --keepParent "$APP" "$ZIP"
     echo "→ $ZIP"

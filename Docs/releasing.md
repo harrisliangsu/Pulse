@@ -12,7 +12,7 @@ The version lives in `VERSION` and nowhere else. Tag `v$(cat VERSION)`. The upda
 
 ```bash
 # CHANGELOG.md and CHANGELOG.zh-CN.md first. Then:
-echo 1.0.1 > VERSION && git commit -am "Pulse 1.0.1"
+echo 1.0.1 > VERSION && git commit -am "Blinky 1.0.1"
 git tag v1.0.1 && git push && git push origin v1.0.1
 ```
 
@@ -56,7 +56,7 @@ different zips.
 
 ## Disk image (`Scripts/dmg.sh`)
 
-The image is the install guide: Pulse is not notarised, and on macOS 15+ Control-click → Open is gone. Instructions are printed on the window (README-only instructions are not read by people downloading an app).
+The image is the install guide: Blinky is not notarised, and on macOS 15+ Control-click → Open is gone. Instructions are printed on the window (README-only instructions are not read by people downloading an app).
 
 Finder window layout is a committed `Scripts/dmg-DS_Store` (AppleScript cannot run on CI). Recapture with `./Scripts/dmg.sh --relayout` after changing the backdrop or icon positions. Finder `bounds` **include the title bar** (~28pt taller than a 660×420 backdrop). Backdrop: `Scripts/dmg-background.tiff` (1x and 2x).
 
@@ -64,7 +64,7 @@ Sparkle updates from the **zip**, not the DMG. The image is for people.
 
 ## Sparkle
 
-The feed title and the heading in the update window say **Blinky**. The bundle identifier stays `io.github.qunqin24.Pulse`, and the archive is still named `Pulse-<version>.zip`.
+The feed title and the heading in the update window say **Blinky**. The bundle identifier stays `io.github.qunqin24.Pulse`. The disk image is `Blinky-<version>.dmg` and the update archive is `Blinky-<version>.zip`. Items already in the feed keep the archive names those releases uploaded.
 
 `AppUpdate.swift`. Safe without Apple Developer ID because of the **EdDSA** key: Sparkle refuses any archive not signed by the private half whose public half is in `Info.plist`. Apple signing is recommended by Sparkle, not required. Notarisation would only help Gatekeeper on **first** launch, which no updater can fix.
 

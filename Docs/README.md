@@ -2,7 +2,7 @@
 
 Maintained map. Change the topic file that owns a behaviour in the same patch as the code. [CLAUDE.md](../CLAUDE.md) is a short AI entry; [CONTRIBUTING.md](../CONTRIBUTING.md) is the human process.
 
-The name on screen is **Blinky** (menu bar, Settings, About, update notes). The Swift module, the `Pulse` executable, `Pulse.app`, and the bundle identifier `io.github.qunqin24.Pulse` stay as they are, so an existing install keeps its data and its updates. This fork lives at [harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac). Upstream remains [qunqin24/Pulse](https://github.com/qunqin24/Pulse).
+The name on screen is **Blinky** (menu bar, Settings, About, update notes). The Swift module, the `Pulse` executable, `Pulse.app`, and the bundle identifier `io.github.qunqin24.Pulse` stay as they are, so an existing install keeps its data and its updates. The release scripts name the disk image and the update archive `Blinky-<version>.dmg` and `Blinky-<version>.zip`. This fork lives at [harrisliangsu/blinky-mac](https://github.com/harrisliangsu/blinky-mac). Upstream remains [qunqin24/Pulse](https://github.com/qunqin24/Pulse).
 
 `Docs/` is the only docs tree. Investigation notes that are not “how it works now” live under [history/](history/) rather than being folded into current architecture.
 

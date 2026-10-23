@@ -31,7 +31,7 @@ class OfferTests(unittest.TestCase):
         self.feed = appcast.offer(
             appcast.SKELETON,
             "1.2.0",
-            "https://example.invalid/Pulse-1.2.0.zip",
+            "https://example.invalid/Blinky-1.2.0.zip",
             "sig-old",
             "100",
             "notes-for-1.2.0",
@@ -39,7 +39,7 @@ class OfferTests(unittest.TestCase):
         self.feed = appcast.offer(
             self.feed,
             "1.3.0",
-            "https://example.invalid/Pulse-1.3.0.zip",
+            "https://example.invalid/Blinky-1.3.0.zip",
             "sig-new",
             "200",
             "notes-for-1.3.0",
@@ -59,14 +59,14 @@ class OfferTests(unittest.TestCase):
         updated = appcast.offer(
             self.feed,
             "1.3.0",
-            "https://example.invalid/Pulse-1.3.0-rebuilt.zip",
+            "https://example.invalid/Blinky-1.3.0-rebuilt.zip",
             "sig-rebuilt",
             "333",
             "notes-that-must-not-replace",
         )
 
         current = _item(updated, "1.3.0")
-        self.assertIn('url="https://example.invalid/Pulse-1.3.0-rebuilt.zip"', current)
+        self.assertIn('url="https://example.invalid/Blinky-1.3.0-rebuilt.zip"', current)
         self.assertIn('length="333"', current)
         self.assertIn('sparkle:edSignature="sig-rebuilt"', current)
         self.assertIn("notes-for-1.3.0", current)
@@ -81,7 +81,7 @@ class OfferTests(unittest.TestCase):
         again = appcast.offer(
             self.feed,
             "1.3.0",
-            "https://example.invalid/Pulse-1.3.0.zip",
+            "https://example.invalid/Blinky-1.3.0.zip",
             "sig-new",
             "200",
             "",
@@ -91,7 +91,7 @@ class OfferTests(unittest.TestCase):
     def test_broken_enclosure_does_not_noop(self) -> None:
         broken = self.feed.replace(
             appcast.enclosure(
-                "https://example.invalid/Pulse-1.3.0.zip",
+                "https://example.invalid/Blinky-1.3.0.zip",
                 "200",
                 "sig-new",
             ),

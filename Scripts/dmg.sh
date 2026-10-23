@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# Builds build.noindex/Pulse-<version>.dmg: the app, a shortcut to Applications, and a
+# Builds build.noindex/Blinky-<version>.dmg: the app, a shortcut to Applications, and a
 # backdrop telling you what to do with them.
 #
-# The disk image is the install guide. Pulse is not signed with an Apple
+# The disk image is the install guide. Blinky is not signed with an Apple
 # Developer ID, so macOS blocks the first launch and the user has to go and
 # allow it by hand — instructions that live only in a README are instructions
 # nobody downloading a zip ever sees, so they are printed on the window itself.
@@ -29,8 +29,8 @@ cd "$(dirname "$0")/.."
 VERSION="$(tr -d '[:space:]' < VERSION)"
 VOLUME="Blinky"
 STAGING="build.noindex/dmg"
-WRITABLE="build.noindex/pulse-rw.dmg"
-FINAL="build.noindex/Pulse-$VERSION.dmg"
+WRITABLE="build.noindex/blinky-rw.dmg"
+FINAL="build.noindex/Blinky-$VERSION.dmg"
 
 ./Scripts/bundle.sh
 
