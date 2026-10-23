@@ -59,7 +59,7 @@ struct SpendGlanceWindowTests {
         }
 
         let window = try #require(NSApp.windows.first { $0 is SpendGlancePanel } as? SpendGlancePanel)
-        #expect(!(window is NSPanel))
+        #expect(!window.isKind(of: NSPanel.self))
         #expect(window.canBecomeKey)
         #expect(window.canBecomeMain)
         #expect(window.styleMask.contains(.titled))
@@ -110,9 +110,8 @@ struct SpendGlanceWindowTests {
         let note = controller.model.didCopy
             ? String.localized("Copied to the clipboard.")
             : String.localized("Could not copy.")
-        let noted = Self.axNodes(from: content).contains {
-            $0.accessibilityIdentifier() == "spend-glance-copy-note"
-                || $0.accessibilityLabel() == note
+        let noted = Self.axNodes(from: content).contains { node in
+            Self.identifier(of: node) == "spend-glance-copy-note" || Self.label(of: node) == note
         }
         #expect(noted)
 
@@ -192,6 +191,8 @@ struct SpendGlanceWindowTests {
         return [view] + view.subviews.flatMap { flatten($0) }
     }
 
+    /// The macOS 26 SDK does not put these getters on `NSObject`. They are
+    /// still the AppKit methods, so the test reads them by name.
     private static func axNodes(from root: Any?) -> [NSObject] {
         var seen = Set<ObjectIdentifier>()
         var output: [NSObject] = []
@@ -199,8 +200,7 @@ struct SpendGlanceWindowTests {
             guard depth < 12, output.count < 400, let object = object as? NSObject else { return }
             guard seen.insert(ObjectIdentifier(object)).inserted else { return }
             output.append(object)
-            let children = (object.accessibilityChildren() ?? []) + (object.accessibilityVisibleChildren() ?? [])
-            for child in children {
+            for child in children(of: object) {
                 walk(child, depth: depth + 1)
             }
         }
@@ -208,15 +208,53 @@ struct SpendGlanceWindowTests {
         return output
     }
 
+    private static func children(of object: NSObject) -> [NSObject] {
+        let names = [
+            "accessibilityChildren",
+            "accessibilityVisibleChildren",
+            "accessibilityChildrenInNavigationOrder",
+        ]
+        var found: [NSObject] = []
+        for name in names {
+            guard object.responds(to: NSSelectorFromString(name)) else { continue }
+            let value = object.value(forKey: name)
+            if let list = value as? [NSObject] {
+                found.append(contentsOf: list)
+            } else if let list = value as? NSArray {
+                found.append(contentsOf: list.compactMap { $0 as? NSObject })
+            }
+        }
+        return found
+    }
+
+    private static func identifier(of object: NSObject) -> String? {
+        text(object, "accessibilityIdentifier")
+    }
+
+    private static func label(of object: NSObject) -> String? {
+        text(object, "accessibilityLabel")
+    }
+
+    private static func text(_ object: NSObject, _ name: String) -> String? {
+        guard object.responds(to: NSSelectorFromString(name)) else { return nil }
+        return object.value(forKey: name) as? String
+    }
+
+    private static func frame(of object: NSObject) -> NSRect {
+        let name = "accessibilityFrame"
+        guard object.responds(to: NSSelectorFromString(name)) else { return .zero }
+        return (object.value(forKey: name) as? NSValue)?.rectValue ?? .zero
+    }
+
     private static func control(_ identifier: String, label: String, in nodes: [NSObject]) -> NSObject? {
-        nodes.first { $0.accessibilityIdentifier() == identifier }
-            ?? nodes.first { $0.accessibilityLabel() == label }
+        nodes.first { Self.identifier(of: $0) == identifier }
+            ?? nodes.first { Self.label(of: $0) == label }
     }
 
     private static func describe(_ nodes: [NSObject]) -> String {
         nodes.prefix(30).map { node in
-            let id = node.accessibilityIdentifier() ?? "-"
-            let label = node.accessibilityLabel() ?? "-"
+            let id = identifier(of: node) ?? "-"
+            let label = label(of: node) ?? "-"
             return "\(type(of: node)) id=\(id) label=\(label)"
         }.joined(separator: " | ")
     }
@@ -228,7 +266,7 @@ struct SpendGlanceWindowTests {
     }
 
     private static func hit(_ element: NSObject, in root: NSView, window: NSWindow) -> NSView? {
-        let frame = element.accessibilityFrame()
+        let frame = frame(of: element)
         guard !frame.isEmpty else { return nil }
         let inWindow = window.convertPoint(fromScreen: NSPoint(x: frame.midX, y: frame.midY))
         guard let superview = root.superview else { return root.hitTest(inWindow) }
@@ -245,7 +283,7 @@ struct SpendGlanceWindowTests {
     }
 
     private static func click(_ element: NSObject, in window: NSWindow) throws {
-        let frame = element.accessibilityFrame()
+        let frame = frame(of: element)
         try #require(!frame.isEmpty)
         let point = window.convertPoint(fromScreen: NSPoint(x: frame.midX, y: frame.midY))
         let down = try #require(NSEvent.mouseEvent(
