@@ -329,6 +329,48 @@ final class SpendGlanceHostingView<Content: View>: NSHostingView<Content> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
 
+/// Records a control's window rectangle without taking the click.
+///
+/// Refresh and Share are SwiftUI buttons. macOS 26 does not put an `NSButton`
+/// under them, and asking the hosting view for its accessibility children
+/// returns the view itself. The test needs the rectangle the button laid out
+/// so it can send the click there. `hitTest` returns nil, so the press falls
+/// through to the button.
+struct ControlFrameProbe: NSViewRepresentable {
+    var id: String
+    var onFrame: (String, CGRect) -> Void
+
+    func makeNSView(context: Context) -> ProbeView {
+        ProbeView()
+    }
+
+    func updateNSView(_ nsView: ProbeView, context: Context) {
+        nsView.onFrame = { [onFrame, id] frame in onFrame(id, frame) }
+        nsView.report()
+    }
+
+    final class ProbeView: NSView {
+        var onFrame: ((CGRect) -> Void)?
+
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+        override func layout() {
+            super.layout()
+            report()
+        }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            report()
+        }
+
+        func report() {
+            guard window != nil, bounds.width > 1, bounds.height > 1 else { return }
+            onFrame?(convert(bounds, to: nil))
+        }
+    }
+}
+
 /// Copies the branded summary. The image is the picture's text and bars;
 /// nothing is written to disk.
 @MainActor
@@ -415,9 +457,11 @@ struct SpendGlanceView: View {
                 Button(String.localized("Refresh")) { model.rescan += 1 }
                     .disabled(model.isScanning)
                     .accessibilityIdentifier("spend-glance-refresh")
+                    .background(ControlFrameProbe(id: "spend-glance-refresh", onFrame: model.noteControlFrame))
                 Button(shareLabel, action: onShare)
                     .disabled(!model.figuresReady || model.isScanning)
                     .accessibilityIdentifier("spend-glance-share")
+                    .background(ControlFrameProbe(id: "spend-glance-share", onFrame: model.noteControlFrame))
             }
             if model.didCopy {
                 Text(localized: "Copied to the clipboard.")

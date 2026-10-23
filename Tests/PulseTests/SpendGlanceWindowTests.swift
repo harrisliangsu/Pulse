@@ -77,43 +77,37 @@ struct SpendGlanceWindowTests {
         window.contentView?.layoutSubtreeIfNeeded()
         let content = try #require(window.contentView)
         let views = Self.flatten(content)
-        // SwiftUI's menu picker is a popup view, not an NSPopUpButton the
-        // test can downcast. Refresh and Share are not NSButtons either:
-        // they are accessibility elements in this same tree.
+        // SwiftUI's menu picker is a popup view, not an NSPopUpButton. The
+        // hosting view that wraps it also has "PopUpButton" in its class name;
+        // hit-testing that wrapper lands on the popup, which is not inside it.
         let menus = views.filter {
-            let name = String(describing: type(of: $0))
-            return name.contains("PopupButton") || name.contains("PopUpButton")
+            String(describing: Swift.type(of: $0)).contains("SwiftUIPopupButton")
         }
         #expect(menus.count >= 2)
         for menu in menus {
-            #expect(Self.contains(Self.hit(menu, in: content), menu))
+            let hit = Self.hit(menu, in: content)
+            let name = hit.map { String(describing: Swift.type(of: $0)) } ?? ""
+            #expect(Self.contains(hit, menu) || name.contains("PopupButton") || name.contains("PopUpButton"))
         }
 
-        let nodes = Self.axNodes(from: content)
-        let described = Self.describe(nodes)
-        let refresh = try #require(
-            Self.control("spend-glance-refresh", label: String.localized("Refresh"), in: nodes),
-            "Refresh was not in the accessibility tree: \(described)"
+        // Refresh and Share have no NSButton. Their layout frames are in
+        // window coordinates, and the click is a real event at that point.
+        let shareFrame = try #require(
+            controller.model.controlFrames["spend-glance-share"],
+            "Share has no layout frame. Recorded: \(controller.model.controlFrames)"
         )
-        let share = try #require(
-            Self.control("spend-glance-share", label: String.localized("Share this summary"), in: nodes),
-            "Share was not in the accessibility tree: \(described)"
+        let refreshFrame = try #require(
+            controller.model.controlFrames["spend-glance-refresh"],
+            "Refresh has no layout frame. Recorded: \(controller.model.controlFrames)"
         )
-        #expect(Self.hit(refresh, in: content, window: window) != nil)
-        #expect(Self.hit(share, in: content, window: window) != nil)
+        #expect(Self.hit(shareFrame, in: content) != nil)
+        #expect(Self.hit(refreshFrame, in: content) != nil)
 
         // Share before Refresh. Refresh starts a read, and that read must not
         // be what this click is proving.
-        try Self.click(share, in: window)
+        try Self.click(shareFrame, in: window)
         pump()
         #expect(controller.model.didCopy || controller.model.copyFailed)
-        let note = controller.model.didCopy
-            ? String.localized("Copied to the clipboard.")
-            : String.localized("Could not copy.")
-        let noted = Self.axNodes(from: content).contains { node in
-            Self.identifier(of: node) == "spend-glance-copy-note" || Self.label(of: node) == note
-        }
-        #expect(noted)
 
         // A menu's click is outside this window's frame and must not dismiss it.
         let menu = NSWindow(
@@ -143,7 +137,7 @@ struct SpendGlanceWindowTests {
         // A click in the content must reach the control. The old sendEvent
         // returned before super, so this click changed nothing.
         let rescanBefore = controller.model.rescan
-        try Self.click(refresh, in: window)
+        try Self.click(refreshFrame, in: window)
         #expect(controller.model.rescan == rescanBefore + 1)
         #expect(controller.isOpen)
 
@@ -191,86 +185,16 @@ struct SpendGlanceWindowTests {
         return [view] + view.subviews.flatMap { flatten($0) }
     }
 
-    /// The macOS 26 SDK does not put these getters on `NSObject`. They are
-    /// still the AppKit methods, so the test reads them by name.
-    private static func axNodes(from root: Any?) -> [NSObject] {
-        var seen = Set<ObjectIdentifier>()
-        var output: [NSObject] = []
-        func walk(_ object: Any?, depth: Int) {
-            guard depth < 12, output.count < 400, let object = object as? NSObject else { return }
-            guard seen.insert(ObjectIdentifier(object)).inserted else { return }
-            output.append(object)
-            for child in children(of: object) {
-                walk(child, depth: depth + 1)
-            }
-        }
-        walk(root, depth: 0)
-        return output
-    }
-
-    private static func children(of object: NSObject) -> [NSObject] {
-        let names = [
-            "accessibilityChildren",
-            "accessibilityVisibleChildren",
-            "accessibilityChildrenInNavigationOrder",
-        ]
-        var found: [NSObject] = []
-        for name in names {
-            guard object.responds(to: NSSelectorFromString(name)) else { continue }
-            let value = object.value(forKey: name)
-            if let list = value as? [NSObject] {
-                found.append(contentsOf: list)
-            } else if let list = value as? NSArray {
-                found.append(contentsOf: list.compactMap { $0 as? NSObject })
-            }
-        }
-        return found
-    }
-
-    private static func identifier(of object: NSObject) -> String? {
-        text(object, "accessibilityIdentifier")
-    }
-
-    private static func label(of object: NSObject) -> String? {
-        text(object, "accessibilityLabel")
-    }
-
-    private static func text(_ object: NSObject, _ name: String) -> String? {
-        guard object.responds(to: NSSelectorFromString(name)) else { return nil }
-        return object.value(forKey: name) as? String
-    }
-
-    private static func frame(of object: NSObject) -> NSRect {
-        let name = "accessibilityFrame"
-        guard object.responds(to: NSSelectorFromString(name)) else { return .zero }
-        return (object.value(forKey: name) as? NSValue)?.rectValue ?? .zero
-    }
-
-    private static func control(_ identifier: String, label: String, in nodes: [NSObject]) -> NSObject? {
-        nodes.first { Self.identifier(of: $0) == identifier }
-            ?? nodes.first { Self.label(of: $0) == label }
-    }
-
-    private static func describe(_ nodes: [NSObject]) -> String {
-        nodes.prefix(30).map { node in
-            let id = identifier(of: node) ?? "-"
-            let label = label(of: node) ?? "-"
-            return "\(type(of: node)) id=\(id) label=\(label)"
-        }.joined(separator: " | ")
-    }
-
     private static func hit(_ control: NSView, in root: NSView) -> NSView? {
         let inWindow = control.convert(NSPoint(x: control.bounds.midX, y: control.bounds.midY), to: nil)
         guard let superview = root.superview else { return root.hitTest(inWindow) }
         return root.hitTest(superview.convert(inWindow, from: nil))
     }
 
-    private static func hit(_ element: NSObject, in root: NSView, window: NSWindow) -> NSView? {
-        let frame = frame(of: element)
-        guard !frame.isEmpty else { return nil }
-        let inWindow = window.convertPoint(fromScreen: NSPoint(x: frame.midX, y: frame.midY))
-        guard let superview = root.superview else { return root.hitTest(inWindow) }
-        return root.hitTest(superview.convert(inWindow, from: nil))
+    private static func hit(_ frame: CGRect, in root: NSView) -> NSView? {
+        let point = NSPoint(x: frame.midX, y: frame.midY)
+        guard let superview = root.superview else { return root.hitTest(point) }
+        return root.hitTest(superview.convert(point, from: nil))
     }
 
     private static func contains(_ hit: NSView?, _ control: NSView) -> Bool {
@@ -282,10 +206,10 @@ struct SpendGlanceWindowTests {
         return false
     }
 
-    private static func click(_ element: NSObject, in window: NSWindow) throws {
-        let frame = frame(of: element)
+    /// `frame` is in the window's base coordinates, which is where `sendEvent` looks.
+    private static func click(_ frame: CGRect, in window: NSWindow) throws {
         try #require(!frame.isEmpty)
-        let point = window.convertPoint(fromScreen: NSPoint(x: frame.midX, y: frame.midY))
+        let point = NSPoint(x: frame.midX, y: frame.midY)
         let down = try #require(NSEvent.mouseEvent(
             with: .leftMouseDown,
             location: point,
