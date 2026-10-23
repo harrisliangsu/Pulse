@@ -319,7 +319,10 @@ struct UsageDetailCard: View {
     /// The exhaustion line for one window, or nil when the forecast is off
     /// or the window does not carry a length and a reset.
     private func forecastLine(for window: UsageWindow) -> BurnRate.CardLine? {
-        guard showsForecast, let reading = BurnRate.reading(for: window) else { return nil }
+        // The weekly limit, or the longest other limit when there is no
+        // weekly one. A five-hour row stays a percentage and a reset.
+        guard showsForecast, ExhaustionEstimate.includes(window, among: usage.windows) else { return nil }
+        guard let reading = BurnRate.reading(for: window) else { return nil }
         return BurnRate.cardLine(
             for: window,
             reading: reading,
@@ -344,11 +347,9 @@ struct UsageDetailCard: View {
                     percentageText: window.percentText(remaining: showsRemaining),
                     isSpent: UsageTint.isSpent(window),
                     showsRemaining: showsRemaining,
-                    // Every provider, not a chosen few: what this needs is a
-                    // percentage, a reset and a length the provider actually
-                    // stated, and `BurnRate` refuses the windows that lack one
-                    // rather than being told in advance which they are.
-                    // Codex's 5-hour and weekly windows state both.
+                    // The weekly limit, or the longest other limit. A five-hour
+                    // window is not estimated. `BurnRate` still refuses a row
+                    // that has no stated length or reset.
                     forecast: forecastLine(for: window),
                     value: valueText(window),
                     amount: showsAmounts ? Self.amountText(window, remaining: showsRemaining) : nil
@@ -944,8 +945,8 @@ struct UsageDetailCard: View {
 
                     if let openSettings {
                         HeaderIconButton(
-                            systemImage: "gearshape",
-                            label: String.localized("Settings…"),
+                            image: BlinkyMark.image,
+                            label: String.localized("Open Blinky"),
                             action: openSettings
                         )
                         HeaderIconButton(
@@ -1178,17 +1179,30 @@ private struct ScreenRectReporter: NSViewRepresentable {
 /// SwiftUI `Button` under a tracking overlay that declines `hitTest` is a
 /// hole in the transparent window — the press lands on the page behind.
 /// `PointerHand` claims the point and fires the action.
+///
+/// Blinky's own icon, for the control that opens the main window. The
+/// application icon when the bundle has one, and the named asset otherwise.
+/// A gear here used to read as Settings; the window it opens is the app.
+@MainActor
+enum BlinkyMark {
+    static var image: NSImage {
+        if let application = NSApp.applicationIconImage, application.size.width > 1 {
+            return application
+        }
+        return NSImage(named: "AppIcon") ?? NSImage()
+    }
+}
+
 private struct HeaderIconButton: View {
-    let systemImage: String
+    var systemImage: String? = nil
+    var image: NSImage? = nil
     let label: String
     let action: () -> Void
     @State private var hovering = false
 
     var body: some View {
         let size = DetailCardLayout.headerIconSize
-        Image(systemName: systemImage)
-            .font(.system(size: size * 0.9, weight: .medium))
-            .foregroundStyle(.primary.opacity(hovering ? 0.95 : 0.55))
+        mark
             .frame(width: size, height: size)
             .scaleEffect(hovering ? 1.32 : 1)
             .animation(.spring(response: 0.22, dampingFraction: 0.72), value: hovering)
@@ -1201,6 +1215,20 @@ private struct HeaderIconButton: View {
             .accessibilityLabel(label)
             .accessibilityAddTraits(.isButton)
             .accessibilityAction(named: Text(verbatim: label), action)
+    }
+
+    @ViewBuilder
+    private var mark: some View {
+        if let image {
+            Image(nsImage: image)
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fit)
+        } else {
+            Image(systemName: systemImage ?? "circle")
+                .font(.system(size: DetailCardLayout.headerIconSize * 0.9, weight: .medium))
+                .foregroundStyle(.primary.opacity(hovering ? 0.95 : 0.55))
+        }
     }
 }
 

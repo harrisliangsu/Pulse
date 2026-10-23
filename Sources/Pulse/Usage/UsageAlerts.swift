@@ -352,6 +352,11 @@ struct AlertMemory: Codable, Sendable, Equatable {
             return produced
         }
 
+        // Remaining-time notices follow the weekly limit, or the longest
+        // other limit when there is no weekly one. A five-hour window is
+        // never one of them. The percentage track above still sees every limit.
+        let exhaustionWindows = Set(ExhaustionEstimate.windows(in: reading.windows).map(\.id))
+
         for window in reading.windows {
             // A previously live snapshot can outlast its window between polls.
             guard window.resetsAt.map({ $0 > now }) ?? true else { continue }
@@ -470,7 +475,7 @@ struct AlertMemory: Codable, Sendable, Equatable {
                 )
             }
 
-            if announcesExhaustion {
+            if announcesExhaustion, exhaustionWindows.contains(window.id) {
                 Self.noteExhaustion(
                     of: window,
                     into: &memory,

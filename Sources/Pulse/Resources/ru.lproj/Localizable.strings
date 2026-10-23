@@ -1399,3 +1399,27 @@
 "Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking." = "Каждые два часа. Выбор ниже решает, уведомить, открыть окно обновления или установить без запроса.";
 "By hour" = "По часам";
 "Copied to the clipboard." = "Скопировано в буфер обмена.";
+
+/* 1.5.11 */
+"Limit reminders" = "Напоминания о лимите";
+"Running out" = "На исходе";
+"Monthly recap" = "Месячный обзор";
+"When it is running out" = "Когда на исходе";
+"Remaining hours" = "Оставшиеся часы";
+"Will not last until the reset" = "Не хватит до сброса";
+"Exhaustion estimate" = "Оценка исчерпания";
+"Show the estimate" = "Показывать оценку";
+"When it is ready" = "Когда готово";
+"When it is down" = "При сбое";
+"Open Blinky" = "Открыть Blinky";
+"Could not copy." = "Не удалось скопировать.";
+"Low balance" = "Низкий баланс";
+"Writes a line under the weekly limit, or under the longest other limit when there is no weekly one, about how long it may last. A five-hour limit is left out." = "Под недельным лимитом пишется строка, на сколько его ещё хватит при текущем темпе. Если недельного лимита нет, строка пишется у самого длинного из остальных. Пятичасовой лимит не оценивается.";
+"Notifies once when the time left reaches a stage, on the weekly limit, or on the longest other limit when there is no weekly one. A five-hour limit is left out." = "Когда оставшееся время доходит до ступени, одно уведомление. Только для недельного лимита. Если его нет — для самого длинного из остальных. Пятичасовой лимит не входит.";
+"The estimate and the running-out notices both use this list." = "Оценка и уведомления о том, что лимит на исходе, используют этот список.";
+"The furthest time, in hours, at which a countdown is written." = "Самое дальнее время в часах, для которого пишется отсчёт.";
+"Further out, it says the pace may not last until the reset, and does not write a time." = "Дальше пишется только то, что при текущем темпе лимита может не хватить до сброса, без времени.";
+"When the pace will not last until the reset, it writes roughly how long is left." = "Если при текущем темпе лимита не хватит до сброса, пишется, сколько примерно осталось.";
+"Each part also shows the credits, such as 5,843 / 6,000. The rings keep their percentages." = "У каждой части также показывается число кредитов, например 5,843 / 6,000. Кольца по-прежнему показывают проценты.";
+"Sends a separate notice when the current pace will not last until the reset, on that same limit." = "Если при текущем темпе лимита не хватит до сброса, отправляется отдельное уведомление по тому же лимиту.";
+"Each stage notifies once, at its own hours left, on that same limit. A new install starts with 24 hours." = "Каждая ступень уведомляет один раз, по своим оставшимся часам и по тому же лимиту. Новая установка начинает с 24 часов.";

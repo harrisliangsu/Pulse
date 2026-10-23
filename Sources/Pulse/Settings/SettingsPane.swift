@@ -16,9 +16,9 @@ enum SettingsPane: Hashable {
     /// "General" pane of thirty-odd rows until that was too long to find
     /// anything in.
     case appearance
-    /// What the usage card shows: figures, the second ring, the reset clock,
-    /// the exhaustion forecast on the card, and which accounts that forecast
-    /// shares with the exhaustion notifications.
+    /// What usage shows: figures, the second ring, the reset clock, the
+    /// exhaustion estimate, and which accounts that estimate shares with
+    /// the running-out notices.
     case usageCard
     case placement
     /// Pulse as an app: launch, menu bar, shortcuts, language.
@@ -35,31 +35,47 @@ enum SettingsPane: Hashable {
     /// Where extensions live and which were found. Each one found is an
     /// `.account` of its own; this is the list.
     case extensions
-    /// Every built-in account, on one page. The sidebar has this one row
-    /// instead of a row per account; search still lists the matches.
+    /// Every built-in account, on one page. The sidebar has this one row,
+    /// inside Application. Opening an account does not add another row;
+    /// search still lists the matches.
     case providers
 
-    /// The sidebar's fixed rows, section by section. `panel` and
-    /// `application` sit above Providers. `bottom` is the Other section:
-    /// extensions, then integrations, then About.
+    /// The sidebar's fixed rows, section by section. `bottom` is the Other
+    /// section: extensions, then integrations, then About.
     static let panel: [SettingsPane] = [.appearance, .usageCard, .placement]
-    static let application: [SettingsPane] = [.general, .notifications, .network]
+    static let application: [SettingsPane] = [.general, .notifications, .network, .providers]
     static let bottom: [SettingsPane] = [.extensions, .integrations, .about]
 
     /// Every fixed row, for the sidebar's "No matches" line.
     static var fixedPanes: [SettingsPane] {
-        panel + [.spend] + application + [.providers] + bottom
+        panel + [.spend] + application + bottom
+    }
+
+    /// The sidebar row that stays selected for this pane.
+    ///
+    /// A built-in account is not its own row, so Providers stays selected
+    /// while that account's page is showing. An extension is already a row
+    /// under Other. A search match is selected as itself while that row is
+    /// in the list.
+    static func sidebarRow(for pane: SettingsPane, listed: [SettingsPane]) -> SettingsPane {
+        if listed.contains(pane) { return pane }
+        switch pane {
+        case .account(let account) where account.provider == .pulseExtension:
+            return listed.contains(.extensions) ? .extensions : pane
+        case .account:
+            return listed.contains(.providers) ? .providers : pane
+        default:
+            return pane
+        }
     }
 
     var title: String {
         switch self {
         case .appearance: .localized("Appearance")
-        case .usageCard: .localized("Usage card")
+        case .usageCard: .localized("Usage")
         case .placement: .localized("Position and behavior")
         case .general: .localized("General")
-        // "Notifications" stays the account pane's group title. This pane is
-        // the exhaustion notices, the reset reminders, and the celebrations.
-        case .notifications: .localized("Exhaustion and reminders")
+        case .notifications: .localized("Notifications")
         case .network: .localized("Network and refresh")
         // Not "Usage history", which is what a provider's own card is called.
         // Two panes with one name is two places to look for one thing.
@@ -108,9 +124,10 @@ enum SettingsPane: Hashable {
             [.localized("Figures"), .localized("Percentages at the side"), .localized("Percentages across"),
              .localized("Figures beside the rings"), .localized("Figure above the ring"), .localized("Show what's left"),
              .localized("Second limit inside the ring"), .localized("Time until reset"), .localized("Time ring direction"),
-             .localized("Exhaustion on the card"), .localized("Exhaustion forecast"), .localized("What the card shows"),
-             .localized("On the card"), .localized("Countdown up to"), .localized("May run out before reset"),
-             .localized("Say roughly when"), .localized("Which accounts"), .localized("Accounts")]
+             .localized("Exhaustion estimate"), .localized("Show the estimate"), .localized("Exhaustion forecast"),
+             .localized("Countdown up to"), .localized("May run out before reset"),
+             .localized("Say roughly when"), .localized("Which accounts"), .localized("Accounts"),
+             .localized("Usage card"), .localized("Exhaustion on the card"), .localized("On the card")]
         case .placement:
             [.localized("Panel"), .localized("Show floating panel"), .localized("Hide in full screen"),
              .localized("Hide from screenshots"), .localized("Hide until pointed at"), .localized("Position"),
@@ -122,14 +139,16 @@ enum SettingsPane: Hashable {
              .localized("Hide menu bar icon"), .localized("Show floating panel"),
              .localized("Shortcuts"), .localized("Interface language")]
         case .notifications:
-            [.localized("Limits and outages"), .localized("Warn at"), .localized("When a limit comes back"),
-             .localized("How early"), .localized("When a reading stops arriving"),
-             .localized("When a service is down"), .localized("When a recap is ready"),
-             .localized("Exhaustion notifications"), .localized("Notify when a limit is running out"),
-             .localized("Hours left to notify"), .localized("Add a stage"),
-             .localized("Notify if it will not last until the reset"),
-             .localized("Reset reminders"), .localized("Predicted reset"), .localized("Regular resets"),
-             .localized("Celebrate a reset"), .localized("Also celebrate hourly quota resets")]
+            [.localized("Limit reminders"), .localized("Warn at"), .localized("When a limit comes back"),
+             .localized("Running out"), .localized("When it is running out"), .localized("Remaining hours"),
+             .localized("Will not last until the reset"), .localized("Add a stage"),
+             .localized("Service status"), .localized("When a reading stops arriving"),
+             .localized("When it is down"), .localized("Monthly recap"), .localized("When it is ready"),
+             .localized("How early"), .localized("Reset reminders"), .localized("Predicted reset"),
+             .localized("Regular resets"), .localized("Celebrate a reset"),
+             .localized("Also celebrate hourly quota resets"),
+             .localized("Exhaustion and reminders"), .localized("Exhaustion notifications"),
+             .localized("Notify when a limit is running out")]
         case .network:
             [.localized("Check every"), .localized("Proxy")]
         case .extensions:

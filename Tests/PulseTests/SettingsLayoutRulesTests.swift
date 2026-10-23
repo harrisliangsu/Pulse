@@ -250,23 +250,40 @@ struct SettingsLayoutRulesTests {
         #expect(settings.glassTransparency == stored)
     }
 
-    @Test("Exhaustion group titles and the countdown subtitle")
+    @Test("Notification and exhaustion titles, in English and simplified Chinese")
     func exhaustionCopy() {
         LocalizationSource.use(.chineseSimplified)
         defer { LocalizationSource.use(.system) }
 
-        #expect(ExhaustionSettingsSections.titles == ["卡片上的用尽预估", "用尽系统通知", "作用账号"])
-        #expect(String.localized("The furthest time, in hours, at which the card writes a countdown.")
-            == "卡片上写出具体倒计时的最远时间（小时）。")
-        #expect(String.localized("Limits and outages") == "故障与额度")
-        #expect(String.localized("Countdown up to") == "具体倒计时")
+        #expect(NotificationSettingsSections.titles == ["额度提醒", "用量用尽", "服务状态", "月报"])
+        #expect(NotificationSettingsSections.runningOutRow == "将用尽时")
+        #expect(NotificationSettingsSections.remainingHours == "剩余小时")
+        #expect(NotificationSettingsSections.willNotLast == "撑不到重置时")
+        #expect(ExhaustionSettingsSections.titles == ["用尽预估", "用量用尽", "作用账号"])
+        #expect(!NotificationSettingsSections.runningOutRow.contains("通知"))
+        #expect(!NotificationSettingsSections.titles.contains { $0.contains("通知") })
+        #expect(String.localized("The furthest time, in hours, at which a countdown is written.")
+            == "写出具体倒计时的最远时间（小时）。")
+        #expect(String.localized("Show the estimate") == "显示预估")
+        #expect(String.localized("Open Blinky") == "打开 Blinky")
+        #expect(String.localized("Low balance") == "余额偏低")
+        #expect(String.localized("When it is down") == "出故障时")
+        #expect(String.localized("When it is ready") == "生成时")
+        #expect(String.localized("Limit reset credits") == "额度重置券")
 
         LocalizationSource.use(.english)
-        #expect(ExhaustionSettingsSections.titles == [
-            "Exhaustion on the card", "Exhaustion notifications", "Which accounts",
+        #expect(NotificationSettingsSections.titles == [
+            "Limit reminders", "Running out", "Service status", "Monthly recap",
         ])
-        #expect(String.localized("The furthest time, in hours, at which the card writes a countdown.")
-            == "The furthest time, in hours, at which the card writes a countdown.")
+        #expect(NotificationSettingsSections.runningOutRow == "When it is running out")
+        #expect(ExhaustionSettingsSections.titles == [
+            "Exhaustion estimate", "Running out", "Which accounts",
+        ])
+        #expect(!NotificationSettingsSections.runningOutRow.localizedStandardContains("notify"))
+        #expect(String.localized("The furthest time, in hours, at which a countdown is written.")
+            == "The furthest time, in hours, at which a countdown is written.")
+        #expect(String.localized("Writes a line under the weekly limit, or under the longest other limit when there is no weekly one, about how long it may last. A five-hour limit is left out.")
+            .contains("weekly"))
     }
 
     private static func pace(remaining: TimeInterval, length: Double = 604_800, elapsed: Double = 0.5) -> Double {

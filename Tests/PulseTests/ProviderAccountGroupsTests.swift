@@ -32,24 +32,22 @@ struct ProviderAccountGroupsTests {
         #expect(onlySubscription[0].accounts == [codex])
     }
 
-    @Test("The sidebar lists provider matches only while searching, and otherwise only the open provider")
+    @Test("The sidebar lists provider matches only while searching")
     func listing() {
-        let codex = AccountKey(.codex)
         let cursor = AccountKey(.cursor)
-        let ext = AccountKey(.pulseExtension, slot: "demo")
+        let codex = AccountKey(.codex)
 
-        #expect(SettingsProviderListing.accounts(searching: true, matches: [cursor], open: codex) == [cursor])
-        #expect(SettingsProviderListing.accounts(searching: false, matches: [cursor, codex], open: codex) == [codex])
-        #expect(SettingsProviderListing.accounts(searching: false, matches: [cursor], open: nil).isEmpty)
-        #expect(SettingsProviderListing.accounts(searching: false, matches: [ext], open: ext).isEmpty)
+        #expect(SettingsProviderListing.accounts(searching: true, matches: [cursor]) == [cursor])
+        #expect(SettingsProviderListing.accounts(searching: true, matches: [cursor, codex]) == [cursor, codex])
+        #expect(SettingsProviderListing.accounts(searching: false, matches: [cursor, codex]).isEmpty)
     }
 
-    @Test("Providers is one sidebar pane, and the bottom three stay in one order")
+    @Test("Providers sits in Application, and the bottom three stay in one order")
     func panes() {
         #expect(SettingsPane.bottom == [.extensions, .integrations, .about])
-        #expect(SettingsPane.application == [.general, .notifications, .network])
+        #expect(SettingsPane.application == [.general, .notifications, .network, .providers])
         #expect(SettingsPane.fixedPanes.contains(.providers))
         #expect(!SettingsPane.panel.contains(.providers))
-        #expect(!SettingsPane.application.contains(.providers))
+        #expect(SettingsPane.fixedPanes.filter { $0 == .providers }.count == 1)
     }
 }

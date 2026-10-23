@@ -138,6 +138,12 @@ struct SettingsView: View {
                         case .notifications: NotificationsPane(store: store, settings: settings, alerts: alerts)
                         case .network: NetworkPane(store: store, settings: settings)
                         case .account(let account):
+                            if account.provider != .pulseExtension {
+                                ProviderDetailHeading(
+                                    title: settings.label(for: account),
+                                    back: { navigation.open(.providers) }
+                                )
+                            }
                             AccountPane(
                                 account: account, store: store, settings: settings,
                                 navigation: navigation, history: history, flows: flows, scroll: proxy
@@ -213,6 +219,34 @@ struct SettingsView: View {
     private func exists(_ pane: SettingsPane) -> Bool {
         if case .account(let account) = pane { return settings.allAccounts.contains(account) }
         return true
+    }
+}
+
+/// Title and back for a provider opened from the Providers page.
+///
+/// The sidebar keeps Providers selected. This is how that page is left,
+/// inside the pane. The toolbar's back and forward still walk the history.
+struct ProviderDetailHeading: View {
+    let title: String
+    let back: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button(action: back) {
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text(localized: "Back")
+                        .font(.system(size: 12))
+                }
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+
+            Text(verbatim: title)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(.primary)
+        }
     }
 }
 

@@ -59,7 +59,7 @@ struct ExtensionsSettingsView: View {
                                 ? String.localized("Shown in the panel")
                                 : String.localized("Off")
                         ) {
-                            Button(String.localized("Settings…")) { open(found.account) }
+                            Button(String.localized("Open")) { open(found.account) }
                         }
                     }
                 }

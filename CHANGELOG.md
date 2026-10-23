@@ -10,6 +10,14 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.11
+
+- **Notifications gathers every notice.** Settings → Notifications holds Limit reminders, Running out, Service status, and Monthly recap, and Usage under Panel holds the figures and the exhaustion estimate. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
+- **Providers is one row in Application.** Opening an account keeps Providers selected, with the account's title and Back inside the page, while the toolbar's back and forward still move between panes. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
+- **The exhaustion estimate follows the weekly limit.** The card line and the remaining-hours and will-not-last notices use the weekly limit, or the longest other limit when there is none, and a five-hour limit is left out. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
+- **The Token spend window's controls respond.** The time range, the breakdown, Refresh, Share, the close button, and Escape all do what they say, and Share says when the image was copied. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
+- **The usage card opens Blinky from its own icon.** The icon in the card's header opens the main window on the pane last shown. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)
+
 ## 1.5.10
 
 - **Settings splits the usage card from the rings' colours.** Usage card, under Panel, holds the figures, the second ring, the reset clock, the exhaustion forecast on the card, and which accounts that forecast shares with the exhaustion notifications. Appearance gains Colour: the ring scheme, Turn red at, and the alert colour when docked. Rings and figures is no longer a pane. Notifications is now Exhaustion and reminders, and it keeps limits and outages, the exhaustion notifications, reset reminders, and celebrations. [#71](https://github.com/harrisliangsu/blinky-mac/pull/71)

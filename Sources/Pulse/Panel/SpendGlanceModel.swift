@@ -24,6 +24,14 @@ final class SpendGlanceModel {
     var observedAt: Date?
     var hasReadLimitations = false
     var didCopy = false
+    var copyFailed = false
+    /// Window coordinates of Refresh and Share, written while they lay out.
+    /// Not observed: storing a frame must not lay the window out again. SwiftUI
+    /// draws these two without an `NSButton`, and an in-process accessibility
+    /// query does not list them, so a test sends the click to this rectangle.
+    /// Layout calls in on the main thread; the property is nonisolated so that
+    /// call is not an actor hop.
+    @ObservationIgnored nonisolated(unsafe) var controlFrames: [String: CGRect] = [:]
     /// Set once the span's figures match `summaryRequest`. Share stays off
     /// until then, so a click cannot copy the empty summary still on screen
     /// while the arithmetic is in flight.
@@ -141,6 +149,7 @@ final class SpendGlanceModel {
     }
 
     func noteCopied(hold: Duration = SpendGlanceCopy.hold) {
+        copyFailed = false
         didCopy = true
         copyClear?.cancel()
         copyClear = Task { [weak self] in
@@ -148,6 +157,26 @@ final class SpendGlanceModel {
             guard !Task.isCancelled else { return }
             self?.didCopy = false
         }
+    }
+
+    nonisolated func noteControlFrame(id: String, frame: CGRect) {
+        guard frame.width > 1, frame.height > 1 else { return }
+        controlFrames[id] = frame
+    }
+
+    func noteCopyFailed() {
+        copyClear?.cancel()
+        didCopy = false
+        copyFailed = true
+    }
+
+    /// Shows an empty summary as ready, so Share can be clicked without
+    /// walking the stores. A later open reuses it (`SpendGlanceRead` retains
+    /// a snapshot it already holds).
+    func presentReadySummary() {
+        isOpen = true
+        read.install(AgentLedgers.Snapshot())
+        displayedRequest = summaryRequest
     }
 
     private func adopt(_ snapshot: AgentLedgers.Snapshot, at date: Date) {

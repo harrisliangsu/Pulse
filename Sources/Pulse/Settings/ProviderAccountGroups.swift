@@ -38,13 +38,11 @@ struct ProviderAccountGroups {
 
 /// Which provider accounts the sidebar draws.
 ///
-/// A search draws the matches. With the field empty, only the open account
-/// is drawn, and only when it is a provider — the full list is the Providers
-/// page. An extension is drawn with the other bottom rows, not here.
+/// A search draws the matches. With the field empty it draws none: the full
+/// list is the Providers page, and opening an account does not add a row.
+/// An extension is drawn with the other bottom rows, not here.
 enum SettingsProviderListing {
-    static func accounts(searching: Bool, matches: [AccountKey], open: AccountKey?) -> [AccountKey] {
-        if searching { return matches }
-        guard let open, open.provider != .pulseExtension else { return [] }
-        return [open]
+    static func accounts(searching: Bool, matches: [AccountKey]) -> [AccountKey] {
+        searching ? matches : []
     }
 }

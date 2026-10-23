@@ -1407,3 +1407,27 @@
 "Every two hours. The choice below decides whether Blinky notifies you, opens the update window, or installs without asking." = "2時間ごと。下の選択で、通知するか、更新ウィンドウを開くか、確認せずにインストールするかを決めます。";
 "By hour" = "時間ごと";
 "Copied to the clipboard." = "クリップボードにコピーしました。";
+
+/* 1.5.11 */
+"Limit reminders" = "上限の知らせ";
+"Running out" = "使い切り";
+"Monthly recap" = "月次のまとめ";
+"When it is running out" = "尽きるとき";
+"Remaining hours" = "残り時間";
+"Will not last until the reset" = "リセットまで持たないとき";
+"Exhaustion estimate" = "使い切りの見通し";
+"Show the estimate" = "見通しを表示";
+"When it is ready" = "できたとき";
+"When it is down" = "障害が起きたとき";
+"Open Blinky" = "Blinky を開く";
+"Could not copy." = "コピーできませんでした。";
+"Low balance" = "残高が少ない";
+"Writes a line under the weekly limit, or under the longest other limit when there is no weekly one, about how long it may last. A five-hour limit is left out." = "毎週の上限の下に、現在のペースであとどれくらいか一行で示します。毎週の上限がないときは、それ以外で最も長い上限に示します。5時間の上限には示しません。";
+"Notifies once when the time left reaches a stage, on the weekly limit, or on the longest other limit when there is no weekly one. A five-hour limit is left out." = "残り時間が段階に達したとき一度知らせます。対象は毎週の上限です。毎週の上限がないときは、それ以外で最も長い上限です。5時間の上限は対象にしません。";
+"The estimate and the running-out notices both use this list." = "見通しと使い切りの知らせは、この一覧を使います。";
+"The furthest time, in hours, at which a countdown is written." = "カウントダウンを書く最も遠い時間（時間）。";
+"Further out, it says the pace may not last until the reset, and does not write a time." = "それより先は、リセットまで持たないかもしれないとだけ書き、時刻は書きません。";
+"When the pace will not last until the reset, it writes roughly how long is left." = "リセットまで持たないときは、残り時間のだいたいを書きます。";
+"Each part also shows the credits, such as 5,843 / 6,000. The rings keep their percentages." = "各部分のクレジット数も示します。例: 5,843 / 6,000。リングは割合のままです。";
+"Sends a separate notice when the current pace will not last until the reset, on that same limit." = "リセットまで持たないとき、同じ上限について別に一度知らせます。";
+"Each stage notifies once, at its own hours left, on that same limit. A new install starts with 24 hours." = "各段階は、それぞれの残り時間で一度だけ、同じ上限について知らせます。初期状態は 24 時間です。";

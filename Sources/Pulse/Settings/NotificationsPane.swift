@@ -8,7 +8,7 @@ struct NotificationsPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            SettingsGroup(String.localized("Limits and outages")) {
+            SettingsGroup(String.localized("Limit reminders")) {
                 SettingsRow(
                     String.localized("Warn at"),
                     subtitle: alertsSubtitle
@@ -61,8 +61,11 @@ struct NotificationsPane: View {
                     }
                 }
 
-                SettingsRowDivider()
+            }
 
+            exhaustionNoticeGroup
+
+            SettingsGroup(String.localized("Service status")) {
                 SettingsRow(
                     String.localized("When a reading stops arriving"),
                     subtitle: String.localized("After several failed checks in a row, once per outage.")
@@ -86,7 +89,7 @@ struct NotificationsPane: View {
                 SettingsRowDivider()
 
                 SettingsRow(
-                    String.localized("When a service is down"),
+                    String.localized("When it is down"),
                     subtitle: String.localized("From each provider's own status page, for the providers you have switched on and only about what their accounts run on.")
                 ) {
                     Toggle("", isOn: Binding(
@@ -107,11 +110,11 @@ struct NotificationsPane: View {
                     .toggleStyle(.switch)
                     .disabled(!UsageAlerts.isSupported)
                 }
+            }
 
-                SettingsRowDivider()
-
+            SettingsGroup(String.localized("Monthly recap")) {
                 SettingsRow(
-                    String.localized("When a recap is ready"),
+                    String.localized("When it is ready"),
                     subtitle: String.localized("Last month's recap, at the start of the month. Needs Token spend reading.")
                 ) {
                     // The request and the first check follow from the setting
@@ -128,8 +131,6 @@ struct NotificationsPane: View {
                     .disabled(!UsageAlerts.isSupported || (!settings.readsTokenSpend && !settings.alertsOnRecap))
                 }
             }
-
-            exhaustionNoticeGroup
 
             SettingsGroup(String.localized("Reset reminders")) {
                 SettingsRow(
@@ -267,7 +268,7 @@ struct NotificationsPane: View {
     private var exhaustionNoticeGroup: some View {
         SettingsGroup(ExhaustionSettingsSections.notices) {
             SettingsRow(
-                String.localized("Notify when a limit is running out"),
+                String.localized("When it is running out"),
                 subtitle: exhaustionAlertsSubtitle
             ) {
                 Toggle("", isOn: Binding(
@@ -286,8 +287,8 @@ struct NotificationsPane: View {
                 SettingsRowDivider()
 
                     SettingsRow(
-                        String.localized("Hours left to notify"),
-                        subtitle: String.localized("Each stage notifies once, at its own hours left. A new install starts with 24 hours."),
+                        String.localized("Remaining hours"),
+                        subtitle: String.localized("Each stage notifies once, at its own hours left, on that same limit. A new install starts with 24 hours."),
                         nested: true
                     ) {
                     Button(String.localized("Add a stage")) {
@@ -328,8 +329,8 @@ struct NotificationsPane: View {
             SettingsRowDivider()
 
             SettingsRow(
-                String.localized("Notify if it will not last until the reset"),
-                subtitle: String.localized("Sends a separate notice when the current pace will not last until the reset.")
+                String.localized("Will not last until the reset"),
+                subtitle: String.localized("Sends a separate notice when the current pace will not last until the reset, on that same limit.")
             ) {
                 // The switch is `exhaustionNotifyBeforeReset` itself. On sends
                 // the notice. The shipped default is off; a stored true stays on.
@@ -383,7 +384,7 @@ struct NotificationsPane: View {
         if settings.wantsExhaustionAlerts, alerts.authorization == .denied {
             return .localized("Turned off for Blinky in System Settings › Notifications.")
         }
-        return .localized("Notifies once when the time left reaches a stage, for each account and limit.")
+        return .localized("Notifies once when the time left reaches a stage, on the weekly limit, or on the longest other limit when there is no weekly one. A five-hour limit is left out.")
     }
 
     private func commitAdvanceReminders() {
@@ -414,15 +415,31 @@ struct NotificationsPane: View {
     }
 }
 
-/// The three exhaustion groups. The card and the account list are on Usage
-/// card; the notices are on Exhaustion and reminders. The titles stay in
-/// that order so a test can name them without opening a window.
+/// The exhaustion groups. The estimate and the account list are on Usage.
+/// The remaining-time notices are the Running out section of Notifications.
+/// The titles stay in that order so a test can name them without opening a window.
 enum ExhaustionSettingsSections {
-    static var card: String { String.localized("Exhaustion on the card") }
-    static var notices: String { String.localized("Exhaustion notifications") }
+    static var card: String { String.localized("Exhaustion estimate") }
+    static var notices: String { String.localized("Running out") }
     static var accounts: String { String.localized("Which accounts") }
 
     static var titles: [String] { [card, notices, accounts] }
+}
+
+/// The four sections on Notifications, in sidebar order. Reset reminders and
+/// celebrations stay their own groups: they are not a threshold, a running-out
+/// notice, a service status, or the monthly recap.
+enum NotificationSettingsSections {
+    static var limitReminders: String { String.localized("Limit reminders") }
+    static var runningOut: String { String.localized("Running out") }
+    static var serviceStatus: String { String.localized("Service status") }
+    static var monthlyRecap: String { String.localized("Monthly recap") }
+
+    static var titles: [String] { [limitReminders, runningOut, serviceStatus, monthlyRecap] }
+
+    static var runningOutRow: String { String.localized("When it is running out") }
+    static var remainingHours: String { String.localized("Remaining hours") }
+    static var willNotLast: String { String.localized("Will not last until the reset") }
 }
 
 /// Up and down, with the current hours written beside them.

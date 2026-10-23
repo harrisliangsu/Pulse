@@ -1174,6 +1174,88 @@ struct AlertMemoryTests {
         ).isEmpty)
     }
 
+    @Test("Remaining-time notices use the weekly limit, or the longest other limit")
+    func exhaustionFollowsTheWeeklyLimit() {
+        let stage = [ExhaustionStage.defaultStage]
+        let weekResets = Self.now.addingTimeInterval(302_400)
+        let week = Self.window(
+            "week",
+            used: Self.pace(remaining: 20 * 3600),
+            resetsAt: weekResets
+        )
+        let fiveResets = Self.now.addingTimeInterval(9_000)
+        let five = Self.window(
+            "5h",
+            used: Self.pace(remaining: 1_800, length: 18_000),
+            resetsAt: fiveResets,
+            kind: .fiveHour,
+            windowSeconds: 18_000
+        )
+
+        var fiveOnly = AlertMemory()
+        #expect(exhaustion(&fiveOnly, Self.live(five), stages: stage).isEmpty)
+        var beforeFive = AlertMemory()
+        #expect(exhaustion(&beforeFive, Self.live(five), beforeReset: true).isEmpty)
+
+        var both = AlertMemory()
+        let weeklyNotice = run(
+            &both, Self.live(week, five),
+            threshold: .off, announcesReset: false, announcesFailure: false,
+            announcesExhaustion: true, exhaustionStages: stage
+        )
+        #expect(weeklyNotice.map(\.window?.id) == ["week"])
+
+        var fiveBesideQuietWeek = AlertMemory()
+        let quietWeek = Self.window("week", used: 0.2, resetsAt: weekResets)
+        #expect(exhaustion(&fiveBesideQuietWeek, Self.live(quietWeek, five), stages: stage).isEmpty)
+
+        let month = Self.window(
+            "month",
+            used: Self.pace(remaining: 20 * 3600, length: Double(30 * 86_400)),
+            resetsAt: Self.now.addingTimeInterval(15 * 86_400),
+            kind: .monthly,
+            windowSeconds: 30 * 86_400
+        )
+        let day = Self.window(
+            "day",
+            used: Self.pace(remaining: 2 * 3600, length: 86_400),
+            resetsAt: Self.now.addingTimeInterval(43_200),
+            kind: .daily,
+            windowSeconds: 86_400
+        )
+        var longest = AlertMemory()
+        let monthNotice = run(
+            &longest, Self.live(day, month),
+            threshold: .off, announcesReset: false, announcesFailure: false,
+            announcesExhaustion: true, exhaustionStages: stage
+        )
+        #expect(monthNotice.map(\.window?.id) == ["month"])
+
+        var dailyOnly = AlertMemory()
+        #expect(exhaustion(&dailyOnly, Self.live(day), stages: stage).count == 1)
+
+        var beforeWeek = AlertMemory()
+        #expect(exhaustion(
+            &beforeWeek,
+            Self.weekly(used: Self.pace(remaining: 30 * 3600), resetsAt: weekResets),
+            beforeReset: true
+        ).count == 1)
+
+        // The percentage track still sees a five-hour window. The remaining-time
+        // notices do not, even when that window is also inside a stage.
+        var percent = AlertMemory()
+        let hot = Self.window(
+            "5h", used: 0.95, resetsAt: fiveResets, kind: .fiveHour, windowSeconds: 18_000
+        )
+        let warned = run(
+            &percent, Self.live(hot),
+            announcesExhaustion: true, exhaustionStages: stage, announcesBeforeReset: true
+        )
+        #expect(warned.contains { if case .approaching = $0.kind { return true } else { return false } })
+        #expect(!warned.contains { if case .exhaustion = $0.kind { return true } else { return false } })
+        #expect(!warned.contains { if case .exhaustionBeforeReset = $0.kind { return true } else { return false } })
+    }
+
     @Test("An alerts file from before stages still decodes")
     func legacyAlertMemoryDecodes() throws {
         let json = """

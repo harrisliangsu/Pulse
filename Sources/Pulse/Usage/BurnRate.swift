@@ -38,11 +38,22 @@ import Foundation
 /// already answers the question it was supporting. A number nobody can read
 /// without being taught it first is worse than no number.
 enum BurnRate {
-    /// Nothing is said about a window barely open. Early on, the elapsed share
-    /// is so small that dividing by it turns a single burst into a rate that
-    /// would empty the account before lunch — measured at 9,574 minutes on a
-    /// five-hour window when the guard was missing.
+    /// Nothing is *divided* for a window barely open. Early on, the elapsed
+    /// share is so small that dividing by it turns a single burst into a rate
+    /// that would empty the account before lunch — measured at 9,574 minutes
+    /// on a five-hour window when the guard was missing.
+    ///
+    /// Three percent of a week is about five hours. A weekly limit still at
+    /// 99% left sits inside that floor for the whole morning after it resets,
+    /// and the card then shows the percentage and no estimate. Little spent
+    /// does not need a division to be called on course (`earlyQuietUsed`).
+    /// A window already well spent stays quiet until the floor.
     static let minimumElapsed = 0.03
+
+    /// Used share below which a window still inside `minimumElapsed` is said
+    /// to be on course, with no time. At or above it, the floor still refuses
+    /// a rate: that is the burst the floor exists for.
+    static let earlyQuietUsed = 0.05
 
     struct Reading: Equatable, Sendable {
         /// Whether it is on course to run out before the window resets.
@@ -57,16 +68,20 @@ enum BurnRate {
     static func reading(for window: UsageWindow, now: Date = Date()) -> Reading? {
         // `elapsedFraction` already refuses a window whose length was chosen
         // to sort by rather than reported — which is exactly the length this
-        // would otherwise divide by. Codex's 5-hour and weekly windows state
-        // both, so they are included; a sort key is not.
+        // would otherwise divide by. A sort key is not a pace. Which of a
+        // reading's windows may be shown is `ExhaustionEstimate`, not this.
         guard let elapsed = window.elapsedFraction(at: now),
-              elapsed >= minimumElapsed,
               let resetsAt = window.resetsAt
         else { return nil }
 
         let used = min(max(window.usedFraction, 0), 1)
         let untilReset = resetsAt.timeIntervalSince(now)
         guard untilReset > 0 else { return nil }
+
+        if elapsed < minimumElapsed {
+            guard used < earlyQuietUsed else { return nil }
+            return Reading(exhaustsBeforeReset: false, timeToExhaustion: nil)
+        }
 
         // The window's own length, from the two figures that describe it.
         let elapsedSeconds = untilReset / (1 - elapsed) * elapsed

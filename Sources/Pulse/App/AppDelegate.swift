@@ -301,7 +301,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             openUpdate: { [weak self] in self?.update.check() }
         )
         recapNotice.start()
-        let glance = SpendGlanceController(settings: settings)
+        let glance = SpendGlanceController(settings: settings, dock: dock)
         spendGlance = glance
         let controller = FloatingPanelController(
             store: store,
