@@ -9,6 +9,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 ## 1.5.3
 
 - **更新之后，访达里显示的是 Blinky。** 文件名仍是 `Pulse.app` 的那一份，在下次打开时（包括应用内更新后的重新打开）会改名为 `Blinky.app`，前提是同一文件夹里还没有 `Blinky.app`；原先开着开机自启的，会按新文件重新登记，开关在「设置 → 通用」。[#58](https://github.com/harrisliangsu/blinky-mac/pull/58)
+- **预测重置的倒计时与标题同一行。** Codex 卡片上，倒计时在「预测重置」的右侧，本地的日期和时刻在下一行。[Docs/providers/codex.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/providers/codex.md)
 
 ## 1.5.2
 

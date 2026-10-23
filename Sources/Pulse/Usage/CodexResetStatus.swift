@@ -313,10 +313,12 @@ enum CodexResetPresentation {
 /// `latest` is set — that is the banked announcement the site leads with.
 /// The card draws these values; it does not decide the rules again inline.
 struct CodexResetCardLines: Equatable, Sendable {
-    /// The prediction block. The title row carries `trailing` (confidence, or
-    /// "no prediction yet"). `countdown` and `bound` are the lines under it.
-    /// `note` is the help mark; nil hides the mark. An event sentence is
-    /// never one of the lines.
+    /// The prediction block. `countdown` is the trailing text of the title
+    /// row (how long until a reset). `bound` is the local time on the line
+    /// under that row. `trailing` is confidence, or "no prediction yet": it
+    /// takes the trailing edge when there is no countdown, and sits beside
+    /// the title when a countdown is showing. `note` is the help mark; nil
+    /// hides the mark. An event sentence is never one of the lines.
     struct Prediction: Equatable, Sendable {
         var trailing: String?
         var countdown: String?

@@ -13,6 +13,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 ## 1.5.3
 
 - **An installed update shows up in Finder as Blinky.** The next time a copy still named `Pulse.app` opens, including the relaunch after an in-app update, it renames itself to `Blinky.app` when that folder has no `Blinky.app` yet, and Open at login is registered again for the new file when it was already on (Settings → General). [#58](https://github.com/harrisliangsu/blinky-mac/pull/58)
+- **The predicted-reset countdown shares its title row.** On the Codex card, the time remaining sits beside Predicted reset, and the local date and time are on the line below. [Docs/providers/codex.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/providers/codex.md)
 
 ## 1.5.2
 
