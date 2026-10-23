@@ -25,18 +25,20 @@ struct TokenSpendPane: View {
                     .labelsHidden()
                     .toggleStyle(.switch)
                 }
-                if settings.readsTokenSpend, model.isScanningSpend, let progress = model.spendProgress {
+                if SettingsChildRows.showsTokenSpendDetails(reading: settings.readsTokenSpend),
+                   model.isScanningSpend, let progress = model.spendProgress {
                     SettingsRowDivider()
-                    SettingsRow(String.localized("Reading \(progress.agent.displayName)…")) {
+                    SettingsRow(String.localized("Reading \(progress.agent.displayName)…"), nested: true) {
                         Text(verbatim: "\(progress.index + 1)/\(progress.total)")
                             .monospacedDigit()
                     }
                 }
-                if settings.readsTokenSpend {
+                if SettingsChildRows.showsTokenSpendDetails(reading: settings.readsTokenSpend) {
                     SettingsRowDivider()
                     SettingsRow(
                         String.localized("Usage recaps"),
-                        subtitle: String.localized("Shareable cards for a day, a week, a month or a year, from this Mac's records.")
+                        subtitle: String.localized("Shareable cards for a day, a week, a month or a year, from this Mac's records."),
+                        nested: true
                     ) {
                         // One way in. The window switches between day, week,
                         // month and year itself; a button for each period
@@ -48,7 +50,7 @@ struct TokenSpendPane: View {
                     }
                 }
             }
-            if settings.readsTokenSpend {
+            if SettingsChildRows.showsTokenSpendDetails(reading: settings.readsTokenSpend) {
                 TokenSpendView(
                     summary: model.spend,
                     focus: $model.spendFocus,

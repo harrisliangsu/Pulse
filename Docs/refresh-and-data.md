@@ -123,7 +123,7 @@ The arc rides the **empty ring** between icon and usage stroke, in Core Animatio
 
 ## Forecast (`BurnRate`)
 
-On unless a stored choice says otherwise (`showsForecast`). One line under a limit, worded as a **projection**. The switches live in Settings → Notifications → Exhaustion forecast, next to the notices that use the same pace ([notifications.md](notifications.md#time-to-empty)).
+On unless a stored choice says otherwise (`showsForecast`). One line under a limit, worded as a **projection**. The switches live in Settings → Notifications, in What the card shows, Notices and Which accounts, next to the notices that use the same pace ([notifications.md](notifications.md#time-to-empty)).
 
 - Rate = spent share / elapsed share from **one** reading (trailing samples were dropped: [decisions/reported-figures.md](decisions/reported-figures.md#ledger-and-burn-rate)).
 - Needs a reported percentage, a reset and `reportsLength`, so sort-key lengths fall out. Codex's 5-hour and weekly windows state both, including a length sent as text and a reset sent as milliseconds or as `reset_after_seconds` when the stamp is missing. A missing length is not a stated one.

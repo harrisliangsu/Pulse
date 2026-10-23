@@ -54,6 +54,10 @@ struct SettingsRow<Control: View>: View {
     /// clients that are not providers at all; see `SpendAgent.iconResource`.
     let icon: String?
     let controlBelow: Bool
+    /// A row that belongs to the switch or menu above it. The extra inset is
+    /// the only difference: the control is the same one, editing the same
+    /// setting. Callers omit the row entirely while its parent is off.
+    let nested: Bool
     @ViewBuilder let control: Control
 
     init(
@@ -61,12 +65,14 @@ struct SettingsRow<Control: View>: View {
         subtitle: String? = nil,
         icon: String? = nil,
         controlBelow: Bool = false,
+        nested: Bool = false,
         @ViewBuilder control: () -> Control
     ) {
         self.title = title
         self.subtitle = subtitle
         self.icon = icon
         self.controlBelow = controlBelow
+        self.nested = nested
         self.control = control()
     }
 
@@ -87,6 +93,7 @@ struct SettingsRow<Control: View>: View {
             }
         }
         .padding(.horizontal, 14)
+        .padding(.leading, nested ? 22 : 0)
         .padding(.vertical, 11)
         .frame(minHeight: 44)
     }

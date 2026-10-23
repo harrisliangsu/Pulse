@@ -284,6 +284,8 @@ extension AppSettings {
         exhaustionSoftHint = defaults.settingsFlag(Key.exhaustionSoftHint, default: true)
         exhaustionBeforeReset = defaults.settingsFlag(Key.exhaustionBeforeReset, default: true)
         exhaustionAlerts = defaults.settingsFlag(Key.exhaustionAlerts, default: true)
+        // The switch in Settings reads this bit directly. Off is the shipped
+        // default; a stored `true` stays on, and a stored `false` stays off.
         exhaustionNotifyBeforeReset = defaults.settingsFlag(
             Key.exhaustionNotifyBeforeReset, default: false
         )

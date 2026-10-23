@@ -97,12 +97,16 @@ struct GeneralPane: View {
 
                 // Only once there is a figure to shape. Offered even with the
                 // icon hidden would be two controls for nothing on screen.
-                if settings.showsUsageInMenuBar, !settings.hidesMenuBarIcon {
+                if SettingsChildRows.showsMenuBarFigureOptions(
+                    showsUsage: settings.showsUsageInMenuBar,
+                    iconHidden: settings.hidesMenuBarIcon
+                ) {
                     SettingsRowDivider()
 
                     SettingsRow(
                         String.localized("Menu bar shows"),
-                        subtitle: String.localized("An account switched off falls back to the fullest ring.")
+                        subtitle: String.localized("An account switched off falls back to the fullest ring."),
+                        nested: true
                     ) {
                         Picker("", selection: Binding(
                             // An account taken off the rail reads as the
@@ -125,7 +129,7 @@ struct GeneralPane: View {
 
                     SettingsRowDivider()
 
-                    SettingsRow(String.localized("Menu bar style")) {
+                    SettingsRow(String.localized("Menu bar style"), nested: true) {
                         Picker("", selection: Binding(
                             get: { settings.menuBarStyle },
                             set: { settings.menuBarStyle = $0 }

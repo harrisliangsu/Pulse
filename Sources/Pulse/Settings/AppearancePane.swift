@@ -12,7 +12,7 @@ struct AppearancePane: View {
                     .foregroundStyle(.secondary)
             }
 
-            SettingsGroup {
+            SettingsGroup(String.localized("Size and spacing")) {
                 SettingsRow(
                     String.localized("Size"),
                     subtitle: String.localized("Size of the rail on screen.")
@@ -65,9 +65,9 @@ struct AppearancePane: View {
                     .toggleStyle(.switch)
                     .disabled(!settings.isPanelVisible)
                 }
+            }
 
-                SettingsRowDivider()
-
+            SettingsGroup(String.localized("Look")) {
                 // Not greyed out with the panel hidden: the menu's bars
                 // follow it too.
                 SettingsRow(
@@ -108,23 +108,30 @@ struct AppearancePane: View {
                 }
 
                 // Only while glass is on: it is how clear the glass is, and on
-                // a solid panel there is no glass to be clear.
-                if settings.usesGlass {
+                // a solid panel there is no glass to be clear. The percent is
+                // the stored fraction, shown, not a second setting.
+                if SettingsChildRows.showsTransparency(usesGlass: settings.usesGlass) {
                     SettingsRowDivider()
 
                     SettingsRow(
                         String.localized("Transparency"),
-                        subtitle: String.localized("Clearer to the right, and the text turns from white to black. Black text is hard to read over dark windows.")
+                        subtitle: String.localized("Clearer to the right, and the text turns from white to black. Black text is hard to read over dark windows."),
+                        nested: true
                     ) {
-                        Slider(
-                            value: Binding(
-                                get: { settings.glassTransparency },
-                                set: { settings.glassTransparency = $0 }
-                            ),
-                            in: 0...1
-                        )
-                        .labelsHidden()
-                        .frame(width: SettingsLayout.controlWidth)
+                        HStack(spacing: 8) {
+                            Text(verbatim: GlassTransparencyLabel.percent(settings.glassTransparency))
+                                .font(.system(size: 13).monospacedDigit())
+                                .frame(minWidth: 44, alignment: .trailing)
+                            Slider(
+                                value: Binding(
+                                    get: { settings.glassTransparency },
+                                    set: { settings.glassTransparency = $0 }
+                                ),
+                                in: 0...1
+                            )
+                            .labelsHidden()
+                            .frame(width: SettingsLayout.controlWidth - 52)
+                        }
                         .disabled(!settings.isPanelVisible)
                     }
                 }

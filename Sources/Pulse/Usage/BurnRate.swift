@@ -250,3 +250,20 @@ struct ExhaustionStage: Codable, Equatable, Sendable, Identifiable {
     static let defaultStage = ExhaustionStage(id: "24h", hours: 24)
     static let defaultStages = [defaultStage]
 }
+
+/// The hours the settings stepper shows, and the value it writes.
+///
+/// The countdown row used to give the stepper an empty label and then hide
+/// it. The chevrons drew, the number did not, and the pane never read
+/// `exhaustionCardHours` while building that row, so a click did not stay.
+/// The label is `digits`, which is never empty, and the binding reads the
+/// setting itself rather than a copy taken before the click.
+enum ExhaustionHoursControl {
+    static func applied(_ hours: Int) -> Int {
+        ExhaustionStage.clamped(hours)
+    }
+
+    static func digits(_ hours: Int) -> String {
+        String(applied(hours))
+    }
+}
