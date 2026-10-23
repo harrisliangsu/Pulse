@@ -13,6 +13,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 - **管理扩展、开发者集成和关于收在同一组。** 这三项在设置侧栏底部的「其他」里。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
 - **通用里的开机启动登记的是正在运行的这一份。** 开关是「设置 → 通用」的第一行；从 Pulse.app 换成 Blinky.app 之后，若开关本来是开的，下次启动会登记正在运行的 Blinky.app。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
 - **发现新版本时，更新窗口会到前面。** 自动检查或「检查更新」发现新版本时，Blinky 会把 Sparkle 的更新窗口调到最前，并在安装前询问。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **更新窗口只显示正在提供的这一版。** 窗口里的说明是这一版的更新记录，更早的版本不再叠在同一个窗口里。[#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
 
 ## 1.5.3
 

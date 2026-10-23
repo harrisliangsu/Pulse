@@ -17,6 +17,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 - **Manage extensions, Developer integrations and About share one section.** They sit under Other at the bottom of the Settings sidebar. [#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
 - **Open at login is the first row under General.** The switch registers the copy that is running, including Blinky.app after a rename from Pulse.app, and simplified Chinese labels the row 开机启动. [#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
 - **Sparkle's update window comes forward.** A check that finds a newer version, on the schedule or from Check for Updates…, brings that window to the front and asks before installing. [#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **The update window shows only the version being offered.** Its notes are that version's changelog entry, and earlier releases are not stacked in the same window. [#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
 
 ## 1.5.3
 
