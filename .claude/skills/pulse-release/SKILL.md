@@ -1,9 +1,9 @@
 ---
 name: pulse-release
-description: Release a new Pulse version end to end — checks, bilingual CHANGELOG entry, VERSION, tag, the release workflow, syncing main, and the issue replies that go with it. Use when the user asks to release ("发版", "发 1.x.y", "release"), to stop or redo a release, or to reply to issues a release fixed.
+description: Release a new Blinky version end to end — checks, bilingual CHANGELOG entry, VERSION, tag, the release workflow, syncing main, and the issue replies that go with it. Use when the user asks to release ("发版", "发 1.x.y", "release"), to stop or redo a release, or to reply to issues a release fixed.
 ---
 
-# Releasing Pulse
+# Releasing Blinky
 
 The mechanics — what the workflow builds, how Sparkle and the release page are made — are in `Docs/releasing.md`; read it if anything below surprises you. This skill is the order of operations, and the places where it has gone wrong before.
 
@@ -53,7 +53,7 @@ If a new feature is user-visible, add it to the feature list in **all five** REA
 
 ```bash
 echo x.y.z > VERSION
-git add CHANGELOG.md CHANGELOG.zh-CN.md VERSION && git commit -m "Pulse x.y.z"
+git add CHANGELOG.md CHANGELOG.zh-CN.md VERSION && git commit -m "Blinky x.y.z"
 git tag vx.y.z
 git push origin main && git push origin vx.y.z
 ```
@@ -66,7 +66,7 @@ git push origin main && git push origin vx.y.z
 ```bash
 gh run list --workflow release.yml --limit 1 --json databaseId,status,headBranch
 gh run watch <id> --exit-status        # run in the background; you are told when it ends
-gh release view vx.y.z --json assets --jq '.assets[].name'   # Pulse-x.y.z.dmg and .zip
+gh release view vx.y.z --json assets --jq '.assets[].name'   # Blinky-x.y.z.dmg and .zip
 git pull --ff-only                     # brings in the workflow's "Offer x.y.z to Sparkle" commit
 ```
 

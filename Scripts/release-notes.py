@@ -82,7 +82,7 @@ def install_zh(version: str) -> str:
         [
             "## 安装",
             "",
-            f"下载 **Pulse-{version}.dmg**，打开后把 Blinky 拖入「应用程序」。未公证，首次启动会被阻止：先打开 Blinky 并关闭警告，再到 **系统设置 → 隐私与安全性 → 安全性 → 仍要打开**。只需操作一次。",
+            f"下载 **Blinky-{version}.dmg**，打开后把 Blinky 拖入「应用程序」。未公证，首次启动会被阻止：先打开 Blinky 并关闭警告，再到 **系统设置 → 隐私与安全性 → 安全性 → 仍要打开**。只需操作一次。",
             "",
             "需要 macOS 14 或更高版本，支持 Apple 芯片和 Intel。",
         ]
@@ -94,7 +94,7 @@ def install_en(version: str) -> str:
         [
             "## Install",
             "",
-            f"Download **Pulse-{version}.dmg** and drag Blinky into Applications. Not notarized, so macOS blocks the first launch: open Blinky, dismiss the warning, then go to **System Settings → Privacy & Security → Security → Open Anyway**. Once only.",
+            f"Download **Blinky-{version}.dmg** and drag Blinky into Applications. Not notarized, so macOS blocks the first launch: open Blinky, dismiss the warning, then go to **System Settings → Privacy & Security → Security → Open Anyway**. Once only.",
             "",
             "Requires macOS 14 or newer. Universal (Apple Silicon and Intel).",
         ]

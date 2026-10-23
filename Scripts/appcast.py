@@ -21,7 +21,7 @@ script writes one feed per language as well (`appcast-zh.xml`, `appcast-en.xml`)
 and the app reads the one for the language it is set to.
 
 Every feed URL is this repository's own file on GitHub
-(`raw.githubusercontent.com/<owner>/Pulse/main/`). This fork does not publish
+(`raw.githubusercontent.com/<owner>/<repo>/main/`). This fork does not publish
 to, or fall back onto, update.qunqin.org.
 
 The feed is committed rather than generated from scratch each time. Older

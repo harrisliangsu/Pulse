@@ -5,7 +5,7 @@ name: Release
 #   ./Scripts/bundle.sh   (locally, to check it)
 #   git tag v1.0.1 && git push origin v1.0.1
 #
-# Pulse's own update check reads GitHub's latest release, so what this
+# Blinky's own update check reads GitHub's latest release, so what this
 # publishes is exactly what installed copies are offered.
 on:
   push:
@@ -123,7 +123,7 @@ jobs:
         run: |
           # A tag like v1.1.0-beta.1 is published as a pre-release, which
           # GitHub's "latest release" excludes — and so, therefore, does
-          # Pulse's update check.
+          # Blinky's update check.
           PRERELEASE=""
           case "$VERSION" in *-*) PRERELEASE="--prerelease";; esac
 
@@ -133,13 +133,13 @@ jobs:
           if gh release view "v$VERSION" >/dev/null 2>&1; then
             echo "Release exists — replacing its assets."
             gh release upload "v$VERSION" \
-              "build.noindex/Pulse-$VERSION.dmg" \
-              "build.noindex/Pulse-$VERSION.zip" \
+              "build.noindex/Blinky-$VERSION.dmg" \
+              "build.noindex/Blinky-$VERSION.zip" \
               --clobber
           else
             gh release create "v$VERSION" \
-              "build.noindex/Pulse-$VERSION.dmg" \
-              "build.noindex/Pulse-$VERSION.zip" \
+              "build.noindex/Blinky-$VERSION.dmg" \
+              "build.noindex/Blinky-$VERSION.zip" \
               --title "Blinky $VERSION" \
               --notes-file notes.md \
               $PRERELEASE
@@ -171,7 +171,7 @@ jobs:
             exit 1
           fi
 
-          URL="https://github.com/${{ github.repository }}/releases/download/v$VERSION/Pulse-$VERSION.zip"
+          URL="https://github.com/${{ github.repository }}/releases/download/v$VERSION/Blinky-$VERSION.zip"
 
           # The tag was checked out detached; the feed lives on main.
           git fetch origin main
@@ -182,7 +182,7 @@ jobs:
           # uses --clobber) and leaves every older version alone. A second
           # run for the same tag therefore commits a signature for the asset
           # that is actually on the release.
-          Scripts/appcast.py "$VERSION" "build.noindex/Pulse-$VERSION.zip" "$URL"
+          Scripts/appcast.py "$VERSION" "build.noindex/Blinky-$VERSION.zip" "$URL"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
