@@ -212,7 +212,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
          Still only an offer: SUAutomaticallyUpdate stays false below. -->
     <key>SUScheduledCheckInterval</key><integer>7200</integer>
     <!-- Downloading and installing on its own stays off: an update is offered,
-         not applied behind the user's back. -->
+         not applied behind the user's back. The offer is brought forward by
+         UpdaterRelay (AppUpdate.swift). Leaving this false is what keeps the
+         install inside that window. -->
     <key>SUAutomaticallyUpdate</key><false/>
 </dict>
 </plist>

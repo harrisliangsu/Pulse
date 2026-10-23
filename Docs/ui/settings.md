@@ -157,7 +157,7 @@ In the sidebar's Other section, between Manage extensions and About. It copies t
 
 Two groups. The first is the app: version and update state, where the usage figures come from, and the **source address**, with the URL itself as the subtitle so it can be typed.
 
-**Opening the pane checks for an update** (`AppUpdate.probe`, Sparkle's `checkForUpdateInformation`), unless a check or update is already running: no Sparkle window, only the Version subtitle changes ("Checking…", then the answer), so "up to date" is current. It runs **even with Check automatically off** — that switch covers Pulse's own schedule; opening About is the reader asking. **Check now** still puts up Sparkle's window. The Blinky menu's **Check for Updates…** (under About; zh-Hans 检查更新) calls the same `AppUpdate.check`.
+**Opening the pane checks for an update** (`AppUpdate.probe`, Sparkle's `checkForUpdateInformation`), unless a check or update is already running: no Sparkle window, only the Version subtitle changes ("Checking…", then the answer), so "up to date" is current. It runs **even with Check automatically off** — that switch covers Pulse's own schedule; opening About is the reader asking. **Check now** still puts up Sparkle's window, and so does a scheduled check that finds a newer version; both bring that window to the front ([../releasing.md](../releasing.md#sparkle)). The Blinky menu's **Check for Updates…** (under About; zh-Hans 检查更新) calls the same `AppUpdate.check`.
 
 The second group is **Credits**: anything shipped here that somebody else made — the design it was built from, the provider marks, and the animated marks' geometry ([../decisions/bot-mark-geometry.md](../decisions/bot-mark-geometry.md)).
 

@@ -45,6 +45,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     init(settings: AppSettings) {
         self.settings = settings
         super.init()
+        // Sparkle's window is not one DockPresence tracks. The updater says
+        // when that window is up; the Dock icon follows, as it does for Settings.
+        update.onUpdateOfferVisible = { [weak self] visible in
+            self?.dock.setUpdateOfferVisible(visible)
+        }
     }
 
     private var panelController: FloatingPanelController?
