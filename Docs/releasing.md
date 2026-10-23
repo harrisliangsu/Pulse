@@ -28,6 +28,9 @@ Both pin **`macos-26`**, not `macos-latest`. `PanelSurface`’s Liquid Glass nee
 
 Release needs `SPARKLE_PRIVATE_KEY`. It fails without it rather than publishing a version no installed copy would be offered.
 
+The Package step builds once. `./Scripts/bundle.sh --zip` produces `build.noindex/Blinky.app` and `Blinky-<version>.zip`. `./Scripts/dmg.sh --reuse` writes the disk image from that app and does not run `swift build`. A local `./Scripts/dmg.sh` still builds, then writes the image.
+
+The debug `swift build` and `swift test` run on Release unless the Build workflow (`ci.yml`) has already succeeded for the tagged commit. That means a finished green run for the same SHA. No run, a failed or cancelled run, or a run still in progress leaves both steps in place. Tag and VERSION agreement, both changelog gates, and the Sparkle signature are unchanged.
 
 ## Workflow file updates
 
@@ -47,7 +50,7 @@ different zips.
 - `LSUIElement` = true.
 - **Icon: `AppIcon/AppIcon.icon`**, an Icon Composer document, compiled by `actool` into `Assets.car` plus a flattened `AppIcon.icns`; `CFBundleIconName` points at it. The layer is `mascot.png`, the Blinky mascot on its dark squircle. Glass, the group shadow, and translucency are off: the picture is the icon, and a glass treatment would replace the drawing with the shape of its outline. `blinky-icon-1024.png` (README) and the Raycast icon are that picture. The menu bar and the recap header use `blinky-mascot.png` from the resource bundle.
 - `CFBundleURLTypes` registers `pulse` for settings/account navigation. The developer kit is copied to `Contents/Resources/Integrations` from an explicit file list: scripts, Raycast source, manifest, lockfile, icon and tests; no `node_modules` or generated extension output. This copy needs no Node.js build on release CI. [integrations.md](integrations.md)
-- Universal: `--arch arm64 --arch x86_64`. Zip with **`ditto`**, not `zip` (plain zip flattens bundle symlinks).
+- Universal: `--arch arm64 --arch x86_64`. Zip with **`ditto`**, not `zip` (plain zip flattens bundle symlinks). Release passes `--zip` on this one build, then `./Scripts/dmg.sh --reuse`, so the script does not run again for the archive.
 - **The SDK stamp is checked, not assumed.** macOS draws an app's controls to the SDK version in its `LC_BUILD_VERSION`, and below 26 it uses the previous design. `Package.swift` stamps 26.0 in `linkerSettings` — the manifest, not this script, so that a build run from Xcode matches a release — and this script reads it back off **every slice** after linking and refuses to package anything lower. The flag alone is not enough: when SwiftPM last got this wrong there was no error and no failing test, only an app drawn the old way. [decisions/sdk-stamp-and-appearance.md](decisions/sdk-stamp-and-appearance.md)
 - **Output is `build.noindex/`.** Spotlight indexes any `.app`; a project-folder build appears beside the installed copy, and whichever is opened claims the login item and rewrites Claude Code’s status-line path to itself. A `.metadata_never_index` marker was tried and did **not** stop indexing (historical); the `.noindex` suffix is what Spotlight honours. Do not rename it back.
 - Sparkle is copied into `Contents/Frameworks` and `@executable_path/../Frameworks` is added to the rpath. Sign **inside out** (nested XPC / updater first).
@@ -59,6 +62,8 @@ different zips.
 The image is the install guide: Blinky is not notarised, and on macOS 15+ Control-click → Open is gone. Instructions are printed on the window (README-only instructions are not read by people downloading an app).
 
 Finder window layout is a committed `Scripts/dmg-DS_Store` (AppleScript cannot run on CI). Recapture with `./Scripts/dmg.sh --relayout` after changing the backdrop or icon positions. Finder `bounds` **include the title bar** (~28pt taller than a 660×420 backdrop). Backdrop: `Scripts/dmg-background.tiff` (1x and 2x).
+
+`./Scripts/dmg.sh --reuse` packages the existing `build.noindex/Blinky.app` and skips `bundle.sh`. The app's `CFBundleShortVersionString` has to match `VERSION`. Release runs `./Scripts/bundle.sh --zip` first, then this, so the universal build happens once and both downloads are that app.
 
 Sparkle updates from the **zip**, not the DMG. The image is for people.
 
