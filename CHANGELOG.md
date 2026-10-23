@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.3
+
+- **An installed update shows up in Finder as Blinky.** The next time a copy still named `Pulse.app` opens, including the relaunch after an in-app update, it renames itself to `Blinky.app` when that folder has no `Blinky.app` yet, and Open at login is registered again for the new file when it was already on (Settings → General).
+
 ## 1.5.2
 
 - **A new download is Blinky.app.** Finder and the disk image show that name, and the icon is the Blinky mascot. [Docs/releasing.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/releasing.md) [#56](https://github.com/harrisliangsu/blinky-mac/pull/56)

@@ -33,7 +33,7 @@ export default function Command() {
 
   const reload = () => setGeneration((value) => value + 1);
   if (error) {
-    return <Detail markdown={"# Couldn't read Blinky\n\nInstall Blinky and check **Blinky executable** in this extension's preferences. The path ends in `Blinky.app/Contents/MacOS/Pulse`. A copy updated in place may still be `Pulse.app` with that same executable name.\n\nThis command only reads the cache. Keep Blinky running to update it."} actions={
+    return <Detail markdown={"# Couldn't read Blinky\n\nInstall Blinky and check **Blinky executable** in this extension's preferences. The path ends in `Blinky.app/Contents/MacOS/Pulse`. A copy that has not opened since an update may still be `Pulse.app` with that same executable name.\n\nThis command only reads the cache. Keep Blinky running to update it."} actions={
       <ActionPanel><Action title="Retry Cache Read" onAction={reload} /><Action.OpenInBrowser title="Open Blinky Settings" url="pulse://settings" /></ActionPanel>
     } />;
   }
@@ -45,7 +45,7 @@ export default function Command() {
   </List>;
 }
 
-/** The `Pulse` executable inside Blinky.app, or inside a Pulse.app an update did not rename. */
+/** The `Pulse` executable inside Blinky.app, or inside a Pulse.app that has not opened since an update. */
 function blinkyExecutable(): string {
   const set = getPreferenceValues<{ pulsePath?: string }>().pulsePath?.trim();
   const shipped = "/Applications/Blinky.app/Contents/MacOS/Pulse";

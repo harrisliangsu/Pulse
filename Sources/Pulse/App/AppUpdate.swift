@@ -24,6 +24,14 @@ import Sparkle
 /// only what the rest of the app asks about: whether a check can happen at
 /// all, whether one is running, and whether a newer version was found — which
 /// is what the menu bar shows.
+///
+/// **The installed file name is not changed from this delegate.** Sparkle
+/// writes the update over `host.bundlePath` because
+/// `SPARKLE_NORMALIZE_INSTALLED_APPLICATION_NAME` is off in the SwiftPM
+/// framework, then relaunches that path. `updaterWillRelaunchApplication`
+/// runs in the process that is quitting, before the helper installs, so it
+/// cannot point the relaunch at `Blinky.app`. `InstalledAppName` renames
+/// `Pulse.app` on the launch that follows.
 @MainActor
 @Observable
 final class AppUpdate {

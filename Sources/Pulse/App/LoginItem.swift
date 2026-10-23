@@ -90,6 +90,26 @@ enum LoginItem {
         setEnabled(true)
     }
 
+    /// Registers this bundle again after `Pulse.app` has become `Blinky.app`.
+    ///
+    /// Both routes store a path: `SMAppService` the bundle's, the launch agent
+    /// the executable's. The old path is gone after the rename, and
+    /// `register()` on an item that is already registered does not retarget
+    /// it, so this unregisters first. One attempt. If login no longer starts
+    /// the app, Open at login under Settings → General is the switch that
+    /// registers the bundle now running.
+    @discardableResult
+    static func refreshAfterBundleMoved() -> Bool {
+        guard usesAppService else { return writeAgent() }
+        try? SMAppService.mainApp.unregister()
+        do {
+            try SMAppService.mainApp.register()
+            return true
+        } catch {
+            return false
+        }
+    }
+
     /// Rebuilding moves the executable, which leaves the agent pointing at a
     /// binary that is no longer there. Same problem, and same fix, as
     /// `StatusLineHook.repairPathIfNeeded`.
