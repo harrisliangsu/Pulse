@@ -471,7 +471,7 @@ struct AlertMemory: Codable, Sendable, Equatable {
             }
 
             if announcesExhaustion {
-                noteExhaustion(
+                Self.noteExhaustion(
                     of: window,
                     into: &memory,
                     produced: &produced,
