@@ -18,6 +18,10 @@
 </p>
 
 <p align="center">
+  <a href="https://afdian.com/a/sharkchiligaga">Sponsor</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/harrisliangsu/blinky-mac/releases/latest"><img src="https://img.shields.io/github/v/release/harrisliangsu/blinky-mac?color=black" alt="Latest Release"></a>
   <img src="https://img.shields.io/badge/macOS-14.0%2B%20Sonoma-333333?logo=apple" alt="macOS 14+">
   <a href="https://github.com/harrisliangsu/blinky-mac/actions/workflows/ci.yml"><img src="https://github.com/harrisliangsu/blinky-mac/actions/workflows/ci.yml/badge.svg" alt="CI Build"></a>
