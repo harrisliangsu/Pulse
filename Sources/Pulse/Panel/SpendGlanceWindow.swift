@@ -142,8 +142,12 @@ final class SpendGlanceController {
             let keyCode = event.keyCode
             let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
             let eventWindow = event.window.map { ObjectIdentifier($0) }
-            let point = NSEvent.mouseLocation
-            let auxiliary = event.window.map { SpendGlanceWindowLevel.isAuxiliary($0) } ?? false
+            // The click's own window and point. The cursor is a fallback for an
+            // event that names no window; a real click and a synthesized one
+            // then name the same place. The window number crosses into the
+            // actor; the window does not.
+            let windowNumber = event.windowNumber
+            let locationInWindow = event.locationInWindow
             let swallowEscape = MainActor.assumeIsolated { () -> Bool in
                 guard let self, let window = self.window, window.isVisible else { return false }
                 if type == .keyDown {
@@ -162,6 +166,14 @@ final class SpendGlanceController {
                     window.close()
                     return true
                 }
+                let source = NSApp.window(withWindowNumber: windowNumber)
+                let auxiliary = source.map {
+                    SpendGlanceWindowLevel.isAuxiliary(
+                        level: $0.level,
+                        className: String(describing: type(of: $0))
+                    )
+                } ?? false
+                let point = source?.convertPoint(toScreen: locationInWindow) ?? NSEvent.mouseLocation
                 let inside = window.frame.contains(point) || self.entryRect.contains(point)
                 if SpendGlanceWindowLevel.dismisses(inside: inside, auxiliary: auxiliary) {
                     self.close()

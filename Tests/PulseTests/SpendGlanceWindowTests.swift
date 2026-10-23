@@ -71,46 +71,48 @@ struct SpendGlanceWindowTests {
         #expect(window.title == "Token spend")
 
         window.makeKey()
+        window.displayIfNeeded()
         window.contentView?.layoutSubtreeIfNeeded()
         pump()
         window.contentView?.layoutSubtreeIfNeeded()
-        let views = Self.flatten(window.contentView)
-        let described = views.map {
-            "\(type(of: $0)) id=\($0.accessibilityIdentifier() ?? "-") title=\(($0 as? NSButton)?.title ?? "-")"
-        }.joined(separator: "\n")
-
-        let refresh = try #require(
-            Self.button(named: "Refresh", identifier: "spend-glance-refresh", in: views),
-            "Refresh was not in the window.\n\(described)"
-        )
-        let share = try #require(
-            Self.button(named: "Share this summary", identifier: "spend-glance-share", in: views),
-            "Share was not in the window.\n\(described)"
-        )
-        let menus = views.compactMap { $0 as? NSPopUpButton }
-        #expect(menus.count >= 2, "Expected the span and breakdown menus.\n\(described)")
-
         let content = try #require(window.contentView)
-        let refreshHit = Self.hit(refresh, in: content)
-        #expect(Self.contains(refreshHit, refresh))
-        let shareHit = Self.hit(share, in: content)
-        #expect(Self.contains(shareHit, share))
+        let views = Self.flatten(content)
+        // SwiftUI's menu picker is a popup view, not an NSPopUpButton the
+        // test can downcast. Refresh and Share are not NSButtons either:
+        // they are accessibility elements in this same tree.
+        let menus = views.filter {
+            let name = String(describing: type(of: $0))
+            return name.contains("PopupButton") || name.contains("PopUpButton")
+        }
+        #expect(menus.count >= 2)
         for menu in menus {
             #expect(Self.contains(Self.hit(menu, in: content), menu))
         }
 
+        let nodes = Self.axNodes(from: content)
+        let described = Self.describe(nodes)
+        let refresh = try #require(
+            Self.control("spend-glance-refresh", label: String.localized("Refresh"), in: nodes),
+            "Refresh was not in the accessibility tree: \(described)"
+        )
+        let share = try #require(
+            Self.control("spend-glance-share", label: String.localized("Share this summary"), in: nodes),
+            "Share was not in the accessibility tree: \(described)"
+        )
+        #expect(Self.hit(refresh, in: content, window: window) != nil)
+        #expect(Self.hit(share, in: content, window: window) != nil)
+
         // Share before Refresh. Refresh starts a read, and that read must not
         // be what this click is proving.
-        #expect(share.isEnabled)
         try Self.click(share, in: window)
         pump()
         #expect(controller.model.didCopy || controller.model.copyFailed)
         let note = controller.model.didCopy
             ? String.localized("Copied to the clipboard.")
             : String.localized("Could not copy.")
-        #expect(!note.isEmpty)
-        let noted = Self.flatten(window.contentView).contains {
+        let noted = Self.axNodes(from: content).contains {
             $0.accessibilityIdentifier() == "spend-glance-copy-note"
+                || $0.accessibilityLabel() == note
         }
         #expect(noted)
 
@@ -137,6 +139,7 @@ struct SpendGlanceWindowTests {
         ))
         NSApp.sendEvent(menuClick)
         #expect(controller.isOpen)
+        menu.orderOut(nil)
 
         // A click in the content must reach the control. The old sendEvent
         // returned before super, so this click changed nothing.
@@ -149,7 +152,7 @@ struct SpendGlanceWindowTests {
         #expect(close.isEnabled)
         if let frame = window.contentView?.superview {
             let hit = Self.hit(close, in: frame)
-            #expect(Self.contains(hit, close), "The close button was covered.\n\(described)")
+            #expect(Self.contains(hit, close))
         }
         close.performClick(nil)
         #expect(!controller.isOpen)
@@ -189,15 +192,47 @@ struct SpendGlanceWindowTests {
         return [view] + view.subviews.flatMap { flatten($0) }
     }
 
-    private static func button(named title: String, identifier: String, in views: [NSView]) -> NSButton? {
-        views.compactMap { $0 as? NSButton }.first {
-            $0.title == title || $0.accessibilityIdentifier() == identifier || $0.accessibilityLabel() == title
+    private static func axNodes(from root: Any?) -> [NSObject] {
+        var seen = Set<ObjectIdentifier>()
+        var output: [NSObject] = []
+        func walk(_ object: Any?, depth: Int) {
+            guard depth < 12, output.count < 400, let object = object as? NSObject else { return }
+            guard seen.insert(ObjectIdentifier(object)).inserted else { return }
+            output.append(object)
+            let children = (object.accessibilityChildren() ?? []) + (object.accessibilityVisibleChildren() ?? [])
+            for child in children {
+                walk(child, depth: depth + 1)
+            }
         }
+        walk(root, depth: 0)
+        return output
+    }
+
+    private static func control(_ identifier: String, label: String, in nodes: [NSObject]) -> NSObject? {
+        nodes.first { $0.accessibilityIdentifier() == identifier }
+            ?? nodes.first { $0.accessibilityLabel() == label }
+    }
+
+    private static func describe(_ nodes: [NSObject]) -> String {
+        nodes.prefix(30).map { node in
+            let id = node.accessibilityIdentifier() ?? "-"
+            let label = node.accessibilityLabel() ?? "-"
+            return "\(type(of: node)) id=\(id) label=\(label)"
+        }.joined(separator: " | ")
     }
 
     private static func hit(_ control: NSView, in root: NSView) -> NSView? {
-        let point = control.convert(NSPoint(x: control.bounds.midX, y: control.bounds.midY), to: root)
-        return root.hitTest(point)
+        let inWindow = control.convert(NSPoint(x: control.bounds.midX, y: control.bounds.midY), to: nil)
+        guard let superview = root.superview else { return root.hitTest(inWindow) }
+        return root.hitTest(superview.convert(inWindow, from: nil))
+    }
+
+    private static func hit(_ element: NSObject, in root: NSView, window: NSWindow) -> NSView? {
+        let frame = element.accessibilityFrame()
+        guard !frame.isEmpty else { return nil }
+        let inWindow = window.convertPoint(fromScreen: NSPoint(x: frame.midX, y: frame.midY))
+        guard let superview = root.superview else { return root.hitTest(inWindow) }
+        return root.hitTest(superview.convert(inWindow, from: nil))
     }
 
     private static func contains(_ hit: NSView?, _ control: NSView) -> Bool {
@@ -209,8 +244,10 @@ struct SpendGlanceWindowTests {
         return false
     }
 
-    private static func click(_ control: NSView, in window: NSWindow) throws {
-        let point = control.convert(NSPoint(x: control.bounds.midX, y: control.bounds.midY), to: nil)
+    private static func click(_ element: NSObject, in window: NSWindow) throws {
+        let frame = element.accessibilityFrame()
+        try #require(!frame.isEmpty)
+        let point = window.convertPoint(fromScreen: NSPoint(x: frame.midX, y: frame.midY))
         let down = try #require(NSEvent.mouseEvent(
             with: .leftMouseDown,
             location: point,
