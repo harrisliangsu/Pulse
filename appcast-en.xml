@@ -6,22 +6,22 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.7</title>
-            <pubDate>Fri, 23 Oct 2026 11:57:57 -0000</pubDate>
-            <sparkle:version>1.5.7</sparkle:version>
-            <sparkle:shortVersionString>1.5.7</sparkle:shortVersionString>
+            <title>1.5.8</title>
+            <pubDate>Fri, 23 Oct 2026 12:37:57 -0000</pubDate>
+            <sparkle:version>1.5.8</sparkle:version>
+            <sparkle:shortVersionString>1.5.8</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.7</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.8</link>
             <description><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.7</h2><ul><li><strong>Token spend can open beside the floating panel.</strong> With Token spend on, the button on the usage card&#x27;s header opens a summary for the same span as Settings, and Share copies that summary as an image. The full Token spend page stays in Settings. <a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md">Docs/token-spend.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/62">#62</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.7">Release notes on GitHub</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.7/Blinky-1.5.7.zip"
-                       length="22450851"
+</style><h2>Blinky 1.5.8</h2><ul><li><strong>A scheduled check notifies you before opening the update window.</strong> Settings → About, under Check automatically: When an update is found defaults to Notify first, and the window opens when that notification is clicked. Show the window opens it immediately. Check for Updates… and Check now still open the window. If notification permission is refused, the window opens so the update is not missed. <a href="https://github.com/harrisliangsu/blinky-mac/pull/65">#65</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.8">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.8/Blinky-1.5.8.zip"
+                       length="22506954"
                        type="application/octet-stream"
-                       sparkle:edSignature="nH2pz32UQTSpieUUFKqzfmDGFFDN7K5YH6FOEiQgEaHwj/TsEY+hj4gNPOWiHG+Xq3fpzoAnGrq2x8mPA8o3Dg==" />
+                       sparkle:edSignature="lsAdUy6+ySe5fYQUKJ60ON4QOhLUCPpygGeIpq+t5Pru/9VguqNEfGO/k/N+3omjpgstiIxqskWe80NqbQ+6BA==" />
         </item>
     </channel>
 </rss>

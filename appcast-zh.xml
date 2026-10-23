@@ -6,22 +6,22 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.7</title>
-            <pubDate>Fri, 23 Oct 2026 11:57:57 -0000</pubDate>
-            <sparkle:version>1.5.7</sparkle:version>
-            <sparkle:shortVersionString>1.5.7</sparkle:shortVersionString>
+            <title>1.5.8</title>
+            <pubDate>Fri, 23 Oct 2026 12:37:57 -0000</pubDate>
+            <sparkle:version>1.5.8</sparkle:version>
+            <sparkle:shortVersionString>1.5.8</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.7</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.8</link>
             <description><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.7</h2><ul><li><strong>Token 消耗可以在悬浮面板旁边打开。</strong> 打开 Token 消耗后，用量卡片标题栏上的按钮会打开与设置里相同统计区间的摘要，分享会把这份摘要复制成图片。完整的 Token 消耗页面仍在设置中。<a href="https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/token-spend.md">Docs/token-spend.md</a> <a href="https://github.com/harrisliangsu/blinky-mac/pull/62">#62</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.7">在 GitHub 查看更新说明</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.7/Blinky-1.5.7.zip"
-                       length="22450851"
+</style><h2>Blinky 1.5.8</h2><ul><li><strong>定时检查会先通知，再打开更新窗口。</strong> 在「设置 → 关于」里，「自动检查」下面有「发现更新时」，默认是「先通知」：点击通知后才打开更新窗口。选「直接打开窗口」则会立刻打开。菜单里的「检查更新」和关于里的「检查更新」仍会直接打开窗口。若系统拒绝了通知权限，窗口会直接打开，以免漏掉这次更新。<a href="https://github.com/harrisliangsu/blinky-mac/pull/65">#65</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.8">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.8/Blinky-1.5.8.zip"
+                       length="22506954"
                        type="application/octet-stream"
-                       sparkle:edSignature="nH2pz32UQTSpieUUFKqzfmDGFFDN7K5YH6FOEiQgEaHwj/TsEY+hj4gNPOWiHG+Xq3fpzoAnGrq2x8mPA8o3Dg==" />
+                       sparkle:edSignature="lsAdUy6+ySe5fYQUKJ60ON4QOhLUCPpygGeIpq+t5Pru/9VguqNEfGO/k/N+3omjpgstiIxqskWe80NqbQ+6BA==" />
         </item>
     </channel>
 </rss>
