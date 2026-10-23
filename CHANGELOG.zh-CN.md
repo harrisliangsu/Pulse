@@ -8,7 +8,7 @@ Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文
 
 ## 1.5.2
 
-- **新下载的应用是 Blinky.app。** 访达和安装镜像都显示这个名字，图标是米白色的圆，中间有一条黄绿色的细缝。[Docs/releasing.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/releasing.md)
+- **新下载的应用是 Blinky.app。** 访达和安装镜像都显示这个名字，图标是米白色的圆，中间有一条黄绿色的细缝。[Docs/releasing.md](https://github.com/harrisliangsu/blinky-mac/blob/main/Docs/releasing.md) [#56](https://github.com/harrisliangsu/blinky-mac/pull/56)
 
 ## 1.5.1
 
