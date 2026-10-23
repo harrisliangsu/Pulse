@@ -10,6 +10,10 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.6
+
+- **Settings groups a control with the choices that belong to it.** In Settings, a child row hides while its switch is off, and Notifications shows the countdown hours, starting at 6. A separate notice before the reset stays off until it is turned on. [#66](https://github.com/harrisliangsu/blinky-mac/pull/66)
+
 ## 1.5.5
 
 - **The card says when a limit may run out.** Settings → Notifications → Exhaustion forecast. Within six hours it names the window and a rough time, for example “Weekly · may run out in about 4 hours”; further out it can say the pace may not last until the reset. Notifications start with one warning at 24 hours left, and more stages can be added. Codex’s 5-hour and weekly windows are included when the reply states a length and a reset. [#61](https://github.com/harrisliangsu/blinky-mac/pull/61)

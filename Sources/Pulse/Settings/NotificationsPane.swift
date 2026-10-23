@@ -8,7 +8,7 @@ struct NotificationsPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            SettingsGroup {
+            SettingsGroup(String.localized("Limits and outages")) {
                 SettingsRow(
                     String.localized("Warn at"),
                     subtitle: alertsSubtitle
@@ -33,28 +33,32 @@ struct NotificationsPane: View {
                     .disabled(!UsageAlerts.isSupported)
                 }
 
-                SettingsRowDivider()
+                // Hidden while Warn at is Off. The switch keeps its stored
+                // value; a reset is still announced only for a window that
+                // was mentioned on the way up.
+                if SettingsChildRows.showsLimitCameBack(settings.alertThreshold) {
+                    SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("When a limit comes back"),
-                    subtitle: String.localized("Only for one you were warned about.")
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.alertsOnReset },
-                        set: {
-                            settings.alertsOnReset = $0
-                            Task {
-                                if await alerts.requestAuthorizationIfNeeded() {
-                                    store.reconsiderAlerts()
+                    SettingsRow(
+                        String.localized("When a limit comes back"),
+                        subtitle: String.localized("Only for one you were warned about."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.alertsOnReset },
+                            set: {
+                                settings.alertsOnReset = $0
+                                Task {
+                                    if await alerts.requestAuthorizationIfNeeded() {
+                                        store.reconsiderAlerts()
+                                    }
                                 }
                             }
-                        }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    // Nothing to fire about: a reset is only announced for a
-                    // window that was mentioned on the way up.
-                    .disabled(!UsageAlerts.isSupported || settings.alertThreshold == .off)
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .disabled(!UsageAlerts.isSupported)
+                    }
                 }
 
                 SettingsRowDivider()
@@ -125,7 +129,11 @@ struct NotificationsPane: View {
                 }
             }
 
-            exhaustionGroup
+            exhaustionCardGroup
+
+            exhaustionNoticeGroup
+
+            exhaustionAccountGroup
 
             SettingsGroup(String.localized("Reset reminders")) {
                 SettingsRow(
@@ -144,26 +152,29 @@ struct NotificationsPane: View {
                     .disabled(!UsageAlerts.isSupported)
                 }
 
-                SettingsRowDivider()
+                if SettingsChildRows.showsPredictedLead(settings.remindsBeforePredictedReset) {
+                    SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("How early"),
-                    subtitle: String.localized("Hours before the predicted time.")
-                ) {
-                    Picker("", selection: Binding(
-                        get: { settings.predictedResetLead },
-                        set: { lead in
-                            settings.predictedResetLead = lead
-                            commitAdvanceReminders()
+                    SettingsRow(
+                        String.localized("How early"),
+                        subtitle: String.localized("Hours before the predicted time."),
+                        nested: true
+                    ) {
+                        Picker("", selection: Binding(
+                            get: { settings.predictedResetLead },
+                            set: { lead in
+                                settings.predictedResetLead = lead
+                                commitAdvanceReminders()
+                            }
+                        )) {
+                            ForEach(ResetLead.allCases) { lead in
+                                Text(lead.title).tag(lead)
+                            }
                         }
-                    )) {
-                        ForEach(ResetLead.allCases) { lead in
-                            Text(lead.title).tag(lead)
-                        }
+                        .labelsHidden()
+                        .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+                        .disabled(!UsageAlerts.isSupported)
                     }
-                    .labelsHidden()
-                    .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
-                    .disabled(!UsageAlerts.isSupported || !settings.remindsBeforePredictedReset)
                 }
 
                 SettingsRowDivider()
@@ -184,26 +195,29 @@ struct NotificationsPane: View {
                     .disabled(!UsageAlerts.isSupported)
                 }
 
-                SettingsRowDivider()
+                if SettingsChildRows.showsRegularLead(settings.remindsBeforeRegularReset) {
+                    SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("How early"),
-                    subtitle: String.localized("Hours before that reset.")
-                ) {
-                    Picker("", selection: Binding(
-                        get: { settings.regularResetLead },
-                        set: { lead in
-                            settings.regularResetLead = lead
-                            commitAdvanceReminders()
+                    SettingsRow(
+                        String.localized("How early"),
+                        subtitle: String.localized("Hours before that reset."),
+                        nested: true
+                    ) {
+                        Picker("", selection: Binding(
+                            get: { settings.regularResetLead },
+                            set: { lead in
+                                settings.regularResetLead = lead
+                                commitAdvanceReminders()
+                            }
+                        )) {
+                            ForEach(ResetLead.allCases) { lead in
+                                Text(lead.title).tag(lead)
+                            }
                         }
-                    )) {
-                        ForEach(ResetLead.allCases) { lead in
-                            Text(lead.title).tag(lead)
-                        }
+                        .labelsHidden()
+                        .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+                        .disabled(!UsageAlerts.isSupported)
                     }
-                    .labelsHidden()
-                    .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
-                    .disabled(!UsageAlerts.isSupported || !settings.remindsBeforeRegularReset)
                 }
             }
 
@@ -220,19 +234,21 @@ struct NotificationsPane: View {
                     .toggleStyle(.switch)
                 }
 
-                SettingsRowDivider()
+                if SettingsChildRows.showsHourlyCelebration(settings.celebratesReset) {
+                    SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("Also celebrate hourly quota resets"),
-                    subtitle: String.localized("Five-hour windows, not only the week or month.")
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.celebratesHourlyReset },
-                        set: { settings.celebratesHourlyReset = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!settings.celebratesReset)
+                    SettingsRow(
+                        String.localized("Also celebrate hourly quota resets"),
+                        subtitle: String.localized("Five-hour windows, not only the week or month."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.celebratesHourlyReset },
+                            set: { settings.celebratesHourlyReset = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
                 }
             }
         }
@@ -251,60 +267,14 @@ struct NotificationsPane: View {
         }
     }
 
-    /// The card line and the remaining-time notices, in one group. Percent
-    /// thresholds stay in the group above; this is the other question.
-    @ViewBuilder
-    private var exhaustionGroup: some View {
-        SettingsGroup(String.localized("Exhaustion forecast")) {
-            exhaustionAccountRows
-            exhaustionCardRows
-            exhaustionNoticeRows
-        }
-    }
-
-    /// Whose windows are forecast, on the card and in the notices together.
-    @ViewBuilder
-    private var exhaustionAccountRows: some View {
-        SettingsRow(
-            String.localized("Accounts"),
-            subtitle: String.localized("Every account on the panel, or only the ones you pick.")
-        ) {
-                Picker("", selection: Binding(
-                    get: { settings.exhaustionAllAccounts },
-                    set: { settings.setExhaustionAllAccounts($0) }
-                )) {
-                    Text(localized: "All shown accounts").tag(true)
-                    Text(localized: "Selected accounts").tag(false)
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
-            }
-
-            if !settings.exhaustionAllAccounts {
-                ForEach(settings.shownAccounts, id: \.id) { account in
-                    SettingsRowDivider()
-                    SettingsRow(settings.label(for: account)) {
-                        Toggle("", isOn: Binding(
-                            get: { settings.forecastsExhaustion(for: account) },
-                            set: { settings.setForecastsExhaustion($0, for: account) }
-                        ))
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                    }
-                }
-            }
-    }
-
-    /// The line on the card. These stay usable without a notification grant.
-    @ViewBuilder
-    private var exhaustionCardRows: some View {
-        SettingsRowDivider()
-
-        SettingsRow(
-            String.localized("On the card"),
-            subtitle: String.localized("A line under each limit that has a length and a reset.")
-        ) {
+    /// What the card writes. Usable without a notification grant: it only
+    /// changes a line. Percent thresholds stay in the group above.
+    private var exhaustionCardGroup: some View {
+        SettingsGroup(ExhaustionSettingsSections.card) {
+            SettingsRow(
+                String.localized("On the card"),
+                subtitle: String.localized("Under each limit that has a length and a reset, the card adds a line about how long it may last.")
+            ) {
                 Toggle("", isOn: Binding(
                     get: { settings.showsForecast },
                     set: { settings.showsForecast = $0 }
@@ -314,65 +284,66 @@ struct NotificationsPane: View {
                 .disabled(!settings.isPanelVisible)
             }
 
-            SettingsRowDivider()
+            if SettingsChildRows.showsForecastDetails(onCard: settings.showsForecast) {
+                SettingsRowDivider()
 
-            SettingsRow(
-                String.localized("Countdown within"),
-                subtitle: String.localized("Hours. Show the time only this close to running out.")
-            ) {
-                Stepper(
-                    value: Binding(
-                        get: { settings.exhaustionCardHours },
-                        set: { settings.exhaustionCardHours = $0 }
-                    ),
-                    in: ExhaustionStage.minimumHours...ExhaustionStage.maximumHours
+                SettingsRow(
+                    String.localized("Countdown up to"),
+                    subtitle: String.localized("The furthest time, in hours, at which the card writes a countdown."),
+                    nested: true
                 ) {
-                    EmptyView()
+                    hoursStepper(
+                        hours: settings.exhaustionCardHours,
+                        enabled: settings.isPanelVisible,
+                        value: Binding(
+                            get: { settings.exhaustionCardHours },
+                            set: { settings.exhaustionCardHours = ExhaustionHoursControl.applied($0) }
+                        )
+                    )
                 }
-                .labelsHidden()
-                .disabled(!settings.isPanelVisible || !settings.showsForecast)
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("May run out before reset"),
+                    subtitle: String.localized("Further out, the card says it may not last until the reset, and does not write a time."),
+                    nested: true
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.exhaustionSoftHint },
+                        set: { settings.exhaustionSoftHint = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible)
+                }
+
+                SettingsRowDivider()
+
+                SettingsRow(
+                    String.localized("Say roughly when"),
+                    subtitle: String.localized("When the pace will not last until the reset, the card writes roughly how long is left."),
+                    nested: true
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { settings.exhaustionBeforeReset },
+                        set: { settings.exhaustionBeforeReset = $0 }
+                    ))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .disabled(!settings.isPanelVisible)
+                }
             }
-
-            SettingsRowDivider()
-
-            SettingsRow(
-                String.localized("May run out before reset"),
-                subtitle: String.localized("A quieter line when it is further out than the countdown.")
-            ) {
-                Toggle("", isOn: Binding(
-                    get: { settings.exhaustionSoftHint },
-                    set: { settings.exhaustionSoftHint = $0 }
-                ))
-                .labelsHidden()
-                .toggleStyle(.switch)
-                .disabled(!settings.isPanelVisible || !settings.showsForecast)
-            }
-
-            SettingsRowDivider()
-
-            SettingsRow(
-                String.localized("Tie it to the reset"),
-                subtitle: String.localized("When it will not last until the reset, say roughly when.")
-            ) {
-                Toggle("", isOn: Binding(
-                    get: { settings.exhaustionBeforeReset },
-                    set: { settings.exhaustionBeforeReset = $0 }
-                ))
-                .labelsHidden()
-                .toggleStyle(.switch)
-                .disabled(!settings.isPanelVisible || !settings.showsForecast)
-            }
+        }
     }
 
     /// Remaining-time notices. Greyed out where there is no app bundle to post from.
-    @ViewBuilder
-    private var exhaustionNoticeRows: some View {
-        SettingsRowDivider()
-
-        SettingsRow(
-            String.localized("Time remaining"),
-            subtitle: exhaustionAlertsSubtitle
-        ) {
+    private var exhaustionNoticeGroup: some View {
+        SettingsGroup(ExhaustionSettingsSections.notices) {
+            SettingsRow(
+                String.localized("Notify by time left"),
+                subtitle: exhaustionAlertsSubtitle
+            ) {
                 Toggle("", isOn: Binding(
                     get: { settings.exhaustionAlerts },
                     set: { enabled in
@@ -385,42 +356,46 @@ struct NotificationsPane: View {
                 .disabled(!UsageAlerts.isSupported)
             }
 
-            SettingsRowDivider()
-
-            SettingsRow(
-                String.localized("Stages"),
-                subtitle: String.localized("Each one warns once, at its own remaining time.")
-            ) {
-                Button(String.localized("Add a stage")) {
-                    settings.addExhaustionStage()
-                    commitExhaustionAlerts()
-                }
-                .disabled(!UsageAlerts.isSupported || !settings.exhaustionAlerts)
-            }
-
-            ForEach(settings.exhaustionStages) { stage in
+            if SettingsChildRows.showsExhaustionStages(alertsOn: settings.exhaustionAlerts) {
                 SettingsRowDivider()
-                SettingsRow(String.localized("\("\(stage.hours)") hours")) {
-                    HStack(spacing: 10) {
-                        Stepper(
-                            value: Binding(
-                                get: { stage.hours },
-                                set: { hours in
-                                    settings.setExhaustionStageHours(id: stage.id, hours: hours)
-                                    commitExhaustionAlerts()
-                                }
-                            ),
-                            in: ExhaustionStage.minimumHours...ExhaustionStage.maximumHours
-                        ) {
-                            EmptyView()
-                        }
-                        .labelsHidden()
-                        Button(String.localized("Remove")) {
-                            settings.removeExhaustionStage(id: stage.id)
-                            commitExhaustionAlerts()
+
+                SettingsRow(
+                    String.localized("Reminder times"),
+                    subtitle: String.localized("Each stage notifies once, at its own hours left. A new install starts with 24 hours."),
+                    nested: true
+                ) {
+                    Button(String.localized("Add a stage")) {
+                        settings.addExhaustionStage()
+                        commitExhaustionAlerts()
+                    }
+                    .disabled(!UsageAlerts.isSupported)
+                }
+
+                ForEach(settings.exhaustionStages) { stage in
+                    SettingsRowDivider()
+                    SettingsRow(String.localized("\("\(liveStageHours(stage))") hours"), nested: true) {
+                        HStack(spacing: 10) {
+                            hoursStepper(
+                                hours: liveStageHours(stage),
+                                enabled: UsageAlerts.isSupported,
+                                value: Binding(
+                                    get: { liveStageHours(stage) },
+                                    set: { hours in
+                                        settings.setExhaustionStageHours(
+                                            id: stage.id,
+                                            hours: ExhaustionHoursControl.applied(hours)
+                                        )
+                                        commitExhaustionAlerts()
+                                    }
+                                )
+                            )
+                            Button(String.localized("Remove")) {
+                                settings.removeExhaustionStage(id: stage.id)
+                                commitExhaustionAlerts()
+                            }
+                            .disabled(!UsageAlerts.isSupported)
                         }
                     }
-                    .disabled(!UsageAlerts.isSupported || !settings.exhaustionAlerts)
                 }
             }
 
@@ -428,8 +403,10 @@ struct NotificationsPane: View {
 
             SettingsRow(
                 String.localized("Notify before the reset"),
-                subtitle: String.localized("When the pace will not last until the reset.")
+                subtitle: String.localized("Sends a separate notice when the current pace will not last until the reset.")
             ) {
+                // The switch is `exhaustionNotifyBeforeReset` itself. On sends
+                // the notice. The shipped default is off; a stored true stays on.
                 Toggle("", isOn: Binding(
                     get: { settings.exhaustionNotifyBeforeReset },
                     set: { enabled in
@@ -441,6 +418,78 @@ struct NotificationsPane: View {
                 .toggleStyle(.switch)
                 .disabled(!UsageAlerts.isSupported)
             }
+        }
+    }
+
+    /// Whose windows are forecast, on the card and in the notices together.
+    private var exhaustionAccountGroup: some View {
+        SettingsGroup(ExhaustionSettingsSections.accounts) {
+            SettingsRow(
+                String.localized("Accounts"),
+                subtitle: String.localized("Every account shown on the panel, or only the ones you pick.")
+            ) {
+                Picker("", selection: Binding(
+                    get: { settings.exhaustionAllAccounts },
+                    set: { settings.setExhaustionAllAccounts($0) }
+                )) {
+                    Text(localized: "All shown accounts").tag(true)
+                    Text(localized: "Selected accounts").tag(false)
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
+            }
+
+            if SettingsChildRows.showsExhaustionAccountList(allAccounts: settings.exhaustionAllAccounts) {
+                ForEach(settings.shownAccounts, id: \.id) { account in
+                    SettingsRowDivider()
+                    SettingsRow(settings.label(for: account), nested: true) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.forecastsExhaustion(for: account) },
+                            set: { settings.setForecastsExhaustion($0, for: account) }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
+                }
+            }
+        }
+    }
+
+    /// The hours still stored for this stage. Read while the row is built, so
+    /// the stepper's label and the row title follow a click.
+    private func liveStageHours(_ stage: ExhaustionStage) -> Int {
+        settings.exhaustionStages.first { $0.id == stage.id }?.hours ?? stage.hours
+    }
+
+    /// Up and down, with the current hours written beside them.
+    ///
+    /// The binding is built in the row, where it reads the setting again
+    /// after the click. A copy taken while the row was last built puts the
+    /// old number back, and the click looks dead. The label is that same
+    /// number: hiding it was how the row shipped with bare chevrons.
+    ///
+    /// The binding stays a `Binding` rather than two closures passed in.
+    /// Those closures are not sendable, and the stepper's binding requires
+    /// closures that are.
+    private func hoursStepper(
+        hours: Int,
+        enabled: Bool,
+        value: Binding<Int>
+    ) -> some View {
+        let shown = ExhaustionHoursControl.digits(hours)
+        return Stepper(
+            value: value,
+            in: ExhaustionStage.minimumHours...ExhaustionStage.maximumHours,
+            step: 1
+        ) {
+            Text(verbatim: shown)
+                .font(.system(size: 13).monospacedDigit())
+                .frame(minWidth: 36, alignment: .trailing)
+        }
+        .fixedSize()
+        .accessibilityValue(shown)
+        .disabled(!enabled)
     }
 
     /// Advance reminders are notifications, so they share the grant the other
@@ -473,7 +522,7 @@ struct NotificationsPane: View {
         if settings.wantsExhaustionAlerts, alerts.authorization == .denied {
             return .localized("Turned off for Blinky in System Settings › Notifications.")
         }
-        return .localized("One notice per account, limit and stage.")
+        return .localized("Notifies once when the time left reaches a stage, for each account and limit.")
     }
 
     private func commitAdvanceReminders() {
@@ -502,4 +551,13 @@ struct NotificationsPane: View {
         }
         return .localized("Notify when a limit passes this, and again when it is spent.")
     }
+}
+
+/// The three exhaustion groups, in the order the notifications pane draws them.
+enum ExhaustionSettingsSections {
+    static var card: String { String.localized("What the card shows") }
+    static var notices: String { String.localized("Notices") }
+    static var accounts: String { String.localized("Which accounts") }
+
+    static var titles: [String] { [card, notices, accounts] }
 }

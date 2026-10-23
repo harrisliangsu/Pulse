@@ -36,38 +36,43 @@ struct RingsPane: View {
                     .disabled(!settings.isPanelVisible)
                 }
 
-                SettingsRowDivider()
+                if SettingsChildRows.showsFiguresBeside(percentagesAcross: settings.topRailShowsPercentages) {
+                    SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("Figures beside the rings"),
-                    subtitle: String.localized("Only when the panel lies free across. A thinner, longer panel.")
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.freeAcrossFiguresBeside },
-                        set: { settings.freeAcrossFiguresBeside = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!settings.isPanelVisible || !settings.topRailShowsPercentages)
+                    SettingsRow(
+                        String.localized("Figures beside the rings"),
+                        subtitle: String.localized("Only when the panel lies free across. A thinner, longer panel."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.freeAcrossFiguresBeside },
+                            set: { settings.freeAcrossFiguresBeside = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .disabled(!settings.isPanelVisible)
+                    }
                 }
 
-                SettingsRowDivider()
-
-                SettingsRow(
-                    String.localized("Figure above the ring"),
-                    subtitle: String.localized("Swaps the two, wherever the panel is.")
+                if SettingsChildRows.showsFigureAboveRing(
+                    sidePercentages: settings.sideRailShowsPercentages,
+                    acrossPercentages: settings.topRailShowsPercentages
                 ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.labelAboveRing },
-                        set: { settings.labelAboveRing = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(
-                        !settings.isPanelVisible
-                            // Nothing to swap when neither rail shows a figure.
-                            || (!settings.sideRailShowsPercentages && !settings.topRailShowsPercentages)
-                    )
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Figure above the ring"),
+                        subtitle: String.localized("Swaps the two, wherever the panel is."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.labelAboveRing },
+                            set: { settings.labelAboveRing = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .disabled(!settings.isPanelVisible)
+                    }
                 }
 
                 SettingsRowDivider()
@@ -116,24 +121,27 @@ struct RingsPane: View {
                     .disabled(!settings.isPanelVisible)
                 }
 
-                SettingsRowDivider()
+                if SettingsChildRows.showsTimeRingDirection(clockOn: settings.showsWindowClock) {
+                    SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("Time ring direction"),
-                    subtitle: String.localized("Choose whether the outer arc fills with elapsed time or empties with time remaining.")
-                ) {
-                    Picker("", selection: Binding(
-                        get: { settings.windowClockDirection },
-                        set: { settings.windowClockDirection = $0 }
-                    )) {
-                        ForEach(WindowClockDirection.allCases) { direction in
-                            Text(direction.title).tag(direction)
+                    SettingsRow(
+                        String.localized("Time ring direction"),
+                        subtitle: String.localized("Choose whether the outer arc fills with elapsed time or empties with time remaining."),
+                        nested: true
+                    ) {
+                        Picker("", selection: Binding(
+                            get: { settings.windowClockDirection },
+                            set: { settings.windowClockDirection = $0 }
+                        )) {
+                            ForEach(WindowClockDirection.allCases) { direction in
+                                Text(direction.title).tag(direction)
+                            }
                         }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
+                        .disabled(!settings.isPanelVisible)
                     }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
-                    .frame(width: SettingsLayout.controlWidth, alignment: .trailing)
-                    .disabled(!settings.isPanelVisible || !settings.showsWindowClock)
                 }
 
                 SettingsRowDivider()
@@ -156,14 +164,15 @@ struct RingsPane: View {
                     .disabled(!settings.isPanelVisible)
                 }
 
-                if settings.ringColourScheme == .redAlert || settings.ringColourScheme == .quiet {
+                if SettingsChildRows.showsWarningThreshold(settings.ringColourScheme) {
                     SettingsRowDivider()
 
                     SettingsRow(
                         String.localized("Turn red at"),
                         subtitle: settings.ringColourScheme == .quiet
                             ? String.localized("Where a ring turns from green to muted grey.")
-                            : String.localized("Where a ring turns from green to red.")
+                            : String.localized("Where a ring turns from green to red."),
+                        nested: true
                     ) {
                         Picker(String.localized("Turn red at"), selection: Binding(
                             get: { settings.warningThreshold },

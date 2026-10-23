@@ -34,7 +34,7 @@ struct PlacementPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            SettingsGroup {
+            SettingsGroup(String.localized("Panel")) {
                 SettingsRow(
                     String.localized("Show floating panel"),
                     subtitle: String.localized("The usage rail at the edge of the screen.")
@@ -47,83 +47,87 @@ struct PlacementPane: View {
                     .toggleStyle(.switch)
                 }
 
-                SettingsRowDivider()
+                if SettingsChildRows.showsPanelDetails(panelVisible: settings.isPanelVisible) {
+                    SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("Hide in full screen"),
-                    subtitle: String.localized("Keep the floating panel out of full-screen apps.")
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.hidesInFullScreen },
-                        set: { settings.hidesInFullScreen = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!settings.isPanelVisible)
+                    SettingsRow(
+                        String.localized("Hide in full screen"),
+                        subtitle: String.localized("Keep the floating panel out of full-screen apps."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.hidesInFullScreen },
+                            set: { settings.hidesInFullScreen = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
+
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Hide from screenshots"),
+                        subtitle: String.localized("Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.hidesFromScreenCapture },
+                            set: { settings.hidesFromScreenCapture = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
+
+                    SettingsRowDivider()
+
+                    SettingsRow(
+                        String.localized("Hide until pointed at"),
+                        subtitle: String.localized("Against a screen edge, the rail shrinks to a sliver until you point at it."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.autoCollapse },
+                            set: { settings.autoCollapse = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
                 }
+            }
 
-                SettingsRowDivider()
-
-                SettingsRow(
-                    String.localized("Hide from screenshots"),
-                    subtitle: String.localized("Screenshot tools that support it leave the floating panel out. Recordings and screen sharing may still show it.")
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.hidesFromScreenCapture },
-                        set: { settings.hidesFromScreenCapture = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!settings.isPanelVisible)
-                }
-
-                SettingsRowDivider()
-
-                SettingsRow(
-                    String.localized("Hide until pointed at"),
-                    subtitle: String.localized("Against a screen edge, the rail shrinks to a sliver until you point at it.")
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.autoCollapse },
-                        set: { settings.autoCollapse = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!settings.isPanelVisible)
-                }
-
-                SettingsRowDivider()
-
+            SettingsGroup(String.localized("Position")) {
                 positionRow
 
-                SettingsRowDivider()
+                if SettingsChildRows.showsPanelDetails(panelVisible: settings.isPanelVisible) {
+                    SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("Snap to screen edges"),
-                    subtitle: String.localized("Dragged near an edge, the rail docks to it and turns to run along it. When this is off, dragging only moves the rail and keeps its direction.")
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.snapsToEdges },
-                        set: { settings.snapsToEdges = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!settings.isPanelVisible)
-                }
+                    SettingsRow(
+                        String.localized("Snap to screen edges"),
+                        subtitle: String.localized("Dragged near an edge, the rail docks to it and turns to run along it. When this is off, dragging only moves the rail and keeps its direction."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.snapsToEdges },
+                            set: { settings.snapsToEdges = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
 
-                SettingsRowDivider()
+                    SettingsRowDivider()
 
-                SettingsRow(
-                    String.localized("Follow the active display"),
-                    subtitle: String.localized("With more than one display, the rail moves to the one the pointer is on.")
-                ) {
-                    Toggle("", isOn: Binding(
-                        get: { settings.followsActiveDisplay },
-                        set: { settings.followsActiveDisplay = $0 }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .disabled(!settings.isPanelVisible)
+                    SettingsRow(
+                        String.localized("Follow the active display"),
+                        subtitle: String.localized("With more than one display, the rail moves to the one the pointer is on."),
+                        nested: true
+                    ) {
+                        Toggle("", isOn: Binding(
+                            get: { settings.followsActiveDisplay },
+                            set: { settings.followsActiveDisplay = $0 }
+                        ))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                    }
                 }
             }
 

@@ -63,10 +63,10 @@ struct NetworkPane: View {
                     .frame(maxWidth: SettingsLayout.controlWidth, alignment: .trailing)
                 }
 
-                if settings.networkProxy.mode == .manual {
+                if SettingsChildRows.showsManualProxy(settings.networkProxy.mode) {
                     SettingsRowDivider()
 
-                    SettingsRow(String.localized("Type")) {
+                    SettingsRow(String.localized("Type"), nested: true) {
                         Picker("", selection: Binding(
                             get: { settings.networkProxy.kind },
                             set: { kind in
@@ -90,7 +90,8 @@ struct NetworkPane: View {
                         String.localized("Host"),
                         subtitle: proxyHostInvalid
                             ? String.localized("Enter a host.")
-                            : String.localized("The proxy server's name or address.")
+                            : String.localized("The proxy server's name or address."),
+                        nested: true
                     ) {
                         TextField("", text: $proxyHost, prompt: Text(verbatim: "127.0.0.1"))
                             .textFieldStyle(.roundedBorder)
@@ -105,7 +106,8 @@ struct NetworkPane: View {
                         String.localized("Port"),
                         subtitle: proxyPortInvalid
                             ? String.localized("Enter a whole number from 1 to 65535.")
-                            : String.localized("A number from 1 to 65535.")
+                            : String.localized("A number from 1 to 65535."),
+                        nested: true
                     ) {
                         TextField("", text: $proxyPort, prompt: Text(verbatim: "7897"))
                             .textFieldStyle(.roundedBorder)

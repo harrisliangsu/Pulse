@@ -94,7 +94,8 @@ enum SettingsPane: Hashable {
     var searchTerms: [String] {
         switch self {
         case .appearance:
-            [.localized("Size"), .localized("Spacing"), .localized("Round ends"), .localized("Progress bars"),
+            [.localized("Size and spacing"), .localized("Size"), .localized("Spacing"), .localized("Round ends"),
+             .localized("Look"), .localized("Progress bars"),
              .localized("Appearance"), .localized("Transparency"), .localized("Ring activity animation")]
         case .rings:
             [.localized("Percentages at the side"), .localized("Percentages across"), .localized("Figures beside the rings"),
@@ -103,18 +104,20 @@ enum SettingsPane: Hashable {
              .localized("Time ring direction"), .localized("Ring colour scheme"),
              .localized("Turn red at"), .localized("Alert colour when docked")]
         case .placement:
-            [.localized("Show floating panel"), .localized("Hide in full screen"),
-             .localized("Hide until pointed at"), .localized("Position"),
+            [.localized("Panel"), .localized("Show floating panel"), .localized("Hide in full screen"),
+             .localized("Hide from screenshots"), .localized("Hide until pointed at"), .localized("Position"),
              .localized("Snap to screen edges"), .localized("Follow the active display"), .localized("Order")]
         case .general:
             [.localized("Open at login"), .localized("Hide menu bar icon"), .localized("Shortcuts"),
              .localized("Interface language")]
         case .notifications:
-            [.localized("Warn at"), .localized("When a limit comes back"), .localized("When a reading stops arriving"),
+            [.localized("Limits and outages"), .localized("Warn at"), .localized("When a limit comes back"),
+             .localized("How early"), .localized("When a reading stops arriving"),
              .localized("When a service is down"), .localized("When a recap is ready"),
-             .localized("Exhaustion forecast"), .localized("On the card"), .localized("Countdown within"),
-             .localized("May run out before reset"), .localized("Tie it to the reset"),
-             .localized("Time remaining"), .localized("Add a stage"), .localized("Notify before the reset"),
+             .localized("Exhaustion forecast"), .localized("What the card shows"), .localized("On the card"),
+             .localized("Countdown up to"), .localized("May run out before reset"), .localized("Say roughly when"),
+             .localized("Notices"), .localized("Notify by time left"), .localized("Reminder times"),
+             .localized("Add a stage"), .localized("Notify before the reset"), .localized("Which accounts"),
              .localized("Reset reminders"), .localized("Predicted reset"), .localized("Regular resets"),
              .localized("Celebrate a reset"), .localized("Also celebrate hourly quota resets")]
         case .network:
