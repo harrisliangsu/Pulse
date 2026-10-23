@@ -89,6 +89,8 @@ struct AppSettingsPersistenceTests {
 
         settings.menuBarStyle = .ring
         #expect(defaults.string(forKey: "settings.menuBarStyle") == "ring")
+        settings.updateDiscovery = .showWindow
+        #expect(defaults.string(forKey: "settings.updateDiscovery") == "showWindow")
         settings.displayCurrency = .cny
         #expect(defaults.string(forKey: "settings.displayCurrency") == "cny")
         settings.setManualExchangeRate(7.1, for: .cny)
@@ -225,6 +227,7 @@ struct AppSettingsPersistenceTests {
         first.showsMenuDashboard = true
         first.menuBarAccount = "codex"
         first.menuBarStyle = .ring
+        first.updateDiscovery = .showWindow
         first.displayCurrency = .jpy
         first.setManualExchangeRate(150, for: .jpy)
         first.hidesInFullScreen = false
@@ -313,6 +316,7 @@ struct AppSettingsPersistenceTests {
         #expect(back.showsMenuDashboard)
         #expect(back.menuBarAccount == "codex")
         #expect(back.menuBarStyle == .ring)
+        #expect(back.updateDiscovery == .showWindow)
         #expect(back.displayCurrency == .jpy)
         #expect(back.manualExchangeRates == ["JPY": 150])
         #expect(back.hidesInFullScreen == false)
@@ -436,6 +440,7 @@ struct AppSettingsPersistenceTests {
         #expect(back.alertsOnFailure == false)
         #expect(back.alertsOnOutage == false)
         #expect(back.alertsOnRecap == false)
+        #expect(back.updateDiscovery == .notifyFirst)
         #expect(back.primerHours == .default)
         #expect(back.wantsAlerts)
     }

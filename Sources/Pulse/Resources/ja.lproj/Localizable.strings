@@ -369,6 +369,12 @@
 "Update to %@" = "%@ に更新";
 "Check automatically" = "自動で確認";
 "Every two hours. Updates are offered, never installed on their own." = "2 時間ごとに確認します。案内するだけで、勝手にインストールはしません。";
+"When an update is found" = "更新が見つかったとき";
+"Notify first" = "先に通知";
+"Show the window" = "ウインドウを表示";
+"A scheduled check posts a notification, and the update window opens when that notification is clicked. Check now still opens the window." = "定期確認では通知を出し、その通知を開くと更新ウインドウが開きます。「今すぐ確認」はこれまでどおりウインドウを開きます。";
+"A scheduled check opens the update window." = "定期確認で新しいバージョンが見つかると、更新ウインドウを開きます。";
+"Open this notification to review and install it." = "この通知を開くと、内容を確認してインストールできます。";
 "Couldn't reach the update feed." = "更新フィードに接続できませんでした。";
 "Uses the key you entered." = "入力したキーを使います。";
 "API key" = "API キー";

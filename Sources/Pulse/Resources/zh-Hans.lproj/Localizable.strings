@@ -375,6 +375,12 @@
 "Update to %@" = "更新到 %@";
 "Check automatically" = "自动检查";
 "Every two hours. Updates are offered, never installed on their own." = "每两小时检查一次。只会提示，不会自动安装。";
+"When an update is found" = "发现更新时";
+"Notify first" = "先通知";
+"Show the window" = "直接打开窗口";
+"A scheduled check posts a notification, and the update window opens when that notification is clicked. Check now still opens the window." = "定时检查会先发一条通知，点击这条通知后才打开更新窗口。「检查更新」仍会直接打开窗口。";
+"A scheduled check opens the update window." = "定时检查发现新版本后，直接打开更新窗口。";
+"Open this notification to review and install it." = "打开这条通知即可查看并安装。";
 "Couldn't reach the update feed." = "无法连接更新源。";
 "Uses the key you entered." = "使用你填入的 key。";
 "Signed-in account" = "已登录的账号";

@@ -2,11 +2,12 @@
 import Foundation
 
 // The app's own shell: the menu bar item, the Dock icon the settings window
-// brings, the two global shortcuts, the interface language and the currency
-// estimates are shown in. None of it is a reading, so none of it asks the
-// usage loop to do anything — except the language, whose strings are on
-// screen in the panel as well. The currency redraws the panel through
-// `moneyIdentity` and fetches nothing but the day's rates.
+// brings, the two global shortcuts, the interface language, how a scheduled
+// update is announced, and the currency estimates are shown in. None of it is
+// a reading, so none of it asks the usage loop to do anything — except the
+// language, whose strings are on screen in the panel as well. The currency
+// redraws the panel through `moneyIdentity` and fetches nothing but the day's
+// rates.
 
 extension AppSettings.Key {
     static let hidesMenuBarIcon = "settings.hidesMenuBarIcon"
@@ -18,6 +19,7 @@ extension AppSettings.Key {
     static let openSettingsShortcut = "settings.openSettingsShortcut"
     static let togglePanelShortcut = "settings.togglePanelShortcut"
     static let language = "settings.language"
+    static let updateDiscovery = "settings.updateDiscovery"
     static let displayCurrency = "settings.displayCurrency"
     static let manualExchangeRates = "settings.manualExchangeRates"
 }
@@ -80,6 +82,12 @@ extension AppSettings {
         onChange?()
     }
 
+    func updateDiscoveryChanged(from old: UpdateDiscovery) {
+        guard updateDiscovery != old else { return }
+        defaults.set(updateDiscovery.rawValue, forKey: Key.updateDiscovery)
+        onUpdateDiscoveryChange?()
+    }
+
     func displayCurrencyChanged(from old: DisplayCurrency) {
         guard displayCurrency != old else { return }
         defaults.set(displayCurrency.rawValue, forKey: Key.displayCurrency)
@@ -136,6 +144,7 @@ extension AppSettings {
         showsMenuDashboard = defaults.bool(forKey: Key.showsMenuDashboard)
         menuBarAccount = defaults.string(forKey: Key.menuBarAccount)
         menuBarStyle = defaults.settingsChoice(Key.menuBarStyle) ?? .figure
+        updateDiscovery = defaults.settingsChoice(Key.updateDiscovery) ?? .notifyFirst
         displayCurrency = defaults.settingsChoice(Key.displayCurrency) ?? .default
         manualExchangeRates = (defaults.dictionary(forKey: Key.manualExchangeRates) as? [String: Double] ?? [:])
             .filter { $0.value.isFinite && $0.value > 0 }

@@ -361,6 +361,12 @@
 "Update to %@" = "Обновить до %@";
 "Check automatically" = "Проверять автоматически";
 "Every two hours. Updates are offered, never installed on their own." = "Раз в два часа. Обновления только предлагаются и не устанавливаются сами.";
+"When an update is found" = "Когда найдено обновление";
+"Notify first" = "Сначала уведомление";
+"Show the window" = "Показать окно";
+"A scheduled check posts a notification, and the update window opens when that notification is clicked. Check now still opens the window." = "Плановая проверка отправляет уведомление, и окно обновления открывается по нажатию на него. «Проверить» по-прежнему открывает окно.";
+"A scheduled check opens the update window." = "Плановая проверка открывает окно обновления.";
+"Open this notification to review and install it." = "Откройте это уведомление, чтобы просмотреть и установить обновление.";
 "Couldn't reach the update feed." = "Не удалось подключиться к серверу обновлений.";
 "Uses the key you entered." = "Использует введённый ключ.";
 "API key" = "Ключ API";

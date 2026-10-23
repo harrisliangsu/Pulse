@@ -146,7 +146,7 @@ struct SettingsView: View {
                             TokenSpendPane(settings: settings, model: spend, openRecap: openRecap, scroll: proxy)
                         case .providers:
                             ProvidersHubPane(settings: settings, navigation: navigation)
-                        case .about: AboutPane(update: update)
+                        case .about: AboutPane(update: update, settings: settings, alerts: alerts)
                         case .integrations: DeveloperIntegrationsView(settings: settings)
                         case .extensions:
                             ExtensionsSettingsView(settings: settings) { navigation.pane = .account($0) }
@@ -217,12 +217,13 @@ struct SettingsView: View {
 }
 
 #Preview("Settings") {
+    let settings = AppSettings()
     SettingsView(
-        store: UsageStore(settings: AppSettings()),
-        settings: AppSettings(),
+        store: UsageStore(settings: settings),
+        settings: settings,
         placement: PanelPlacement(),
-        update: AppUpdate(),
-        alerts: UsageAlerts(settings: AppSettings()),
+        update: AppUpdate(settings: settings),
+        alerts: UsageAlerts(settings: settings),
         shortcuts: GlobalShortcutMonitor(),
         navigation: SettingsNavigation()
     )
