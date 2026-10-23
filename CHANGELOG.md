@@ -12,10 +12,10 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.5.4
 
-- **Settings lists every provider under Providers.** Open Settings and choose Providers; search still finds an account by its name or the name you gave it.
-- **The Blinky menu checks for updates.** Check for Updates… is under About and opens the same update window as the button in Settings → About.
-- **Manage extensions, Developer integrations and About share one section.** They sit under Other at the bottom of the Settings sidebar.
-- **Open at login is the first row under General.** The switch registers the copy that is running, including Blinky.app after a rename from Pulse.app, and simplified Chinese labels the row 开机启动.
+- **Settings lists every provider under Providers.** Open Settings and choose Providers; search still finds an account by its name or the name you gave it. [#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **The Blinky menu checks for updates.** Check for Updates… is under About and opens the same update window as the button in Settings → About. [#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **Manage extensions, Developer integrations and About share one section.** They sit under Other at the bottom of the Settings sidebar. [#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
+- **Open at login is the first row under General.** The switch registers the copy that is running, including Blinky.app after a rename from Pulse.app, and simplified Chinese labels the row 开机启动. [#60](https://github.com/harrisliangsu/blinky-mac/pull/60)
 
 ## 1.5.3
 
