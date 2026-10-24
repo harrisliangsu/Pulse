@@ -689,6 +689,7 @@ final class FloatingPanel: NSPanel {
     private var pressedHeader: CardHeaderControl?
 
     /// True when this event belongs to a header control and must not start a drag.
+    @MainActor
     private func routeHeader(_ event: NSEvent) -> Bool {
         if event.type == .leftMouseDown {
             refreshHeaderFrames()
@@ -722,6 +723,7 @@ final class FloatingPanel: NSPanel {
 
     /// Lays the header out and reads the buttons that are actually there.
     /// A stored rect from a button that has since gone is dropped.
+    @MainActor
     private func refreshHeaderFrames() {
         contentView?.layoutSubtreeIfNeeded()
         let live = HeaderControlFrames.collect(in: contentView)

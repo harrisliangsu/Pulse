@@ -77,6 +77,7 @@ final class HeaderFrameSink {
 /// The probes also report as they lay out. That report can still be missing
 /// on the first click after launch, so the press asks the views directly and
 /// does not wait for the callback.
+@MainActor
 enum HeaderControlFrames {
     static func collect(in root: NSView?) -> [CardHeaderControl: CGRect] {
         guard let root else { return [:] }
