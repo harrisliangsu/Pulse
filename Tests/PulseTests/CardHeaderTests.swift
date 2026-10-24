@@ -90,13 +90,15 @@ struct CardHeaderTests {
     }
 
     @Test("The panel takes a click on each header control and ignores one that leaves it")
-    func panelRoutesHeaderClicks() throws {
+    func panelRoutesHeaderClicks() async throws {
         let panel = FloatingPanel(
             contentRect: NSRect(x: 0, y: 0, width: 420, height: 240),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
+        panel.setFrame(NSRect(x: 0, y: 0, width: 420, height: 240), display: false)
+        panel.orderFrontRegardless()
         #expect(panel.styleMask.contains(.nonactivatingPanel))
         #expect(!panel.canBecomeKey)
         #expect(!panel.canBecomeMain)
@@ -113,15 +115,15 @@ struct CardHeaderTests {
 
         try Self.click(open, in: panel)
         #expect(activated.controls.isEmpty)
-        Self.pump()
+        await Self.until { activated.controls.count == 1 }
         #expect(activated.controls == [.openApp])
 
         try Self.click(quit, in: panel)
-        Self.pump()
+        await Self.until { activated.controls.count == 2 }
         #expect(activated.controls == [.openApp, .quit])
 
         try Self.click(spend, in: panel)
-        Self.pump()
+        await Self.until { activated.controls.count == 3 }
         #expect(activated.controls == [.openApp, .quit, .tokenSpend])
 
         try Self.press(
@@ -129,12 +131,13 @@ struct CardHeaderTests {
             up: CGPoint(x: 8, y: 8),
             in: panel
         )
-        Self.pump()
+        await Self.settle()
         #expect(activated.controls == [.openApp, .quit, .tokenSpend])
 
         try Self.click(CGRect(x: 8, y: 8, width: 4, height: 4), in: panel)
-        Self.pump()
+        await Self.settle()
         #expect(activated.controls == [.openApp, .quit, .tokenSpend])
+        panel.orderOut(nil)
     }
 
     private final class Activations {
@@ -142,7 +145,7 @@ struct CardHeaderTests {
     }
 
     @Test("A laid-out header button is hit from its window rectangle, and the view does not also fire")
-    func laidOutButtonReceivesTheWindowClick() throws {
+    func laidOutButtonReceivesTheWindowClick() async throws {
         let frames = HeaderFrameSink()
         let fromWindow = Activations()
         let fromView = Activations()
@@ -172,10 +175,24 @@ struct CardHeaderTests {
         try Self.click(frame, in: panel)
         #expect(fromView.controls.isEmpty)
         #expect(fromWindow.controls.isEmpty)
-        Self.pump()
+        await Self.until { fromWindow.controls.count == 1 }
         #expect(fromWindow.controls == [.openApp])
         #expect(fromView.controls.isEmpty)
         panel.orderOut(nil)
+    }
+
+    /// Lets the main-actor task queued by a header click run. A nested run
+    /// loop does not: the test is already on the main queue, and that queue
+    /// does not re-enter.
+    private static func until(_ ready: () -> Bool) async {
+        for _ in 0..<50 {
+            if ready() { return }
+            await Task.yield()
+        }
+    }
+
+    private static func settle() async {
+        for _ in 0..<20 { await Task.yield() }
     }
 
     private static func pump() {

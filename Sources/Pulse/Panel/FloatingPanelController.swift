@@ -699,11 +699,11 @@ final class FloatingPanel: NSPanel {
         case .activate(let control):
             // The next turn, not this one. The press is still the non-activating
             // panel's, and ordering the main window front from inside it leaves
-            // the window behind the app that was key.
-            DispatchQueue.main.async { [weak self] in
-                MainActor.assumeIsolated {
-                    self?.onHeaderControl?(control)
-                }
+            // the window behind the app that was key. A main-queue block queued
+            // from this call does not run until AppKit gets the thread back;
+            // a main-actor task is the same turn, and a test can yield to it.
+            Task { @MainActor [weak self] in
+                self?.onHeaderControl?(control)
             }
             return true
         }
