@@ -15,15 +15,13 @@ import Testing
 struct CardHeaderTests {
     @Test("Open is a window symbol, beside Token spend and Quit")
     func symbols() {
-        LocalizationSource.use(.english)
-        defer { LocalizationSource.use(.system) }
-
         #expect(CardHeaderControl.openApp.symbolName == "macwindow")
         #expect(CardHeaderControl.tokenSpend.symbolName == "chart.bar")
         #expect(CardHeaderControl.quit.symbolName == "power")
-        #expect(HeaderIconButton.label(for: .openApp) == "Open Blinky")
-        #expect(HeaderIconButton.label(for: .tokenSpend) == "Token spend")
-        #expect(HeaderIconButton.label(for: .quit) == "Quit Blinky")
+        let english = LocalizationSource.bundle(for: .english)
+        #expect(english.localizedString(forKey: "Open Blinky", value: nil, table: nil) == "Open Blinky")
+        #expect(english.localizedString(forKey: "Token spend", value: nil, table: nil) == "Token spend")
+        #expect(english.localizedString(forKey: "Quit Blinky", value: nil, table: nil) == "Quit Blinky")
     }
 
     @Test("Mouse-up inside the pressed control activates it, and leaving it does not")

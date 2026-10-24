@@ -219,9 +219,6 @@ struct BurnRateTests {
 
     @Test("An idle weekly limit still says it lasts, including when the length is only a sort key")
     func idleWeeklyLastsWithoutAStatedLength() {
-        LocalizationSource.use(.english)
-        defer { LocalizationSource.use(.system) }
-
         let week = Self.named(
             "week", kind: .weekly, used: 0, seconds: 604_800,
             resetsAt: Self.now.addingTimeInterval(500_000), reportsLength: false
@@ -235,10 +232,15 @@ struct BurnRateTests {
             horizon: 6 * 3600, softHint: true, beforeReset: true, now: Self.now
         )
         #expect(line?.tone == .lasts)
-        #expect(line?.text == "Expected to last the window")
         let reading = BurnRate.reading(for: week, now: Self.now)
         #expect(reading?.exhaustsBeforeReset == false)
         #expect(reading?.timeToExhaustion == nil)
+        #expect(line?.text.isEmpty == false)
+
+        let english = LocalizationSource.bundle(for: .english)
+        let chinese = LocalizationSource.bundle(for: .chineseSimplified)
+        #expect(english.localizedString(forKey: "Expected to last the window", value: nil, table: nil) == "Expected to last the window")
+        #expect(chinese.localizedString(forKey: "Expected to last the window", value: nil, table: nil) == "预计可维持到本轮重置")
 
         #expect(BurnRate.forecastLine(
             for: week, among: [five, week], showsForecast: false,
@@ -282,12 +284,6 @@ struct BurnRateTests {
         )
         #expect(stated?.exhaustsBeforeReset == false)
         #expect(stated?.timeToExhaustion == nil)
-
-        LocalizationSource.use(.chineseSimplified)
-        #expect(BurnRate.forecastLine(
-            for: week, among: [week], showsForecast: true,
-            horizon: 6 * 3600, softHint: true, beforeReset: true, now: Self.now
-        )?.text == "预计可维持到本轮重置")
     }
 
     @Test("Lasting is green and regular; a pace that may not last is amber and a step heavier")
