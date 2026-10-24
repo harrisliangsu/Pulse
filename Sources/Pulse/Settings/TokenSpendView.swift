@@ -68,7 +68,7 @@ struct TokenSpendView: View {
 
     /// The combined total's money and token line. Hidden when the glance
     /// window already draws that span's figures. An open agent keeps its line.
-    static func showsNumberRow(hidesSpanHeadline: Bool, hasFocus: Bool) -> Bool {
+    nonisolated static func showsNumberRow(hidesSpanHeadline: Bool, hasFocus: Bool) -> Bool {
         !hidesSpanHeadline || hasFocus
     }
 

@@ -82,19 +82,24 @@ enum HeaderControlFrames {
     static func collect(in root: NSView?) -> [CardHeaderControl: CGRect] {
         guard let root else { return [:] }
         var frames: [CardHeaderControl: CGRect] = [:]
-        func consider(_ control: CardHeaderControl?, _ view: NSView) {
-            guard let control else { return }
+        /// `preferred` is the probe the button laid out. The hand sits on the
+        /// same control and can be a different rectangle; it fills in only
+        /// when the probe has not reported.
+        func consider(_ control: CardHeaderControl?, _ view: NSView, preferred: Bool) {
+            guard let control, view.window != nil else { return }
             let rect = view.convert(view.bounds, to: nil)
             guard rect.width > 1, rect.height > 1, !rect.isNull, !rect.isInfinite else { return }
-            frames[control] = rect
+            if frames[control] == nil || preferred {
+                frames[control] = rect
+            }
         }
         func walk(_ view: NSView) {
             if let probe = view as? ControlFrameProbe.ProbeView,
                let control = CardHeaderControl(rawValue: probe.marker) {
-                consider(control, view)
+                consider(control, view, preferred: true)
             }
             if let hand = view as? PointerHand.HandView {
-                consider(hand.headerControl, view)
+                consider(hand.headerControl, view, preferred: false)
             }
             for child in view.subviews { walk(child) }
         }
