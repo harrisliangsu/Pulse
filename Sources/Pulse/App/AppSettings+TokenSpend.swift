@@ -51,8 +51,10 @@ extension AppSettings {
         Self.storeReadsTokenSpend(readsTokenSpend, in: defaults)
     }
 
-    /// The span last chosen, or `.week` when nothing is stored or what is
-    /// stored no longer names an offered range.
+    /// The span last chosen. A missing key is Today (`SpendSpan.default`),
+    /// which is what a new install opens on. A value the picker no longer
+    /// offers falls back to the week, so an old stored name does not jump to
+    /// Today. A saved span is returned as stored.
     ///
     /// Takes the store as an argument, rather than reaching for
     /// `UserDefaults.standard`, so the round trip can be pinned against an
@@ -60,8 +62,9 @@ extension AppSettings {
     /// this and `storeSpendSpan`, so what a test exercises is the one
     /// production uses.
     static func storedSpendSpan(in defaults: UserDefaults) -> SpendSpan {
-        defaults.string(forKey: Key.spendSpan)
-            .flatMap(SpendSpan.init(rawValue:)) ?? .default
+        guard defaults.object(forKey: Key.spendSpan) != nil else { return .default }
+        return defaults.string(forKey: Key.spendSpan)
+            .flatMap(SpendSpan.init(rawValue:)) ?? .week
     }
 
     static func storeSpendSpan(_ span: SpendSpan, in defaults: UserDefaults) {

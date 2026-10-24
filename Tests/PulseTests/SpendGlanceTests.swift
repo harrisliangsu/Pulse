@@ -1,4 +1,5 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
+import AppKit
 import CoreGraphics
 import Foundation
 import Testing
@@ -434,6 +435,33 @@ struct SpendGlanceTests {
         #expect(SpendGlanceHeadline.posterMoneyPointSize == 22)
         #expect(SpendGlanceHeadline.posterTokenPointSize > SpendGlanceHeadline.posterMoneyPointSize)
         #expect(SpendGlanceCopy.hold >= .seconds(4))
+        #expect(!SpendGlanceCopy.shiftsLayout)
+        #expect(SpendGlancePlacement.size.width >= 640)
+        #expect(SpendGlancePlacement.size.height >= 640)
+        #expect(!TokenSpendView.showsNumberRow(hidesSpanHeadline: true, hasFocus: false))
+        #expect(TokenSpendView.showsNumberRow(hidesSpanHeadline: true, hasFocus: true))
+        #expect(TokenSpendView.showsNumberRow(hidesSpanHeadline: false, hasFocus: false))
+    }
+
+    @MainActor
+    @Test("Share copies a PNG and a TIFF of the visible view, and the recap note does not take a row")
+    func shareCopiesTheVisibleView() {
+        #expect(!RecapExport.noticeShiftsLayout)
+        let view = NSView(frame: NSRect(x: 0, y: 0, width: 80, height: 40))
+        view.wantsLayer = true
+        let window = NSWindow(
+            contentRect: view.frame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentView = view
+        window.orderFrontRegardless()
+        defer { window.orderOut(nil) }
+        let pasteboard = NSPasteboard.withUniqueName()
+        #expect(SpendGlanceExport.copyVisible(view, pasteboard: pasteboard))
+        #expect(pasteboard.data(forType: .png) != nil)
+        #expect(pasteboard.data(forType: .tiff) != nil)
     }
 
     @Test("The palette is saturated and not one grey")
@@ -593,6 +621,14 @@ struct SpendGlanceTests {
             try? await Task.sleep(for: .milliseconds(20))
         }
         #expect(!model.didCopy)
+        model.noteCopyFailed(hold: .milliseconds(30))
+        #expect(model.copyFailed)
+        #expect(!model.didCopy)
+        for _ in 0..<200 where model.copyFailed {
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(!model.copyFailed)
     }
 
     @Test("Escape and the close button dismiss the glance window")

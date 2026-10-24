@@ -159,7 +159,7 @@ final class FloatingPanelController {
             }
         }
         let headerSink = panel.headerSink
-        let hostingView = NSHostingView(
+        let hostingView = PanelHostingView(
             rootView: FloatingUsagePanelView(
                 store: store,
                 settings: settings,
@@ -540,6 +540,13 @@ final class FloatingPanelController {
     }
 }
 
+/// The panel's hosting view accepts the first click. The panel never becomes
+/// key, and a click that misses the stored header rect otherwise dies as an
+/// activation click before `PointerHand` sees it.
+final class PanelHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
 /// The panel, which also owns dragging itself around.
 ///
 /// The drag used to be an `NSViewRepresentable` inside the SwiftUI tree, and
@@ -683,6 +690,9 @@ final class FloatingPanel: NSPanel {
 
     /// True when this event belongs to a header control and must not start a drag.
     private func routeHeader(_ event: NSEvent) -> Bool {
+        if event.type == .leftMouseDown {
+            refreshHeaderFrames()
+        }
         var pressed = pressedHeader
         let outcome = HeaderClickDispatch.outcome(
             type: event.type,
@@ -697,15 +707,26 @@ final class FloatingPanel: NSPanel {
         case .taken:
             return true
         case .activate(let control):
-            // The next turn, not this one. The press is still the non-activating
-            // panel's, and ordering the main window front from inside it leaves
-            // the window behind the app that was key. A main-queue block queued
-            // from this call does not run until AppKit gets the thread back;
-            // a main-actor task is the same turn, and a test can yield to it.
-            Task { @MainActor [weak self] in
-                self?.onHeaderControl?(control)
+            // After this mouse-up returns. The press is still the
+            // non-activating panel's; ordering a window front inside it leaves
+            // that window behind the app that was key. A main-actor task runs
+            // in this turn. A main-queue block waits until AppKit is done.
+            DispatchQueue.main.async { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.onHeaderControl?(control)
+                }
             }
             return true
+        }
+    }
+
+    /// Lays the header out and reads the buttons that are actually there.
+    /// A stored rect from a button that has since gone is dropped.
+    private func refreshHeaderFrames() {
+        contentView?.layoutSubtreeIfNeeded()
+        let live = HeaderControlFrames.collect(in: contentView)
+        if !live.isEmpty {
+            headerSink.replace(with: live)
         }
     }
 

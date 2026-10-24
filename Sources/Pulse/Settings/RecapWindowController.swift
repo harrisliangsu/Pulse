@@ -45,7 +45,6 @@ final class RecapWindowController {
         trackTitle()
 
         let wasVisible = window.isVisible
-        window.makeKeyAndOrderFront(nil)
         if !wasVisible { window.center() }
         dock.apply(showingWindow: window)
     }

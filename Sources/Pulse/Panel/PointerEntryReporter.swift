@@ -72,22 +72,26 @@ struct PointerEntryReporter: NSViewRepresentable {
 /// click while another app is frontmost (`acceptsFirstMouse`), and fires
 /// `onClick` itself.
 struct PointerHand: NSViewRepresentable {
+    var headerControl: CardHeaderControl? = nil
     var onHover: (Bool) -> Void = { _ in }
     var onClick: () -> Void
 
     func makeNSView(context: Context) -> HandView {
         let view = HandView()
+        view.headerControl = headerControl
         view.onHover = onHover
         view.onClick = onClick
         return view
     }
 
     func updateNSView(_ view: HandView, context: Context) {
+        view.headerControl = headerControl
         view.onHover = onHover
         view.onClick = onClick
     }
 
     final class HandView: NSView {
+        var headerControl: CardHeaderControl?
         var onHover: (Bool) -> Void = { _ in }
         var onClick: () -> Void = {}
         private var pressedInside = false

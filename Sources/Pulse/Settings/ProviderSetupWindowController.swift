@@ -44,9 +44,9 @@ final class ProviderSetupWindowController: NSObject, NSWindowDelegate {
 
     func show() {
         window.center()
-        window.makeKeyAndOrderFront(nil)
-        // Policy first, then activation. Activating before the app is
-        // `.regular` leaves the previous app's name in the menu bar.
+        // Policy first, then the window in front. Activating before the app
+        // is `.regular` leaves the previous app's name in the menu bar, and
+        // ordering front before the policy change leaves the window behind.
         dock.apply(showingWindow: window)
     }
 

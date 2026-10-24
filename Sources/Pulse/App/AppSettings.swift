@@ -875,13 +875,12 @@ final class AppSettings {
 
     // MARK: - Token spend (AppSettings+TokenSpend)
 
-    /// How far back the Token spend pane counts.
+    /// How far back Token spend counts.
     ///
-    /// The last **week** until the reader picks another span, and their pick is
-    /// kept: the pane answers a sit-down question, and making someone re-choose
-    /// the window on every visit is work nobody asked for. No `onChange?()` —
-    /// nothing about the panel's frame depends on it, and `@Observable` already
-    /// redraws whoever read it, the same as `warningThreshold`.
+    /// Today until the reader picks another span, and their pick is kept.
+    /// A missing key is today; a value already stored is not rewritten.
+    /// No `onChange?()` — nothing about the panel's frame depends on it, and
+    /// `@Observable` already redraws whoever read it, the same as `warningThreshold`.
     var spendSpan: SpendSpan {
         didSet { spendSpanChanged(from: oldValue) }
     }

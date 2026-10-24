@@ -58,6 +58,48 @@ final class HeaderFrameSink {
             frames[control] = nil
         }
     }
+
+    /// Replaces every stored rect. A control that is not in `frames` is gone,
+    /// so a button that has left the card is not a hit target.
+    func replace(with frames: [CardHeaderControl: CGRect]) {
+        var next: [CardHeaderControl: CGRect] = [:]
+        for (control, rect) in frames {
+            if rect.width > 1, rect.height > 1, !rect.isNull, !rect.isInfinite {
+                next[control] = rect
+            }
+        }
+        self.frames = next
+    }
+}
+
+/// Header rectangles read from the views that are in the window now.
+///
+/// The probes also report as they lay out. That report can still be missing
+/// on the first click after launch, so the press asks the views directly and
+/// does not wait for the callback.
+enum HeaderControlFrames {
+    static func collect(in root: NSView?) -> [CardHeaderControl: CGRect] {
+        guard let root else { return [:] }
+        var frames: [CardHeaderControl: CGRect] = [:]
+        func consider(_ control: CardHeaderControl?, _ view: NSView) {
+            guard let control else { return }
+            let rect = view.convert(view.bounds, to: nil)
+            guard rect.width > 1, rect.height > 1, !rect.isNull, !rect.isInfinite else { return }
+            frames[control] = rect
+        }
+        func walk(_ view: NSView) {
+            if let probe = view as? ControlFrameProbe.ProbeView,
+               let control = CardHeaderControl(rawValue: probe.marker) {
+                consider(control, view)
+            }
+            if let hand = view as? PointerHand.HandView {
+                consider(hand.headerControl, view)
+            }
+            for child in view.subviews { walk(child) }
+        }
+        walk(root)
+        return frames
+    }
 }
 
 /// What `FloatingPanel.sendEvent` does with a mouse event before the rail's

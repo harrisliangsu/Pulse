@@ -1,15 +1,14 @@
 // Copyright (c) 2026 qunqin24. Licensed under the Apache License, Version 2.0.
 import SwiftUI
 
-/// The pane whose subject is every agent's spending added up: the switch that
-/// turns reading on, the recap buttons, and `TokenSpendView` over what
-/// `SpendPaneModel` has read.
+/// Settings for Token spend: the switch that turns reading on, and the way
+/// into the recap. The lists and charts live in the window beside the usage
+/// card (`SpendGlanceView`), not on this pane.
 struct TokenSpendPane: View {
     let settings: AppSettings
     @Bindable var model: SpendPaneModel
     /// Opens the recap window on a period.
     let openRecap: @MainActor (Recap.Period) -> Void
-    let scroll: ScrollViewProxy
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -50,46 +49,6 @@ struct TokenSpendPane: View {
                     }
                 }
             }
-            if SettingsChildRows.showsTokenSpendDetails(reading: settings.readsTokenSpend) {
-                TokenSpendView(
-                    summary: model.spend,
-                    focus: $model.spendFocus,
-                    focused: model.focusedSpend,
-                    modelFocus: $model.selectedModel,
-                    modelSummary: model.modelSpend,
-                    noRecords: model.spendNoRecords,
-                    hasReadLimitations: model.spendHasReadLimitations,
-                    span: Binding(
-                        get: { settings.spendSpan },
-                        set: { settings.spendSpan = $0 }
-                    ),
-                    customDays: Binding(
-                        get: { settings.spendCustomDays },
-                        set: { settings.spendCustomDays = $0 }
-                    ),
-                    activity: model.spendActivity,
-                    activityView: Binding(
-                        get: { settings.spendActivityView },
-                        set: { settings.spendActivityView = $0 }
-                    ),
-                    isLoading: model.isScanningSpend,
-                    isSummarizing: model.summaryIsPending,
-                    refresh: { model.spendRescan += 1 }
-                )
-            }
-        }
-        // A model opened under one agent means nothing under another,
-        // so changing the agent drops back out of the model.
-        .onChange(of: model.spendFocus) { _, _ in model.selectedModel = nil }
-        .onChange(of: model.selectedModel) { old, new in
-            // Entering the detail drops the reader to the top, or they
-            // land in the middle of it when the model row was well down
-            // the page. Returning puts them back at the model list.
-            if new != nil {
-                scroll.scrollTo("heading", anchor: .top)
-            } else if old != nil {
-                scroll.scrollTo("models", anchor: .top)
-            }
         }
     }
 
@@ -98,5 +57,4 @@ struct TokenSpendPane: View {
     private var recapPeriod: Recap.Period {
         RecapPeriods.defaultMonth(earliest: RecapPeriods.earliest(in: model.spendLedgers))
     }
-
 }

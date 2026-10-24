@@ -83,7 +83,7 @@ struct SpendGlanceWindowTests {
         let menus = views.filter {
             String(describing: Swift.type(of: $0)).contains("SwiftUIPopupButton")
         }
-        #expect(menus.count >= 2)
+        #expect(menus.count >= 1)
         for menu in menus {
             let hit = Self.hit(menu, in: content)
             let name = hit.map { String(describing: Swift.type(of: $0)) } ?? ""

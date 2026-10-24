@@ -57,7 +57,20 @@ struct TokenSpendView: View {
     @Binding var activityView: ActivityView
     let isLoading: Bool
     var isSummarizing = false
+    /// The glance window draws the span's token total and estimate itself.
+    /// The combined view then omits that number row. An agent's own row stays:
+    /// it is that agent, not the span.
+    var hidesSpanHeadline = false
+    /// Window rectangles of controls the glance test clicks. The settings pane
+    /// does not draw this view.
+    var onControlFrame: ((String, CGRect) -> Void)? = nil
     let refresh: () -> Void
+
+    /// The combined total's money and token line. Hidden when the glance
+    /// window already draws that span's figures. An open agent keeps its line.
+    static func showsNumberRow(hidesSpanHeadline: Bool, hasFocus: Bool) -> Bool {
+        !hidesSpanHeadline || hasFocus
+    }
 
     /// Which column the day table is sorted by. Its own state rather than a
     /// setting: it is a way of reading the table in front of you, not a
@@ -111,6 +124,11 @@ struct TokenSpendView: View {
 
                         Button(String.localized("Rescan")) { refresh() }
                             .disabled(isLoading)
+                            .accessibilityIdentifier("spend-glance-refresh")
+                            .background(ControlFrameProbe(
+                                id: "spend-glance-refresh",
+                                onFrame: { id, rect in onControlFrame?(id, rect) }
+                            ))
                     }
                 }
 
@@ -322,27 +340,29 @@ struct TokenSpendView: View {
                 let partialEstimate = !noPriceAtAll
                     && (summary.unpricedTokens > 0 || summary.hasPartialCounts)
 
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    if noPriceAtAll {
-                        Text(localized: "Estimate unavailable")
-                            .font(.system(size: 28, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text(SpendFormat.money(summary.cost))
-                            .font(.system(size: 28, weight: .semibold))
-                            .monospacedDigit()
-
-                        if partialEstimate {
-                            Text(localized: "Partial estimate")
-                                .font(.system(size: 11))
+                if Self.showsNumberRow(hidesSpanHeadline: hidesSpanHeadline, hasFocus: focus != nil) {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        if noPriceAtAll {
+                            Text(localized: "Estimate unavailable")
+                                .font(.system(size: 28, weight: .semibold))
                                 .foregroundStyle(.secondary)
-                        }
-                    }
+                        } else {
+                            Text(SpendFormat.money(summary.cost))
+                                .font(.system(size: 28, weight: .semibold))
+                                .monospacedDigit()
 
-                    Text(String.localized("\(TokenCount.short(summary.tokens)) tokens"))
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
+                            if partialEstimate {
+                                Text(localized: "Partial estimate")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
+                        Text(String.localized("\(TokenCount.short(summary.tokens)) tokens"))
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
                 }
 
                 // **A day is not one bar.** Over any other span the bars are
@@ -1010,10 +1030,9 @@ enum SpendSpan: String, CaseIterable, Identifiable, Sendable {
     /// The reader's own first and last day, kept in `AppSettings.spendCustomDays`.
     case custom
 
-    /// The span the pane opens on: the last week, the shortest window that
-    /// shows a work rhythm rather than a single day. The reader's own pick is
-    /// kept by `AppSettings.spendSpan`.
-    static let `default` = SpendSpan.week
+    /// The span a new install opens on. A saved choice is kept
+    /// (`AppSettings.spendSpan`); only a missing key uses this.
+    static let `default` = SpendSpan.today
 
     var id: String { rawValue }
 

@@ -20,13 +20,16 @@ struct SpendSpanPreferenceTests {
         try body(defaults)
     }
 
-    @Test("A store nobody has chosen from counts a week")
-    func unchosenCountsAWeek() {
+    @Test("A store nobody has chosen from counts today")
+    func unchosenCountsToday() {
         withIsolatedDefaults { defaults in
-            #expect(SpendSpan.default == .week)
+            #expect(SpendSpan.default == .today)
+            #expect(AppSettings.storedSpendSpan(in: defaults) == .today)
+            // An instance built without a stored value opens on the same day.
+            #expect(AppSettings().spendSpan == .today)
+            // A saved span is not rewritten to the new-install default.
+            AppSettings.storeSpendSpan(.week, in: defaults)
             #expect(AppSettings.storedSpendSpan(in: defaults) == .week)
-            // An instance built without a stored value opens on the same week.
-            #expect(AppSettings().spendSpan == .week)
         }
     }
 
