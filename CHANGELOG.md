@@ -12,7 +12,7 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.5.13
 
-- **The usage card opens Blinky from a grid icon.** The control beside Token spend in the card header is a filled four-square grid, and clicking it opens the main window on the pane last shown.
+- **The usage card opens Blinky from a grid icon.** The control beside Token spend in the card header is a filled four-square grid, and clicking it opens the main window on the pane last shown. [#74](https://github.com/harrisliangsu/blinky-mac/pull/74)
 
 ## 1.5.12
 
