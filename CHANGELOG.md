@@ -10,6 +10,12 @@ of the GitHub Release page. The Chinese half lives in
 Add the entry **before** tagging, in the small grammar the converter knows:
 bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
+## 1.5.12
+
+- **The exhaustion estimate appears on every shown account.** With Show the estimate on, under Settings → Usage, a weekly limit that is unused or only lightly used says it is expected to last the window, including when the service does not state that window's length.
+- **An estimate that should last is green, and one that may not is amber.** The line under the limit uses those two colours, both held back so they stay quieter than the percentage.
+- **The usage card opens Blinky from a window icon.** The control beside Token spend in the card header is a window symbol, and clicking it opens the main window on the pane last shown.
+
 ## 1.5.11
 
 - **Notifications gathers every notice.** Settings → Notifications holds Limit reminders, Running out, Service status, and Monthly recap, and Usage under Panel holds the figures and the exhaustion estimate. [#72](https://github.com/harrisliangsu/blinky-mac/pull/72)

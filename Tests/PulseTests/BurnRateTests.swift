@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 @testable import Pulse
 
@@ -214,5 +215,123 @@ struct BurnRateTests {
         #expect(window?.reportsLength == true)
         #expect(window?.resetsAt == Self.now.addingTimeInterval(4 * 3600))
         #expect(window.flatMap { BurnRate.reading(for: $0, now: Self.now) }?.exhaustsBeforeReset == true)
+    }
+
+    @Test("An idle weekly limit still says it lasts, including when the length is only a sort key")
+    func idleWeeklyLastsWithoutAStatedLength() {
+        LocalizationSource.use(.english)
+        defer { LocalizationSource.use(.system) }
+
+        let week = Self.named(
+            "week", kind: .weekly, used: 0, seconds: 604_800,
+            resetsAt: Self.now.addingTimeInterval(500_000), reportsLength: false
+        )
+        let five = Self.named(
+            "five", kind: .fiveHour, used: 0, seconds: 18_000,
+            resetsAt: Self.now.addingTimeInterval(10_000), reportsLength: true
+        )
+        let line = BurnRate.forecastLine(
+            for: week, among: [five, week], showsForecast: true,
+            horizon: 6 * 3600, softHint: true, beforeReset: true, now: Self.now
+        )
+        #expect(line?.tone == .lasts)
+        #expect(line?.text == "Expected to last the window")
+        let reading = BurnRate.reading(for: week, now: Self.now)
+        #expect(reading?.exhaustsBeforeReset == false)
+        #expect(reading?.timeToExhaustion == nil)
+
+        #expect(BurnRate.forecastLine(
+            for: week, among: [five, week], showsForecast: false,
+            horizon: 6 * 3600, softHint: true, beforeReset: true, now: Self.now
+        ) == nil)
+        #expect(BurnRate.forecastLine(
+            for: five, among: [five, week], showsForecast: true,
+            horizon: 6 * 3600, softHint: true, beforeReset: true, now: Self.now
+        ) == nil)
+
+        let light = Self.named(
+            "week", kind: .weekly, used: 0.04, seconds: 604_800,
+            resetsAt: Self.now.addingTimeInterval(500_000), reportsLength: false
+        )
+        #expect(BurnRate.forecastLine(
+            for: light, among: [light], showsForecast: true,
+            horizon: 6 * 3600, softHint: true, beforeReset: true, now: Self.now
+        )?.tone == .lasts)
+
+        let edge = Self.named(
+            "week", kind: .weekly, used: BurnRate.earlyQuietUsed, seconds: 604_800,
+            resetsAt: Self.now.addingTimeInterval(500_000), reportsLength: false
+        )
+        #expect(BurnRate.reading(for: edge, now: Self.now) == nil)
+
+        let spent = Self.named(
+            "week", kind: .weekly, used: 0.4, seconds: 604_800,
+            resetsAt: Self.now.addingTimeInterval(500_000), reportsLength: false
+        )
+        #expect(BurnRate.reading(for: spent, now: Self.now) == nil)
+
+        let past = Self.named(
+            "week", kind: .weekly, used: 0, seconds: 604_800,
+            resetsAt: Self.now.addingTimeInterval(-60), reportsLength: false
+        )
+        #expect(BurnRate.reading(for: past, now: Self.now) == nil)
+
+        let stated = BurnRate.reading(
+            for: Self.window(used: 0, resetsAt: Self.now.addingTimeInterval(302_400)),
+            now: Self.now
+        )
+        #expect(stated?.exhaustsBeforeReset == false)
+        #expect(stated?.timeToExhaustion == nil)
+
+        LocalizationSource.use(.chineseSimplified)
+        #expect(BurnRate.forecastLine(
+            for: week, among: [week], showsForecast: true,
+            horizon: 6 * 3600, softHint: true, beforeReset: true, now: Self.now
+        )?.text == "预计可维持到本轮重置")
+    }
+
+    @Test("Lasting is green and regular; a pace that may not last is amber and a step heavier")
+    @MainActor
+    func forecastInkFollowsTheTone() {
+        let lasts = ForecastLineInk.style(for: .lasts)
+        #expect(lasts.hue == .green)
+        #expect(lasts.weight == .regular)
+        #expect(lasts.usageColor == .pulseGood)
+        #expect(lasts.fontWeight == Font.Weight.regular)
+        #expect(lasts.usageColor != .pulseWarning)
+        #expect(lasts.usageColor != .pulseCaution)
+
+        for tone: BurnRate.CardLine.Tone in [.countdown, .beforeReset, .hint] {
+            let ink = ForecastLineInk.style(for: tone)
+            #expect(ink.hue == .amber)
+            #expect(ink.weight == .medium)
+            #expect(ink.usageColor == .pulseCaution)
+            #expect(ink.fontWeight == Font.Weight.medium)
+            #expect(ink.usageColor != .pulseWarning)
+            #expect(ink.usageColor != .pulseGood)
+        }
+
+        #expect(ForecastLineInk.opacity > 0)
+        #expect(ForecastLineInk.opacity < 1)
+        #expect(ForecastLineInk.style(for: .lasts).lineColor != ForecastLineInk.style(for: .countdown).lineColor)
+    }
+
+    private static func named(
+        _ id: String,
+        kind: UsageWindow.Kind,
+        used: Double,
+        seconds: Int,
+        resetsAt: Date?,
+        reportsLength: Bool
+    ) -> UsageWindow {
+        UsageWindow(
+            id: id,
+            kind: kind,
+            scope: nil,
+            usedFraction: used,
+            windowSeconds: seconds,
+            resetsAt: resetsAt,
+            reportsLength: reportsLength
+        )
     }
 }

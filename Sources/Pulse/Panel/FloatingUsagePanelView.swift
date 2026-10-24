@@ -13,6 +13,8 @@ struct FloatingUsagePanelView: View {
     /// Opens the Token spend summary. The button is drawn only while reading is on.
     var openTokenSpend: (() -> Void)? = nil
     var onTokenSpendFrame: ((CGRect) -> Void)? = nil
+    /// Window rectangles of the header controls, for the panel's own click path.
+    var onHeaderFrame: ((CardHeaderControl, CGRect) -> Void)? = nil
 
     /// The clock arc moves to the minute even when quota refresh backs off.
     @State private var minute = Date()
@@ -32,7 +34,8 @@ struct FloatingUsagePanelView: View {
             placement: placement,
             openSettings: openSettings,
             openTokenSpend: openTokenSpend,
-            onTokenSpendFrame: onTokenSpendFrame
+            onTokenSpendFrame: onTokenSpendFrame,
+            onHeaderFrame: onHeaderFrame
         )
             .task(id: settings.showsWindowClock) {
                 guard settings.showsWindowClock else { return }

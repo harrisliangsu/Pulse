@@ -15,6 +15,7 @@ struct FloatingUsagePanelContent: View {
     /// Token spend summary. Absent while reading is off, so the header button is too.
     var openTokenSpend: (() -> Void)? = nil
     var onTokenSpendFrame: ((CGRect) -> Void)? = nil
+    var onHeaderFrame: ((CardHeaderControl, CGRect) -> Void)? = nil
 
     /// Which **ring** the card belongs to, not which account: one account
      /// can now own two of them. `RailSlot.id` is the account's own id for
@@ -159,6 +160,7 @@ struct FloatingUsagePanelContent: View {
                             showsTokenSpend: settings.readsTokenSpend,
                             openTokenSpend: openTokenSpend,
                             onTokenSpendFrame: onTokenSpendFrame,
+                            onHeaderFrame: onHeaderFrame,
                             codexReset: selected.provider == .codex ? codexResetStatus : nil,
                             codexResets: selected.provider == .codex ? store : nil,
                             codexCredits: selected.provider == .codex && selected.account.isPrimary

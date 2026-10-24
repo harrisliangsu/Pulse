@@ -57,11 +57,13 @@ Taken in `sendEvent` rather than with SwiftUI's `.contextMenu`, for the reason e
 
 `placement.isMenuOpen` is set for the span of `popUp`, which runs its own tracking loop. Without it the pointer is on the menu — off the panel by every test `pointerMoved` makes — and the rail winds down to its sliver the moment the menu appears beside it. `scheduleHide` guards on it exactly as it guards on `isDragging`, and re-arms the same way.
 
-## The Token spend button
+## The card header
 
-It sits on the usage card's header with Open Blinky and Quit, and only while Token spend is on. It is a `HeaderIconButton`: `PointerHand` records the press and fires on mouse-up. Hovering a ring still opens that provider's card; the summary opens only from this click.
+Token spend, Open, and Quit sit on the usage card's header. Token spend is there only while that reading is on. Open is the SF Symbol `macwindow`, labelled Open Blinky. It opens the main window on the pane last shown (`settings.lastPane`). Quit is `power`. Blinky's own icon is not a control. Hovering a ring still opens that provider's card.
 
-The summary is a separate window that can become key, so Escape, the close button, and a click outside dismiss it. The close button is the window's own, not a click the content view takes in `sendEvent`. The click-outside monitor ignores the button's screen rectangle, and it ignores a menu, so that same click toggles the window closed and choosing a span does not. A press on the rail is still `FloatingPanel.sendEvent` and is not this button. The control that used to be a gear is Blinky's icon, labelled Open Blinky, and it opens the main window on the pane last shown. [../token-spend.md](../token-spend.md#the-glance-window)
+The press is taken in `FloatingPanel.sendEvent`, before the rail's drag, from the window rectangle `ControlFrameProbe` reported (`HeaderClickDispatch`). Mouse-up has to land in the same control. The action runs on the next turn, so the main window is not ordered front inside the panel's mouse-up. `PointerHand` still tracks the pointer and remains the fallback when that rectangle is not in yet; VoiceOver uses the button's action. `ScreenRectReporter`, which publishes Token spend's screen rectangle for the summary's outside click, returns nil from `hitTest` so it cannot swallow the press.
+
+The summary is a separate window that can become key, so Escape, the close button, and a click outside dismiss it. The close button is the window's own, not a click the content view takes in `sendEvent`. The click-outside monitor ignores the button's screen rectangle, and it ignores a menu, so that same click toggles the window closed and choosing a span does not. A press on the rail is still the rail's drag and is not one of these buttons. [../token-spend.md](../token-spend.md#the-glance-window)
 
 ## Global shortcuts
 

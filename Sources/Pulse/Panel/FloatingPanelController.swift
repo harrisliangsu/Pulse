@@ -104,7 +104,7 @@ final class FloatingPanelController {
     /// Watches which display the pointer is on, while that is switched on.
     private let displayFollower = ActiveDisplayFollower()
 
-    /// Opens the main window from the rail's context menu and the card's Blinky icon.
+    /// Opens the main window from the rail's context menu and the card's window symbol.
     /// The panel never becomes key, so the menu-bar shortcuts do not reach it.
     private let openSettings: () -> Void
     /// Opens the Token spend summary from the card header.
@@ -151,6 +151,14 @@ final class FloatingPanelController {
 
         configurePanel()
 
+        panel.onHeaderControl = { control in
+            switch control {
+            case .openApp: openSettings()
+            case .tokenSpend: openTokenSpend()
+            case .quit: NSApplication.shared.terminate(nil)
+            }
+        }
+        let headerSink = panel.headerSink
         let hostingView = NSHostingView(
             rootView: FloatingUsagePanelView(
                 store: store,
@@ -158,7 +166,10 @@ final class FloatingPanelController {
                 placement: placement,
                 openSettings: openSettings,
                 openTokenSpend: openTokenSpend,
-                onTokenSpendFrame: onTokenSpendFrame
+                onTokenSpendFrame: onTokenSpendFrame,
+                onHeaderFrame: { [headerSink] control, rect in
+                    headerSink.note(control, rect)
+                }
             )
         )
         hostingView.sizingOptions = []
@@ -550,7 +561,9 @@ final class FloatingPanelController {
 /// the rail (it carries the space the card unfolds into) and which side of it
 /// the rail sits on flips at the middle of the screen; moving the window with
 /// the pointer would throw the rail sideways at that moment.
-private final class FloatingPanel: NSPanel {
+/// Internal so a test can send a click through `sendEvent` the way the window
+/// receives one. The controller is what the app holds.
+final class FloatingPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
@@ -650,10 +663,49 @@ private final class FloatingPanel: NSPanel {
         // taking it as a press would start carrying the panel instead.
         case .rightMouseDown where showMenu(event): return
         case .leftMouseDown where event.modifierFlags.contains(.control) && showMenu(event): return
+        // Header controls, before the rail. Their layout frames are the
+        // target: a view under the symbol was taking the point and dropping it.
+        case .leftMouseDown where routeHeader(event): return
         case .leftMouseDown where begin(event): return
+        case .leftMouseDragged where routeHeader(event): return
         case .leftMouseDragged where carry(): return
+        case .leftMouseUp where routeHeader(event): return
         case .leftMouseUp where finish(): return
         default: super.sendEvent(event)
+        }
+    }
+
+    /// Header frames in window coordinates, written while the buttons lay out.
+    let headerSink = HeaderFrameSink()
+    /// Open, Token spend, and Quit. Called on mouse-up inside the pressed control.
+    var onHeaderControl: ((CardHeaderControl) -> Void)?
+    private var pressedHeader: CardHeaderControl?
+
+    /// True when this event belongs to a header control and must not start a drag.
+    private func routeHeader(_ event: NSEvent) -> Bool {
+        var pressed = pressedHeader
+        let outcome = HeaderClickDispatch.outcome(
+            type: event.type,
+            point: event.locationInWindow,
+            frames: headerSink.frames,
+            pressed: &pressed
+        )
+        pressedHeader = pressed
+        switch outcome {
+        case .pass:
+            return false
+        case .taken:
+            return true
+        case .activate(let control):
+            // The next turn, not this one. The press is still the non-activating
+            // panel's, and ordering the main window front from inside it leaves
+            // the window behind the app that was key.
+            DispatchQueue.main.async { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.onHeaderControl?(control)
+                }
+            }
+            return true
         }
     }
 
