@@ -66,15 +66,28 @@ enum BurnRate {
 
     /// What may be said about a window, or nil when nothing may be.
     static func reading(for window: UsageWindow, now: Date = Date()) -> Reading? {
+        let used = min(max(window.usedFraction, 0), 1)
         // `elapsedFraction` already refuses a window whose length was chosen
         // to sort by rather than reported — which is exactly the length this
         // would otherwise divide by. A sort key is not a pace. Which of a
         // reading's windows may be shown is `ExhaustionEstimate`, not this.
+        //
+        // Little or nothing spent still lasts, and that sentence does not
+        // divide. An idle weekly row — Kimi's rolling week, whose seconds
+        // only sort it — was returning nil here, so the card stayed blank
+        // while a window that stated a length (Codex) drew a line. A window
+        // already well spent, with no stated length, stays quiet: there is
+        // no pace to invent. A reset that has already passed stays quiet too.
         guard let elapsed = window.elapsedFraction(at: now),
               let resetsAt = window.resetsAt
-        else { return nil }
+        else {
+            if let resetsAt = window.resetsAt, resetsAt.timeIntervalSince(now) <= 0 {
+                return nil
+            }
+            guard used < earlyQuietUsed else { return nil }
+            return Reading(exhaustsBeforeReset: false, timeToExhaustion: nil)
+        }
 
-        let used = min(max(window.usedFraction, 0), 1)
         let untilReset = resetsAt.timeIntervalSince(now)
         guard untilReset > 0 else { return nil }
 
@@ -202,6 +215,32 @@ enum BurnRate {
         return nil
     }
 
+    /// The line the card draws under one window.
+    ///
+    /// `showsForecast` is the card switch already combined with the account
+    /// list. The weekly limit is the one this may speak for, or the longest
+    /// other stated limit when there is no weekly one. A five-hour window is
+    /// never that line.
+    static func forecastLine(
+        for window: UsageWindow,
+        among windows: [UsageWindow],
+        showsForecast: Bool,
+        horizon: TimeInterval,
+        softHint: Bool,
+        beforeReset: Bool,
+        now: Date = Date()
+    ) -> CardLine? {
+        guard showsForecast, ExhaustionEstimate.includes(window, among: windows) else { return nil }
+        guard let reading = reading(for: window, now: now) else { return nil }
+        return cardLine(
+            for: window,
+            reading: reading,
+            horizon: horizon,
+            softHint: softHint,
+            beforeReset: beforeReset
+        )
+    }
+
     private enum Rounded: Equatable {
         case underQuarter
         case minutes(Int)
@@ -233,6 +272,39 @@ enum BurnRate {
         let days = whole / 24
         let rest = whole % 24
         return .days(max(days, 1), rest == 0 ? nil : rest)
+    }
+}
+
+/// How the forecast line is inked.
+///
+/// Lasting is green. A pace that may not last the window — the countdown,
+/// the reset sentence, and the hint — is amber. Both sit under full strength
+/// (`opacity`) so the line stays quieter than the percentage beside it.
+/// Lasting stays regular; the amber line is a step heavier, still not bold.
+struct ForecastLineInk: Equatable, Sendable {
+    enum Hue: Equatable, Sendable {
+        case green
+        case amber
+    }
+
+    enum Weight: Equatable, Sendable {
+        case regular
+        case medium
+    }
+
+    var hue: Hue
+    var weight: Weight
+
+    /// Held back from 1 so neither green nor amber reads as a second alarm.
+    static let opacity = 0.66
+
+    static func style(for tone: BurnRate.CardLine.Tone) -> ForecastLineInk {
+        switch tone {
+        case .lasts:
+            ForecastLineInk(hue: .green, weight: .regular)
+        case .countdown, .beforeReset, .hint:
+            ForecastLineInk(hue: .amber, weight: .medium)
+        }
     }
 }
 

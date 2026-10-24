@@ -290,6 +290,27 @@ extension Color {
     }
 }
 
+extension ForecastLineInk {
+    /// The usage colour this line borrows. Rings use it at full strength.
+    /// The forecast line holds it back with `opacity`, so it stays quieter
+    /// than the percentage and is not a second alarm.
+    var usageColor: Color {
+        switch hue {
+        case .green: .pulseGood
+        case .amber: .pulseCaution
+        }
+    }
+
+    var lineColor: Color { usageColor.opacity(Self.opacity) }
+
+    var fontWeight: Font.Weight {
+        switch weight {
+        case .regular: .regular
+        case .medium: .medium
+        }
+    }
+}
+
 /// How full a limit has to be before Red alert draws it red, and which
 /// colour language the panel is speaking.
 ///

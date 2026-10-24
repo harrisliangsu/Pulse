@@ -586,7 +586,12 @@ struct SpendGlanceTests {
         let model = SpendGlanceModel(settings: settings)
         model.noteCopied(hold: .milliseconds(30))
         #expect(model.didCopy)
-        try? await Task.sleep(for: .milliseconds(120))
+        // The clear is a main-actor task. A fixed sleep loses to the rest of
+        // the suite while that actor is busy, and the flag is still set.
+        for _ in 0..<200 where model.didCopy {
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(20))
+        }
         #expect(!model.didCopy)
     }
 

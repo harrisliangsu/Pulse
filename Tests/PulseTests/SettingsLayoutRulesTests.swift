@@ -286,6 +286,34 @@ struct SettingsLayoutRulesTests {
             .contains("weekly"))
     }
 
+    @Test("The estimate covers every shown account until the list says otherwise")
+    func exhaustionListCoversShownAccounts() {
+        let (defaults, cleanup) = AppSettingsPersistenceTests.isolatedDefaults()
+        defer { cleanup() }
+        let settings = AppSettings(
+            enabledAccounts: ["codex", "kimiCode", "zai"],
+            defaults: defaults
+        )
+        let codex = AccountKey(.codex)
+        let kimi = AccountKey(.kimiCode)
+        let zai = AccountKey(.zai)
+        #expect(settings.exhaustionAllAccounts)
+        #expect(settings.shownAccounts.contains(codex))
+        #expect(settings.shownAccounts.contains(kimi))
+        #expect(settings.shownAccounts.contains(zai))
+        #expect(settings.forecastsExhaustion(for: codex))
+        #expect(settings.forecastsExhaustion(for: kimi))
+        #expect(settings.forecastsExhaustion(for: zai))
+
+        settings.setExhaustionAllAccounts(false)
+        #expect(settings.forecastsExhaustion(for: kimi))
+        settings.setForecastsExhaustion(false, for: kimi)
+        #expect(!settings.forecastsExhaustion(for: kimi))
+        #expect(settings.forecastsExhaustion(for: codex))
+        #expect(settings.forecastsExhaustion(for: zai))
+        #expect(settings.showsForecast)
+    }
+
     private static func pace(remaining: TimeInterval, length: Double = 604_800, elapsed: Double = 0.5) -> Double {
         let elapsedSeconds = length * elapsed
         return elapsedSeconds / (remaining + elapsedSeconds)

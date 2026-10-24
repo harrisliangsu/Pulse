@@ -219,8 +219,9 @@ struct UsageDetailCard: View {
     /// at the card's centre — it has to be placed independently to keep aiming
     /// at the selected ring.
     let pointerCenter: CGFloat
-    /// The panel is never key, so Settings and Quit on the menu bar extras
-    /// are a hunt. These ride the card header: they take no extra height.
+    /// The panel is never key, so the menu-bar extras are a hunt. Open and
+    /// Quit ride the card header and take no extra height. Open shows the
+    /// main window on the pane last shown.
     var openSettings: (() -> Void)? = nil
     /// Token spend summary. Shown only while reading is on, and only as a
     /// click: hovering a ring still opens this card.
@@ -229,6 +230,10 @@ struct UsageDetailCard: View {
     /// The button's screen rect, so a click on it can toggle the summary
     /// instead of counting as a click outside that window.
     var onTokenSpendFrame: ((CGRect) -> Void)? = nil
+    /// Each header control's rectangle in window coordinates. The panel's
+    /// `sendEvent` is what acts on a press inside one: this panel never
+    /// becomes key, and a view under the symbol was dropping the click.
+    var onHeaderFrame: ((CardHeaderControl, CGRect) -> Void)? = nil
     /// Codex Resets' public status. Nil until a fetch or the disk cache lands.
     /// The prediction row still says there is no prediction rather than
     /// leaving a hole. A latest announcement is a separate row under that.
@@ -317,15 +322,12 @@ struct UsageDetailCard: View {
     }
 
     /// The exhaustion line for one window, or nil when the forecast is off
-    /// or the window does not carry a length and a reset.
+    /// or this window is not the one it speaks for.
     private func forecastLine(for window: UsageWindow) -> BurnRate.CardLine? {
-        // The weekly limit, or the longest other limit when there is no
-        // weekly one. A five-hour row stays a percentage and a reset.
-        guard showsForecast, ExhaustionEstimate.includes(window, among: usage.windows) else { return nil }
-        guard let reading = BurnRate.reading(for: window) else { return nil }
-        return BurnRate.cardLine(
+        BurnRate.forecastLine(
             for: window,
-            reading: reading,
+            among: usage.windows,
+            showsForecast: showsForecast,
             horizon: exhaustionHorizon,
             softHint: exhaustionSoftHint,
             beforeReset: exhaustionBeforeReset
@@ -348,8 +350,9 @@ struct UsageDetailCard: View {
                     isSpent: UsageTint.isSpent(window),
                     showsRemaining: showsRemaining,
                     // The weekly limit, or the longest other limit. A five-hour
-                    // window is not estimated. `BurnRate` still refuses a row
-                    // that has no stated length or reset.
+                    // window is not estimated. Little or nothing spent still
+                    // says the window is expected to last, including when the
+                    // service did not state a length.
                     forecast: forecastLine(for: window),
                     value: valueText(window),
                     amount: showsAmounts ? Self.amountText(window, remaining: showsRemaining) : nil
@@ -934,25 +937,14 @@ struct UsageDetailCard: View {
 
                     if SpendGlance.showsEntry(reading: showsTokenSpend, canOpen: openTokenSpend != nil),
                        let openTokenSpend {
-                        HeaderIconButton(
-                            systemImage: "chart.bar",
-                            label: String.localized("Token spend"),
-                            action: openTokenSpend
-                        )
-                        .background(ScreenRectReporter { onTokenSpendFrame?($0) })
-                        .onDisappear { onTokenSpendFrame?(.null) }
+                        HeaderIconButton(control: .tokenSpend, onFrame: onHeaderFrame, action: openTokenSpend)
+                            .background(ScreenRectReporter { onTokenSpendFrame?($0) })
+                            .onDisappear { onTokenSpendFrame?(.null) }
                     }
 
                     if let openSettings {
-                        HeaderIconButton(
-                            image: BlinkyMark.image,
-                            label: String.localized("Open Blinky"),
-                            action: openSettings
-                        )
-                        HeaderIconButton(
-                            systemImage: "power",
-                            label: String.localized("Quit Blinky")
-                        ) {
+                        HeaderIconButton(control: .openApp, onFrame: onHeaderFrame, action: openSettings)
+                        HeaderIconButton(control: .quit, onFrame: onHeaderFrame) {
                             NSApplication.shared.terminate(nil)
                         }
                     }
@@ -1164,6 +1156,11 @@ private struct ScreenRectReporter: NSViewRepresentable {
             publish()
         }
 
+        /// Declines the press. This view only publishes the screen rectangle
+        /// the summary uses for an outside click. A reporter that still
+        /// hit-tests sits on the symbol and swallows the click.
+        override func hitTest(_: NSPoint) -> NSView? { nil }
+
         func publish() {
             guard let window else {
                 onChange(.null)
@@ -1175,60 +1172,52 @@ private struct ScreenRectReporter: NSViewRepresentable {
     }
 }
 
-/// Settings and Quit on the card. `.onHover` is silent on this panel, and a
-/// SwiftUI `Button` under a tracking overlay that declines `hitTest` is a
-/// hole in the transparent window — the press lands on the page behind.
-/// `PointerHand` claims the point and fires the action.
-///
-/// Blinky's own icon, for the control that opens the main window. The
-/// application icon when the bundle has one, and the named asset otherwise.
-/// A gear here used to read as Settings; the window it opens is the app.
-@MainActor
-enum BlinkyMark {
-    static var image: NSImage {
-        if let application = NSApp.applicationIconImage, application.size.width > 1 {
-            return application
-        }
-        return NSImage(named: "AppIcon") ?? NSImage()
-    }
-}
-
-private struct HeaderIconButton: View {
-    var systemImage: String? = nil
-    var image: NSImage? = nil
-    let label: String
+/// Token spend, Open, and Quit on the card. The same symbol weight as the
+/// others: Open is `macwindow`, not Blinky's own icon. The panel never
+/// becomes key, so the press is taken in `FloatingPanel.sendEvent` from the
+/// rectangle `ControlFrameProbe` reports. `PointerHand` remains for the
+/// pointer and for VoiceOver's fallback when that rectangle is not in yet.
+struct HeaderIconButton: View {
+    let control: CardHeaderControl
+    var onFrame: ((CardHeaderControl, CGRect) -> Void)? = nil
     let action: () -> Void
     @State private var hovering = false
 
+    private var label: String { Self.label(for: control) }
+
+    static func label(for control: CardHeaderControl) -> String {
+        switch control {
+        case .tokenSpend: String.localized("Token spend")
+        case .openApp: String.localized("Open Blinky")
+        case .quit: String.localized("Quit Blinky")
+        }
+    }
+
     var body: some View {
         let size = DetailCardLayout.headerIconSize
-        mark
+        Image(systemName: control.symbolName)
+            .font(.system(size: size * 0.9, weight: .medium))
+            .foregroundStyle(.primary.opacity(hovering ? 0.95 : 0.55))
+            .allowsHitTesting(false)
             .frame(width: size, height: size)
             .scaleEffect(hovering ? 1.32 : 1)
             .animation(.spring(response: 0.22, dampingFraction: 0.72), value: hovering)
             .frame(width: size + 16, height: size + 16)
+            .contentShape(Rectangle())
+            .background(
+                ControlFrameProbe(id: control.rawValue) { _, rect in
+                    onFrame?(control, rect)
+                }
+            )
             .overlay {
                 PointerHand(onHover: { hovering = $0 }, onClick: action)
             }
+            .onDisappear { onFrame?(control, .null) }
             .help(label)
             .accessibilityElement()
             .accessibilityLabel(label)
             .accessibilityAddTraits(.isButton)
             .accessibilityAction(named: Text(verbatim: label), action)
-    }
-
-    @ViewBuilder
-    private var mark: some View {
-        if let image {
-            Image(nsImage: image)
-                .resizable()
-                .interpolation(.high)
-                .aspectRatio(contentMode: .fit)
-        } else {
-            Image(systemName: systemImage ?? "circle")
-                .font(.system(size: DetailCardLayout.headerIconSize * 0.9, weight: .medium))
-                .foregroundStyle(.primary.opacity(hovering ? 0.95 : 0.55))
-        }
     }
 }
 
@@ -1882,34 +1871,19 @@ private struct ProgressMetricRow: View {
 }
 
 extension ProgressMetricRow {
-    /// How fast it is going, and — only when the evidence carries it — when it
-    /// runs out.
-    ///
-    /// One line, dimmer than the figures above it, because it is the one thing
-    /// on this card the provider did not say — though both halves of it are
-    /// figures the provider *did* say, subtracted. It is absent far more often than
-    /// present, and that is the design rather than a gap: a rate is only
-    /// measurable while a limit is actually moving, and the prediction is only
-    /// offered when it lands before the reset.
+    /// The projection under the limit. Quieter than the percentage beside it:
+    /// lasting is a restrained green, and a pace that may not last is a
+    /// restrained amber. Drawn whenever the estimate is on and this window is
+    /// the one it speaks for, including when nothing has been spent.
     @ViewBuilder
     var burnLine: some View {
         if let forecast, !isSpent {
+            let ink = ForecastLineInk.style(for: forecast.tone)
             Text(verbatim: forecast.text)
-                .foregroundStyle(forecastColor)
-                .font(.system(size: DetailCardLayout.rowFontSize, weight: .regular, design: .rounded))
+                .foregroundStyle(ink.lineColor)
+                .font(.system(size: DetailCardLayout.rowFontSize, weight: ink.fontWeight, design: .rounded))
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
-        }
-    }
-
-    /// The countdown is the loud one. The reset sentence is the same news a
-    /// little further out. The hint is only the verdict. Lasting is not news.
-    private var forecastColor: Color {
-        switch forecast?.tone {
-        case .countdown: Color.pulseWarning.opacity(0.9)
-        case .beforeReset: Color.pulseWarning.opacity(0.75)
-        case .hint: Color.pulseWarning.opacity(0.55)
-        case .lasts, nil: Color.primary.opacity(0.45)
         }
     }
 }

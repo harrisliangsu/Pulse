@@ -4,7 +4,7 @@
 
 The window **may** resize when the rail is re-docked onto the other axis (side ↔ top), under the pointer with no card open. Why: [../decisions/panel-frame.md](../decisions/panel-frame.md).
 
-The Token spend button is one more icon on the usage card's header, the same size as Settings and Quit, and only while Token spend is on. It does not add a row. Opening the summary does not change this window's frame: the summary is its own window ([../token-spend.md](../token-spend.md#the-glance-window)).
+The Token spend button is one more icon on the usage card's header, the same size as Open and Quit, and only while Token spend is on. It does not add a row. Opening the summary does not change this window's frame: the summary is its own window ([../token-spend.md](../token-spend.md#the-glance-window)).
 
 ## Overlay and height
 
