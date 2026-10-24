@@ -12,9 +12,9 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.5.12
 
-- **The exhaustion estimate appears on every shown account.** With Show the estimate on, under Settings → Usage, a weekly limit that is unused or only lightly used says it is expected to last the window, including when the service does not state that window's length.
-- **An estimate that should last is green, and one that may not is amber.** The line under the limit uses those two colours, both held back so they stay quieter than the percentage.
-- **The usage card opens Blinky from a window icon.** The control beside Token spend in the card header is a window symbol, and clicking it opens the main window on the pane last shown.
+- **The exhaustion estimate appears on every shown account.** With Show the estimate on, under Settings → Usage, a weekly limit that is unused or only lightly used says it is expected to last the window, including when the service does not state that window's length. [#73](https://github.com/harrisliangsu/blinky-mac/pull/73)
+- **An estimate that should last is green, and one that may not is amber.** The line under the limit uses those two colours, both held back so they stay quieter than the percentage. [#73](https://github.com/harrisliangsu/blinky-mac/pull/73)
+- **The usage card opens Blinky from a window icon.** The control beside Token spend in the card header is a window symbol, and clicking it opens the main window on the pane last shown. [#73](https://github.com/harrisliangsu/blinky-mac/pull/73)
 
 ## 1.5.11
 
