@@ -106,6 +106,40 @@ enum HeaderControlFrames {
         walk(root)
         return frames
     }
+
+    /// The header control whose view contains `point`, in window coordinates.
+    /// The probe wins over the hand when both contain it, because the probe is
+    /// the rectangle the button laid out.
+    static func control(at point: CGPoint, in root: NSView?) -> CardHeaderControl? {
+        guard let root else { return nil }
+        var found: (CardHeaderControl, CGFloat, Bool)?
+        func consider(_ control: CardHeaderControl?, _ view: NSView, preferred: Bool) {
+            guard let control, view.window != nil else { return }
+            let rect = view.convert(view.bounds, to: nil)
+            guard rect.width > 1, rect.height > 1, !rect.isNull, !rect.isInfinite else { return }
+            guard rect.contains(point) else { return }
+            let area = rect.width * rect.height
+            if let current = found {
+                if preferred && !current.2 { found = (control, area, true); return }
+                if current.2 && !preferred { return }
+                if area < current.1 { found = (control, area, preferred) }
+            } else {
+                found = (control, area, preferred)
+            }
+        }
+        func walk(_ view: NSView) {
+            if let probe = view as? ControlFrameProbe.ProbeView,
+               let control = CardHeaderControl(rawValue: probe.marker) {
+                consider(control, view, preferred: true)
+            }
+            if let hand = view as? PointerHand.HandView {
+                consider(hand.headerControl, view, preferred: false)
+            }
+            for child in view.subviews { walk(child) }
+        }
+        walk(root)
+        return found?.0
+    }
 }
 
 /// What `FloatingPanel.sendEvent` does with a mouse event before the rail's

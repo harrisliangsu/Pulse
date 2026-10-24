@@ -691,14 +691,21 @@ final class FloatingPanel: NSPanel {
     /// True when this event belongs to a header control and must not start a drag.
     @MainActor
     private func routeHeader(_ event: NSEvent) -> Bool {
+        let point = event.locationInWindow
         if event.type == .leftMouseDown {
             refreshHeaderFrames()
+        }
+        // The views that are in the window now. A stored rectangle can be
+        // missing on the first press, or can name a button that has gone.
+        var frames = headerSink.frames
+        if let live = HeaderControlFrames.control(at: point, in: contentView) {
+            frames[live] = CGRect(x: point.x - 1, y: point.y - 1, width: 3, height: 3)
         }
         var pressed = pressedHeader
         let outcome = HeaderClickDispatch.outcome(
             type: event.type,
-            point: event.locationInWindow,
-            frames: headerSink.frames,
+            point: point,
+            frames: frames,
             pressed: &pressed
         )
         pressedHeader = pressed
@@ -721,15 +728,26 @@ final class FloatingPanel: NSPanel {
         }
     }
 
-    /// Lays the header out and reads the buttons that are actually there.
-    /// A stored rect from a button that has since gone is dropped.
+    /// Reads the buttons that are actually in the window.
+    ///
+    /// A control that has left is dropped. A rectangle the button already
+    /// reported is kept while that control is still there: replacing it with
+    /// a different live rectangle made the press miss the point it was on.
+    /// A control with no stored rectangle yet takes the live one, which is
+    /// the first click after launch.
     @MainActor
     private func refreshHeaderFrames() {
-        contentView?.layoutSubtreeIfNeeded()
         let live = HeaderControlFrames.collect(in: contentView)
-        if !live.isEmpty {
-            headerSink.replace(with: live)
+        guard !live.isEmpty else { return }
+        var merged: [CardHeaderControl: CGRect] = [:]
+        for control in CardHeaderControl.allCases {
+            if let stored = headerSink.frames[control], live[control] != nil {
+                merged[control] = stored
+            } else if let found = live[control] {
+                merged[control] = found
+            }
         }
+        headerSink.replace(with: merged)
     }
 
     /// Puts the panel's menu up, if the click landed on something to grab.

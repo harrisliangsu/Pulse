@@ -219,10 +219,10 @@ struct CardHeaderTests {
         Self.pump()
         host.layoutSubtreeIfNeeded()
 
-        let frame = try #require(panel.headerSink.frames[.tokenSpend])
         panel.headerSink.replace(with: [:])
         #expect(panel.headerSink.frames[.tokenSpend] == nil)
-        #expect(HeaderControlFrames.collect(in: host)[.tokenSpend] != nil)
+        let frame = try #require(HeaderControlFrames.collect(in: host)[.tokenSpend])
+        #expect(HeaderControlFrames.control(at: CGPoint(x: frame.midX, y: frame.midY), in: host) == .tokenSpend)
 
         try Self.click(frame, in: panel)
         #expect(fromWindow.controls.isEmpty)
