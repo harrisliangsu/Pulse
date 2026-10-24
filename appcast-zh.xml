@@ -6,22 +6,22 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.11</title>
-            <pubDate>Fri, 23 Oct 2026 20:19:30 -0000</pubDate>
-            <sparkle:version>1.5.11</sparkle:version>
-            <sparkle:shortVersionString>1.5.11</sparkle:shortVersionString>
+            <title>1.5.12</title>
+            <pubDate>Sat, 24 Oct 2026 05:30:22 -0000</pubDate>
+            <sparkle:version>1.5.12</sparkle:version>
+            <sparkle:shortVersionString>1.5.12</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.11</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.12</link>
             <description><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.11</h2><ul><li><strong>通知页收齐了全部提醒。</strong> 「设置 → 通知」分为额度提醒、用量用尽、服务状态和月报；「面板」下的「用量」放数字和用尽预估。<a href="https://github.com/harrisliangsu/blinky-mac/pull/72">#72</a></li><li><strong>供应商在侧边栏里只有一行。</strong> 它在「应用」一组中；打开某个供应商时侧边栏仍选中供应商，这一页自己有标题和返回，工具栏的后退和前进仍可在各页之间移动。<a href="https://github.com/harrisliangsu/blinky-mac/pull/72">#72</a></li><li><strong>用尽预估只看每周限额。</strong> 卡片上的那一行，以及按剩余小时和撑不到重置的通知，都针对每周限额；没有每周限额时，用其余限额里最长的一条，5 小时限额不预估也不通知。<a href="https://github.com/harrisliangsu/blinky-mac/pull/72">#72</a></li><li><strong>Token 消耗窗口的控件可以点了。</strong> 时间范围、分类、刷新、分享、关闭按钮和 Esc 都会响应，分享后会写明图片是否已复制。<a href="https://github.com/harrisliangsu/blinky-mac/pull/72">#72</a></li><li><strong>用量卡片用 Blinky 的图标打开主窗口。</strong> 卡片标题栏上的图标会打开主窗口，并回到上次看的那一页。<a href="https://github.com/harrisliangsu/blinky-mac/pull/72">#72</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.11">在 GitHub 查看更新说明</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.11/Blinky-1.5.11.zip"
-                       length="22649163"
+</style><h2>Blinky 1.5.12</h2><ul><li><strong>用尽预估会写在每个显示的账号上。</strong> 在「设置 → 用量」打开「显示预估」后，每周限额几乎没用或用得很少时，卡片也会写「预计可维持到本轮重置」；服务商没有给出这段窗口的长度时同样如此。<a href="https://github.com/harrisliangsu/blinky-mac/pull/73">#73</a></li><li><strong>能撑住的预估是绿色，可能撑不住的是琥珀色。</strong> 限额下面的那一行用这两种颜色，都比旁边的百分比更淡。<a href="https://github.com/harrisliangsu/blinky-mac/pull/73">#73</a></li><li><strong>用量卡片用窗口图标打开主窗口。</strong> 标题栏上「Token 消耗」旁边的控件改为窗口符号，点击后打开主窗口，并回到上次查看的页面。<a href="https://github.com/harrisliangsu/blinky-mac/pull/73">#73</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.12">在 GitHub 查看更新说明</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.12/Blinky-1.5.12.zip"
+                       length="22662086"
                        type="application/octet-stream"
-                       sparkle:edSignature="K6nlwiXi1xy4lpYi3JCodOrV139umeSQNGd+l5+SeKhGvyAnPmedG1JFgkhj//mYKyM1tNLfTd3zR2q0XDVDDA==" />
+                       sparkle:edSignature="Bx+uiawAhiShy3OBVn1+mPUvFVSSMyd+icMjrqzvHAcsCXnE9LPUESDK+/q2c3qEUWMzdwa31Dub8MO9xkClAQ==" />
         </item>
     </channel>
 </rss>
