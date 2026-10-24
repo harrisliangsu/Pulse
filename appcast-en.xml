@@ -6,22 +6,22 @@
         <description>Updates for Blinky.</description>
         <language>zh-CN</language>
         <item>
-            <title>1.5.12</title>
-            <pubDate>Sat, 24 Oct 2026 05:30:22 -0000</pubDate>
-            <sparkle:version>1.5.12</sparkle:version>
-            <sparkle:shortVersionString>1.5.12</sparkle:shortVersionString>
+            <title>1.5.13</title>
+            <pubDate>Sat, 24 Oct 2026 16:17:54 -0000</pubDate>
+            <sparkle:version>1.5.13</sparkle:version>
+            <sparkle:shortVersionString>1.5.13</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.12</link>
+            <link>https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.13</link>
             <description><![CDATA[<style>
   h2 { font-size: 1.05em; margin: 0 0 .5em; }
   ul { margin: 0; padding-left: 1.2em; }
   li { margin: .3em 0; }
   p { margin: .8em 0 0; }
-</style><h2>Blinky 1.5.12</h2><ul><li><strong>The exhaustion estimate appears on every shown account.</strong> With Show the estimate on, under Settings → Usage, a weekly limit that is unused or only lightly used says it is expected to last the window, including when the service does not state that window&#x27;s length. <a href="https://github.com/harrisliangsu/blinky-mac/pull/73">#73</a></li><li><strong>An estimate that should last is green, and one that may not is amber.</strong> The line under the limit uses those two colours, both held back so they stay quieter than the percentage. <a href="https://github.com/harrisliangsu/blinky-mac/pull/73">#73</a></li><li><strong>The usage card opens Blinky from a window icon.</strong> The control beside Token spend in the card header is a window symbol, and clicking it opens the main window on the pane last shown. <a href="https://github.com/harrisliangsu/blinky-mac/pull/73">#73</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.12">Release notes on GitHub</a></p>]]></description>
-            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.12/Blinky-1.5.12.zip"
-                       length="22662086"
+</style><h2>Blinky 1.5.13</h2><ul><li><strong>The usage card opens Blinky from a grid icon.</strong> The control beside Token spend in the card header is a filled four-square grid, and clicking it opens the main window on the pane last shown. <a href="https://github.com/harrisliangsu/blinky-mac/pull/74">#74</a></li></ul><p><a href="https://github.com/harrisliangsu/blinky-mac/releases/tag/v1.5.13">Release notes on GitHub</a></p>]]></description>
+            <enclosure url="https://github.com/harrisliangsu/blinky-mac/releases/download/v1.5.13/Blinky-1.5.13.zip"
+                       length="22662228"
                        type="application/octet-stream"
-                       sparkle:edSignature="Bx+uiawAhiShy3OBVn1+mPUvFVSSMyd+icMjrqzvHAcsCXnE9LPUESDK+/q2c3qEUWMzdwa31Dub8MO9xkClAQ==" />
+                       sparkle:edSignature="ts88AFep7HcmCXKfANqs38AbbGezCSbioNrOGoV4vUQ3zDafuhh7vOuzD09ZAnuJ1DbsRfMoOPopXS1/ZzI1CQ==" />
         </item>
     </channel>
 </rss>
