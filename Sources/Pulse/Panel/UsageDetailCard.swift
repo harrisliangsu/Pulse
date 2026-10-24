@@ -1210,7 +1210,7 @@ struct HeaderIconButton: View {
                 }
             )
             .overlay {
-                PointerHand(onHover: { hovering = $0 }, onClick: action)
+                PointerHand(headerControl: control, onHover: { hovering = $0 }, onClick: action)
             }
             .onDisappear { onFrame?(control, .null) }
             .help(label)

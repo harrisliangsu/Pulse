@@ -97,6 +97,12 @@ struct CardHeaderTests {
         #expect(sink.frames[.openApp] == nil)
         sink.note(.quit, CGRect(x: 0, y: 0, width: 0.5, height: 10))
         #expect(sink.frames[.quit] == nil)
+
+        sink.note(.tokenSpend, CGRect(x: 0, y: 0, width: 20, height: 20))
+        sink.note(.openApp, CGRect(x: 30, y: 0, width: 20, height: 20))
+        sink.replace(with: [.openApp: CGRect(x: 30, y: 0, width: 20, height: 20)])
+        #expect(sink.frames[.tokenSpend] == nil)
+        #expect(sink.frames[.openApp] != nil)
     }
 
     @Test("The panel takes a click on each header control and ignores one that leaves it")
@@ -190,18 +196,59 @@ struct CardHeaderTests {
         panel.orderOut(nil)
     }
 
-    /// Lets the main-actor task queued by a header click run. A nested run
-    /// loop does not: the test is already on the main queue, and that queue
-    /// does not re-enter.
+    @Test("The first click reaches Token spend when no frame has been stored yet")
+    func firstClickBeforeTheFrameIsStored() async throws {
+        let fromWindow = Activations()
+        let panel = FloatingPanel(
+            contentRect: NSRect(x: 80, y: 80, width: 80, height: 44),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        let host = PanelHostingView(rootView: HeaderIconButton(
+            control: .tokenSpend,
+            onFrame: { panel.headerSink.note($0, $1) },
+            action: {}
+        ))
+        host.frame = NSRect(x: 0, y: 0, width: 80, height: 44)
+        panel.contentView = host
+        panel.onHeaderControl = { fromWindow.controls.append($0) }
+        panel.orderFrontRegardless()
+        panel.displayIfNeeded()
+        host.layoutSubtreeIfNeeded()
+        Self.pump()
+        host.layoutSubtreeIfNeeded()
+
+        panel.headerSink.replace(with: [:])
+        #expect(panel.headerSink.frames[.tokenSpend] == nil)
+        let frame = try #require(HeaderControlFrames.collect(in: host)[.tokenSpend])
+        #expect(HeaderControlFrames.control(at: CGPoint(x: frame.midX, y: frame.midY), in: host) == .tokenSpend)
+
+        try Self.click(frame, in: panel)
+        #expect(fromWindow.controls.isEmpty)
+        await Self.until { fromWindow.controls.count == 1 }
+        #expect(fromWindow.controls == [.tokenSpend])
+        panel.orderOut(nil)
+    }
+
+    /// Lets the main-queue block queued by a header click run. The action
+    /// waits until AppKit has finished the mouse-up; yielding the main actor
+    /// does not drain that queue.
     private static func until(_ ready: () -> Bool) async {
         for _ in 0..<50 {
             if ready() { return }
-            await Task.yield()
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                DispatchQueue.main.async { continuation.resume() }
+            }
         }
     }
 
     private static func settle() async {
-        for _ in 0..<20 { await Task.yield() }
+        for _ in 0..<5 {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                DispatchQueue.main.async { continuation.resume() }
+            }
+        }
     }
 
     private static func pump() {

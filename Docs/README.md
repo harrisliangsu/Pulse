@@ -17,7 +17,7 @@ Topic docs, at the top of this folder. Subfolders are under [Folders](#folders).
 | [architecture.md](architecture.md) | App shell, settings state, first-run / offer-once, login item, defaults domain |
 | [networking.md](networking.md) | System/manual proxy boundary, URLSession coverage, helper environment, Sparkle exception |
 | [refresh-and-data.md](refresh-and-data.md) | Refresh loop, cache, connection diagnostics and server replies, activity, ledger, forecast, estimate, currency, chart hover |
-| [token-spend.md](token-spend.md) | Token spend pane: agents read, model drill-down, pricing, what may be said about the figures |
+| [token-spend.md](token-spend.md) | Token spend: the window beside the usage card, agents read, model drill-down, pricing, what may be said about the figures |
 | [token-spend-sources.md](token-spend-sources.md) | The complete agent/source catalog: default macOS location, format, counters reported, evidence level |
 | [recap.md](recap.md) | The shareable month and year recap cards: which cards a recap gets, nil means left out, language rules, the review render |
 | [notifications.md](notifications.md) | When Pulse posts a notification, and what it refuses to say |

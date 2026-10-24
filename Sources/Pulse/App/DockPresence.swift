@@ -88,12 +88,30 @@ final class DockPresence {
     /// Re-reads which windows are open. `closing` is a window `close()` is in
     /// the middle of: it still reports visible, so it is left out of the count.
     ///
-    /// `showingWindow` is a window that was just ordered front. The policy is
-    /// applied first, then activation follows `MainWindowActivation`: a change
-    /// into `.regular` waits until the next turn, or the menu bar keeps the
-    /// name of whichever app was frontmost.
+    /// `showingWindow` is the window this call is about to order front. It
+    /// counts as open before that, so the policy can become `.regular` first.
+    /// Activation follows `MainWindowActivation`: a change into `.regular`
+    /// waits until the next turn, or the menu bar keeps the name of whichever
+    /// app was frontmost.
     func apply(closing: NSWindow? = nil, showingWindow: NSWindow? = nil) {
-        let open = windows.allObjects.contains { $0 !== closing && ($0.isVisible || $0.isMiniaturized) }
+        // The window being shown is not visible yet: ordering it front is
+        // what this call does, after the policy. Leaving it out kept Blinky
+        // an accessory app, so the window stayed behind the one that was key.
+        let listed = windows.allObjects
+        let showingUntracked = showingWindow.map { showing in
+            showing !== closing && !listed.contains { $0 === showing }
+        } ?? false
+        let open = Self.anyOpen(
+            listed.map { window in
+                (
+                    closing: window === closing,
+                    showing: window === showingWindow,
+                    visible: window.isVisible,
+                    miniaturized: window.isMiniaturized
+                )
+            },
+            showingUntracked: showingUntracked
+        )
         let policy = Self.activationPolicy(
             alwaysShowsDockIcon: settings.alwaysShowsDockIcon,
             trackedWindowOpen: open,
@@ -102,13 +120,50 @@ final class DockPresence {
         )
         let changed = NSApp.activationPolicy() != policy
         if changed { NSApp.setActivationPolicy(policy) }
+        // After the policy. `makeKeyAndOrderFront` only orders among this
+        // app's windows, so a window opened while another app is key stays
+        // behind it. `orderFrontRegardless` puts it on top either way.
+        if let showingWindow {
+            MainWindowActivation.orderFront(showingWindow)
+        }
         let timing = MainWindowActivation.timing(
             policy: policy,
             policyChanged: changed,
             wantsAttention: showingWindow != nil || updateOfferVisible
         )
         MainWindowActivation.perform(timing) { [weak showingWindow] in
-            showingWindow?.makeKeyAndOrderFront(nil)
+            MainWindowActivation.orderFront(showingWindow)
+        }
+    }
+
+    /// Whether one tracked window counts as open for the Dock policy.
+    ///
+    /// The window being shown counts before AppKit has ordered it front.
+    /// A window `close()` is still inside of reports visible and does not.
+    nonisolated static func countsAsOpen(
+        isClosing: Bool,
+        isShowing: Bool,
+        isVisible: Bool,
+        isMiniaturized: Bool
+    ) -> Bool {
+        if isClosing { return false }
+        return isShowing || isVisible || isMiniaturized
+    }
+
+    /// True when any tracked window is open, including one that is about to
+    /// be shown and is not in the tracked list yet.
+    nonisolated static func anyOpen(
+        _ windows: [(closing: Bool, showing: Bool, visible: Bool, miniaturized: Bool)],
+        showingUntracked: Bool
+    ) -> Bool {
+        if showingUntracked { return true }
+        return windows.contains {
+            countsAsOpen(
+                isClosing: $0.closing,
+                isShowing: $0.showing,
+                isVisible: $0.visible,
+                isMiniaturized: $0.miniaturized
+            )
         }
     }
 }
@@ -127,7 +182,8 @@ final class DockPresence {
 /// activation waits until the next turn. An app that is already `.regular`
 /// (Always show Dock icon, or another tracked window already open) activates
 /// immediately. Staying `.accessory` — the while-open Dock switch is off, and
-/// always-show is off — has no application menu to claim.
+/// always-show is off — has no application menu to claim, and the window is
+/// still ordered in front of other apps.
 ///
 /// Call sites, all through `DockPresence.apply(showingWindow:)`: the main
 /// window (`SettingsWindowController.show` — the usage card's grid symbol, the panel
@@ -141,7 +197,9 @@ enum MainWindowActivation {
         case now
         /// The policy just became `.regular`. Activate on the next turn.
         case nextTurn
-        /// Staying `.accessory`, or nothing is asking for attention.
+        /// Staying `.accessory`. No menu bar to claim; the window still comes forward.
+        case orderOnly
+        /// Nothing is asking for attention.
         case skip
     }
 
@@ -150,9 +208,23 @@ enum MainWindowActivation {
         policyChanged: Bool,
         wantsAttention: Bool
     ) -> Timing {
-        guard policy == .regular else { return .skip }
+        guard policy == .regular else {
+            return wantsAttention ? .orderOnly : .skip
+        }
         if policyChanged { return .nextTurn }
         return wantsAttention ? .now : .skip
+    }
+
+    /// Puts `window` in front of other apps and makes it key.
+    ///
+    /// `makeKeyAndOrderFront` only orders among this app's own windows. While
+    /// Blinky is still an accessory, or while `activate` has not landed, that
+    /// leaves the window behind whichever app was key.
+    @MainActor
+    static func orderFront(_ window: NSWindow?) {
+        guard let window else { return }
+        window.orderFrontRegardless()
+        window.makeKey()
     }
 
     /// Activates, then runs `after` (the window being made key again).
@@ -161,6 +233,8 @@ enum MainWindowActivation {
         switch timing {
         case .skip:
             break
+        case .orderOnly:
+            after?()
         case .now:
             NSApp.activate(ignoringOtherApps: true)
             after?()

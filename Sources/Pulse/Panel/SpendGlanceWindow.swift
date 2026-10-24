@@ -63,14 +63,13 @@ final class SpendGlanceController {
         window.standardWindowButton(.closeButton)?.isEnabled = true
         installMonitors()
         dock?.track(window)
-        // Same activation as the main window. A utility panel at the rail's
-        // level never became key, so menus and the close button received nothing.
-        window.makeKeyAndOrderFront(nil)
+        // Same path as the main window: policy first, then in front of other
+        // apps. Ordering before the policy change left the window behind.
         if let dock {
             dock.apply(showingWindow: window)
         } else {
             NSApp.activate(ignoringOtherApps: true)
-            window.makeKey()
+            MainWindowActivation.orderFront(window)
         }
     }
 
@@ -94,11 +93,13 @@ final class SpendGlanceController {
     }
 
     private func share() {
-        if SpendGlanceExport.copy(model.picture) {
-            model.noteCopied()
-        } else {
+        // Before the toast. The image is the summary on screen, and the
+        // confirmation must not be part of it or of the layout under it.
+        guard let view = window?.contentView, SpendGlanceExport.copyVisible(view) else {
             model.noteCopyFailed()
+            return
         }
+        model.noteCopied()
     }
 
     private func makeWindow() -> SpendGlancePanel {
@@ -349,11 +350,17 @@ struct ControlFrameProbe: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: ProbeView, context: Context) {
+        nsView.marker = id
         nsView.onFrame = { [onFrame, id] frame in onFrame(id, frame) }
         nsView.report()
+        // The first layout can run before the view has a window. Report again
+        // once AppKit has placed it, so a click in that gap still has a rect.
+        DispatchQueue.main.async { [weak nsView] in nsView?.report() }
     }
 
     final class ProbeView: NSView {
+        /// `CardHeaderControl.rawValue` when this probe marks a header button.
+        var marker = ""
         var onFrame: ((CGRect) -> Void)?
 
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
@@ -368,6 +375,11 @@ struct ControlFrameProbe: NSViewRepresentable {
             report()
         }
 
+        override func viewDidMoveToSuperview() {
+            super.viewDidMoveToSuperview()
+            report()
+        }
+
         func report() {
             guard window != nil, bounds.width > 1, bounds.height > 1 else { return }
             onFrame?(convert(bounds, to: nil))
@@ -375,21 +387,17 @@ struct ControlFrameProbe: NSViewRepresentable {
     }
 }
 
-/// Copies the branded summary. The image is the picture's text and bars;
-/// nothing is written to disk.
+/// Copies the visible summary. The image is what the window is showing —
+/// the headline and the lists on screen — not a separate poster. Nothing
+/// is written to disk. PNG and TIFF, the same two types as the recap.
 @MainActor
 enum SpendGlanceExport {
-    static let pointSize = CGSize(width: 680, height: 920)
-
-    static func copy(_ picture: SpendGlancePicture) -> Bool {
-        let renderer = ImageRenderer(content: SpendGlancePoster(picture: picture).frame(width: pointSize.width, height: pointSize.height))
-        renderer.proposedSize = ProposedViewSize(pointSize)
-        renderer.scale = 2
-        guard let image = renderer.cgImage else { return false }
-        let bitmap = NSBitmapImageRep(cgImage: image)
-        bitmap.size = pointSize
+    static func copyVisible(_ view: NSView, pasteboard: NSPasteboard = .general) -> Bool {
+        let bounds = view.bounds
+        guard bounds.width > 1, bounds.height > 1 else { return false }
+        guard let bitmap = view.bitmapImageRepForCachingDisplay(in: bounds) else { return false }
+        view.cacheDisplay(in: bounds, to: bitmap)
         guard let png = bitmap.representation(using: .png, properties: [:]) else { return false }
-        let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setData(png, forType: .png)
         if let tiff = bitmap.tiffRepresentation {
@@ -399,154 +407,78 @@ enum SpendGlanceExport {
     }
 }
 
-/// The window's contents. The share image is `SpendGlancePoster`, drawn again
-/// from the same picture, not a screenshot of this view.
+/// The window's contents. Share copies this view as it is on screen.
+/// The copy confirmation is an overlay (`SpendGlanceCopy.shiftsLayout`): a
+/// line in the column would move the lists.
 struct SpendGlanceView: View {
-    let model: SpendGlanceModel
+    @Bindable var model: SpendGlanceModel
     let settings: AppSettings
     let onShare: () -> Void
     let onDismiss: () -> Void
 
     var body: some View {
         let _ = settings.language
-        let picture = model.picture
-        let ready = model.figuresReady
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                header
-                if !ready {
-                    reading
-                } else {
-                    overview(picture)
-                    dimensionPicker
-                    if !picture.agents.isEmpty {
-                        agents(picture)
-                    }
-                    if !picture.bars.isEmpty {
-                        activity(picture)
-                    }
-                    footnotes(picture)
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            shareRow
+            if model.showsHeadline {
+                headline
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            ScrollView {
+                TokenSpendView(
+                        summary: model.summary,
+                        focus: $model.focus,
+                        focused: model.focused,
+                        modelFocus: $model.selectedModel,
+                        modelSummary: model.modelSpend,
+                        noRecords: model.noRecords,
+                        hasReadLimitations: model.hasReadLimitations,
+                        span: Binding(
+                            get: { settings.spendSpan },
+                            set: { settings.spendSpan = $0 }
+                        ),
+                        customDays: Binding(
+                            get: { settings.spendCustomDays },
+                            set: { settings.spendCustomDays = $0 }
+                        ),
+                        activity: model.tokenActivity,
+                        activityView: Binding(
+                            get: { settings.spendActivityView },
+                            set: { settings.spendActivityView = $0 }
+                        ),
+                        isLoading: model.isScanning,
+                        isSummarizing: model.summaryIsPending,
+                        hidesSpanHeadline: true,
+                        onControlFrame: model.noteControlFrame,
+                        refresh: { model.rescan += 1 }
+                    )
+            }
         }
-        .frame(minWidth: 320, minHeight: 280)
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .overlay(alignment: .bottom) { copyNotice }
         .task(id: model.loadKey) { await model.load() }
         .task(id: model.summaryRequest) { await model.recompute() }
         .onChange(of: settings.readsTokenSpend) { _, enabled in
             if !enabled { onDismiss() }
         }
+        .onChange(of: model.focus) { _, _ in model.selectedModel = nil }
     }
 
-    private var header: some View {
-        let shareLabel = model.didCopy
-            ? String.localized("Copied")
-            : String.localized("Share this summary")
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Picker("", selection: Binding(
-                    get: { settings.spendSpan },
-                    set: { settings.spendSpan = $0 }
-                )) {
-                    ForEach(SpendSpan.allCases) { span in
-                        Text(span.title).tag(span)
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .frame(maxWidth: 180, alignment: .leading)
-                .accessibilityIdentifier("spend-glance-span")
-                Spacer(minLength: 8)
-                Button(String.localized("Refresh")) { model.rescan += 1 }
-                    .disabled(model.isScanning)
-                    .accessibilityIdentifier("spend-glance-refresh")
-                    .background(ControlFrameProbe(id: "spend-glance-refresh", onFrame: model.noteControlFrame))
-                Button(shareLabel, action: onShare)
-                    .disabled(!model.figuresReady || model.isScanning)
-                    .accessibilityIdentifier("spend-glance-share")
-                    .background(ControlFrameProbe(id: "spend-glance-share", onFrame: model.noteControlFrame))
-            }
-            if model.didCopy {
-                Text(localized: "Copied to the clipboard.")
-                    .font(.system(size: 12, weight: .medium))
-                    .accessibilityIdentifier("spend-glance-copy-note")
-            } else if model.copyFailed {
-                Text(localized: "Could not copy.")
-                    .font(.system(size: 12, weight: .medium))
-                    .accessibilityIdentifier("spend-glance-copy-note")
-            }
-            if settings.spendSpan == .custom {
-                customDatePickers
-            }
+    private var shareRow: some View {
+        HStack {
+            Spacer(minLength: 8)
+            Button(String.localized("Share this summary"), action: onShare)
+                .disabled(!model.figuresReady || model.isScanning)
+                .accessibilityIdentifier("spend-glance-share")
+                .background(ControlFrameProbe(id: "spend-glance-share", onFrame: model.noteControlFrame))
         }
         .controlSize(.small)
     }
 
-    /// The same two days as Settings, neither after today, the first never after the last.
-    private var customDatePickers: some View {
-        let today = Calendar.current.startOfDay(for: Date())
-        return HStack(spacing: 6) {
-            DatePicker("", selection: Binding(
-                get: { settings.spendCustomDays.lowerBound },
-                set: {
-                    let first = Calendar.current.startOfDay(for: $0)
-                    settings.spendCustomDays = first...max(settings.spendCustomDays.upperBound, first)
-                }
-            ), in: ...today, displayedComponents: .date)
-            .labelsHidden()
-            .datePickerStyle(.field)
-            .accessibilityLabel(String.localized("First day"))
-
-            Text(verbatim: "–")
-                .foregroundStyle(.secondary)
-
-            DatePicker("", selection: Binding(
-                get: { settings.spendCustomDays.upperBound },
-                set: {
-                    let last = Calendar.current.startOfDay(for: $0)
-                    settings.spendCustomDays = min(settings.spendCustomDays.lowerBound, last)...last
-                }
-            ), in: ...today, displayedComponents: .date)
-            .labelsHidden()
-            .datePickerStyle(.field)
-            .accessibilityLabel(String.localized("Last day"))
-        }
-    }
-
-    private var dimensionPicker: some View {
-        Picker("", selection: Binding(
-            get: { settings.spendGlanceDimension },
-            set: { settings.spendGlanceDimension = $0 }
-        )) {
-            ForEach(SpendGlanceDimension.allCases) { dimension in
-                Text(dimension.title).tag(dimension)
-            }
-        }
-        .labelsHidden()
-        .pickerStyle(.menu)
-        .frame(maxWidth: 180, alignment: .leading)
-        .accessibilityIdentifier("spend-glance-dimension")
-    }
-
-    private var reading: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ProgressView()
-                .controlSize(.small)
-            if let progress = model.progress {
-                Text(String.localized("Reading \(progress.agent.displayName)…"))
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-            } else {
-                Text(localized: "Reading…")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
-
-    private func overview(_ picture: SpendGlancePicture) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+    /// Tokens large, the estimate under them. Both follow the selected span.
+    private var headline: some View {
+        let picture = model.picture
+        return VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: picture.tokens)
                 .font(.system(size: SpendGlanceHeadline.tokenPointSize, weight: .semibold))
                 .monospacedDigit()
@@ -562,211 +494,27 @@ struct SpendGlanceView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .accessibilityIdentifier("spend-glance-headline")
     }
 
-    private func agents(_ picture: SpendGlancePicture) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(verbatim: picture.agentsTitle)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
-            ForEach(Array(picture.agents.enumerated()), id: \.offset) { index, agent in
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(verbatim: agent.name)
-                            .font(.system(size: 12, weight: .medium))
-                            .lineLimit(1)
-                        Spacer(minLength: 8)
-                        Text(verbatim: agent.tokens)
-                            .font(.system(size: 12))
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                        if let cost = agent.cost {
-                            Text(verbatim: cost)
-                                .font(.system(size: 12))
-                                .monospacedDigit()
-                        }
-                    }
-                    GeometryReader { proxy in
-                        Capsule()
-                            .fill(SpendGlancePalette.color(at: index))
-                            .frame(width: max(proxy.size.width * agent.share, agent.share > 0 ? 2 : 0), height: 4)
-                    }
-                    .frame(height: 4)
-                }
-            }
-        }
-    }
-
-    private func activity(_ picture: SpendGlancePicture) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(verbatim: picture.activityTitle)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
-            SpendGlanceBars(bars: picture.bars)
-                .frame(height: 56)
-        }
-    }
-
-    private func footnotes(_ picture: SpendGlancePicture) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(picture.footnotes.enumerated()), id: \.offset) { _, line in
-                Text(verbatim: line)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-}
-
-/// Fourteen days as bars. A missing day is a gap; a quiet day is a hairline.
-struct SpendGlanceBars: View {
-    let bars: [SpendGlancePicture.Bar]
-
-    var body: some View {
-        HStack(alignment: .bottom, spacing: 3) {
-            ForEach(Array(bars.enumerated()), id: \.offset) { index, bar in
-                barMark(bar, index: index)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            }
-        }
-    }
-
+    /// Over the lists. It does not take a row, so the lists do not move.
     @ViewBuilder
-    private func barMark(_ bar: SpendGlancePicture.Bar, index: Int) -> some View {
-        if let tokens = bar.tokens {
-            Capsule()
-                .fill(SpendGlancePalette.color(at: index).opacity(tokens > 0 ? 1 : 0.28))
-                .frame(height: tokens > 0 ? max(4, 56 * bar.share) : 2)
-                .frame(maxHeight: .infinity, alignment: .bottom)
-        } else {
-            Color.clear
+    private var copyNotice: some View {
+        if model.didCopy || model.copyFailed {
+            Text(verbatim: copyNoticeText)
+                .font(.system(size: 12, weight: .medium))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.thinMaterial, in: Capsule())
+                .padding(.bottom, 16)
+                .allowsHitTesting(false)
+                .accessibilityIdentifier("spend-glance-copy-note")
         }
     }
-}
 
-extension SpendGlancePalette {
-    static func color(at index: Int) -> Color {
-        let swatch = swatch(at: index)
-        return Color(red: swatch.red, green: swatch.green, blue: swatch.blue)
+    private var copyNoticeText: String {
+        if model.didCopy { return String.localized("Copied to the clipboard.") }
+        return String.localized("Could not copy.")
     }
+
 }
-
-/// The image Share puts on the clipboard. Flat colours only: `ImageRenderer`
-/// does not draw materials or AppKit controls.
-struct SpendGlancePoster: View {
-    let picture: SpendGlancePicture
-
-    private let ink = Color.white
-    private let secondary = Color.white.opacity(0.62)
-    private let ground = Color(red: 0.09, green: 0.09, blue: 0.11)
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: picture.brand)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                Spacer()
-                Text(localized: "Token spend")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(secondary)
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                Text(verbatim: picture.span)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(secondary)
-                Text(verbatim: picture.tokens)
-                    .font(.system(size: SpendGlanceHeadline.posterTokenPointSize, weight: .semibold, design: .rounded))
-                if let cost = picture.cost {
-                    Text(verbatim: cost)
-                        .font(.system(size: SpendGlanceHeadline.posterMoneyPointSize, weight: .medium, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(secondary)
-                }
-                if let note = picture.costNote {
-                    Text(verbatim: note)
-                        .font(.system(size: 14))
-                        .foregroundStyle(secondary)
-                }
-            }
-            if !picture.agents.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(verbatim: picture.agentsTitle)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(secondary)
-                    ForEach(Array(picture.agents.enumerated()), id: \.offset) { index, agent in
-                        VStack(alignment: .leading, spacing: 5) {
-                            HStack(alignment: .firstTextBaseline) {
-                                Text(verbatim: agent.name)
-                                    .font(.system(size: 16, weight: .medium))
-                                    .lineLimit(1)
-                                Spacer(minLength: 12)
-                                Text(verbatim: agent.tokens)
-                                    .font(.system(size: 15))
-                                    .monospacedDigit()
-                                    .foregroundStyle(secondary)
-                                if let cost = agent.cost {
-                                    Text(verbatim: cost)
-                                        .font(.system(size: 15))
-                                        .monospacedDigit()
-                                }
-                            }
-                            Capsule()
-                                .fill(SpendGlancePalette.color(at: index))
-                                .frame(width: 560 * agent.share, height: 6)
-                        }
-                    }
-                }
-            }
-            if !picture.bars.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(verbatim: picture.activityTitle)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(secondary)
-                    SpendGlanceBars(bars: picture.bars)
-                        .frame(height: 88)
-                }
-            }
-            Spacer(minLength: 12)
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(Array(picture.footnotes.enumerated()), id: \.offset) { _, line in
-                        Text(verbatim: line)
-                            .font(.system(size: 12))
-                            .foregroundStyle(secondary)
-                    }
-                }
-                Spacer()
-                Text(verbatim: picture.brand)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(ink.opacity(0.38))
-            }
-        }
-        .padding(36)
-        .foregroundStyle(ink)
-        .background(ground)
-        .environment(\.colorScheme, .dark)
-    }
-}
-
-#if DEBUG
-#Preview("Token spend summary") {
-    SpendGlancePoster(picture: SpendGlancePicture(
-        span: "Last 7 days",
-        tokens: "12.4M tokens",
-        cost: "$4.20",
-        costNote: "Partial estimate",
-        agentsTitle: "By agent",
-        agents: [
-            .init(name: "Claude Code", tokens: "8.1M", cost: "$3.10", share: 1),
-            .init(name: "Codex", tokens: "4.3M", cost: "$1.10*", share: 0.53)
-        ],
-        activityTitle: "Last 14 days",
-        bars: (0..<14).map { index in
-            .init(tokens: index < 3 ? nil : index * 10, share: index < 3 ? 0 : Double(index) / 13)
-        },
-        footnotes: ["Updated just now", "Counts may be incomplete."]
-    ))
-    .frame(width: 680, height: 920)
-}
-#endif

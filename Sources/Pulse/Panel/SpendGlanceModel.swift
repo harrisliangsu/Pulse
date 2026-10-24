@@ -18,6 +18,14 @@ final class SpendGlanceModel {
 
     var isOpen = false
     var summary = SpendSummary()
+    /// The agent on screen, and that agent's figures over the same span.
+    var focus: SpendAgent?
+    var focused = SpendSummary()
+    /// The model on screen. Dropped when the agent changes.
+    var selectedModel: String?
+    var modelSpend = ModelSpendSummary()
+    /// The year chart. It does not follow the span.
+    var tokenActivity = TokenActivity()
     var activity = SpendGlanceActivity()
     var isScanning = false
     var progress: AgentLedgers.Progress?
@@ -46,6 +54,22 @@ final class SpendGlanceModel {
         return displayedRequest == request
     }
 
+    /// The headline stays up once a span has been added, including while the
+    /// next span's figures replace it. It follows that span when they land.
+    var showsHeadline: Bool { displayedRequest != nil }
+
+    /// True while the figures on screen are for a different agent or model.
+    var summaryIsPending: Bool {
+        guard let request = summaryRequest else { return false }
+        return displayedRequest.map { !request.canKeepShowing($0) } ?? true
+    }
+
+    /// Present sources that produced no token records, over the whole scan.
+    var noRecords: [SpendAgent] {
+        let ledgers = read.snapshot?.ledgers ?? [:]
+        return SpendAgent.allCases.filter { ledgers[$0]?.allTime.tokens == 0 }
+    }
+
     var loadKey: SpendGlanceRead.Request {
         SpendGlanceRead.Request(
             isEnabled: settings.readsTokenSpend,
@@ -69,8 +93,8 @@ final class SpendGlanceModel {
                 calendar: calendar,
                 language: settings.language.rawValue
             ),
-            agent: nil,
-            model: nil
+            agent: focus,
+            model: selectedModel
         )
     }
 
@@ -140,6 +164,9 @@ final class SpendGlanceModel {
         guard let result = try? await cache.summaries(for: request, ledgers: read.snapshot?.ledgers ?? [:]),
               !Task.isCancelled, summaryRequest == request else { return }
         summary = result.overview
+        focused = result.agent
+        modelSpend = result.model
+        tokenActivity = result.activity
         activity = SpendGlanceActivity.covering(
             summary: result.overview,
             span: settings.spendSpan,
@@ -149,13 +176,22 @@ final class SpendGlanceModel {
     }
 
     func noteCopied(hold: Duration = SpendGlanceCopy.hold) {
-        copyFailed = false
-        didCopy = true
+        showNotice(copied: true, hold: hold)
+    }
+
+    func noteCopyFailed(hold: Duration = SpendGlanceCopy.hold) {
+        showNotice(copied: false, hold: hold)
+    }
+
+    private func showNotice(copied: Bool, hold: Duration) {
         copyClear?.cancel()
+        didCopy = copied
+        copyFailed = !copied
         copyClear = Task { [weak self] in
             try? await Task.sleep(for: hold)
             guard !Task.isCancelled else { return }
             self?.didCopy = false
+            self?.copyFailed = false
         }
     }
 
@@ -164,11 +200,6 @@ final class SpendGlanceModel {
         controlFrames[id] = frame
     }
 
-    func noteCopyFailed() {
-        copyClear?.cancel()
-        didCopy = false
-        copyFailed = true
-    }
 
     /// Shows an empty summary as ready, so Share can be clicked without
     /// walking the stores. A later open reuses it (`SpendGlanceRead` retains
@@ -188,6 +219,9 @@ final class SpendGlanceModel {
         cache = SpendSummaryCache()
         displayedRequest = nil
         summary = SpendSummary()
+        focused = SpendSummary()
+        modelSpend = ModelSpendSummary()
+        tokenActivity = TokenActivity()
         activity = SpendGlanceActivity()
         observedAt = nil
         hasReadLimitations = false

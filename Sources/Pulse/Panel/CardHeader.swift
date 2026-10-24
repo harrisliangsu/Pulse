@@ -58,6 +58,88 @@ final class HeaderFrameSink {
             frames[control] = nil
         }
     }
+
+    /// Replaces every stored rect. A control that is not in `frames` is gone,
+    /// so a button that has left the card is not a hit target.
+    func replace(with frames: [CardHeaderControl: CGRect]) {
+        var next: [CardHeaderControl: CGRect] = [:]
+        for (control, rect) in frames {
+            if rect.width > 1, rect.height > 1, !rect.isNull, !rect.isInfinite {
+                next[control] = rect
+            }
+        }
+        self.frames = next
+    }
+}
+
+/// Header rectangles read from the views that are in the window now.
+///
+/// The probes also report as they lay out. That report can still be missing
+/// on the first click after launch, so the press asks the views directly and
+/// does not wait for the callback.
+@MainActor
+enum HeaderControlFrames {
+    static func collect(in root: NSView?) -> [CardHeaderControl: CGRect] {
+        guard let root else { return [:] }
+        var frames: [CardHeaderControl: CGRect] = [:]
+        /// `preferred` is the probe the button laid out. The hand sits on the
+        /// same control and can be a different rectangle; it fills in only
+        /// when the probe has not reported.
+        func consider(_ control: CardHeaderControl?, _ view: NSView, preferred: Bool) {
+            guard let control, view.window != nil else { return }
+            let rect = view.convert(view.bounds, to: nil)
+            guard rect.width > 1, rect.height > 1, !rect.isNull, !rect.isInfinite else { return }
+            if frames[control] == nil || preferred {
+                frames[control] = rect
+            }
+        }
+        func walk(_ view: NSView) {
+            if let probe = view as? ControlFrameProbe.ProbeView,
+               let control = CardHeaderControl(rawValue: probe.marker) {
+                consider(control, view, preferred: true)
+            }
+            if let hand = view as? PointerHand.HandView {
+                consider(hand.headerControl, view, preferred: false)
+            }
+            for child in view.subviews { walk(child) }
+        }
+        walk(root)
+        return frames
+    }
+
+    /// The header control whose view contains `point`, in window coordinates.
+    /// The probe wins over the hand when both contain it, because the probe is
+    /// the rectangle the button laid out.
+    static func control(at point: CGPoint, in root: NSView?) -> CardHeaderControl? {
+        guard let root else { return nil }
+        var found: (CardHeaderControl, CGFloat, Bool)?
+        func consider(_ control: CardHeaderControl?, _ view: NSView, preferred: Bool) {
+            guard let control, view.window != nil else { return }
+            let rect = view.convert(view.bounds, to: nil)
+            guard rect.width > 1, rect.height > 1, !rect.isNull, !rect.isInfinite else { return }
+            guard rect.contains(point) else { return }
+            let area = rect.width * rect.height
+            if let current = found {
+                if preferred && !current.2 { found = (control, area, true); return }
+                if current.2 && !preferred { return }
+                if area < current.1 { found = (control, area, preferred) }
+            } else {
+                found = (control, area, preferred)
+            }
+        }
+        func walk(_ view: NSView) {
+            if let probe = view as? ControlFrameProbe.ProbeView,
+               let control = CardHeaderControl(rawValue: probe.marker) {
+                consider(control, view, preferred: true)
+            }
+            if let hand = view as? PointerHand.HandView {
+                consider(hand.headerControl, view, preferred: false)
+            }
+            for child in view.subviews { walk(child) }
+        }
+        walk(root)
+        return found?.0
+    }
 }
 
 /// What `FloatingPanel.sendEvent` does with a mouse event before the rail's

@@ -43,6 +43,8 @@ enum SpendGlanceHeadline {
 /// How long the copied confirmation stays up. A test can pass a shorter one.
 enum SpendGlanceCopy {
     static let hold: Duration = .seconds(6)
+    /// The confirmation is an overlay. A line in the column moves the lists.
+    static let shiftsLayout = false
 }
 
 /// Saturated colours for the glance bars. Not the accent colour: the share
@@ -352,7 +354,10 @@ struct SpendGlanceActivity: Equatable, Sendable {
 /// of that card, and inside the screen.
 enum SpendGlancePlacement {
     static let gap: CGFloat = 12
-    static let size = CGSize(width: 360, height: 560)
+    /// Close to the settings pane the lists used to fill: wide enough for the
+    /// year chart, tall enough that the first screen holds the headline and
+    /// the lists under it. A shorter display clamps this inside the screen.
+    static let size = CGSize(width: 720, height: 780)
 
     static func frame(
         rail: CGRect,

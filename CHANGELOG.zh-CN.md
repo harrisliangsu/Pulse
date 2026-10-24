@@ -6,6 +6,13 @@
 Sparkle 更新窗口优先使用本文件（中文）；缺条目时回退英文 CHANGELOG.md。GitHub Release 仍由 [Scripts/release-notes.py](Scripts/release-notes.py) 生成双语正文。
 在打 tag 之前写好 `## x.y.z` 条目；语法与英文相同：列表、`**粗体**`、`` `代码` ``、`[链接](https://example.com)`。
 
+## 1.5.14
+
+- **Token 消耗改在用量卡片旁边的窗口里看。** 时间范围、Agent 和模型列表、Token 活动以及某个模型的明细都在这扇窗口里，设置里的「Token 消耗」只保留「读取本机用量记录」和用量报告的「打开」，新安装从今天开始统计。[#75](https://github.com/harrisliangsu/blinky-mac/pull/75)
+- **分享复制的是窗口上正在显示的内容。** 分享会把可见的合计和列表做成图片放到剪贴板，确认显示在窗口上方，列表留在原处。[#75](https://github.com/harrisliangsu/blinky-mac/pull/75)
+- **只有开启「读取本机用量记录」时，标题栏才显示 Token 消耗按钮。** 关闭这项读取后，用量卡片标题栏上的图表按钮不会出现，Blinky 启动后的第一次点击也会打开这扇窗口。[#75](https://github.com/harrisliangsu/blinky-mac/pull/75)
+- **主窗口会打开到其他应用前面。** 用量卡片上的四格图标、Dock，以及从启动台或 Spotlight 启动，都会把主窗口放到最前面。[#75](https://github.com/harrisliangsu/blinky-mac/pull/75)
+
 ## 1.5.13
 
 - **用量卡片用四格图标打开主窗口。** 标题栏上「Token 消耗」旁边的控件改为填满的四格方块，点击后打开主窗口，并回到上次查看的页面。[#74](https://github.com/harrisliangsu/blinky-mac/pull/74)

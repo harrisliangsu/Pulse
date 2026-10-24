@@ -149,7 +149,7 @@ struct SettingsView: View {
                                 navigation: navigation, history: history, flows: flows, scroll: proxy
                             )
                         case .spend:
-                            TokenSpendPane(settings: settings, model: spend, openRecap: openRecap, scroll: proxy)
+                            TokenSpendPane(settings: settings, model: spend, openRecap: openRecap)
                         case .providers:
                             ProvidersHubPane(settings: settings, navigation: navigation)
                         case .about: AboutPane(update: update, settings: settings, alerts: alerts)

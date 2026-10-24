@@ -24,6 +24,9 @@ import UniformTypeIdentifiers
 /// where, and nothing else in that folder is touched.
 @MainActor
 enum RecapExport {
+    /// Saved and Copied are drawn over the sidebar. A line in the button stack moves the grid.
+    static let noticeShiftsLayout = false
+
     enum Outcome: Equatable {
         case saved
         case copied

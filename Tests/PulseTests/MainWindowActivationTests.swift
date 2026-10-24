@@ -28,11 +28,47 @@ struct MainWindowActivationTests {
         #expect(MainWindowActivation.timing(
             policy: .regular, policyChanged: false, wantsAttention: false
         ) == .skip)
+        // No menu bar to claim, and the window is still brought forward.
         #expect(MainWindowActivation.timing(
             policy: .accessory, policyChanged: true, wantsAttention: true
-        ) == .skip)
+        ) == .orderOnly)
+        #expect(MainWindowActivation.timing(
+            policy: .accessory, policyChanged: false, wantsAttention: true
+        ) == .orderOnly)
         #expect(MainWindowActivation.timing(
             policy: .accessory, policyChanged: false, wantsAttention: false
         ) == .skip)
+        #expect(MainWindowActivation.timing(
+            policy: .regular, policyChanged: false, wantsAttention: true
+        ) != .skip)
+    }
+
+    @Test("A window being shown counts as open before it is visible")
+    func showingWindowCountsBeforeItIsVisible() {
+        #expect(DockPresence.countsAsOpen(
+            isClosing: false, isShowing: true, isVisible: false, isMiniaturized: false
+        ))
+        #expect(!DockPresence.countsAsOpen(
+            isClosing: true, isShowing: true, isVisible: true, isMiniaturized: false
+        ))
+        #expect(DockPresence.countsAsOpen(
+            isClosing: false, isShowing: false, isVisible: true, isMiniaturized: false
+        ))
+        #expect(DockPresence.countsAsOpen(
+            isClosing: false, isShowing: false, isVisible: false, isMiniaturized: true
+        ))
+        #expect(!DockPresence.countsAsOpen(
+            isClosing: false, isShowing: false, isVisible: false, isMiniaturized: false
+        ))
+        #expect(DockPresence.anyOpen(
+            [(closing: false, showing: true, visible: false, miniaturized: false)],
+            showingUntracked: false
+        ))
+        #expect(!DockPresence.anyOpen(
+            [(closing: true, showing: false, visible: true, miniaturized: false)],
+            showingUntracked: false
+        ))
+        #expect(DockPresence.anyOpen([], showingUntracked: true))
+        #expect(!DockPresence.anyOpen([], showingUntracked: false))
     }
 }

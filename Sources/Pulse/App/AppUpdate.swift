@@ -452,7 +452,8 @@ final class AppUpdate {
             frameAutosaveName: window.frameAutosaveName,
             windowControllerClassName: window.windowController.map { String(describing: type(of: $0)) }
         ) {
-            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+            window.makeKey()
         }
         // `SUUpdateAlert.windowDidLoad` may run after this return and add the
         // checkbox then. Hide it again on the next turn.

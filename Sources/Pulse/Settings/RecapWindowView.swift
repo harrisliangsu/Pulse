@@ -272,17 +272,23 @@ struct RecapWindowView: View {
             exportSection
         }
         .padding(18)
+        // Saved / Copied sits over the buttons. A line above them moves the grid.
+        .overlay(alignment: .bottom) {
+            if let note {
+                Text(verbatim: note)
+                    .font(.system(size: 12, weight: .medium))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.thinMaterial, in: Capsule())
+                    .padding(.bottom, 12)
+                    .allowsHitTesting(false)
+                    .accessibilityIdentifier("recap-export-note")
+            }
+        }
     }
 
     private var exportSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            if let note {
-                Text(note)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .transition(.opacity)
-            }
-
             // Four buttons of one width, whatever the language makes of their labels.
             Grid(horizontalSpacing: 8, verticalSpacing: 8) {
                 GridRow {
@@ -380,8 +386,8 @@ struct RecapWindowView: View {
         show(RecapExport.share(model.currentCard(in: deck), of: deck, from: anchor))
     }
 
-    /// A line under the buttons for a moment: what happened, if the system did
-    /// not already say so itself.
+    /// Over the buttons for a moment: what happened, if the system did not
+    /// already say so itself. A line in the stack would move the grid.
     private func show(_ outcome: RecapExport.Outcome) {
         let text: String? = switch outcome {
         case .saved: .localized("Saved")

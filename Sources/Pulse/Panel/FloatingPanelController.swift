@@ -159,7 +159,7 @@ final class FloatingPanelController {
             }
         }
         let headerSink = panel.headerSink
-        let hostingView = NSHostingView(
+        let hostingView = PanelHostingView(
             rootView: FloatingUsagePanelView(
                 store: store,
                 settings: settings,
@@ -540,6 +540,13 @@ final class FloatingPanelController {
     }
 }
 
+/// The panel's hosting view accepts the first click. The panel never becomes
+/// key, and a click that misses the stored header rect otherwise dies as an
+/// activation click before `PointerHand` sees it.
+final class PanelHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
 /// The panel, which also owns dragging itself around.
 ///
 /// The drag used to be an `NSViewRepresentable` inside the SwiftUI tree, and
@@ -682,12 +689,23 @@ final class FloatingPanel: NSPanel {
     private var pressedHeader: CardHeaderControl?
 
     /// True when this event belongs to a header control and must not start a drag.
+    @MainActor
     private func routeHeader(_ event: NSEvent) -> Bool {
+        let point = event.locationInWindow
+        if event.type == .leftMouseDown {
+            refreshHeaderFrames()
+        }
+        // The views that are in the window now. A stored rectangle can be
+        // missing on the first press, or can name a button that has gone.
+        var frames = headerSink.frames
+        if let live = HeaderControlFrames.control(at: point, in: contentView) {
+            frames[live] = CGRect(x: point.x - 1, y: point.y - 1, width: 3, height: 3)
+        }
         var pressed = pressedHeader
         let outcome = HeaderClickDispatch.outcome(
             type: event.type,
-            point: event.locationInWindow,
-            frames: headerSink.frames,
+            point: point,
+            frames: frames,
             pressed: &pressed
         )
         pressedHeader = pressed
@@ -697,16 +715,39 @@ final class FloatingPanel: NSPanel {
         case .taken:
             return true
         case .activate(let control):
-            // The next turn, not this one. The press is still the non-activating
-            // panel's, and ordering the main window front from inside it leaves
-            // the window behind the app that was key. A main-queue block queued
-            // from this call does not run until AppKit gets the thread back;
-            // a main-actor task is the same turn, and a test can yield to it.
-            Task { @MainActor [weak self] in
-                self?.onHeaderControl?(control)
+            // After this mouse-up returns. The press is still the
+            // non-activating panel's; ordering a window front inside it leaves
+            // that window behind the app that was key. A main-actor task runs
+            // in this turn. A main-queue block waits until AppKit is done.
+            DispatchQueue.main.async { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.onHeaderControl?(control)
+                }
             }
             return true
         }
+    }
+
+    /// Reads the buttons that are actually in the window.
+    ///
+    /// A control that has left is dropped. A rectangle the button already
+    /// reported is kept while that control is still there: replacing it with
+    /// a different live rectangle made the press miss the point it was on.
+    /// A control with no stored rectangle yet takes the live one, which is
+    /// the first click after launch.
+    @MainActor
+    private func refreshHeaderFrames() {
+        let live = HeaderControlFrames.collect(in: contentView)
+        guard !live.isEmpty else { return }
+        var merged: [CardHeaderControl: CGRect] = [:]
+        for control in CardHeaderControl.allCases {
+            if let stored = headerSink.frames[control], live[control] != nil {
+                merged[control] = stored
+            } else if let found = live[control] {
+                merged[control] = found
+            }
+        }
+        headerSink.replace(with: merged)
     }
 
     /// Puts the panel's menu up, if the click landed on something to grab.
