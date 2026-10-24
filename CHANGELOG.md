@@ -12,10 +12,10 @@ bullets, `**bold**`, `` `code` `` and `[links](https://example.com)`.
 
 ## 1.5.14
 
-- **Token spend opens beside the usage card.** The time range, the agent and model lists, Token activity, and a model's details are in that window, Settings → Token spend keeps Read local usage records and the Usage recaps Open button, and a new install starts on Today.
-- **Share copies what the window is showing.** Share places an image of the visible total and lists on the clipboard, and the confirmation appears over the window so the lists stay where they are.
-- **The Token spend button appears only while reading is on.** The chart button in the usage card's header is absent while Read local usage records is off, and the first click after Blinky launches opens the window.
-- **The main window opens in front.** The grid icon on the usage card, the Dock, and a launch from Launchpad or Spotlight bring the main window in front of other apps.
+- **Token spend opens beside the usage card.** The time range, the agent and model lists, Token activity, and a model's details are in that window, Settings → Token spend keeps Read local usage records and the Usage recaps Open button, and a new install starts on Today. [#75](https://github.com/harrisliangsu/blinky-mac/pull/75)
+- **Share copies what the window is showing.** Share places an image of the visible total and lists on the clipboard, and the confirmation appears over the window so the lists stay where they are. [#75](https://github.com/harrisliangsu/blinky-mac/pull/75)
+- **The Token spend button appears only while reading is on.** The chart button in the usage card's header is absent while Read local usage records is off, and the first click after Blinky launches opens the window. [#75](https://github.com/harrisliangsu/blinky-mac/pull/75)
+- **The main window opens in front.** The grid icon on the usage card, the Dock, and a launch from Launchpad or Spotlight bring the main window in front of other apps. [#75](https://github.com/harrisliangsu/blinky-mac/pull/75)
 
 ## 1.5.13
 
