@@ -146,21 +146,20 @@ struct CardHeaderTests {
 
     @Test("A laid-out header button is hit from its window rectangle, and the view does not also fire")
     func laidOutButtonReceivesTheWindowClick() async throws {
-        let frames = HeaderFrameSink()
         let fromWindow = Activations()
         let fromView = Activations()
-        let host = NSHostingView(rootView: HeaderIconButton(
-            control: .openApp,
-            onFrame: { frames.note($0, $1) },
-            action: { fromView.controls.append(.openApp) }
-        ))
-        host.frame = NSRect(x: 0, y: 0, width: 80, height: 44)
         let panel = FloatingPanel(
             contentRect: NSRect(x: 80, y: 80, width: 80, height: 44),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
+        let host = NSHostingView(rootView: HeaderIconButton(
+            control: .openApp,
+            onFrame: { panel.headerSink.note($0, $1) },
+            action: { fromView.controls.append(.openApp) }
+        ))
+        host.frame = NSRect(x: 0, y: 0, width: 80, height: 44)
         panel.contentView = host
         panel.onHeaderControl = { fromWindow.controls.append($0) }
         panel.orderFrontRegardless()
@@ -169,7 +168,7 @@ struct CardHeaderTests {
         Self.pump()
         host.layoutSubtreeIfNeeded()
 
-        let frame = try #require(frames.frames[.openApp])
+        let frame = try #require(panel.headerSink.frames[.openApp])
         #expect(frame.width > 1)
         #expect(frame.height > 1)
         try Self.click(frame, in: panel)
